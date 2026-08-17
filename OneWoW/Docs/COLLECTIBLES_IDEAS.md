@@ -4,8 +4,11 @@
 > "what serious collectors expect" direction so it does not pollute the shipped
 > [`COLLECTIBLES.md`](COLLECTIBLES.md). Promote items into that doc as they land.
 >
-> **See also:** [`COLLECTIBLES.md`](COLLECTIBLES.md) (shipped design),
-> [`ARCHITECTURE.md`](ARCHITECTURE.md) §6/§7 (core services + LOD/cross-unit model).
+> **See also:**
+> - [`COLLECTIBLES.md`](COLLECTIBLES.md) (shipped design)
+> - [`ARCHITECTURE.md`](ARCHITECTURE.md) §6/§7 (core services + LOD/cross-unit model)
+> - [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) (executable plans)
+> - [`AltTracker2/Docs/IDEAS.md`](../../OneWoW_AltTracker2/Docs/IDEAS.md) (roster Ask / lockouts)
 
 ## The through-line
 
@@ -15,11 +18,18 @@ the easy half of collecting. The hard half — **farmed / gated / planned**
 acquisition and **tracking your own progress toward it** — is where the gaps are.
 The unifying asset is still the collectible **key**; every idea below hangs off it.
 
-A recurring pattern in the reuse analysis: **the live game data and the
-per-character stores already exist in the suite** (AltTracker, AltScope, Merchant,
-GUI copy dialogs). What is genuinely missing is (a) a couple of small **curated
-data maps**, (b) a **temporal-availability service**, and (c) **Notes-side record
-fields + UI** (assignment, priority, dashboard). We are assembling, not inventing.
+**Three legs** (do not collapse them): Notes + `OneWoW.Collectibles` own identity
+and the want list; Trackers owns executable plans; AltTracker(2) owns per-alt
+snapshots and Ask. Competitive collecting addons mostly answer *different*
+questions (instance log, weekly remaining, current-expansion cockpit, AH missing
+scan). Steal framing; do not grow a second catalog.
+
+A recurring pattern: **the live game data and the per-character stores already
+exist** (AltTracker, AltScope, Merchant, Trackers step types, GUI copy dialogs).
+What is genuinely missing is (a) a couple of small **curated data maps**, (b) a
+**temporal-availability** answer (service or shared helper), (c) **Notes-side
+record fields + UI**, and (d) a **Notes → Trackers handoff**. We are assembling,
+not inventing.
 
 ---
 
@@ -40,20 +50,30 @@ fields + UI** (assignment, priority, dashboard). We are assembling, not inventin
 | Live per-offer affordability | `OneWoW.Collectibles.GetOfferAffordability(offer)` | `OneWoW/Services/Collectibles.lua` |
 | Ensemble/set progress rollup | `GetEnsembleProgress` / `GetSetMembers` | same service |
 | Punch-list voidcache → content itemIDs | `Collectibles.GetPunchListSummary` + curated map | `OneWoW/Services/CollectiblesPunchLists.lua` (QoL Collections tooltip footer) |
+| Executable farm steps (quest, rare lock, kill, pin, calendar gate, collection state) | Trackers engine + `rare_quest` / `quest_account` / mount·pet·toy·transmog via Collectibles keys | `OneWoW_Trackers` — see [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) |
 
 **Genuinely new work:** curated data maps (achievement→reward, collectible→
-daily-lock-quest, **punch-list cache→content itemIDs**), a temporal-availability
-service, and Notes record fields + UI (assignment, priority, dashboard, Wowhead
-builder).
+daily-lock-quest, collectible→instance/encounter — **not** punch-lists, those
+shipped), a temporal-availability helper, Notes record fields + UI (assignment,
+priority, dashboard, Wowhead builder, Easy Wins sort), and the Notes→Trackers
+handoff.
 
 ---
 
 ## 1. Farm / attempt plans → `OneWoW_Trackers`
 
-A `farming`-intent collectible should spawn a **Trackers** plan ("go to Vendor A,
-spend 1000g" / "farm mob X"), not grow a farm engine inside Notes. Trackers is
-already the "executable plans keyed by these strings" unit. **Deferred** — Trackers
-needs its own pass first (tracked separately). Notes just needs to hand off the key.
+A `farming`-intent collectible should spawn or focus a **Trackers** plan ("go to
+Vendor A, spend 1000g" / "farm mob X"), not grow a farm engine inside Notes.
+Trackers already ships lists, auto-complete, pins, `rare_quest`, and collection
+steps keyed through `OneWoW.Collectibles`.
+
+**This doc owns:** when to hand off (intent / explicit action) and that the plan
+is identified by the collectible key. **Trackers owns:** `_API`, skip/prune,
+difficulty action, calendar fail-open — [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md).
+
+The payload of a good plan is a Collectionist-style **taskList** (live-evaluable
+gates + waypoints), mapped onto existing Trackers step types, not prose in the
+note body.
 
 ## 2. Daily loot-locks (Midnight per-char mount locks)
 
@@ -63,18 +83,29 @@ loot eligibility**: killing the same rare twice in a day yields no special loot.
 - **Mechanism (reuse):** Blizzard gates these with **hidden "tracking quests"**
   that flag complete on loot and reset daily. Query
   `C_QuestLog.IsQuestFlaggedCompleted(hiddenQuestID)` — already wrapped by
-  `…Collections_API.IsQuestCompleted`. No combat-log parsing.
+  `…Collections_API.IsQuestCompleted`. Trackers already has `rare_quest` for the
+  same flag. No combat-log parsing.
 - **Per-alt (reuse w/ caveat):** each alt's completed-quest set is stored
   (`GetCharacterData(charKey).quests.completed`). **Caveat:** the existing
   `IsQuestCompleted` is *live, current-character only*; other alts answer from a
   **last-seen snapshot** (accurate as of that alt's last data collection). Document
   the freshness limit; add a small "is quest X in alt Y's stored completed set"
-  helper.
+  helper. Roster Ask ("which alts still have loot up?") is AltTracker2.
 - **Build:** a curated **collectible-key → hidden-quest-ID** map (datamined, small,
   updatable; degrade gracefully when a key has no mapping). Same maintenance shape
   as the drop-rate data we deliberately do **not** own.
+- **UX (FuocoNote):** "tried this week" is **lockout + quest flag**, not a custom
+  attempt ledger. Multi-rare farms are a **set** of weekly quests — the row is
+  done when every NPC's quest is flagged. Surface this on a wanted key ("still
+  lootable today / this reset") rather than only as a Trackers checkbox.
 - **Payoff:** "which of my alts still have their daily loot up on Rare X" — a
   surface no mainstream addon presents well, and it feeds the alt view (#6).
+- **Live rare pop:** Trackers can subscribe to RareScanner / SilverDragon *alerts*
+  (not scan) and show this lock + missing keys on an ephemeral pin — see
+  [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) §9. Same
+  quest map; no second kill database. Uncollected loot **not** on the want list
+  uses the vendor capture pattern (`off` / `prompt` / `auto`, **separate** setting,
+  prompt default, combat-deferred) rather than silently treating every rare as a shop.
 
 ## 3. Non-vendor acquisition sources + achievements
 
@@ -88,7 +119,7 @@ quested, or come from achievements/events.
   near-complete achievements (the API gives per-achievement info; iterating +
   thresholding + a completed-vs-total rollup is new). **Filter out** Statistics,
   Feats of Strength, and unobtainable/legacy — surfacing "1 away!" on impossible
-  ones destroys trust.
+  ones destroys trust. Pair with the unobtainable overlay (#4).
 - **Build — achievement → collectible-reward map (curated data):** `rewardText` is
   a *display string*, not a key. To say "…and it grants a mount you're missing" we
   need a curated **achievementID → collectible-key** table. Worth it — it is the
@@ -96,6 +127,10 @@ quested, or come from achievements/events.
   (only achievements whose reward is a mount/pet/toy/appearance ≈ a few hundred
   rows), and **mine** it (ATT reward data, Wowhead achievement pages) rather than
   depending on a heavy live lib.
+- **Shape check:** SecretCollectorCheck is this map in miniature (Mind-Seeker →
+  17 mounts / 8 pets / 2 toys + coords + a 1–4 difficulty). Collectionist
+  duplicates the same `taskList` on the achievement row *and* the reward mount —
+  that cross-link is the UX we want, not a second achievement browser.
 - **UX — the reverse view is stronger:** not just "this collectible comes from
   achievement X (7/8)," but "near-complete achievements, sorted by whether they
   hand you a wanted collectible." Slots into the Progress sub-tab (#4).
@@ -108,9 +143,17 @@ derivable from journals + the ensemble rollup we already call.
 - KPIs collectors actually stare at: account-wide % per type; **nearest-to-
   completion sets** (just sort the existing ensemble rollup — highest-value item,
   turns "someday" into "2 more"); want-list size + burn-down; "collected this
-  week/session"; rarest owned. Per-expansion/source breakdown is the stretch goal.
+  week/session"; rarest owned. Per-expansion/source breakdown is the stretch goal
+  (current-expansion *filter* is the cheap version — §11).
+- **Session honesty (Collection Log):** a login baseline so journal sync does not
+  look like "you just collected 40 mounts." Celebrate real new collects with
+  group `X/Y` when we have a containing set/log.
+- **Unobtainable overlay:** curated retired / seasonal / promotion / unused
+  (Collection Log `RetiredMounts` shape). Hide unobtainable in Progress and
+  "almost complete," but **still show if owned**. Same trust rule as filtering
+  Feats of Strength.
 
-## 5. Priority buckets + budget rollup
+## 5. Priority buckets + budget rollup + Easy Wins
 
 - **Build:** numeric `priority` on the Notes record (user content), mapped to
   High/Med/Low labels; drives sort **and** the budget rollup.
@@ -118,6 +161,14 @@ derivable from journals + the ensemble rollup we already call.
   "Want:High needs 40k + 2,000 Tender." This quietly solves the "come back when I
   can afford it" problem — a High-priority, currency-blocked, at-a-vendor item is
   exactly that reminder.
+- **Easy Wins (WarbandCollector, but from real offers):** sort/filter the want
+  list by vendor-offer + currently affordable. We already capture `vendorOffers`
+  and live affordability — do **not** parse journal `sourceText` for the word
+  "vendor." Collectionator's "cheapest of group" is the same idea with gold
+  instead of effort; useful as a sort key, not an AH tab.
+
+Ignore lists (BountyHelper) matter less here: we do not dump the universe of
+missing collectibles, so "I don't want this" is not adding it (or `delete`).
 
 ## 6. Alt assignment (replace Account/Character scope)
 
@@ -140,6 +191,8 @@ show all collectibles always; assign an entry to one **or many** alts.
   alt AltTracker already knows has that profession.
 - Assignment is "who does the acquiring," so it becomes moot on collection — lines
   up with the existing auto-recycle flow.
+- **Not peer sharing:** Collectionist Roster (guild/BNet bitmaps of missing items)
+  is a different social layer. AltTracker2 already declined cross-account sharing.
 
 ## 7. Requirement modeling (rep / renown / currency), per-alt
 
@@ -149,31 +202,43 @@ Broader: the char that saw it may not qualify, but **another alt might**.
 - **Reuse:** `GetFactionStanding(factionID)` (rep/renown) and per-alt currencies
   already collected; `C_CurrencyInfo.GetCurrencyInfo().isAccountWide` /
   `isAccountTransferable` tells us **which currencies need per-alt accounting**
-  (don't hardcode a list).
+  (don't hardcode a list). Collectionist hardcodes `cost` / `renown` on curated
+  rows — we generalize the live capture instead of a second cost encyclopedia.
 - **Build:** a first-class requirement model on the record + a resolver that
   answers "which of my alts can obtain this," reusing the currency/rep stores.
+  AltTracker2 Ask is the roster-shaped consumer.
 
 ## 8. Temporal-availability service (generalize lockouts)
 
-A single service answering **"when can I next act on this key"** — lockouts,
-resets, spawns, windows.
+A single helper answering **"when can I next act on this key"** — lockouts,
+resets, windows. Trackers and Notes both want this; put the fault line in one
+place (core sibling vs Collectibles vs Trackers-local — open question on the
+Trackers doc).
 
-- **Reuse:** AltTracker_Endgame lockouts (raid/world-boss/weekly).
+- **Reuse:** AltTracker_Endgame lockouts (raid/world-boss/weekly); Trackers
+  `eventRequired` (calendar `eventID`); `rare_quest` / Collections quest flags.
 - **Build — and keep the fault line explicit:**
-  - **Deterministic (API-truth):** raid/dungeon lockouts, daily/weekly resets
-    (`C_DateAndTime`), Trading Post monthly reset, currency-cap resets, holiday
-    event windows (calendar). Answer "next available at T" exactly.
+  - **Deterministic (API-truth):** raid/dungeon lockouts (incl. shared legacy
+    10/25 diffs), daily/weekly resets (`C_DateAndTime`), Trading Post monthly
+    reset, currency-cap resets, holiday / timewalking windows (calendar). Answer
+    "next available at T" exactly. **Fail-open** if the calendar has not loaded
+    (`GetNumDayEvents == 0`) — do not hide event farms as if they were inactive.
   - **Stochastic (estimate only):** rare respawns — the game only knows *current*
     state (`C_VignetteInfo`), never future spawns. Return a **kind/confidence
     flag** so deterministic answers stay exact and spawns read "alive now / last
     seen Xh ago." Conflating them makes the service look like it lied.
 - Ties to #2 (daily-lock is the deterministic per-char case) and the Trading Post
-  as a first-class modern collectible faucet.
+  as a first-class modern collectible faucet. Trackers consumes this for skip/
+  prune ([`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) §3–§4)
+  and can own a monthly Perks checklist after one Post open
+  ([`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) §16).
 
 ## 9. Wowhead links (per-type builder)
 
 - **Reuse:** `OneWoW_GUI:ShowCopyURLDialog(title, url)` — click-to-copy is right
   since chat can't carry external hyperlinks. Show the URL in a tooltip first.
+  Catalog journal rows already have a Wowhead text link; collectibles still need
+  the per-type builder. Collectionist / BountyHelper confirm the copy-dialog UX.
 - **Build — `OneWoW.Collectibles.BuildWowheadURL(key)`** (core, sibling to
   `BuildLink`; pure derivation from the key → reusable by any consumer). The scheme
   is **per-type, not universally `item=`** — dispatch off the descriptor like
@@ -217,21 +282,100 @@ known loot pool.
   direct); Bulging Ethereal / Winter packs (`278026` / `278027`, direct).
 - **Out of scope:** loot-spec filtering; per-chest content subsets.
 
+Nobody in the competitive set does container contents. This stays ours.
+
+---
+
+## 11. Product decisions (not silent scope)
+
+Keepers from the collecting-addon pass that need an explicit yes — they are
+**views over keys**, not a second want list.
+
+**Instance-first remaining loot** (Collection Log / ICH / BountyHelper): "I am
+about to run X — what collectibles still drop on this difficulty, and is the
+boss dead this reset?" That wants a thin curated **key → { instanceID,
+encounterID, difficultyIDs }** (Collection Log `MountDropCategories` shape), not
+their raid-pack encyclopedia. **Activity UI is Catalog Journal** (`OneWoW_Catalog`
++ `OneWoW_CatalogData_Journal_API`, membership/difficulties from `.wow_db2`
+Generated Lua). A Trackers in-instance strip is a *consumer* of those IDs, not a
+second EJ. Notes is not a loot log. **Decide the key→instance map before building
+the strip.**
+
+**Current-expansion cockpit** (Collectionist): a Progress / want-list **filter**
+("Midnight missing"), not a second addon. The maintenance cost is their curated
+Midnight tables — we have so far refused that corpus. Cheap version: filter keys
+we already hold by expansion when the journal gives one.
+
+**Appearance unique vs source:** Collectionator "any source in the visual set"
+vs "this source." We key `appearance:source` and already distinguish `bySource`.
+A want-list filter ("I care about the look") is cheap and matches collectors.
+Collection Log's "collected via other difficulty / shared appearance" tooltip is
+the honesty rule.
+
+**Coverage Blizzard omits:** ExtendedSets exists because `C_TransmogSets` hides
+class sets, heritage, weapon arsenals. Our `set:<setID>` grammar assumes
+Blizzard's list. Illusions (FuocoNote) have **no** key type today. Only pursue
+if "sets/illusions the wardrobe does not list" is a collector expectation we
+want to meet.
+
+---
+
+## Suggested priority
+
+Highest leverage is views over data we already collect, **in the order that unblocks the three legs:**
+
+0. Trackers hub tab GUI-first pass, then calendar fail-open (engine, can parallel)
+   ([`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) Where to start / §0).
+1. Notes `farming` → Trackers handoff (#1) — thin `_API`, list id = collectible key; explicit “Track this” for v1. Land after the tab pass.
+2. Remaining-attempt / lockout-aware availability on a **wanted** key (#2 + #8) — same Endgame lockouts Trackers slice 2 consumes; logged-in char first.
+3. Easy Wins sort of the existing want list (#5) from `vendorOffers` + affordability (Notes-only; can run parallel to 0–2).
+4. Unobtainable overlay + achievement→reward map so Progress / "almost complete" do not lie (#3–#4).
+5. Wowhead builder (#9).
+
 ---
 
 ## Out of scope (integrate, don't build)
 
 - **3D model / dressing-room preview** — ATT / Wowhead / wardrobe territory.
-- **Owning a drop-rate database** — consume a source if needed; own the *tracking*
-  (attempts/locks), not the numbers.
-- **Rare spawn scanning** — Rare Scanner / Silver Dragon already do this well.
+- **Owning a drop-rate / instance-loot encyclopedia** — consume a source if needed;
+  own the *tracking* (attempts/locks), not the numbers. (Collection Log packs,
+  FuocoNote `droplist`, BountyHelper chances, MRP data addon.)
+- **Rare spawn scanning** — RareScanner / SilverDragon already do this well.
+  Trackers may *subscribe* to their alerts ([`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) §9);
+  we do not register `VIGNETTE_*` to discover rares. NPC portrait on that pin is
+  a tracker header, not wardrobe 3D preview.
+- **AH buy / replicate tabs** — Collectionator's scanners are the only lesson
+  (live "don't have this" predicates); we are not an auction addon.
+- **Rebuilding Blizzard Collections** (WarbandCollector as a product). Easy Wins
+  transfers; source-text heuristics do not.
+- **Guild / BNet missing-item bitmaps** (Collectionist Roster).
+- **Pathfinding / travel-item routing** (MRP) — Trackers pins + skip; see Trackers ideas.
 
 ## Open questions
 
-- Achievement→reward + collectible→daily-lock-quest maps: mine from ATT/Wowhead, or
-  is there a currently-maintained lib worth a dependency? (Prefer a small vendored,
-  mineable table over a heavy live dependency.)
+- Achievement→reward + collectible→daily-lock-quest (+ optional instance) maps:
+  mine from ATT/Wowhead, or is there a currently-maintained lib worth a
+  dependency? (Prefer a small vendored, mineable table over a heavy live
+  dependency.)
 - Confirm which alt-multiselect component is the shared one (AltScopeSection vs. the
   gear-overlay picker) and consolidate on it.
 - Per-alt daily-lock freshness: is a "last seen" snapshot acceptable UX, or do we
   want a login-time refresh nudge?
+- Instance-first remaining loot: Catalog Journal is the EJ UI; Trackers strip
+  consumes Journal IDs; remaining work is the curated key→instance map, not
+  which addon browses bosses.
+- Temporal helper: core service vs Collectibles vs Trackers-local (Trackers doc).
+- `illusion:` key type / ExtendedSets coverage: in or out?
+
+## Competitive set (offline)
+
+`_OneWoW_Offline/Collecting/` — Collection Log, Collectionist, FuocoNote,
+InstanceCollectionHelper, Mount Route Planner, BountyHelper, WarbandCollector,
+Collectionator (missing-predicates only), SecretCollectorCheck, ExtendedSets.
+
+Steal: remaining-attempt framing, Easy Wins from real vendor offers, taskList as
+Trackers payload, unobtainable overlay, calendar fail-open, achievement↔reward
+cross-link, unique-vs-source appearance filter.
+
+Do not steal: drop encyclopedias, AH buy, peer bitmaps, journal rebuilds, spawn
+scanners, MRP pathfinding.

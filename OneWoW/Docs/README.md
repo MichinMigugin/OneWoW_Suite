@@ -24,6 +24,9 @@ Contributor and integrator documentation for the suite.
 | [OneWoW_QoL/DEVELOPERS.md](../../OneWoW_QoL/DEVELOPERS.md) | External QoL module authoring (`module.lua`, `ModuleRegistry`, locale scope) |
 | [OneWoW_QoL/MODULES.md](../../OneWoW_QoL/MODULES.md) | QoL external module catalog (35 modules by category) |
 | [OneWoW_Trackers/Docs/ARCHITECTURE.md](../../OneWoW_Trackers/Docs/ARCHITECTURE.md) | Tracker lists, engine, presets, farm value |
+| [OneWoW_Trackers/Docs/TRACKERS_IDEAS.md](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) | Trackers direction parking lot (not committed scope) |
+| [COLLECTIBLES.md](COLLECTIBLES.md) | Collectible identity, keys, live collection state |
+| [COLLECTIBLES_IDEAS.md](COLLECTIBLES_IDEAS.md) | Collectibles direction parking lot (not committed scope) |
 | [OneWoW_Mail/Docs/ARCHITECTURE.md](../../OneWoW_Mail/Docs/ARCHITECTURE.md) | Mail shell, shipments, send/collect pipeline, Storage in-transit |
 | [OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md](../../OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md) | Catalog quest data store and scanner |
 

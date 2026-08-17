@@ -8,6 +8,51 @@ local TMU = ns.TrackerMapUI
 
 local format = format
 
+local dialogCache = {}
+
+local function CreateDialog(config)
+    local dialogName = config.name or "OneWoW_TrackersMapDialog"
+    local destroyOnClose = config.destroyOnClose
+    local cached = dialogCache[dialogName]
+    if destroyOnClose and cached then
+        cached:Hide()
+        cached:SetParent(nil)
+        dialogCache[dialogName] = nil
+        cached = nil
+    end
+    if cached then
+        if cached:IsShown() then cached:Raise() return cached end
+        cached:Show()
+        cached:Raise()
+        return cached
+    end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = dialogName,
+        title = config.title or "",
+        width = config.width or 500,
+        height = config.height or 400,
+        showBrand = true,
+        buttons = config.buttons,
+        onClose = function()
+            if destroyOnClose then
+                dialogCache[dialogName] = nil
+            end
+        end,
+    })
+
+    local frame = result.frame
+    frame.content = result.contentFrame
+    dialogCache[dialogName] = frame
+    frame:HookScript("OnShow", function(myself)
+        C_Timer.After(0, function()
+            OneWoW_GUI:ApplyFontToFrame(myself)
+        end)
+    end)
+    frame:Hide()
+    return frame
+end
+
 local initialized = false
 
 function TMU:Initialize()
@@ -73,7 +118,7 @@ function TMU:ShowWaypointList(listID)
         return
     end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerWaypointList",
         title = format("Waypoints: %s", list.title or ""),
         width = 400,

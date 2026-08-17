@@ -1,7 +1,9 @@
 # Collectibles (`OneWoW.Collectibles`)
 
 > **See also:** [ARCHITECTURE.md](ARCHITECTURE.md) §6 (core service roster), §6/§7
-> (LOD + cross-unit sharing model this builds on).
+> (LOD + cross-unit sharing model this builds on). Direction parking lot (not
+> committed scope): [COLLECTIBLES_IDEAS.md](COLLECTIBLES_IDEAS.md); executable
+> plans: [TRACKERS_IDEAS.md](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md).
 
 One core service owns collectible **identity**: it turns a stable collectible
 key string into live display data and live collection state, and defines the key

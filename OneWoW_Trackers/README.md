@@ -48,7 +48,7 @@
 
 ## Documentation
 
-Contributor reference: [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
+Contributor reference: [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md). Direction parking lot (not committed scope): [Docs/TRACKERS_IDEAS.md](Docs/TRACKERS_IDEAS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
 
 ## Localization
 

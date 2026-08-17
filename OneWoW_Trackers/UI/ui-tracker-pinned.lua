@@ -345,18 +345,8 @@ function TP:Create(listID)
                     stepRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
 
-                local progressStr = ""
-                if rosterCompleters then
-                    progressStr = tostring(#rosterCompleters)
-                elseif step.trackType ~= "manual" or (step.max and step.max > 1) then
-                    local current = sp.current or 0
-                    local max = step.noMax and 0 or (step.max or 1)
-                    if max > 0 then
-                        progressStr = format("%d/%d", current, max)
-                    elseif current > 0 then
-                        progressStr = tostring(current)
-                    end
-                end
+                local progressStr = ns.TrackerEvaluators.FormatStepProgress(
+                    step, sp, rosterCompleters and #rosterCompleters or nil)
 
                 stepRow._prog:SetText(progressStr)
                 stepRow._prog:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))

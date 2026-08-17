@@ -58,6 +58,8 @@
 
 ### Trackers
 - The bundled Midnight weekly tracker now follows Season 2 Mistcrests.
+- Currency, item, level, item-level, reputation, and renown steps show the real target (for example 659/1000) and complete against that target, not 1.
+- Holiday and event-gated steps stay visible until the in-game calendar has loaded, instead of hiding when the calendar is still empty.
 
 ---
 
@@ -82,7 +84,7 @@
 
 ---
 
-- **Last Updated**: Aug 16, 2026
+- **Last Updated**: Aug 17, 2026
 
 ## R6.2608.1105
 

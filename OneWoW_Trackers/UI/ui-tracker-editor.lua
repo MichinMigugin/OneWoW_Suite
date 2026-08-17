@@ -62,6 +62,105 @@ local function FillInstanceFromCurrent(card)
     if card._field_instanceID then card._field_instanceID:SetText(tostring(instanceID)) end
 end
 
+local dialogCache = {}
+
+local function CreateDialog(config)
+    local dialogName = config.name or "OneWoW_TrackersDialog"
+    local destroyOnClose = config.destroyOnClose
+    local cached = dialogCache[dialogName]
+    if destroyOnClose and cached then
+        cached:Hide()
+        cached:SetParent(nil)
+        dialogCache[dialogName] = nil
+        cached = nil
+    end
+    if cached then
+        if cached:IsShown() then cached:Raise() return cached end
+        cached:Show()
+        cached:Raise()
+        return cached
+    end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = dialogName,
+        title = config.title or "",
+        width = config.width or 500,
+        height = config.height or 400,
+        showBrand = true,
+        buttons = config.buttons,
+        onClose = function()
+            if config.onClose then config.onClose() end
+            if destroyOnClose then
+                dialogCache[dialogName] = nil
+            end
+        end,
+    })
+
+    local frame = result.frame
+    frame.content = result.contentFrame
+    dialogCache[dialogName] = frame
+    frame:HookScript("OnHide", function()
+        OneWoW_GUI:CloseAttachFilterMenu()
+    end)
+    frame:HookScript("OnShow", function(myself)
+        C_Timer.After(0, function()
+            OneWoW_GUI:ApplyFontToFrame(myself)
+        end)
+    end)
+    frame:Hide()
+    return frame
+end
+
+local function CreateDropdown(parent, width, height)
+    local dropdown, textFS = OneWoW_GUI:CreateDropdown(parent, {
+        width = width or 150,
+        height = height or 26,
+    })
+    dropdown._value = nil
+    dropdown._options = {}
+    dropdown.onSelect = nil
+
+    function dropdown:SetOptions(options)
+        self._options = options
+    end
+
+    function dropdown:SetSelected(value)
+        for _, opt in ipairs(self._options) do
+            if opt.value == value then
+                self._value = value
+                self._activeValue = value
+                textFS:SetText(opt.text)
+                return
+            end
+        end
+    end
+
+    function dropdown:GetValue()
+        return self._value
+    end
+
+    OneWoW_GUI:AttachFilterMenu(dropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, opt in ipairs(dropdown._options) do
+                tinsert(items, { value = opt.value, text = opt.text })
+            end
+            return items
+        end,
+        onSelect = function(value, displayText)
+            dropdown._value = value
+            dropdown._activeValue = value
+            textFS:SetText(displayText)
+            if dropdown.onSelect then dropdown.onSelect(value, displayText) end
+        end,
+        getActiveValue = function()
+            return dropdown._value
+        end,
+    })
+    return dropdown
+end
+
 local QUICK_START = {
     {
         key = "weekly",
@@ -326,7 +425,7 @@ function TE_UI:ShowNewListDialog(callback)
     local TP = ns.TrackerPresets
     if not TD or not TE then return end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerNewListWizard",
         title = "Create New Tracker",
         width = 700,
@@ -476,7 +575,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     local TE = ns.TrackerEngine
     if not TD or not TE then return end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerCustomListForm",
         title = "Create Custom List",
         width = 480,
@@ -530,7 +629,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     yOfs = yOfs - 60
 
     MakeLabel(content, "Type:", 10, yOfs)
-    local typeDD = ns.UI.CreateThemedDropdown(content, "", 180, 26)
+    local typeDD = CreateDropdown(content, 180, 26)
     typeDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
     local typeOpts = {}
     for _, lt in ipairs(TD:GetListTypes()) do
@@ -541,7 +640,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     dialog._typeDD = typeDD
 
     MakeLabel(content, "Category:", 260, yOfs)
-    local catDD = ns.UI.CreateThemedDropdown(content, "", 140, 26)
+    local catDD = CreateDropdown(content, 140, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", 330, yOfs)
     local catOpts = {}
     for _, cat in ipairs(TD:GetCategories()) do
@@ -568,7 +667,7 @@ function TE_UI:ShowProfessionPicker(callback)
     local TP = ns.TrackerPresets
     if not TP then return end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerProfPicker",
         title = "Pick Your Professions",
         width = 400,
@@ -636,7 +735,7 @@ function TE_UI:ShowListEditor(listID, callback)
     local list = TD:GetList(listID)
     if not list then return end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerEditListDialog",
         title = "Edit List",
         width = 480,
@@ -689,7 +788,7 @@ function TE_UI:ShowListEditor(listID, callback)
     yOfs = yOfs - 60
 
     MakeLabel(content, "Type:", 10, yOfs)
-    local typeDD = ns.UI.CreateThemedDropdown(content, "", 180, 26)
+    local typeDD = CreateDropdown(content, 180, 26)
     typeDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
     local typeOpts = {}
     for _, lt in ipairs(TD:GetListTypes()) do
@@ -700,7 +799,7 @@ function TE_UI:ShowListEditor(listID, callback)
     dialog._typeDD = typeDD
 
     MakeLabel(content, "Category:", 260, yOfs)
-    local catDD = ns.UI.CreateThemedDropdown(content, "", 140, 26)
+    local catDD = CreateDropdown(content, 140, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", 330, yOfs)
     local catOpts = {}
     for _, cat in ipairs(TD:GetCategories()) do
@@ -731,7 +830,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     local existing = sectionKey and TD:GetSection(listID, sectionKey) or nil
     local isEdit = existing ~= nil
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerSectionDialog",
         title = isEdit and "Edit Section" or "Add Section",
         width = 400,
@@ -774,7 +873,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     yOfs = yOfs - 36
 
     MakeLabel(content, "Reset:", 10, yOfs)
-    local resetDD = ns.UI.CreateThemedDropdown(content, "", 220, 26)
+    local resetDD = CreateDropdown(content, 220, 26)
     resetDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
     resetDD:SetOptions({
         { text = L["TRACKER_RESET_DEFAULT"], value = "none" },
@@ -796,7 +895,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     local existing = stepKey and TD:GetStep(listID, sectionKey, stepKey) or nil
     local isEdit = existing ~= nil
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerStepWizard",
         title = isEdit and "Edit Step" or "Add Step",
         width = 650,
@@ -878,7 +977,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     resetLabel:SetText(L["TRACKER_RESET_LABEL"])
     resetLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local resetDD = ns.UI.CreateThemedDropdown(content, "", 220, 26)
+    local resetDD = CreateDropdown(content, 220, 26)
     resetDD:SetPoint("LEFT", resetLabel, "RIGHT", 8, 0)
     resetDD:SetOptions({
         { text = L["TRACKER_RESET_DEFAULT"], value = "none" },
@@ -1106,6 +1205,14 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     max = tonumber(trackParams.count) or 1
                 elseif cat.trackType == "quest_pool" or cat.trackType == "quest_pool_account" then
                     max = tonumber(trackParams.pick) or 1
+                elseif trackParams.amount then
+                    max = tonumber(trackParams.amount) or 1
+                elseif trackParams.level then
+                    max = tonumber(trackParams.level) or 1
+                elseif trackParams.ilvl then
+                    max = tonumber(trackParams.ilvl) or 1
+                elseif trackParams.standing then
+                    max = tonumber(trackParams.standing) or 1
                 end
 
                 local resetVal = dialog._resetDD:GetValue()
@@ -1216,7 +1323,7 @@ function TE_UI:ShowExportDialog(listID)
     local exportStr = TD:ExportList(listID)
     if not exportStr then return end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerExportDialog",
         title = "Export List",
         width = 600,
@@ -1250,7 +1357,7 @@ function TE_UI:ShowImportDialog(callback)
     local TD = ns.TrackerData
     if not TD then return end
 
-    local dialog = ns.UI.CreateThemedDialog({
+    local dialog = CreateDialog({
         name = "TrackerImportDialog",
         title = "Import List",
         width = 600,

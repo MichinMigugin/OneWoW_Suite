@@ -50,10 +50,15 @@ end
 
 local activeEventsCache = {}
 local lastEventCheck = 0
+local calendarKnown = false
+local observedListID = nil
+
+-- Calendar-gated sections stay visible until CALENDAR_UPDATE_EVENT_LIST.
+-- After that, a missing eventID is inactive.
 
 local function RefreshActiveEvents()
     local now = time()
-    if (now - lastEventCheck) < 300 then return end
+    if calendarKnown and (now - lastEventCheck) < 300 then return end
     lastEventCheck = now
     wipe(activeEventsCache)
     local currentDate = C_DateAndTime.GetCurrentCalendarTime()
@@ -70,7 +75,20 @@ end
 function TE:IsEventActive(eventID)
     if not eventID then return true end
     RefreshActiveEvents()
+    if not calendarKnown then return true end
     return activeEventsCache[tonumber(eventID)] or false
+end
+
+function TE:SetObservedList(listID)
+    if observedListID == listID then return end
+    observedListID = listID
+    if initialized then
+        self:RebuildIndices()
+    end
+end
+
+local function IsListObserved(listID, list)
+    return list.pinned or listID == observedListID
 end
 
 function TE:HasProfession(baseSkillLineID)
@@ -121,7 +139,7 @@ local function BuildIndices()
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
-        if list.pinned then
+        if IsListObserved(listID, list) then
         for _, sec in ipairs(list.sections) do
             for _, step in ipairs(sec.steps or {}) do
                 local tt = step.trackType
@@ -203,413 +221,7 @@ local function BuildIndices()
 end
 
 function TE:EvaluateObjective(obj)
-    if not obj then return nil end
-    local ot = obj.type
-    local op = obj.params or {}
-
-    if ot == "manual" then
-        return nil
-
-    elseif ot == "quest" or ot == "rare_quest" then
-        local qid = tonumber(op.questID)
-        if qid then
-            return C_QuestLog.IsQuestFlaggedCompleted(qid) and 1 or 0, 1
-        end
-        if op.questIDs then
-            local done = 0
-            for _, id in ipairs(op.questIDs) do
-                if C_QuestLog.IsQuestFlaggedCompleted(tonumber(id)) then
-                    done = done + 1
-                end
-            end
-            return done, #op.questIDs
-        end
-
-    elseif ot == "quest_account" then
-        local qid = tonumber(op.questID)
-        if qid then
-            return C_QuestLog.IsQuestFlaggedCompletedOnAccount(qid) and 1 or 0, 1
-        end
-        if op.questIDs then
-            local done = 0
-            local checkFn = C_QuestLog.IsQuestFlaggedCompletedOnAccount
-            for _, id in ipairs(op.questIDs) do
-                if checkFn(tonumber(id)) then
-                    done = done + 1
-                end
-            end
-            return done, #op.questIDs
-        end
-
-    elseif ot == "quest_pool" then
-        if op.questIDs then
-            local done = 0
-            for _, id in ipairs(op.questIDs) do
-                if C_QuestLog.IsQuestFlaggedCompleted(tonumber(id)) then
-                    done = done + 1
-                end
-            end
-            local pick = tonumber(op.pick) or #op.questIDs
-            return done, pick
-        end
-
-    elseif ot == "quest_pool_account" then
-        if op.questIDs then
-            local done = 0
-            local checkFn = C_QuestLog.IsQuestFlaggedCompletedOnAccount
-            for _, id in ipairs(op.questIDs) do
-                if checkFn(tonumber(id)) then
-                    done = done + 1
-                end
-            end
-            local pick = tonumber(op.pick) or #op.questIDs
-            return done, pick
-        end
-
-    elseif ot == "quest_progress" then
-        local qid = tonumber(op.questID)
-        local objIdx = tonumber(op.objectiveIndex) or 1
-        if qid then
-            if C_QuestLog.IsQuestFlaggedCompleted(qid) then
-                local objectives = C_QuestLog.GetQuestObjectives(qid)
-                if objectives and objectives[objIdx] then
-                    return objectives[objIdx].numRequired or 1, objectives[objIdx].numRequired or 1
-                end
-                return 1, 1
-            end
-            local objectives = C_QuestLog.GetQuestObjectives(qid)
-            if objectives and objectives[objIdx] then
-                return objectives[objIdx].numFulfilled or 0, objectives[objIdx].numRequired or 1
-            end
-            return 0, 1
-        end
-
-    elseif ot == "quest_active" then
-        local qid = tonumber(op.questID)
-        if qid then
-            return C_QuestLog.IsOnQuest(qid) and 1 or 0, 1
-        end
-
-    elseif ot == "quest_world" then
-        local qid = tonumber(op.questID)
-        if qid then
-            if C_QuestLog.IsQuestFlaggedCompleted(qid) then return 1, 1 end
-            if C_TaskQuest.IsActive(qid) then
-                return 0, 1
-            end
-            return 0, 1
-        end
-
-    elseif ot == "level" then
-        local req = tonumber(op.level) or 1
-        local current = UnitLevel("player") or 1
-        return current, req
-
-    elseif ot == "item" then
-        local itemID = tonumber(op.itemID)
-        local needed = tonumber(op.count) or 1
-        if itemID then
-            local count = C_Item.GetItemCount(itemID, true) or 0
-            return count, needed
-        end
-
-    elseif ot == "currency" then
-        local currID = tonumber(op.currencyID)
-        local needed = tonumber(op.amount) or 0
-        if currID then
-            local info = C_CurrencyInfo.GetCurrencyInfo(currID)
-            if info then
-                local current = info.quantity or 0
-                if needed == 0 then
-                    local weekCap = info.maxWeeklyQuantity or 0
-                    local totalCap = info.maxQuantity or 0
-                    local dynamicCap = (weekCap > 0) and weekCap or totalCap
-                    if dynamicCap > 0 then
-                        return current, dynamicCap
-                    end
-                    return current, 0
-                end
-                return current, needed
-            end
-        end
-
-    elseif ot == "achievement" then
-        local achID = tonumber(op.achievementID)
-        if achID then
-            local _, _, _, completed = GetAchievementInfo(achID)
-            return completed and 1 or 0, 1
-        end
-
-    elseif ot == "reputation" then
-        local factionID = tonumber(op.factionID)
-        local reqStanding = tonumber(op.standing) or 6
-        if factionID then
-            local data = C_Reputation.GetFactionDataByID(factionID)
-            if data then
-                return data.currentStanding or 0, reqStanding
-            end
-        end
-
-    elseif ot == "renown" then
-        local factionID = tonumber(op.factionID)
-        local reqLevel = tonumber(op.level) or 1
-        if factionID then
-            local data = C_MajorFactions.GetMajorFactionData(factionID)
-            if data then
-                return data.renownLevel or 0, reqLevel
-            end
-        end
-
-    elseif ot == "spell_known" then
-        local spellID = tonumber(op.spellID)
-        if spellID then
-            if C_SpellBook.IsSpellKnown(spellID) then return 1, 1 end
-            if C_SpellBook.IsSpellInSpellBook(spellID) then return 1, 1 end
-            if op.itemID then
-                local Util = OneWoW.RecipeKnownUtil
-                if Util then
-                    local result = Util:IsRecipeKnown(tonumber(op.itemID))
-                    if result then return 1, 1 end
-                end
-            end
-            return 0, 1
-        end
-
-    elseif ot == "ilvl" then
-        local req = tonumber(op.ilvl) or 1
-        local current = select(2, GetAverageItemLevel()) or 0
-        return math.floor(current), req
-
-    elseif ot == "location" then
-        local mapID = tonumber(op.mapID)
-        if mapID then
-            local currentMap = C_Map.GetBestMapForUnit("player")
-            return (currentMap == mapID) and 1 or 0, 1
-        end
-
-    elseif ot == "coordinates" then
-        local mapID = tonumber(op.mapID)
-        local tx = tonumber(op.x)
-        local ty = tonumber(op.y)
-        local radius = tonumber(op.radius) or 15
-        if mapID and tx and ty then
-            local currentMap = C_Map.GetBestMapForUnit("player")
-            if currentMap == mapID then
-                local pos = C_Map.GetPlayerMapPosition(currentMap, "player")
-                if pos then
-                    local px, py = pos:GetXY()
-                    px = px * 100
-                    py = py * 100
-                    local dx = px - tx
-                    local dy = py - ty
-                    local dist = math.sqrt(dx * dx + dy * dy)
-                    return (dist <= radius) and 1 or 0, 1
-                end
-            end
-            return 0, 1
-        end
-
-    elseif ot == "npc_interact" then
-        return nil
-
-    elseif ot == "enter_instance" then
-        return nil
-
-    elseif ot == "kill_creature" then
-        return nil
-
-    elseif ot == "loot_item" then
-        return nil
-
-    elseif ot == "toy" then
-        -- Collection truth is owned by OneWoW.Collectibles; the engine keeps
-        -- its `current, max` contract by reading the uniform state's `.collected`.
-        local itemID = tonumber(op.itemID)
-        if itemID then
-            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("toy", itemID))
-            return (st and st.collected) and 1 or 0, 1
-        end
-
-    elseif ot == "mount" then
-        local mountID = tonumber(op.mountID)
-        if mountID then
-            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("mount", mountID))
-            return (st and st.collected) and 1 or 0, 1
-        end
-
-    elseif ot == "pet" then
-        local speciesID = tonumber(op.speciesID)
-        if speciesID then
-            -- Pet objectives complete on any copy; core's numCollected preserves the
-            -- old count-based `current` (numCollected can exceed 1).
-            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("pet", speciesID))
-            return (st and st.numCollected) or 0, 1
-        end
-
-    elseif ot == "transmog" then
-        -- itemModifiedAppearanceID == sourceID, so this routes through the
-        -- appearance:source state, which uses the IMA-aware collection API.
-        local appearanceID = tonumber(op.itemModifiedAppearanceID)
-        if appearanceID then
-            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("appearance", "source", appearanceID))
-            return (st and st.collected) and 1 or 0, 1
-        end
-
-
-    elseif ot == "exploration" then
-        local areaID = tonumber(op.areaID)
-        if areaID then
-            local mapID = C_Map.GetBestMapForUnit("player")
-            if mapID then
-                local explored = C_MapExplorationInfo.GetExploredMapTextures(mapID)
-                if explored then
-                    for _, info in ipairs(explored) do
-                        if info.textureWidth and info.textureHeight then
-                            return 1, 1
-                        end
-                    end
-                end
-            end
-            return 0, 1
-        end
-
-    elseif ot == "vault_raid" then
-        local activities = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.Raid)
-        if activities then
-            local best = 0
-            for _, act in ipairs(activities) do
-                if act.progress > best then best = act.progress end
-            end
-            local maxNeeded = activities[1] and activities[1].threshold or 1
-            return best, maxNeeded
-        end
-
-    elseif ot == "vault_dungeon" then
-        local activities = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.Activities)
-        if activities then
-            local best = 0
-            for _, act in ipairs(activities) do
-                if act.progress > best then best = act.progress end
-            end
-            local maxNeeded = activities[1] and activities[1].threshold or 1
-            return best, maxNeeded
-        end
-
-    elseif ot == "vault_world" then
-        local activities = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.World)
-        if activities then
-            local best = 0
-            for _, act in ipairs(activities) do
-                if act.progress > best then best = act.progress end
-            end
-            local maxNeeded = activities[1] and activities[1].threshold or 1
-            return best, maxNeeded
-        end
-
-    elseif ot == "prof_skill" then
-        local baseID = tonumber(op.baseSkillLineID)
-        if baseID then
-            local prof1, prof2 = GetProfessions()
-            for _, idx in ipairs({ prof1, prof2 }) do
-                if idx then
-                    local _, _, skillLevel, maxSkillLevel, _, _, skillLineID = GetProfessionInfo(idx)
-                    if skillLineID == baseID then
-                        return skillLevel or 0, maxSkillLevel or 1
-                    end
-                end
-            end
-        end
-
-    elseif ot == "prof_concentration" then
-        local currID = tonumber(op.currencyID)
-        if currID then
-            local info = C_CurrencyInfo.GetCurrencyInfo(currID)
-            if info then
-                return info.quantity or 0, info.maxQuantity or 1000
-            end
-        end
-
-    elseif ot == "prof_knowledge" then
-        local skillLineVariantID = tonumber(op.skillLineVariantID)
-        if skillLineVariantID then
-            local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineVariantID)
-            if configID then
-                local configInfo = C_Traits.GetConfigInfo(configID)
-                if configInfo and configInfo.treeIDs then
-                    local treeID = configInfo.treeIDs[1]
-                    if treeID then
-                        local nodes = C_Traits.GetTreeNodes(treeID)
-                        local totalSpent = 0
-                        if nodes then
-                            for _, nodeID in ipairs(nodes) do
-                                local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID)
-                                if nodeInfo and nodeInfo.currentRank then
-                                    totalSpent = totalSpent + nodeInfo.currentRank
-                                end
-                            end
-                        end
-                        local currencyInfo = C_Traits.GetTreeCurrencyInfo(configID, treeID, false)
-                        local unspent = 0
-                        if currencyInfo then
-                            for _, ci in ipairs(currencyInfo) do
-                                unspent = unspent + (ci.quantity or 0)
-                            end
-                        end
-                        return totalSpent + unspent, 0
-                    end
-                end
-            end
-        end
-
-    elseif ot == "prof_firstcraft" then
-        local spellIDs = op.spellIDs or (op.spellID and { op.spellID }) or {}
-        local done = 0
-        for _, sid in ipairs(spellIDs) do
-            sid = tonumber(sid)
-            if sid and C_TradeSkillUI.IsRecipeFirstCraft(sid) == false then
-                done = done + 1
-            end
-        end
-        return done, #spellIDs
-
-    elseif ot == "prof_catchup" then
-        local currID = tonumber(op.currencyID)
-        if currID then
-            local info = C_CurrencyInfo.GetCurrencyInfo(currID)
-            if info then
-                local max = info.maxQuantity or 0
-                if max > 0 then
-                    return info.quantity or 0, max
-                end
-                return info.quantity or 0, 0
-            end
-        end
-
-    elseif ot == "campaign" then
-        local campaignID = tonumber(op.campaignID)
-        if campaignID then
-            local info = C_CampaignInfo.GetCampaignInfo(campaignID)
-            if info then
-                if info.complete then return 1, 1 end
-                local chapters = C_CampaignInfo.GetChapterIDs(campaignID)
-                if chapters then
-                    local done = 0
-                    for _, chapterID in ipairs(chapters) do
-                        local chapterInfo = C_CampaignInfo.GetCampaignChapterInfo(chapterID)
-                        if chapterInfo and chapterInfo.completed then
-                            done = done + 1
-                        end
-                    end
-                    return done, #chapters
-                end
-            end
-        end
-
-    elseif ot == "custom_timer" then
-        return nil
-    end
-
-    return nil
+    return ns.TrackerEvaluators.Evaluate(obj)
 end
 
 function TE:EvaluateStep(listID, sectionKey, step)
@@ -635,17 +247,23 @@ function TE:EvaluateStep(listID, sectionKey, step)
         sp.completed = allComplete
         sp.current = allComplete and 1 or 0
     else
-        local current = self:EvaluateObjective({
+        local current, goal = self:EvaluateObjective({
             type = step.trackType,
             params = step.trackParams or {},
         })
 
+        local effectiveMax = 0
+        if not step.noMax then
+            if goal ~= nil then
+                effectiveMax = goal
+            else
+                effectiveMax = step.max or 1
+            end
+        end
+
         if step.rosterMode then
-            if current ~= nil then
-                local effectiveMax = step.noMax and 0 or (step.max or 1)
-                if effectiveMax > 0 and current >= effectiveMax then
-                    TD:RecordRosterCompletion(listID, step.key)
-                end
+            if current ~= nil and effectiveMax > 0 and current >= effectiveMax then
+                TD:RecordRosterCompletion(listID, step.key)
             end
             return
         end
@@ -653,7 +271,7 @@ function TE:EvaluateStep(listID, sectionKey, step)
         if current ~= nil then
             local sp = TD:GetStepProgress(listID, sectionKey, step.key)
             sp.current = current
-            local effectiveMax = step.noMax and 0 or (step.max or 1)
+            if step.noMax then return end
             if effectiveMax > 0 and current >= effectiveMax then
                 if not sp.completed then sp.lastCompleted = time() end
                 sp.completed = true
@@ -672,7 +290,7 @@ function TE:FullScan()
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
-        if list.pinned then
+        if IsListObserved(listID, list) then
             self:EvaluateList(listID)
         end
     end
@@ -860,6 +478,7 @@ local function OnEvent(_, event, ...)
         end
 
     elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
+        calendarKnown = true
         lastEventCheck = 0
         DeferScan(1.0)
 
@@ -1080,17 +699,13 @@ function TE:BuildStepTooltip(tooltip, listID, sectionKey, step)
             tostring(#completers), 0.5, 0.5, 0.5, 1, 1, 1)
     end
 
-    if tt ~= "manual" then
-        local current, max = self:EvaluateObjective({
-            type = tt,
-            params = step.trackParams or {},
-        })
-        if current then
-            tooltip:AddDoubleLine("Current:", format("%d / %s", current, max and tostring(max) or "?"), 0.5, 0.5, 0.5, 1, 1, 1)
+    local sp = TD:GetStepProgress(listID, sectionKey, step.key)
+    if not step.rosterMode then
+        local progressStr = ns.TrackerEvaluators.FormatStepProgress(step, sp)
+        if progressStr ~= "" then
+            tooltip:AddDoubleLine("Current:", progressStr, 0.5, 0.5, 0.5, 1, 1, 1)
         end
     end
-
-    local sp = TD:GetStepProgress(listID, sectionKey, step.key)
     if sp.completed then
         tooltip:AddLine("Status: Complete", 0.4, 0.8, 0.4)
     else

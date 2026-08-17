@@ -38,6 +38,14 @@ Locales\itIT.lua
 Core\Database.lua
 Core\API.lua
 Core\TrackerData.lua
+Core\Evaluators\Registry.lua
+Core\Evaluators\Quest.lua
+Core\Evaluators\Currency.lua
+Core\Evaluators\Collection.lua
+Core\Evaluators\Profession.lua
+Core\Evaluators\Vault.lua
+Core\Evaluators\Character.lua
+Core\Evaluators\Location.lua
 Core\TrackerEngine.lua
 Core\TrackerPresets.lua
 Core\TrackerMap.lua
@@ -46,7 +54,6 @@ Core\TrackerMap.lua
 OneWoW_Trackers.lua
 
 # UI
-UI\Framework.lua
 UI\t-tracker.lua
 UI\ui-tracker-editor.lua
 UI\ui-tracker-pinned.lua

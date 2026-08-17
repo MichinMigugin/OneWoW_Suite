@@ -438,7 +438,11 @@ function ns.UI.CreateTrackerTab(parent)
         ClearDetail()
 
         local list = TD:GetList(listID)
-        if not list then return end
+        if not list then
+            TE:SetObservedList(nil)
+            return
+        end
+        TE:SetObservedList(listID)
 
         if not list.pinned then
             TE:EvaluateList(listID)
@@ -560,6 +564,7 @@ function ns.UI.CreateTrackerTab(parent)
             TE:DestroyPinnedWindow(list.id)
             TD:RemoveList(list.id)
             selectedListID = nil
+            TE:SetObservedList(nil)
             ClearDetail()
             parent.RefreshList()
         end)
@@ -797,18 +802,8 @@ function ns.UI.CreateTrackerTab(parent)
                     stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
 
-                local progressStr = ""
-                if rosterCompleters then
-                    progressStr = tostring(#rosterCompleters)
-                elseif step.trackType ~= "manual" or (step.max and step.max > 1) then
-                    local current = sp.current or 0
-                    local max = step.noMax and 0 or (step.max or 1)
-                    if max > 0 then
-                        progressStr = format("%d/%d", current, max)
-                    elseif current > 0 then
-                        progressStr = tostring(current)
-                    end
-                end
+                local progressStr = ns.TrackerEvaluators.FormatStepProgress(
+                    step, sp, rosterCompleters and #rosterCompleters or nil)
 
                 local stepProgress = OneWoW_GUI:CreateFS(stepRow, 10)
                 stepProgress:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -60, -8)

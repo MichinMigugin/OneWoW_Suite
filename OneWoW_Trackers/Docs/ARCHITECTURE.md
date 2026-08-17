@@ -1,6 +1,7 @@
 # OneWoW_Trackers — Architecture
 
-> **See also:** [Docs index](../README.md) · [Suite architecture](../../OneWoW/Docs/ARCHITECTURE.md)
+> **See also:** [Docs index](../README.md) · [Suite architecture](../../OneWoW/Docs/ARCHITECTURE.md) ·
+> [TRACKERS_IDEAS.md](TRACKERS_IDEAS.md) (direction parking lot, not committed scope)
 
 ## Overview
 
@@ -21,6 +22,7 @@ OneWoW_Trackers.lua          — thin lifecycle root, hub registration
 Core/Database.lua            — schema, init bridges (incl. legacy Notes SV drain)
 Core/API.lua                 — OneWoW_Trackers_API (cross-unit surface)
 Core/TrackerData.lua         — list/section/step model, import/export
+Core/Evaluators/             — live step evaluation by family (registry first)
 Core/TrackerEngine.lua       — event engine, auto-complete, pinned lifecycle
 Core/TrackerPresets.lua      — bundled presets and examples
 Core/TrackerMap.lua          — world-map pin provider
@@ -30,8 +32,18 @@ UI/ui-tracker-editor.lua     — create/edit dialogs
 UI/ui-tracker-pinned.lua     — pinned overlay windows
 UI/ui-tracker-map.lua        — map integration hooks
 UI/ui-tracker-farmvalue.lua  — farm value tab UI
-UI/Framework.lua             — shared UI helpers
 ```
+
+## Progress contract
+
+`ns.TrackerEvaluators.Evaluate(obj) -> current, goal | nil` is the source of truth for live step types (currency, item, quest, level, ilvl, reputation, renown, collections, professions, vault, location). Hub rows, pinned rows, tooltips, and auto-complete all use that pair.
+
+- **Live types:** complete when `goal > 0` and `current >= goal`. Display `current/goal`.
+- **`step.noMax`:** show quantity only; do not auto-complete from a comparison.
+- **`nil` (unregistered):** session/manual types (kill, loot, enter instance, NPC, custom timer). The engine uses session bumps and `step.max`.
+- **`step.max`:** not the live target. The editor may copy `amount` / `level` / `ilvl` / `standing` onto `max` for export symmetry only.
+
+`FullScan` and event indices cover **pinned lists plus the hub-selected list** (`TE:SetObservedList`). Calendar-gated sections fail open until `CALENDAR_UPDATE_EVENT_LIST` has fired, then hide when the event is known-inactive.
 
 ## Lifecycle
 

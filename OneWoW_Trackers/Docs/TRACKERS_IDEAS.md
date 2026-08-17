@@ -1,0 +1,332 @@
+# Trackers — Ideas & Direction (scratch)
+
+> **Status:** design notes, **not committed scope**. Parking lot for Trackers-specific
+> direction so collectibles and AltTracker2 ideas stay in their own docs. Promote
+> items into [`ARCHITECTURE.md`](ARCHITECTURE.md) as they land.
+>
+> **See also:**
+> - [`ARCHITECTURE.md`](ARCHITECTURE.md) (shipped Trackers design)
+> - [`COLLECTIBLES.md`](../../OneWoW/Docs/COLLECTIBLES.md) (LOD: identity vs plans)
+> - [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) (want list, keys, temporal)
+> - [`AltTracker2/Docs/IDEAS.md`](../../OneWoW_AltTracker2/Docs/IDEAS.md) (roster Ask / lockouts)
+> - [`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md) (Catalog Journal + DB2 membership)
+
+## The three legs
+
+These products share keys, lockouts, and alts; they do not share ownership.
+
+| Leg | Owns | Does not own |
+| --- | --- | --- |
+| **`OneWoW.Collectibles` + Notes** | Identity (`type:id` keys), live collected?, user want/intent, vendor sightings | Executable steps, route order |
+| **`OneWoW_Trackers`** | Lists / sections / steps, auto-complete, pinned overlays, map pins | Collection truth, per-alt SavedVariables, “what don’t I have” |
+| **AltTracker / AltTracker2** | Per-alt snapshots (quests, lockouts, currencies, professions), Ask the roster | Farm routes, collectible records |
+
+**Instance / encounter / loot listing is not a fourth leg.** Catalog (`OneWoW_Catalog` Journal tab) is the EJ interface; `OneWoW_CatalogData_Journal` is the store (`OneWoW_CatalogData_Journal_API`); listing and valid difficulties come from Generated Lua mined from `.wow_db2` (`JournalTierXInstance`, `MapDifficulty`, `JournalEncounter` → `DungeonEncounter`). QoL already consumes `GetInstanceByMapID` for toasts / ESC. Trackers and Collectibles **read those IDs**; they do not overlay Blizzard’s Encounter Journal or ship a parallel instance encyclopedia.
+
+A `farming`-intent collectible in Notes should **hand a key to Trackers**, not grow a farm engine. Trackers already is “executable plans.” The remaining work is the handoff contract, skip/prune against live game state, and a few step types — not a second addon.
+
+---
+
+## What already ships (reuse first)
+
+Do not invent parallel track types. The engine already evaluates:
+
+| Need | Already exists |
+| --- | --- |
+| Collection truth for mount / pet / toy / appearance | `TrackerEngine` → `OneWoW.Collectibles.GetCollectionState` + `BuildKey` |
+| Hidden daily/weekly rare lock | `rare_quest` (`C_QuestLog.IsQuestFlaggedCompleted`) |
+| Account-wide quest flag | `quest_account` |
+| “N of these quests” | `quest_pool` / `quest_pool_account` |
+| Kill / loot / talk / enter instance | `kill_creature`, `loot_item`, `npc_interact`, `enter_instance` |
+| Map pin on a step | `mapID` + `coordX`/`coordY` + `TrackerMap` |
+| Step gating | `requiresSteps`, `professionRequired`, `eventRequired` (calendar `eventID`) |
+| Per-alt “who has done this step” | `rosterMode` (current char stamped into an account roster) |
+| Collectible-shaped preset | Dusting for Moths (`TrackerPresets` — `quest_account` + coords + renown gates) |
+| Hide completed (list + pinned) | `hideCompleted` / `pinnedHideCompleted` |
+| Interval timer step | `custom_timer` |
+| Instance / map / difficulty identity | `OneWoW_CatalogData_Journal_API` (`GetInstanceByMapID`, live EJ merge); Generated `JournalMapDifficulties` / `JournalInstanceMeta` |
+| Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins. Trackers **does not** use it |
+
+**Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. `eventRequired` is **fail-closed**: an empty calendar (`GetNumDayEvents == 0`) hides the step. Lockouts are not consulted. There is no “set instance difficulty” step.
+
+**Gaps vs the rest of the suite UI:** the engine and pin overlay are usable; the hub **Tracker** tab is a mid-modernization authoring surface (see Hub tab UI below). Notes handoff lands in that tab.
+
+---
+
+## Hub tab UI (audit)
+
+Three layers, not one screen: **data** (`TrackerData` — lists → sections → steps), **engine** (`TrackerEngine` — evaluate, pins, map), **UI** (hub tab author / browse, editor dialogs, pinned overlay, farm value). `/1wt` opens the hub tab. `_API` today is show/hide + weekly-reset region.
+
+**Chrome uses `OneWoW_GUI`. Rows and reorder do not.**
+
+| Uses the toolkit | Rolls its own |
+| --- | --- |
+| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Left-rail list rows and detail section/step rows: raw `CreateFrame("Button", …, "BackdropTemplate")`, not `CreateCard` / `CreateCardStack` |
+| Theme / language callbacks on the lifecycle root | Homemade drag: ghost frame + `OnUpdate` hit-test + drop line → `TD:ReorderSection` / `ReorderStep`. Suite pattern is `CreateReorderDrag` |
+| Pinned overlay: `CreateFrame` + `CreateFS` + pooled rows (reasonable for a float) | Farm value: one `UIPanelScrollFrameTemplate` instead of `CreateScrollFrame` |
+| | Every `ShowDetail` destroys and rebuilds the whole tree (no virtualizer) |
+
+**Leftover up/down (preceded drag):** section headers still have `^` / `v` `CreateFitTextButton`s calling `TD:MoveSection(..., "up"|"down")`. Steps dropped visible arrows but keep **Move Up / Move Down** in the right-click `MenuUtil` menu (`TD:MoveStep`). Two reorder systems, both live. `MoveSection` / `MoveStep` stay as data helpers; they should not be chrome.
+
+**Off-policy chrome on those headers:** ASCII glyphs as icons (`^`, `v`, `X`, `+`) and hardcoded English `"Edit"` (use `EDIT` / `L[]` and textures, not font glyphs).
+
+The pin overlay is the play surface and is in better shape than the hub editor. Do not rebuild pinned as part of this pass.
+
+---
+
+## Where to start
+
+Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on the current authoring tab.
+
+**Slice 0 — hub tab GUI-first (§0).** Chrome already suite-shaped; finish the rows. Drop section `^`/`v` (and step-menu move once drag is trusted), switch detail reorder to `CreateReorderDrag`, replace BackdropTemplate snowflakes with cards / shared rows, fix glyphs and `"Edit"`. `UI/Framework.lua` is gone. Not a new product — the surface every later idea sits on.
+
+**Slice 0b — calendar fail-open (§4).** Shipped: event-gated steps stay visible until `CALENDAR_UPDATE_EVENT_LIST`.
+
+**Slice 1 — collectible-key handoff (§1).** After the tab is a place you’d want to land. `EnsureCollectiblePlan(key)` / `ShowCollectiblePlan(key)` on `OneWoW_Trackers_API`, `BringUp("OneWoW_Trackers")` from Notes. v1 = list id is the key plus one collection step. **Decide first:** explicit “Track this” vs auto-spawn on `farming` (explicit is the safer v1).
+
+**Slice 2 — lockout skip for the logged-in character (§3).** Consume Endgame lockouts `_API`. Other alts stay Ask on AltTracker2.
+
+**Notes-only parallel (does not need Trackers):** Easy Wins sort of the want list from `vendorOffers` + affordability.
+
+**Not yet:** RS/SD subscribe, encounter steps (Journal `_API` is ready; kill-credit is not), Trading Post checklist, detach-section, account rollup, chore-preset refresh, AT2 Ops matrix.
+
+---
+
+## Ideas
+
+### 0. Hub tab GUI-first pass
+
+Finish the authoring tab so it matches bags / hub pins. Engine and pinned overlay stay.
+
+- **Reuse:** `CreateReorderDrag`, `CreateCard` / `CreateCardStack` (or the same dense-row pattern other hub lists use), `CreateDropdown` / `CreateDialog` directly, `EDIT` / `L[]`, textures instead of `^` `v` `X` `+`.
+- **Build:** one reorder path (drag). Keep `MoveSection` / `MoveStep` as data if drag calls them, but remove section header arrows and the step-menu Move Up/Down once drag is trusted. Stop full-rebuild if a later pass needs it (virtualizer is optional; correctness of reorder + chrome is the slice).
+- **Do not** restyle the pinned overlay or invent a second Trackers product in this pass.
+
+### 1. Collectible-key handoff
+
+Notes `farming` (and maybe `want` with a “make a plan” action) should `BringUp("OneWoW_Trackers")` and upsert or focus a list whose stable id is the collectible key (`mount:2240`, …).
+
+- **Reuse:** existing list/section/step model; collection steps already speak Collectibles keys.
+- **Build:** a thin `_API` (`EnsureCollectiblePlan(key)` / `ShowCollectiblePlan(key)`). Do not duplicate the want record. When the key becomes collected, the plan can auto-complete the collection step and/or prompt archive — collection truth stays live in core.
+- **Contract lives here;** Notes only stores the key + intent. Detail: [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) §1.
+
+### 2. Acquisition `taskList` → existing step types
+
+Collectionist-style rows are a checklist of live-evaluable gates (quest, achievement criteria, item count, species, waypoint), not source-text. Map that onto types we already have; click the **first incomplete** step (they already do this).
+
+| Their gate | Our step |
+| --- | --- |
+| quest / tracking quest | `quest` / `rare_quest` / `quest_account` |
+| achievement / criteriaID | `achievement` |
+| itemCount | `item` / `loot_item` |
+| speciesID / mountID / toy | `pet` / `mount` / `toy` |
+| coords | `coordinates` + map pin |
+| renown / currency cost | `renown` / `currency` |
+| ordered prereqs | `requiresSteps` |
+
+Do **not** own Collectionist’s Midnight encyclopedia. A plan’s steps are either user-authored, a bundled preset (moths), or a small curated map hanging off a key — same maintenance shape collectibles already accepted for daily-lock quests.
+
+### 3. Remaining-attempt / lockout skip
+
+FuocoNote / ICH / BountyHelper / MRP all answer “is this still lootable this reset?” from `GetSavedInstance*` (and shared 10/25 diffs). We already store lockouts in AltTracker_Endgame.
+
+- **Build:** when a step names `enter_instance` / `kill_creature` (or a future encounter id), evaluate lockout and **skip or dim** — do not invent an attempt ledger. “Tried this week” is lockout + `rare_quest`, not a custom counter.
+- **Roster read:** other alts’ lockouts / completed-quest snapshots are AltTracker data (freshness = last seen). Ask-the-roster UX belongs on AltTracker2; Trackers can consume `_API` for the logged-in char first.
+- Collectibles-side framing: [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) §2 / §8.
+
+### 4. Calendar fail-open
+
+`eventRequired` already hides holiday / timewalking steps. FuocoNote’s rule: if the calendar has not arrived (`GetNumDayEvents == 0`), **keep the step visible**. Hiding a TW vendor farm because the calendar is empty looks like the addon lied.
+
+- **Build:** distinguish “calendar unknown” vs “event known inactive.” Unknown → show; inactive → hide. Open calendar once on login if we need a real answer (they do). Ties to the collectibles temporal service; the step gate is Trackers’ consumer.
+
+### 5. Difficulty as an action
+
+ICH’s product is one-click `SetDungeonDifficultyID` / `SetRaidDifficultyID` / `SetLegacyRaidDifficultyID` from the collectible row, disabled when owned or lockout-complete.
+
+- **Build:** a step type (or step action) “set difficulty D.” Gate with `OneWoW.Restriction` (protected / restricted as appropriate) — never raw `InCombatLockdown`. Not a Notes control.
+
+### 6. Adaptive prune (World Tour / MRP skip)
+
+ICH World Tour and MRP prune stops when nothing left is lootable (owned **or** lockout-blocked). Trackers already has ordered steps and hide-completed.
+
+- **Build:** evaluate collected (Collectibles) + lockout (#3) + calendar (#4) and skip. That is “smart route” without owning MRP pathfinding, travel-item graphs, or a continent nearest-neighbor solver.
+- Bundled “world tour” presets are data, like moths — optional, expansion-scoped, not a new list type unless `guide` is insufficient.
+
+### 7. In-instance remaining strip
+
+ICH’s mini-window: current map + current difficulty → remaining collectibles for this run, desaturate if the encounter is done.
+
+- **Reuse:** `GetInstanceByMapID` (same path as QoL instance toasts) + Generated difficulties. Activity UI stays Catalog Journal.
+- **Build:** a pinned list (or a filter on the current plan) scoped to that `instanceID` / current difficulty. The thin key → `{ instanceID, encounterID, difficultyIDs }` map is a collectibles product decision ([`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) §11); Trackers does not grow a loot encyclopedia.
+
+### 8. Rare packs as a set of `rare_quest`s
+
+FuocoNote models a multi-rare farm as **one row done when every NPC’s weekly quest is flagged**. `rare_quest` + `questIDs` / a section of steps already covers this. The curated collectible → hidden-quest map lives with collectibles; Trackers just evaluates the flags.
+
+### 9. RareScanner / SilverDragon — consume alerts, don’t scan
+
+When they pop a rare, we already know how to answer “do I still need anything from this NPC?” and “is today’s loot lock burned?” Scanning vignettes ourselves stays out of scope ([`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) out-of-scope). This is a **subscriber**.
+
+**SilverDragon is the first-class hook.** AceAddon + CallbackHandler on the `SilverDragon` global, documented for other addons (`SilverDragon.NAMESPACE = ns`). Subscribe after `RegisterAddonLoadedWatcher("SilverDragon", …)` (idempotent). Prefer **`Announce`** (post-filter: they already dropped ignored / dead / “nothing notable”) over raw **`Seen`**. Payload: `id` (npcID), `zone`, `x`, `y`, `is_dead`, `source`, `unit`, GUID, vignetteGUID. Loot tables and quest ids live on `SilverDragon.NAMESPACE` (`Loot.GetLootTable(id)`, `mobdb[id].quest`). `MobIsNotable` is their filter, not our collection truth — re-resolve itemIDs through `OneWoW.Collectibles.ResolveKeyFromItem` + `GetCollectionState`.
+
+**RareScanner is second-class.** No public callback bus. Alerts funnel through `scanner_button:SimulateRareFound` on the named frame `RARESCANNER_BUTTON`. A `hooksecurefunc` there is the least-bad adapter; treat it as fragile. Loot / killed state (`RSNpcDB`) is an internal lib — do **not** read their SavedVariables. If both addons are loaded, debounce on `npcID` so we fire once.
+
+**Two settings, same vocabulary as vendor capture — do not share the vendor dropdown.**
+
+Vendor capture is `off | prompt | auto` on a merchant scan (you walked up; items are actually for sale; dialog is `"Add %d vendor collectible(s) to your want list?"`). A rare pop is ambient, often in combat, and the loot table is *possible* drops, not a shop. Reuse the **pattern**, not the same SavedVariables key (`collectibleCaptureMode` default `off`).
+
+| Concern | Setting | Default |
+| --- | --- | --- |
+| Pin / toast when a rare is up | `off` / `alert` / `auto-pin` | off until they opt into RS/SD |
+| Missing loot **not** on the want list | `off` / `prompt` / `auto` (Notes capture) | **prompt** (same three-way as vendors) |
+
+**Pin/alert** only needs a reason to care: at least one **wanted** key drops here, or the player just accepted a capture prompt. If everything on the table is already collected or already on the want list, no capture dialog (idempotent, same as `HasVendorOffer` skipping a known vendor).
+
+**Capture prompt** (the vendor analog): when the rare has uncollected collectibles that are **not** yet Notes records, StaticPopup `"Add %d collectible(s) from [Rare] to your want list?"` YES = upsert `want` (and then pin). NO = ignore this npcID until it pops again with *new* keys (or a session “don’t ask again for this rare”). Guard `StaticPopup_Visible` so RS+SD debounce plus re-alerts do not stack. **Defer while `OneWoW.Restriction.IsInCombat()`** — vendor dialogs happen at a merchant; rare dialogs otherwise fight the kill.
+
+**Do not default `auto`.** A Midnight rare with a dozen appearances would dump the want list the way vendor-auto does for a transmog vendor, without the player having chosen to shop. Prompt is the honest default; auto is for collectors who already live on vendor-auto and want the same for rares.
+
+**Add-all is correct for the prompt** (vendor does the same). Picking per-item on a combat rare is more UI than the StaticPopup is worth; they can delete from Notes after. Optional later: type filter on capture (mount/pet/toy only vs appearances) if auto/prompt feels loud.
+
+Want-list-only vs “any missing” is then just capture `off` (pin only if already wanted) vs `prompt`/`auto`. No fourth enum.
+
+**Ephemeral tracker shape:**
+
+- Header: rare **portrait** (`PlayerModel` / `ModelScene:SetCreature(npcID)` — display only, not wardrobe preview; not a Restriction issue) + name. Same idea as RareScanner’s miniature / SilverDragon’s popup model, on *our* pin.
+- Body: missing collectible rows (`mount` / `pet` / `toy` / `transmog` steps we already evaluate). Hide or check off owned.
+- Status line: **loot lock** from hidden tracking quest (`rare_quest` / Collections `IsQuestCompleted`) — “already killed today, no special loot.” Do **not** invent a kill ledger or copy RareScanner’s `rares_killed` table. Session `kill_creature` on the open pin can bump “you just killed it”; daily truth stays the quest flag. Other alts: AltTracker snapshot (freshness = last seen).
+- Dedup: one pin per `npcID`; refresh if the same rare re-alerts. Dismiss / leave range / all collected / lock burned → drop the pin. Optional “save as list” later.
+
+**Load:** `RegisterAddonLoadedWatcher("SilverDragon" / "RareScanner", …)` — they load on their own; we subscribe. Do not TOC-`OptionalDeps` them (that would `LoadAddOn` them with Trackers). Never RequiredDeps. Suite-internal units never go in `OptionalDeps`; the loader owns that.
+
+**Loot source policy:** consume SD (and later a thin curated `npcID → collectible keys` if we outgrow them). Filter through Collectibles keys. Do not maintain a parallel rare-loot encyclopedia.
+
+---
+
+## Weekly / chore addon pass (`_OneWoW_Offline/Trackers/`)
+
+Four addons, mostly “remember your weeklies.” We already ship that as `weekly` lists + presets (Great Vault, Midnight weeklies, Prey, renown, moths). Steal **framing and a few step kinds**, not a second chore encyclopedia or a roster spreadsheet.
+
+| Addon | What it actually is | Overlap |
+| --- | --- | --- |
+| **MidnightRoutine** | Live-scanned Midnight module dashboard + warband board + detachable panels | Presets + `rosterMode`; warband matrix is AltTracker2 |
+| **ChoreTracker** | Declarative expansion-pack chores + interval world-event timers | `quest_pool`, `eventRequired`, hide-completed |
+| **WeeklyRewards** | Multi-character weekly *rewards* matrix + loot attribution | AltTracker2 Ops; loot→step is Trackers-shaped |
+| **MidnightHelper** (tracker slice only) | Season ops hub: reset routine, account rollups, Trading Post, nudges | Planning UX; skip combat/keybinds/guides |
+
+### 10. Rotating pools and “what’s live this week”
+
+ChoreTracker `pick = N` and WeeklyRewards `maxCompletion` / `pick` / `rollover` are the same object as `quest_pool`. MidnightRoutine computes vault buckets and Prey hunt counts live.
+
+- **Build:** keep `quest_pool`; refresh **preset content** (Spark, Special Assignment pick-2, Prey ID ranges, Void assaults) from these DBs instead of owning a forever DF→Midnight chore corpus.
+- World-boss **rotation** (Routine `WORLD_BOSS_ROTATION`, Helper `WorldBoss.lua`) is “active now / next,” not a static quest id — a preset that swaps the live id, not a new list type.
+
+### 11. Interval world events + map POI (not rares)
+
+ChoreTracker `Data/Timers/*.lua`: `interval`, `duration`, `offset` from weekly reset, optional `uiMapId` + `areaPois` (Curse Surge sites). Theater Troupe / Nightfall / Beledar-style clocks.
+
+- **Reuse:** `custom_timer` + `eventRequired` + `TrackerMap`.
+- **Build:** a timer step that can bind **AreaPOI ids** so the pin follows the live site this week. Still not a vignette scanner (§9).
+
+### 12. Encounter-linked steps (Catalog / Journal, not an EJ overlay)
+
+MidnightRoutine’s *idea* is right: a weekly can complete on EJ `encounterIds` + difficulty, not only a quest flag. Their *authoring* is wrong for us — they overlay Blizzard’s Encounter Journal (`UI/EncounterJournalOverlay.lua`). We already have that interface: Catalog Journal + `OneWoW_CatalogData_Journal`.
+
+- **Reuse:** `instanceID` / `encounterID` from the Journal store; valid diffs from Generated `JournalMapDifficulties` (DB2 `MapDifficulty`); combat bridge `JournalEncounter.DungeonEncounterID` → `DungeonEncounter` when a step needs kill credit. Authoring pattern is ShoppingList’s Catalog tradeskill hook: pick a row in Catalog, emit a Trackers step — `RegisterAddonLoadedWatcher("OneWoW_Catalog", …)`, not a FrameXML overlay.
+- **Build:** step params `{ instanceID, encounterID, difficultyID }` so “kill X on H this week” auto-completes (lockout skip is §3). Consume `OneWoW_CatalogData_Journal_API` the suite way: `RegisterAddonLoadedWatcher` / data-ready for sticky UI, `EnsureLoaded` / `WithAddon` only on an explicit “pick from Journal” action, call-time `_API` for one-shot reads. Never `## OptionalDeps: OneWoW_*` (Blizzard would auto-load and skip soft opt-out). Difficulty *action* (`SetDungeonDifficultyID` …) stays §5.
+- **Do not** clone Routine’s EJ overlay, walk ATT instance files for membership, or hand-maintain a boss list Trackers-side. Listing truth stays Generated + live EJ merge ([`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md)).
+
+### 13. Detach a section, not a second product
+
+Routine `DetachedWindows`: one module → its own floating window (size/pos). We already pin whole lists.
+
+- **Build:** “detach this section” as a complement to pin-the-list (vault pips on one float, Prey on another) without cloning Routine’s warband board.
+
+### 14. Reset routine as an ordered weekly list
+
+MidnightHelper `ResetRoutine`: post-reset pickup order (vault → hub → trainers), **omit a step if the signal is unverified** (“never lie”). VaultReminder is a reset-day *nudge*, not scoring.
+
+- **Build:** a bundled weekly list with hide-when-unknown (same honesty as calendar fail-open §4). Optional map-pin sequence. Claim-nudge can be a dismissable card on the pinned list, not login spam.
+- **Do not** steal VaultAdvisor / Pawn / AltOverview — AltTracker2.
+
+### 15. Account rollup strip (thin)
+
+Helper `AccountWeeklyChecklist`: “N alts still need SA / Trove.” WeeklyRewards is the full char×column spreadsheet.
+
+- **Build:** one summary row on a weekly list (`rosterMode` already stamps who did a step). Click-through to AltTracker2 Ask is enough. Do **not** rebuild WeeklyRewards as Trackers UI.
+
+### 16. Trading Post month checklist
+
+Helper `TradingPost`: cache Perks wares after the player opens the post once; Tender + owned/purchased. Collectibles already named TP as a faucet.
+
+- **Build:** account-wide monthly list from `C_PerksProgram` (live after one open — no static DB). Wishlist / afford / owned as steps. Identity of a ware that is a collectible still hangs on the Collectibles key.
+
+### 17. Holiday packs + never-lie profession weeklies
+
+Routine/ChoreTracker/WeeklyRewards all ship Darkmoon / Timewalking / bonus-event quest tables gated on calendar. Helper `ProfessionNextStep` only shows **unspent KP + verified trainer quests** — no fake knowledge fractions.
+
+- **Reuse:** `eventRequired` (§4 fail-open), `prof_knowledge` / `prof_concentration`.
+- **Build:** holiday **preset packs** (enable when the event is known active). Profession plans stay verified-id only; the full knowledge-treasure map is optional curated data, not a Trackers encyclopedia.
+
+### 18. Narrow loot-attribution (optional)
+
+WeeklyRewards `SelectableLootScanner` / `AtomicContainerLootScanner` credit a weekly when a specific item/currency drops (container toast, world loot).
+
+- **Build only if a preset needs it** (delve map, KP treasure). `loot_item` already exists; wire toast/container if evaluation is blind today. Not a general loot logger.
+
+### 19. No-quest weeklies: omit, don’t invent a ledger
+
+Helper’s Gilded Stash has **no live API**; they infer progress from a Delve Log of T11+ bountiful runs. Trovehunter’s Bounty, by contrast, is a real quest flag (`86371`).
+
+- **Reuse:** `quest` / `rare_quest` whenever Blizzard flags it.
+- **Build:** same honesty as ResetRoutine and calendar fail-open — if we cannot read a Blizzard signal (quest, currency cap, `C_UIWidgetManager` widget), **omit the step**. Do not copy the inferred-run ledger. A widget-backed step type is discuss-first if a preset actually needs it.
+
+### Skip from this set
+
+| Skip | Owner |
+| --- | --- |
+| Warband / concentration / currency matrix | AltTracker2 |
+| Combat coaches, keybinds, layouts, dungeon live tips | MidnightHelper-as-guide, not us |
+| Forever-porting DF/TWW chore files | Consume IDs into thin Midnight presets |
+| AJ auto-accept of chores | Opt-in at most; suite prefers explicit action |
+| WeeklyRewards spreadsheet as hub UI | Lists + pins stay the product |
+| MidnightRoutine Encounter Journal overlay | Catalog Journal tab + Journal `_API` / DB2 Generated |
+
+---
+
+## Out of scope (integrate, don’t build)
+
+- **Owning a drop-rate / instance-loot encyclopedia** (Collection Log packs, FuocoNote `droplist`, BountyHelper chances, MRP’s external data addon). Consume a source if a preset needs it; do not maintain the corpus.
+- **Pathfinding / travel-item routing** (MRP). Pins + skip are enough.
+- **TomTom as a RequiredDep.** Blizzard waypoint + `TrackerMap` already exist. If we ever subscribe, use a loaded-watcher — do not TOC-OptionalDep it to pull it in with Trackers.
+- **Rare spawn scanning.** Subscribe to RareScanner / SilverDragon alerts (§9); do not register `VIGNETTE_*` ourselves to discover rares.
+- **AH buy flows** (Collectionator). Farm value pricing stays the only AH touch.
+- **Guild / BNet missing-item bitmaps** (Collectionist Roster). AltTracker2 already declined cross-account sharing.
+- **Rebuilding Blizzard Collections** as a Trackers UI.
+
+---
+
+## Open questions
+
+- Hub list rows (§0): `CreateCard` vs a shared dense-row (left rail is 56px with icon + progress — cards may be heavy)?
+- Handoff: auto-spawn a plan on `farming` intent, or only on an explicit “Track this” action?
+- One list per key vs one “Collectibles” list with sections per key?
+- Shared temporal-availability helper in core (`OneWoW.Collectibles` or a sibling service) vs Trackers-local lockout/calendar checks that Notes also wants to read?
+- `SetDifficulty` step vs a button on `enter_instance` steps only?
+- Instance→collectible map: curated keys on Collectibles, listing/IDs from Journal — Trackers only stores step ids?
+- Rare alerts (§9): default pin mode Off / Alert / Auto-pin?
+- Rare capture: share vendor `off|prompt|auto` UI chrome but a **separate** SV key (recommended) vs one global capture mode?
+- Rare alerts: NPCs only, or also SilverDragon `AnnounceLoot` / RareScanner containers?
+- Weekly presets: consume Routine/ChoreTracker/WeeklyRewards Midnight IDs as data, or keep hand-maintained `TrackerPresets` only?
+- Detach-section (§13) vs pin-the-whole-list — worth a second window type?
+
+---
+
+## Competitive set (offline)
+
+`_OneWoW_Offline/Collecting/` — Collectionist (`taskList`, waypoints), InstanceCollectionHelper (difficulty, World Tour), FuocoNote (weekly remaining, rare-quest packs, calendar), Mount Route Planner (skip collected/lockout — steal prune, not pathfinding), Collection Log (instance-first log — collectibles product decision, not a Trackers rewrite), BountyHelper (lockout companion).
+
+Rare alert hosts (offline root): `SilverDragon/` (CallbackHandler `Announce` / `NAMESPACE` loot), `RareScanner/` (named-button funnel, no public bus).
+
+`_OneWoW_Offline/Trackers/` — MidnightRoutine (modules, detach, custom encounter *evaluation*, warband board — steal detach + encounter-complete steps, **not** the EJ overlay or the matrix), ChoreTracker (`pick` pools, calendar packs, interval+AreaPOI timers), WeeklyRewards (char×reward spreadsheet + loot scanners — steal pack IDs and narrow loot-credit, not the grid), MidnightHelper tracker slice (reset routine, account rollup, Trading Post, never-lie KP; skip combat/guides **and** inferred Gilded Stash ledgers).
