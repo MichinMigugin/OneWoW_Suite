@@ -19,7 +19,8 @@ Matching strategy (decreasing confidence):
   2. Basename ambiguous, exactly one upstream file's hash
      matches the local file                                -> auto-match
   3. Basename ambiguous, multiple upstream files have
-     identical content matching local                      -> pick first, flag
+     identical content matching local                      -> pick by local path
+     (parent dirs); flag only if still ambiguous
   4. Basename matches but no upstream hash matches local   -> auto-match (likely
      stale local copy), flag for review
   5. No basename match anywhere, but content hash matches
@@ -159,6 +160,35 @@ def format_candidate(src: str, path: str) -> str:
     return f"[{src}] {path}"
 
 
+def pick_by_local_path(
+    local_rel: str, candidates: list[tuple[str, str]],
+) -> tuple[str, str] | None:
+    """Return the unique candidate whose trailing path matches the local file.
+
+    Walks local path components from the filename upward. At each level, keep
+    only candidates whose corresponding ancestor has the same name. A local
+    category prefix that appears in no candidate is skipped.
+
+    Example: local ``chat_combatlog/Blizzard_ChatFrameBase/Shared/Foo.lua``
+    prefers ``.../Blizzard_ChatFrameBase/Shared/Foo.lua`` over
+    ``.../Blizzard_ChatFrameBase/Mainline/Foo.lua``.
+    """
+    remaining = list(candidates)
+    local_parts = Path(local_rel).parts
+    for depth in range(1, len(local_parts) + 1):
+        needle = local_parts[-depth]
+        hits = []
+        for src, path in remaining:
+            up_parts = Path(path).parts
+            if len(up_parts) >= depth and up_parts[-depth] == needle:
+                hits.append((src, path))
+        if len(hits) == 1:
+            return hits[0]
+        if hits:
+            remaining = hits
+    return None
+
+
 def resolve_manifest_entry(entry, default_source: str) -> tuple[str, str]:
     """Manifest file entry (str or dict) -> (source_name, upstream_path)."""
     if isinstance(entry, str):
@@ -201,24 +231,38 @@ def match_files(
                     ))
                 continue
 
-            # Multiple basename candidates — disambiguate by hash.
+            # Multiple basename candidates — disambiguate by hash, then path.
             hash_matches = [(s, p) for s, p, h in candidates if h == local_hash]
             if len(hash_matches) == 1:
                 matched[local_rel] = hash_matches[0]
             elif len(hash_matches) > 1:
-                matched[local_rel] = hash_matches[0]
-                review.append((
-                    local_rel,
-                    "identical content at multiple upstream paths; picked first",
-                    [format_candidate(s, p) for s, p in hash_matches],
-                ))
+                picked = pick_by_local_path(local_rel, hash_matches)
+                if picked:
+                    matched[local_rel] = picked
+                else:
+                    matched[local_rel] = hash_matches[0]
+                    review.append((
+                        local_rel,
+                        "identical content at multiple upstream paths; picked first",
+                        [format_candidate(s, p) for s, p in hash_matches],
+                    ))
             else:
-                matched[local_rel] = (candidates[0][0], candidates[0][1])
-                review.append((
-                    local_rel,
-                    "ambiguous basename, no hash match across candidates (likely stale)",
-                    [format_candidate(s, p) for s, p, _ in candidates],
-                ))
+                path_cands = [(s, p) for s, p, _ in candidates]
+                picked = pick_by_local_path(local_rel, path_cands)
+                if picked:
+                    matched[local_rel] = picked
+                    review.append((
+                        local_rel,
+                        "ambiguous basename, no hash match; mapped via local path (likely stale)",
+                        [format_candidate(*picked)],
+                    ))
+                else:
+                    matched[local_rel] = (candidates[0][0], candidates[0][1])
+                    review.append((
+                        local_rel,
+                        "ambiguous basename, no hash match across candidates (likely stale)",
+                        [format_candidate(s, p) for s, p, _ in candidates],
+                    ))
             continue
 
         # No basename match anywhere — try content hash across all sources.
@@ -232,12 +276,21 @@ def match_files(
                 [format_candidate(src, up_path)],
             ))
         elif len(hash_candidates) > 1:
-            matched[local_rel] = hash_candidates[0]
-            review.append((
-                local_rel,
-                "basename mismatch; content matches multiple upstream paths; picked first",
-                [format_candidate(s, p) for s, p in hash_candidates],
-            ))
+            picked = pick_by_local_path(local_rel, hash_candidates)
+            if picked:
+                matched[local_rel] = picked
+                review.append((
+                    local_rel,
+                    "basename mismatch; content matches via hash; mapped via local path",
+                    [format_candidate(*picked)],
+                ))
+            else:
+                matched[local_rel] = hash_candidates[0]
+                review.append((
+                    local_rel,
+                    "basename mismatch; content matches multiple upstream paths; picked first",
+                    [format_candidate(s, p) for s, p in hash_candidates],
+                ))
         else:
             review.append((local_rel, "no upstream basename or hash match", []))
 

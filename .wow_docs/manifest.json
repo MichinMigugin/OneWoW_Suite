@@ -1,23 +1,23 @@
 {
   "wow_docs_root": ".",
   "sources": {
-    "blizzard-interface-resources": {
-      "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
-      "branch": "live",
-      "scan_roots": [
-        "Resources"
-      ],
-      "last_synced_commit": "774b2c550366245b5b7fa84688307fa891960632",
-      "last_synced_date": "2026-08-13"
-    },
     "wow-ui-source": {
       "url": "https://github.com/Gethe/wow-ui-source.git",
       "branch": "live",
       "scan_roots": [
         "Interface/AddOns"
       ],
-      "last_synced_commit": "710f59e457317676c0f699e6addaf2c405c2a1a4",
-      "last_synced_date": "2026-08-13"
+      "last_synced_commit": "31c7f7b9cc79e56c986b365c06a6afbcf3c9177b",
+      "last_synced_date": "2026-08-17"
+    },
+    "blizzard-interface-resources": {
+      "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
+      "branch": "live",
+      "scan_roots": [
+        "Resources"
+      ],
+      "last_synced_commit": "7a151700edadc12d0bbf7a9df4c7e8d79c55c525",
+      "last_synced_date": "2026-08-17"
     }
   },
   "default_source": "wow-ui-source",
@@ -181,6 +181,15 @@
       "source": "blizzard-interface-resources",
       "path": "Resources/WidgetAPI.lua"
     },
+    "calendar/Blizzard_Calendar/Blizzard_Calendar_Bootstrap.lua": "Interface/AddOns/Blizzard_Calendar/Blizzard_Calendar_Bootstrap.lua",
+    "calendar/Blizzard_Calendar/Mainline/Blizzard_Calendar.lua": "Interface/AddOns/Blizzard_Calendar/Mainline/Blizzard_Calendar.lua",
+    "calendar/Blizzard_Calendar/Mainline/Blizzard_Calendar.xml": "Interface/AddOns/Blizzard_Calendar/Mainline/Blizzard_Calendar.xml",
+    "calendar/Blizzard_Calendar/Mainline/Blizzard_CalendarTemplates.xml": "Interface/AddOns/Blizzard_Calendar/Mainline/Blizzard_CalendarTemplates.xml",
+    "calendar/CalendarConstantsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CalendarConstantsDocumentation.lua",
+    "calendar/CalendarDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CalendarDocumentation.lua",
+    "calendar/CalendarUtil.lua": "Interface/AddOns/Blizzard_FrameXMLUtil/CalendarUtil.lua",
+    "calendar/DateAndTimeDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/DateAndTimeDocumentation.lua",
+    "calendar/TimeDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/TimeDocumentation.lua",
     "chat_combatlog/Blizzard_ChatFrame/Mainline/BattlegroundChatFilters.lua": "Interface/AddOns/Blizzard_ChatFrame/Mainline/BattlegroundChatFilters.lua",
     "chat_combatlog/Blizzard_ChatFrame/Mainline/BattlegroundChatFilters.xml": "Interface/AddOns/Blizzard_ChatFrame/Mainline/BattlegroundChatFilters.xml",
     "chat_combatlog/Blizzard_ChatFrame/Mainline/ChatConfigFrame.lua": "Interface/AddOns/Blizzard_ChatFrame/Mainline/ChatConfigFrame.lua",
@@ -216,7 +225,7 @@
     "chat_combatlog/Blizzard_ChatFrameBase/Mainline/SlashCommandsOverrides.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Mainline/SlashCommandsOverrides.lua",
     "chat_combatlog/Blizzard_ChatFrameBase/Shared/CastRandomManager.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Shared/CastRandomManager.lua",
     "chat_combatlog/Blizzard_ChatFrameBase/Shared/CastSequenceManager.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Shared/CastSequenceManager.lua",
-    "chat_combatlog/Blizzard_ChatFrameBase/Shared/ChatAlertFrameMixin.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Mainline/ChatAlertFrameMixin.lua",
+    "chat_combatlog/Blizzard_ChatFrameBase/Shared/ChatAlertFrameMixin.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatAlertFrameMixin.lua",
     "chat_combatlog/Blizzard_ChatFrameBase/Shared/ChatFrame.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrame.lua",
     "chat_combatlog/Blizzard_ChatFrameBase/Shared/ChatFrameConstants.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameConstants.lua",
     "chat_combatlog/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua": "Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua",
@@ -320,10 +329,7 @@
     "controls_ui_widget/Blizzard_Menu/MenuTemplates.xml": "Interface/AddOns/Blizzard_Menu/MenuTemplates.xml",
     "controls_ui_widget/Blizzard_Menu/MenuUtil.lua": "Interface/AddOns/Blizzard_Menu/MenuUtil.lua",
     "controls_ui_widget/Blizzard_Menu/MenuVariants.lua": "Interface/AddOns/Blizzard_Menu/MenuVariants.lua",
-    "controls_ui_widget/Blizzard_UIParent/ChatBubbleTemplates.xml": "Interface/AddOns/Blizzard_ChatBubble/ChatBubbleTemplates.xml",
-    "controls_ui_widget/Blizzard_UIParent/Mainline/UIParent.lua": "Interface/AddOns/Blizzard_UIParent/UIParent.lua",
-    "controls_ui_widget/Blizzard_UIParent/Shared/Localization.lua": "Interface/AddOns/Blizzard_AddOnList/Localization.lua",
-    "controls_ui_widget/Blizzard_UIParent/Shared/UIParent.lua": "Interface/AddOns/Blizzard_UIParent/UIParent.lua",
+    "controls_ui_widget/Blizzard_UIParent/UIParent.lua": "Interface/AddOns/Blizzard_UIParent/UIParent.lua",
     "controls_ui_widget/Blizzard_UIParentPanelManager/Mainline/UIPanelWindows.lua": "Interface/AddOns/Blizzard_UIParentPanelManager/Mainline/UIPanelWindows.lua",
     "controls_ui_widget/Blizzard_UIParentPanelManager/Mainline/UIParentPanelManagerOverrides.lua": "Interface/AddOns/Blizzard_UIParentPanelManager/Mainline/UIParentPanelManagerOverrides.lua",
     "controls_ui_widget/Blizzard_UIParentPanelManager/Shared/UIParentPanelManager.lua": "Interface/AddOns/Blizzard_UIParentPanelManager/Shared/UIParentPanelManager.lua",
@@ -614,7 +620,6 @@
     "misc/BattleNetDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/BattleNetDocumentation.lua",
     "misc/Blizzard_AzeriteEssenceUI.lua": "Interface/AddOns/Blizzard_AzeriteEssenceUI/Blizzard_AzeriteEssenceUI.lua",
     "misc/Blizzard_AzeriteEssenceUI.xml": "Interface/AddOns/Blizzard_AzeriteEssenceUI/Blizzard_AzeriteEssenceUI.xml",
-    "misc/CalendarDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CalendarDocumentation.lua",
     "misc/CinematicConstantsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CinematicConstantsDocumentation.lua",
     "misc/CinematicDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CinematicDocumentation.lua",
     "misc/FriendListDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/FriendListDocumentation.lua",

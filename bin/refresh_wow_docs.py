@@ -26,7 +26,9 @@ Manifest schema:
   }
 
 Old single-source manifests (with top-level "upstream_repo") are still read
-correctly. Refresh auto-migrates them to the new format on first run.
+correctly. Refresh auto-migrates them to the new format on first run. Entries
+whose upstream path no longer exists are dropped from the manifest and the
+local copy is deleted.
 
 Usage:
   python scripts/refresh_wow_docs.py
@@ -166,6 +168,22 @@ def write_manifest(manifest_path: Path, manifest: dict, sources: dict, default_s
     manifest_path.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
+def remove_empty_parents(path: Path, stop_at: Path) -> None:
+    """Remove empty directories between path's parent and stop_at (exclusive)."""
+    parent = path.parent
+    stop_at = stop_at.resolve()
+    while parent != stop_at:
+        try:
+            parent.relative_to(stop_at)
+        except ValueError:
+            break
+        try:
+            parent.rmdir()
+        except OSError:
+            break
+        parent = parent.parent
+
+
 def print_diff_since(cache: Path, prev: str, new: str, paths: list[str], source_name: str) -> None:
     print(f"Source {source_name}: changes between {prev[:8]} and {new[:8]}:", file=sys.stderr)
     if run_git(["cat-file", "-e", prev], cache, capture=True, check=False).returncode != 0:
@@ -239,7 +257,7 @@ def refresh(manifest_path: Path, cache_root: Path, dry_run: bool, diff_since: bo
 
     changed: list[tuple[str, str, str]] = []
     unchanged = 0
-    missing_upstream: list[tuple[str, str, str]] = []
+    stale: list[tuple[str, str, str]] = []
     bad_entries: list[tuple[str, str]] = []
 
     for local_rel, entry in sorted(files.items()):
@@ -257,7 +275,7 @@ def refresh(manifest_path: Path, cache_root: Path, dry_run: bool, diff_since: bo
         upstream_path = src["cache_dir"] / upstream_rel
 
         if not upstream_path.exists():
-            missing_upstream.append((local_rel, src_name, upstream_rel))
+            stale.append((local_rel, src_name, upstream_rel))
             continue
 
         upstream_hash = sha256_file(upstream_path)
@@ -271,11 +289,21 @@ def refresh(manifest_path: Path, cache_root: Path, dry_run: bool, diff_since: bo
         else:
             unchanged += 1
 
+    for local_rel, _src_name, _up_rel in stale:
+        del files[local_rel]
+        if dry_run:
+            continue
+        local_path = wow_docs_root / local_rel
+        if local_path.exists():
+            local_path.unlink()
+        remove_empty_parents(local_path, wow_docs_root)
+
     print(f"Unchanged:        {unchanged}", file=sys.stderr)
     print(f"Updated:          {len(changed)}{'  (dry run, not written)' if dry_run else ''}",
           file=sys.stderr)
-    if missing_upstream:
-        print(f"Missing upstream: {len(missing_upstream)}", file=sys.stderr)
+    if stale:
+        print(f"Removed:          {len(stale)}{'  (dry run, not written)' if dry_run else ''}",
+              file=sys.stderr)
     if bad_entries:
         print(f"Bad entries:      {len(bad_entries)}", file=sys.stderr)
 
@@ -285,13 +313,15 @@ def refresh(manifest_path: Path, cache_root: Path, dry_run: bool, diff_since: bo
             arrow = "would copy" if dry_run else "+"
             print(f"  {arrow}  {local_rel}  <-  [{src_name}] {up_rel}", file=sys.stderr)
 
-    if missing_upstream:
+    if stale:
         print("", file=sys.stderr)
-        print("Files no longer present at the manifest's upstream path:", file=sys.stderr)
-        for local_rel, src_name, up_rel in missing_upstream:
-            print(f"  ?  {local_rel}  ->  [{src_name}] {up_rel}", file=sys.stderr)
+        print("Dropped (upstream path no longer exists):", file=sys.stderr)
+        for local_rel, src_name, up_rel in stale:
+            arrow = "would remove" if dry_run else "-"
+            print(f"  {arrow}  {local_rel}  ->  [{src_name}] {up_rel}", file=sys.stderr)
         print("", file=sys.stderr)
-        print("Edit manifest.json to point to the new path, or remove the entry.", file=sys.stderr)
+        print("If a file was renamed, copy the new path into .wow_docs/ and re-run "
+              "bootstrap_wow_docs_manifest.py.", file=sys.stderr)
 
     if bad_entries:
         print("", file=sys.stderr)
@@ -300,13 +330,13 @@ def refresh(manifest_path: Path, cache_root: Path, dry_run: bool, diff_since: bo
             print(f"  !  {local_rel}: {reason}", file=sys.stderr)
 
     any_commit_advanced = any(s["prev_commit"] != s["new_commit"] for s in sources.values())
-    should_write = not dry_run and (changed or missing_upstream or was_old_format or any_commit_advanced)
+    should_write = not dry_run and (changed or stale or was_old_format or any_commit_advanced)
 
     if should_write:
         write_manifest(manifest_path, manifest, sources, default_source)
         print(f"\nUpdated manifest: {manifest_path}", file=sys.stderr)
 
-    return 1 if (missing_upstream or bad_entries) else 0
+    return 1 if bad_entries else 0
 
 
 def main() -> int:
