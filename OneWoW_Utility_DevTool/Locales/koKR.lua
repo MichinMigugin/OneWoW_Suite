@@ -233,6 +233,12 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ERR_CLEAR_ON_RELOAD"] = "/reload 시 오류 지우기",
     ["ERR_KEEP_SESSIONS_LABEL"] = "세션 유지:",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
+    ["ERR_DEVMODE"] = "DEVMODE",
+    ["ERR_DEVMODE_FLASH"] = "깜빡임",
+    ["ERR_DEVMODE_MORE"] = "외 %d개",
+    ["ERR_DEVMODE_ON"] = "DEVMODE 켜짐",
+    ["ERR_DEVMODE_OFF"] = "DEVMODE 꺼짐",
+    ["ERR_DEVMODE_EMPTY"] = "아직 오류 없음",
     ["ERR_EXPORT_CF_STACK"] = "스택 / 지역 변수 (CurseForge용 마크다운):",
 
     ["BTN_TOGGLE_ANALYSIS"] = "분석",

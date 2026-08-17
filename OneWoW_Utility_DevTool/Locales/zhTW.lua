@@ -234,6 +234,12 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ERR_CLEAR_ON_RELOAD"] = "在 /reload 時清除錯誤",
     ["ERR_KEEP_SESSIONS_LABEL"] = "保留工作階段：",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
+    ["ERR_DEVMODE"] = "DEVMODE",
+    ["ERR_DEVMODE_FLASH"] = "閃爍",
+    ["ERR_DEVMODE_MORE"] = "還有 %d 則",
+    ["ERR_DEVMODE_ON"] = "DEVMODE 已開啟",
+    ["ERR_DEVMODE_OFF"] = "DEVMODE 已關閉",
+    ["ERR_DEVMODE_EMPTY"] = "尚無錯誤",
     ["ERR_EXPORT_CF_STACK"] = "堆疊 / 區域變數（用於 CurseForge 的 markdown）：",
 
     ["BTN_TOGGLE_ANALYSIS"] = "分析",

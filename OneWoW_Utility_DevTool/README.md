@@ -30,6 +30,7 @@ lifecycle root `OneWoW_Utility_DevTool` exposes colon hooks only (`OnAddonLoaded
 | Command | Description              |
 |---------|--------------------------|
 | `/1wdt` | Toggle DevTool window    |
+| `/1wdt devmode` | Toggle DEVMODE (floating error list) |
 
 The addon also registers in the **Addon Compartment** (game menu) for quick access.
 
@@ -71,6 +72,7 @@ Track and debug addon errors:
 - **Stack traces** — Full error details and stack traces
 - **Copy Error** — Copy selected error to clipboard
 - **Play Alert** — Optional sound on new errors
+- **DEVMODE** — Optional floating error list (including in combat) that appears when there are stored errors, including leftover ones. Left-click a row for details; right-click opens that error in this tab. New errors highlight and can flash. Clear errors to hide it. Toggle from the Errors tab or `/1wdt devmode`.
 - **!BugGrabber** — When the standalone !BugGrabber addon is loaded, DevTool subscribes to its capture pipeline and shows the same errors here (with an in-tab notice). Disable !BugGrabber if you only want DevTool's own capture.
 
 ### Textures Tab
@@ -182,7 +184,7 @@ Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 ## Technical Notes
 
 - **Secret values** — Frame properties that return secret values (e.g., in instanced content) are safely masked
-- **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores window position, theme, language, minimap, monitor (including pinned addon), error logger settings, globals browser bookmarks and pane width, texture bookmarks and list column width, font preview background and bookmarks, editor snippets and layout options, and related UI preferences
+- **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores window position, theme, language, minimap, monitor (including pinned addon), error logger settings (including DEVMODE), globals browser bookmarks and pane width, texture bookmarks and list column width, font preview background and bookmarks, editor snippets and layout options, and related UI preferences
 - **Clipboard** — Copy actions use the core **`OneWoW.CopyPaste`** dialog service where applicable
 
 ---

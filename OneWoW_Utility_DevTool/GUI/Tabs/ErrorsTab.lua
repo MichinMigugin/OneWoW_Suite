@@ -209,6 +209,48 @@ function ns.UI:CreateErrorsTab(parent)
     keepSessionsDrop:SetPoint("LEFT", keepLabel, "RIGHT", 10, 0)
     keepSessionsDrop:SetPoint("TOP", soundDrop, "TOP", 0, 0)
 
+    local function setDevModeFlashEnabled(on)
+        local flash = tab.devModeFlashCheck
+        if on then
+            flash:Enable()
+            flash.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            flash:Disable()
+            flash.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+    tab.SetDevModeFlashEnabled = setDevModeFlashEnabled
+
+    local devModeCheck = OneWoW_GUI:CreateCheckbox(tab, {
+        label = L["ERR_DEVMODE"],
+    })
+    devModeCheck:SetPoint("TOPLEFT", soundDrop, "BOTTOMLEFT", 0, -8)
+    devModeCheck:SetChecked(getErrorDB().devMode)
+    tab.devModeCheck = devModeCheck
+
+    local flashCheck = OneWoW_GUI:CreateCheckbox(tab, {
+        label = L["ERR_DEVMODE_FLASH"],
+    })
+    flashCheck:SetPoint("LEFT", devModeCheck.label, "RIGHT", 16, 0)
+    flashCheck:SetChecked(getErrorDB().devModeFlash)
+    tab.devModeFlashCheck = flashCheck
+    setDevModeFlashEnabled(getErrorDB().devMode)
+
+    devModeCheck:SetScript("OnClick", function(myself)
+        local db = getErrorDB()
+        db.devMode = myself:GetChecked() and true or false
+        setDevModeFlashEnabled(db.devMode)
+        if db.devMode then
+            ns.ErrorFloat:ShowNow()
+        else
+            ns.ErrorFloat:Hide()
+        end
+    end)
+    flashCheck:SetScript("OnClick", function(myself)
+        local db = getErrorDB()
+        db.devModeFlash = myself:GetChecked() and true or false
+    end)
+
     local function layoutLuaErrorRowAnchors()
         local cb = clearReloadCheck
         local cl = countLabel
@@ -223,11 +265,11 @@ function ns.UI:CreateErrorsTab(parent)
 
     tab.LayoutErrorRowAnchors = layoutLuaErrorRowAnchors
 
-    -- Full-width invisible line under the retention row so list top (TOPLEFT + TOPRIGHT) shares one Y (avoids shearing vs tab TOP).
+    -- Full-width invisible line under the DEVMODE row so list top (TOPLEFT + TOPRIGHT) shares one Y (avoids shearing vs tab TOP).
     local belowRetention = CreateFrame("Frame", nil, tab)
     belowRetention:SetPoint("LEFT", tab, "LEFT", 5, 0)
     belowRetention:SetPoint("RIGHT", tab, "RIGHT", -5, 0)
-    belowRetention:SetPoint("TOP", soundDrop, "BOTTOM", 0, 0)
+    belowRetention:SetPoint("TOP", devModeCheck, "BOTTOM", 0, 0)
     belowRetention:SetHeight(1)
 
     local listPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 150 })
@@ -427,6 +469,15 @@ function ns.UI:CreateErrorsTab(parent)
             tab.clearReloadCheck:SetChecked(showDB.clearOnReload and true or false)
         end
         refreshDropdownLabels(tab)
+        if tab.devModeCheck and showDB then
+            tab.devModeCheck:SetChecked(showDB.devMode)
+        end
+        if tab.devModeFlashCheck and showDB then
+            tab.devModeFlashCheck:SetChecked(showDB.devModeFlash)
+        end
+        if tab.SetDevModeFlashEnabled and showDB then
+            tab.SetDevModeFlashEnabled(showDB.devMode)
+        end
         local vis = (showDB and showDB.showAnalysis ~= false) and true or false
         setAnalysisVisible(vis)
         if ns.ErrorLogger then
@@ -434,6 +485,9 @@ function ns.UI:CreateErrorsTab(parent)
             ns.ErrorLogger:UpdateUI()
         elseif tab.LayoutErrorRowAnchors then
             tab.LayoutErrorRowAnchors()
+        end
+        if showDB and showDB.devMode then
+            ns.ErrorFloat:ShowSessionErrors()
         end
     end)
 

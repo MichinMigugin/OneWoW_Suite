@@ -183,6 +183,9 @@ function ns:InitializeDatabase()
                 maxErrors = 100,
                 soundChoice = "devtools_error",
                 copyFormat = "plain",
+                devMode = false,
+                devModeFlash = true,
+                devModePosition = {},
             },
             editor = {
                 snippets = {},
