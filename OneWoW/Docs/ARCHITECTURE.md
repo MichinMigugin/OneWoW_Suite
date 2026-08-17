@@ -77,7 +77,7 @@ flowchart TB
 | **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
 | **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
 | **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand | Owned under `ModuleManifest.stores`. Most stores: `RequiredDeps: OneWoW` (consumers may load without the owning hub). **Exception:** Endgame still `RequiredDeps: …, OneWoW_AltTracker` (`parentRequiredStores`). |
-| **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; excluded from recommended preset; `loadPhase = "login"` when wanted |
+| **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; soft-opted-out on a fresh account and excluded from recommended preset; `loadPhase = "login"` when wanted |
 
 Verified against current `.toc` files:
 
@@ -135,10 +135,12 @@ At the **end of core's `ADDON_LOADED`** (before `PLAYER_LOGIN`),
 `OneWoW.LoadOrchestrator:RunStartupPhase()` walks the manifest in **array order**
 and calls `OneWoW:BringUp(addon)` for each `loadPhase == "login"` entry (feature
 + stores as one set) that is not soft-opted-out. **`OneWoW_Utility_DevTool` uses
-the same path** — it is not skipped by the orchestrator. DevTool is opt-in only:
-excluded from the recommended Manage Features preset (`FirstRun.CATALOG` utility
-group) but force-loaded at login like other manifest entries when the user has
-it wanted (Blizzard-enabled and not soft-opted-out).
+the same path** — it is not skipped by the orchestrator. Utilities
+(`FirstRun.CATALOG` group `utility`) are opt-in: a fresh account seeds an
+account-wide soft opt-out before `RunStartupPhase` (Blizzard enable stays on, so
+Manage Features can `LoadAddOn` later this session). They are also excluded from
+the recommended preset. When wanted (Blizzard-enabled and not soft-opted-out),
+they load at login like other manifest entries.
 
 **Load order** is manifest array order. **Hub section dropdown order** is the
 explicit `tabOrder` field on entries with `module` (Notes → AltTracker → Catalog →

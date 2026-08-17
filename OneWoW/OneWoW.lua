@@ -69,6 +69,13 @@ end
 function ns:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
 
+    -- Fresh accounts have an empty OneWoW_DB before Init. Capture that before
+    -- MergeMissing fills defaults, then seed utility opt-outs after Init so
+    -- login skips them while they stay Blizzard-enabled (LoadAddOn later this
+    -- session). Existing SVs are left alone.
+    local sv = OneWoW_DB
+    local isFreshAccount = sv == nil or next(sv) == nil
+
     -- Core DB first, then the toolkit binds its settings handle to core's
     -- OneWoW_DB — before any theme/font reads or module UI built by the
     -- orchestrator below.
@@ -125,6 +132,10 @@ function ns:OnAddonLoaded(loadedAddon)
     self:RegisterMinimap("OneWoW", L["OPEN_ONEWOW"], nil, function()
         if self.UI then self.UI:Show() end
     end)
+
+    if isFreshAccount then
+        ns.FirstRun:SeedUtilityOptOuts()
+    end
 
     -- Pull enabled Tier-2 modules and their data stores now (still inside core's
     -- ADDON_LOADED, before PLAYER_LOGIN). EnsureLoaded drives each unit's

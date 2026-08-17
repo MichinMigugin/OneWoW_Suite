@@ -386,6 +386,18 @@ function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
     return false
 end
 
+--- Soft-opt-out CATALOG utility addons on a fresh account (DevTools today).
+--- Account-wide; leaves the Blizzard enable flag alone so Manage Features can
+--- LoadAddOn later this session. Not a MergeMissing default: account "wanted"
+--- is stored as absence of the key.
+function FirstRun:SeedUtilityOptOuts()
+    for _, entry in ipairs(FirstRun.CATALOG) do
+        if entry.group == "utility" then
+            ns:SetFeatureOptOut(entry.addonName, true, false)
+        end
+    end
+end
+
 -- Apply a "recommended set": every feature except utility entries. Account-wide,
 -- soft (reload-free).
 function FirstRun:ApplyRecommended()

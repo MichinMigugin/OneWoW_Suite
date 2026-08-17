@@ -7,6 +7,9 @@
 - Hub search results and the minimap menu no longer error when they close after the mouse leaves.
 - Character profiles no longer error when saving or restoring macros.
 
+### Manage Features
+- DevTools starts off on a new install. Enable it in Manage Features; no reload needed.
+
 ---
 
 ### QoL
