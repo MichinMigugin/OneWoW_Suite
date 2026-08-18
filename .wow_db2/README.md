@@ -7,7 +7,7 @@ tools such as [`bin/journal_db2_tools.py`](../bin/journal_db2_tools.py) and
 
 ## Build
 
-**`12.1.0.69283`**
+**`12.1.0.69382`**
 
 Bump this string whenever you replace CSVs with a newer client extract.
 
@@ -18,6 +18,7 @@ docs live under [`docs/`](docs/):
 
 | Group | Doc | Tables (examples) |
 | --- | --- | --- |
+| Catalog lookup (have / not have) | [`docs/available-data.md`](docs/available-data.md) | What each feature uses, and whether the CSV is already here |
 | Journal (EJ) | [`docs/journal.md`](docs/journal.md) | `Journal*`, `MapDifficulty*`, `Difficulty`, `DungeonEncounter` |
 | Item bonus seasons | [`docs/item-bonus-seasons.md`](docs/item-bonus-seasons.md) | `ItemBonusListGroup`, `ItemBonusListGroupEntry`, `DisplaySeason` |
 | Conditions (shared) | *(cross-links only for now)* | `PlayerCondition`, `*XCondition`, `GlobalPlayerCondition*` |
