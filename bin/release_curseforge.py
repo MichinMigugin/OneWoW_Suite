@@ -24,7 +24,6 @@ import json
 import os
 import re
 import sys
-import zipfile
 from pathlib import Path
 
 _BIN = Path(__file__).resolve().parent
@@ -39,6 +38,7 @@ from onewow_release_lib import (  # noqa: E402
     load_dotenv,
     require_uniform_interfaces,
     require_uniform_version,
+    write_suite_zip,
 )
 
 try:
@@ -148,39 +148,9 @@ ZIP_IGNORE_NAMES = frozenset(
 )
 
 
-def should_skip_zip_member(rel: Path) -> bool:
-    """True if this path (relative to addon root or repo) should not be zipped."""
-    parts = rel.parts
-    if not parts:
-        return True
-    if any(p.startswith(".") for p in parts):
-        return True
-    if any(p == "__pycache__" for p in parts):
-        return True
-    return False
-
-
 def build_suite_zip(version: str, addon_dirs: list[Path]) -> Path:
     """Write sibling-addon zip under .releases/; return the zip path."""
-    RELEASES_DIR.mkdir(parents=True, exist_ok=True)
-    zip_name = f"OneWoW Suite {version}.zip"
-    zip_path = RELEASES_DIR / zip_name
-    if zip_path.exists():
-        zip_path.unlink()
-
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for addon_dir in addon_dirs:
-            addon_name = addon_dir.name
-            for file_path in sorted(addon_dir.rglob("*")):
-                if not file_path.is_file():
-                    continue
-                rel_inside = file_path.relative_to(addon_dir)
-                if should_skip_zip_member(rel_inside):
-                    continue
-                arcname = f"{addon_name}/{rel_inside.as_posix()}"
-                zf.write(file_path, arcname)
-
-    return zip_path
+    return write_suite_zip(RELEASES_DIR / f"OneWoW Suite {version}.zip", addon_dirs)
 
 
 def resolve_game_version_ids(

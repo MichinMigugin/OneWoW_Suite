@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -147,3 +148,36 @@ def load_dotenv(path: Path | None = None) -> dict[str, str]:
         if key:
             out[key] = value
     return out
+
+
+def should_skip_zip_member(rel: Path) -> bool:
+    """True if this path (relative to an addon root) should not be zipped."""
+    parts = rel.parts
+    if not parts:
+        return True
+    if any(part.startswith(".") for part in parts):
+        return True
+    if any(part == "__pycache__" for part in parts):
+        return True
+    return False
+
+
+def write_suite_zip(zip_path: Path, addon_dirs: list[Path] | None = None) -> Path:
+    """Write a sibling-addon zip (OneWoW/, OneWoW_Bags/, ...) and return the path."""
+    dirs = addon_dirs if addon_dirs is not None else discover_addon_dirs()
+    if not dirs:
+        raise SystemExit("No shippable addon directories to package")
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+    if zip_path.exists():
+        zip_path.unlink()
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for addon_dir in dirs:
+            addon_name = addon_dir.name
+            for file_path in sorted(addon_dir.rglob("*")):
+                if not file_path.is_file():
+                    continue
+                rel_inside = file_path.relative_to(addon_dir)
+                if should_skip_zip_member(rel_inside):
+                    continue
+                zf.write(file_path, f"{addon_name}/{rel_inside.as_posix()}")
+    return zip_path
