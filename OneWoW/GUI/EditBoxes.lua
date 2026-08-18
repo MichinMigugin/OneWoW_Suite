@@ -28,24 +28,35 @@ function OneWoW_GUI:AttachClearButton(box, options)
     local clearBtn = CreateFrame("Button", nil, box)
     clearBtn:SetSize(CLEAR_BTN_SIZE, CLEAR_BTN_SIZE)
     clearBtn:SetPoint("RIGHT", box, "RIGHT", -3, 0)
-    clearBtn:SetFrameLevel((box:GetFrameLevel() or 0) + 2)
+    clearBtn:SetFrameLevel((box:GetFrameLevel() or 0) + 5)
+    clearBtn:EnableMouse(true)
     clearBtn:Hide()
 
     local clearTex = clearBtn:CreateTexture(nil, "ARTWORK")
     clearTex:SetAllPoints()
-    clearTex:SetAtlas("common-icon-redx")
+    -- Client search-box X (grey), not common-icon-redx.
+    clearTex:SetAtlas("common-search-clearbutton")
     clearBtn.icon = clearTex
 
+    local function PaintClearIcon(hovered)
+        if hovered then
+            clearTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            clearTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+    PaintClearIcon(false)
+
     clearBtn:SetScript("OnEnter", function(myself)
-        myself.icon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        PaintClearIcon(true)
         if clearTooltip and clearTooltip ~= "" then
             GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(clearTooltip, 1, 1, 1)
             GameTooltip:Show()
         end
     end)
-    clearBtn:SetScript("OnLeave", function(myself)
-        myself.icon:SetVertexColor(1, 1, 1)
+    clearBtn:SetScript("OnLeave", function()
+        PaintClearIcon(false)
         GameTooltip:Hide()
     end)
     clearBtn:SetScript("OnClick", function()
@@ -81,9 +92,23 @@ function OneWoW_GUI:AttachClearButton(box, options)
         end
     end
 
-    box:HookScript("OnTextChanged", function(myself)
-        myself:UpdateClearButton()
-    end)
+    -- SetScript("OnTextChanged") replaces the handler and drops HookScripts.
+    -- Split-panel tabs do that after create, so wrap SetScript and always
+    -- run UpdateClearButton after whatever they install.
+    local origSetScript = box.SetScript
+    function box:SetScript(handler, script)
+        if handler == "OnTextChanged" then
+            origSetScript(self, handler, function(myself, userInput)
+                if script then
+                    script(myself, userInput)
+                end
+                myself:UpdateClearButton()
+            end)
+            return
+        end
+        return origSetScript(self, handler, script)
+    end
+    box:SetScript("OnTextChanged", box:GetScript("OnTextChanged"))
     box:HookScript("OnEditFocusGained", function(myself)
         myself:UpdateClearButton()
     end)

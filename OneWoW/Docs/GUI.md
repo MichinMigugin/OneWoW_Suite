@@ -858,7 +858,10 @@ OneWoW_GUI:AttachClearButton(box, {
 ```
 
 `AttachClearButton` hides the X when the box is empty or showing `box.placeholderText`,
-and bumps the right inset if it is narrower than the X gutter.
+and bumps the right inset if it is narrower than the X gutter. It wraps
+`SetScript("OnTextChanged")` so a later replace (split-panel search filters) still
+updates the X while typing. Prefer `onTextChanged` on `CreateEditBox` or
+`HookScript` when layering your own filter.
 
 Use `CreateEditBox` with `placeholderText` for search boxes. The deprecated `CreateSearchBox` wrapper has been removed.
 
