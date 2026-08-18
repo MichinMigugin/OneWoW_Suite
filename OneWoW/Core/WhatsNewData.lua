@@ -14,9 +14,12 @@ local _, ns = ...
 
 ns.WhatsNewData = {
     highlights = {
-        { titleKey = "WHATS_NEW_H_AUTOMOUNT_TITLE", bodyKey = "WHATS_NEW_H_AUTOMOUNT_BODY" },
-        { titleKey = "WHATS_NEW_H_JOURNAL_TITLE",   bodyKey = "WHATS_NEW_H_JOURNAL_BODY" },
-        { titleKey = "MODULE_BAGS",                 bodyKey = "WHATS_NEW_H_BAGS_UI_BODY" },
+        { titleKey = "WHATS_NEW_H_PORTALS_TITLE",     bodyKey = "WHATS_NEW_H_PORTALS_BODY" },
+        { titleKey = "WHATS_NEW_H_JOURNAL_TITLE",     bodyKey = "WHATS_NEW_H_JOURNAL_BODY" },
+        { titleKey = "MODULE_ALTTRACKER",             bodyKey = "WHATS_NEW_H_ALTTRACKER_BODY" },
+        { titleKey = "MODULE_TRACKERS",               bodyKey = "WHATS_NEW_H_TRACKERS_BODY" },
+        { titleKey = "MODULE_BAGS",                   bodyKey = "WHATS_NEW_H_BAGS_UI_BODY" },
         { titleKey = "WHATS_NEW_H_ICONBROWSER_TITLE", bodyKey = "WHATS_NEW_H_ICONBROWSER_BODY" },
+        { titleKey = "MAIL",                          bodyKey = "WHATS_NEW_H_MAIL_BODY" },
     },
 }
