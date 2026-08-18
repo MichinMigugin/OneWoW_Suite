@@ -239,6 +239,7 @@ function ns.UI.CreateTrackerTab(parent)
     emptyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function CreateListRow(listData, yOffset)
+        local PAD = 8
         local row = CreateFrame("Button", nil, listScrollChild, "BackdropTemplate")
         row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
         row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
@@ -249,45 +250,8 @@ function ns.UI.CreateTrackerTab(parent)
 
         local typeIcon = row:CreateTexture(nil, "ARTWORK")
         typeIcon:SetSize(24, 24)
-        typeIcon:SetPoint("LEFT", row, "LEFT", 8, 0)
+        typeIcon:SetPoint("TOPLEFT", row, "TOPLEFT", PAD, -PAD)
         typeIcon:SetTexture(LIST_TYPE_ICONS[listData.listType] or LIST_TYPE_ICONS.todo)
-
-        local titleLabel = OneWoW_GUI:CreateFS(row, 12)
-        titleLabel:SetPoint("TOPLEFT", typeIcon, "TOPRIGHT", 8, -2)
-        titleLabel:SetPoint("RIGHT", row, "RIGHT", -72, 0)
-        titleLabel:SetJustifyH("LEFT")
-        titleLabel:SetText(listData.title or "Untitled")
-        titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-        local metaLabel = OneWoW_GUI:CreateFS(row, 10)
-        metaLabel:SetPoint("TOPLEFT", titleLabel, "BOTTOMLEFT", 0, -2)
-        metaLabel:SetPoint("RIGHT", row, "RIGHT", -72, 0)
-        metaLabel:SetJustifyH("LEFT")
-        local typeColor = LIST_TYPE_COLORS[listData.listType] or { 0.7, 0.7, 0.7 }
-        local typeName = TE:GetListTypeDisplayName(listData.listType)
-        metaLabel:SetText(format("|cFF%02x%02x%02x%s|r  %s",
-            typeColor[1] * 255, typeColor[2] * 255, typeColor[3] * 255,
-            typeName, listData.category or ""))
-        metaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        local done, total = TD:GetListCompletion(listData.id)
-
-        local progressLabel = OneWoW_GUI:CreateFS(row, 10)
-        progressLabel:SetPoint("RIGHT", row, "RIGHT", -28, 0)
-        progressLabel:SetText(total > 0 and format("%d/%d", done, total) or "")
-        progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        if total > 0 then
-            local progressBar = OneWoW_GUI:CreateProgressBar(row, {
-                height = 3,
-                min    = 0,
-                max    = total,
-                value  = done,
-            })
-            progressBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 4, 4)
-            progressBar:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 4)
-            progressBar._text:Hide()
-        end
 
         local listFavBtn = OneWoW_GUI:CreateFavoriteToggleButton(row, {
             size     = 18,
@@ -300,8 +264,46 @@ function ns.UI.CreateTrackerTab(parent)
                 parent.ShowDetail(listData.id)
             end,
         })
-        listFavBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -4)
+        listFavBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -PAD, -PAD)
         listFavBtn:SetFrameLevel((row:GetFrameLevel() or 0) + 15)
+
+        local titleLabel = OneWoW_GUI:CreateFS(row, 12)
+        titleLabel:SetPoint("TOPLEFT", typeIcon, "TOPRIGHT", PAD, 0)
+        titleLabel:SetPoint("RIGHT", listFavBtn, "LEFT", -PAD, 0)
+        titleLabel:SetJustifyH("LEFT")
+        titleLabel:SetWordWrap(false)
+        titleLabel:SetText(listData.title or "Untitled")
+        titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local metaLabel = OneWoW_GUI:CreateFS(row, 10)
+        metaLabel:SetPoint("TOPLEFT", titleLabel, "BOTTOMLEFT", 0, -2)
+        metaLabel:SetPoint("RIGHT", listFavBtn, "LEFT", -PAD, 0)
+        metaLabel:SetJustifyH("LEFT")
+        metaLabel:SetWordWrap(false)
+        local typeColor = LIST_TYPE_COLORS[listData.listType] or { 0.7, 0.7, 0.7 }
+        local typeName = TE:GetListTypeDisplayName(listData.listType)
+        metaLabel:SetText(format("|cFF%02x%02x%02x%s|r | %s",
+            typeColor[1] * 255, typeColor[2] * 255, typeColor[3] * 255,
+            typeName, listData.category or ""))
+        metaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        local done, total = TD:GetListCompletion(listData.id)
+        if total > 0 then
+            local progressLabel = OneWoW_GUI:CreateFS(row, 10)
+            progressLabel:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -PAD, PAD)
+            progressLabel:SetText(format("%d/%d", done, total))
+            progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+            local progressBar = OneWoW_GUI:CreateProgressBar(row, {
+                height = 3,
+                min    = 0,
+                max    = total,
+                value  = done,
+            })
+            progressBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", PAD, PAD)
+            progressBar:SetPoint("RIGHT", progressLabel, "LEFT", -PAD, 0)
+            progressBar._text:Hide()
+        end
 
         local isSelected = (listData.id == selectedListID)
         if isSelected then
@@ -316,18 +318,24 @@ function ns.UI.CreateTrackerTab(parent)
             parent.ShowDetail(listData.id)
         end)
 
-        row:SetScript("OnEnter", function(self)
+        row:SetScript("OnEnter", function(myself)
             if listData.id ~= selectedListID then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            end
+            if titleLabel:IsTruncated() then
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetText(listData.title or "Untitled", 1, 1, 1)
+                GameTooltip:Show()
             end
         end)
 
-        row:SetScript("OnLeave", function(self)
+        row:SetScript("OnLeave", function(myself)
             if listData.id ~= selectedListID then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
+            GameTooltip:Hide()
         end)
 
         return row
