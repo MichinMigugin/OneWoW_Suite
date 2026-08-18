@@ -10,14 +10,14 @@
 
 ### Lists
 
-* Create lists by type: guide, daily, weekly, todo, repeating, or farm value
-* Organize with categories, favorites, and filters. Hide Done drops finished lists; Hide completed on an open list (and on its pin) hides finished steps and empty sections. Clear resets search, type, category, and Hide Done.
+* Create lists by type: guide, daily, weekly, todo, repeating, or farm value. Repeating lists clear after a custom hour interval you set.
+* Organize with categories (topic folders, not daily/weekly cadence), favorites, and filters. Hide Done drops finished lists; Hide completed on an open list (and on its pin) hides finished steps and empty sections. Clear resets search, type, category, and Hide Done.
 * Author sections and steps; import, export, and share lists
 * Start from bundled presets and examples
 
 ### Auto-tracking
 
-Many step types complete themselves from game events — quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, timers, and more. Choose daily, weekly, or one-time resets; progress can be character- or account-scoped where the list allows.
+Many step types complete themselves from game events — quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, timers, and more. Choose daily, weekly, repeating (hour interval), or one-time resets; progress can be character- or account-scoped where the list allows.
 
 ### Overlays and map
 

@@ -123,7 +123,7 @@ local function ValidateAndNormalizeImport(expanded)
     end
 
     expanded.listType    = TD:IsValidListType(expanded.listType) and expanded.listType or "todo"
-    expanded.category    = type(expanded.category) == "string" and expanded.category or "General"
+    expanded.category    = TD:NormalizeCategory(expanded.category)
     expanded.description = type(expanded.description) == "string" and expanded.description or ""
     expanded.author      = type(expanded.author) == "string" and expanded.author or "Unknown"
     expanded.version     = tonumber(expanded.version) or 1
@@ -233,9 +233,7 @@ function TD:NormalizeAllLists()
                 list.title = "Untitled List"
                 wasBroken = true
             end
-            if type(list.category) ~= "string" then
-                list.category = "General"
-            end
+            list.category = TD:NormalizeCategory(list.category)
             if type(list.description) ~= "string" then
                 list.description = ""
             end

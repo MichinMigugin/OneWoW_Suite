@@ -95,6 +95,9 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["TRACKER_LIST_TODO"]             = "To-do",
     ["TRACKER_LIST_REPEATING"]        = "Wiederkehrend",
+    ["TRACKER_REPEAT_EVERY"]          = "Alle",
+    ["TRACKER_REPEAT_HOURS"]          = "Stunden",
+    ["TRACKER_REPEAT_HINT"]           = "Der Fortschritt wird nach dieser Anzahl Stunden zurückgesetzt.",
 
     ["TRACKER_TYPE_MANUAL"]           = "Manuell",
     ["TRACKER_TYPE_QUEST"]            = "Quest",

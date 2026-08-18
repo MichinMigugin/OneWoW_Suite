@@ -58,7 +58,7 @@ Follows suite orchestrator hooks (no per-file `ADDON_LOADED` init) — see [ARCH
 
 ## Data Model
 
-- **Lists** — typed (`guide`, `daily`, `weekly`, `todo`, `repeating`, `farmvalue`), categorized, favoritable
+- **Lists** — typed (`guide`, `daily`, `weekly`, `todo`, `repeating`, `farmvalue`). Categories are topic folders (not cadence). Repeating lists clear when `resetInterval` (seconds) elapses.
 - **Sections / steps** — markup-capable; step types drive auto-tracking predicates
 - **Farm value** — watchlist or all unbound stacks; optional session baseline snapshot
 

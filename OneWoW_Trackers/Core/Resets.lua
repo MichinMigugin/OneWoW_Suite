@@ -244,12 +244,16 @@ function TD:CheckCustomTimerResets()
     local lists = self:GetListsDB()
 
     for listID, list in pairs(lists) do
-        local progress = self:GetProgressDBForList(listID)
-        if list.listType == "repeating" and list.resetInterval and progress[listID] then
-            local prog = progress[listID]
-            local lastReset = prog.lastReset or 0
-            if (now - lastReset) >= list.resetInterval then
-                self:ResetProgress(listID)
+        if list.listType == "repeating" then
+            local interval = tonumber(list.resetInterval)
+            if interval and interval > 0 then
+                local prog = self:GetProgress(listID)
+                local lastReset = prog.lastReset or 0
+                if lastReset == 0 then
+                    prog.lastReset = now
+                elseif (now - lastReset) >= interval then
+                    self:ResetProgress(listID)
+                end
             end
         end
 

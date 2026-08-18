@@ -95,6 +95,9 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["TRACKER_LIST_TODO"]             = "Da fare",
     ["TRACKER_LIST_REPEATING"]        = "Ricorrente",
+    ["TRACKER_REPEAT_EVERY"]          = "Ogni",
+    ["TRACKER_REPEAT_HOURS"]          = "ore",
+    ["TRACKER_REPEAT_HINT"]           = "I progressi si azzerano dopo questo numero di ore.",
 
     ["TRACKER_TYPE_MANUAL"]           = "Manuale",
     ["TRACKER_TYPE_QUEST"]            = "Missione",
