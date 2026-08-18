@@ -6,6 +6,7 @@
 - Updated Home links.
 - Hub search results and the minimap menu no longer error when they close after the mouse leaves.
 - Character profiles no longer error when saving or restoring macros.
+- Single-line text fields (search, names, filters) show an X to clear them.
 
 ### Manage Features
 - DevTools starts off on a new install. Enable it in Manage Features; no reload needed.
@@ -95,11 +96,7 @@
 
 ---
 
-*No user-facing changes this release for Notes.*
-
----
-
-- **Last Updated**: Aug 17, 2026
+- **Last Updated**: Aug 18, 2026
 
 ## R6.2608.1105
 

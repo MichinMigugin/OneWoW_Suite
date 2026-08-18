@@ -830,7 +830,7 @@ local box = OneWoW_GUI:CreateEditBox(parent, {
     height = 22,           -- optional, default SEARCH_HEIGHT
     placeholderText = "Search...",  -- optional
     maxLetters = 50,       -- optional
-    showClear = true,      -- optional; X button when text is non-empty
+    showClear = true,      -- optional; default on unless width is set and under 80
     clearTooltip = "Clear", -- optional; tooltip on the X (omit for no tooltip)
     onClear = function(box) end,  -- optional; after clear click
     onTextChanged = function(text)  -- optional, text has placeholder filtered out
@@ -841,7 +841,24 @@ local box = OneWoW_GUI:CreateEditBox(parent, {
 Themed with focus border highlight and placeholder text behavior.
 When `width` is omitted, only height is set - use anchor points for flexible width.
 Use `box:GetSearchText()` to get current text with placeholder filtered out.
-With `showClear`, right text inset reserves room for the X so glyphs do not sit under it.
+`showClear` defaults on for stretch-width boxes and for fixed widths of 80 or more.
+Pass `showClear = false` for cramped or numeric fields (gold/qty/id). Explicit
+`true`/`false` always wins. With the X, right text inset reserves room so glyphs
+do not sit under it.
+
+`CreateScrollEditBox` (multiline notes, mail body, import/export) does not get an X.
+
+For a raw `EditBox` (hub search, dropdown filter), reuse the same X:
+
+```lua
+OneWoW_GUI:AttachClearButton(box, {
+    onClear = function(box) end,  -- optional; after clear click
+    clearTooltip = "Clear",       -- optional
+})
+```
+
+`AttachClearButton` hides the X when the box is empty or showing `box.placeholderText`,
+and bumps the right inset if it is narrower than the X gutter.
 
 Use `CreateEditBox` with `placeholderText` for search boxes. The deprecated `CreateSearchBox` wrapper has been removed.
 

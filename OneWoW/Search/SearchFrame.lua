@@ -227,7 +227,8 @@ function Search:Init(parent, rightAnchor)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
     box:SetMaxLetters(50)
-    box:SetText("Search...")
+    box.placeholderText = "Search..."
+    box:SetText(box.placeholderText)
     box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local isPlaceholder = true
@@ -244,7 +245,7 @@ function Search:Init(parent, rightAnchor)
     box:SetScript("OnEditFocusLost", function(myself)
         myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         if myself:GetText() == "" then
-            myself:SetText("Search...")
+            myself:SetText(myself.placeholderText)
             myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             isPlaceholder = true
         end
@@ -275,6 +276,16 @@ function Search:Init(parent, rightAnchor)
             end
         end
     end)
+
+    OneWoW_GUI:AttachClearButton(box, {
+        onClear = function()
+            isPlaceholder = true
+            if resultsFrame then
+                resultsFrame:Hide()
+                resultsFrame:SetScript("OnUpdate", nil)
+            end
+        end,
+    })
 
     searchBox = box
 

@@ -708,6 +708,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     menu:Hide()
                 end
             end)
+            OneWoW_GUI:AttachClearButton(searchBox)
         end
 
         menu:Show()
