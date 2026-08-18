@@ -11,7 +11,7 @@ Packed entry format:
 
 The redundant "sound/" prefix is omitted from stored entries and rebuilt in Lua.
 
-python bin/extract_listfile_audio.py -v --from-wago --product wowt --shared-when-identical --version 12.0.7.68887 --compare-version 12.0.7.68182 --outfile ".cache/SoundFiles-{product}.lua"
+python bin/extract_listfile_audio.py -v --from-wago --product wowt --shared-when-identical --version 12.1.0.69382 --compare-version 12.0.7.68887 --outfile ".cache/SoundFiles-{product}.lua"
 
   --outfile "OneWoW_Utility_DevTool/Data/SoundFiles-{product}.lua"
 """
@@ -239,6 +239,30 @@ def lua_data_version_literal(data_versions: list[str]) -> str:
     return "{ " + ", ".join(lua_quote(version) for version in data_versions) + " }"
 
 
+SOUND_DATA_TYPE_BY_PRODUCT = {
+    "wow": "Sound",
+    "wowt": "Sound PTR",
+    "wowxptr": "Sound XPTR",
+}
+
+
+def sound_data_type_label(product: str) -> str:
+    return SOUND_DATA_TYPE_BY_PRODUCT.get(product, f"Sound {product}")
+
+
+def render_validate_call(product: str) -> str:
+    """Emit ValidateDataBuildGameBuild(dataType, expectedVersion[, verbose]).
+
+    Matches AtlasInfo-wow / AtlasInfo-wowt. Live prints on mismatch so a stale
+    extract is obvious in chat. PTR/XPTR stay quiet: TOC AllowLoadGameType is
+    ignored, so those files also load on Mainline and a mismatch is expected.
+    """
+    data_type = lua_quote(sound_data_type_label(product))
+    if product == "wow":
+        return f"if not Addon.ValidateDataBuildGameBuild({data_type}, dataVersion, true) then"
+    return f"if not Addon.ValidateDataBuildGameBuild({data_type}, dataVersion) then"
+
+
 def fetch_wago_latest_version(
     product: str,
     builds_base: str,
@@ -412,13 +436,14 @@ def write_init_file(
     init_path: Path,
     data_versions: list[str],
     slices: dict[str, dict[str, tuple[int, int]]],
+    product: str,
 ) -> None:
     lines = [
         "-- AUTOMATICALLY GENERATED -- https://wago.tools/",
         "local _, Addon = ...",
         "",
         f"local dataVersion = {lua_data_version_literal(data_versions)}",
-        "if not Addon.ValidateDataBuildGameBuild(dataVersion) then",
+        render_validate_call(product),
         "\treturn",
         "end",
         "",
@@ -460,6 +485,7 @@ def write_dataset(
     verbose: bool,
     *,
     entries_per_shard: int,
+    product: str,
 ) -> list[Path]:
     if entries_per_shard < 1:
         print("Error: --entries-per-shard must be >= 1.", file=sys.stderr)
@@ -482,7 +508,7 @@ def write_dataset(
         old_path.unlink()
         vprint(verbose, f"Removed old shard {old_path.name}")
 
-    write_init_file(init_path, data_versions, slices)
+    write_init_file(init_path, data_versions, slices, product)
     shard_paths: list[Path] = [init_path]
 
     total_shards = max(1, (len(entries) + entries_per_shard - 1) // entries_per_shard) if entries else 0
@@ -632,6 +658,7 @@ def main() -> int:
         primary_dataset,
         verbose,
         entries_per_shard=args.entries_per_shard,
+        product=args.product,
     )
 
     where = f"{shard_paths[0]}, {len(shard_paths) - 1} shard(s) under {out_path.parent}"

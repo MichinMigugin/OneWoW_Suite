@@ -14,7 +14,12 @@
 
 ---
 
-*No user-facing changes this release for Home, QoL, Bags, AltTracker, Mail, Shopping List, Notes, DevTool, or Direct Deposit.*
+# DevTool
+- The Sounds tab lists game audio again.
+
+---
+
+*No user-facing changes this release for Home, QoL, Bags, AltTracker, Mail, Shopping List, Notes, or Direct Deposit.*
 
 ---
 
