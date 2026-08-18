@@ -95,6 +95,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["TRACKER_LIST_TODO"]             = "Список дел",
     ["TRACKER_LIST_REPEATING"]        = "Повторяющийся",
+    ["TRACKER_REPEAT_EVERY"]          = "Сброс каждые",
+    ["TRACKER_REPEAT_HOURS"]          = "ч.",
+    ["TRACKER_REPEAT_HINT"]           = "Прогресс сбрасывается через указанное число часов.",
 
     ["TRACKER_TYPE_MANUAL"]           = "Вручную",
     ["TRACKER_TYPE_QUEST"]            = "Задание",

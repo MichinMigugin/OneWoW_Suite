@@ -29,29 +29,43 @@ local LIST_TYPES = {
 local LIST_TYPE_SET = {}
 for _, v in ipairs(LIST_TYPES) do LIST_TYPE_SET[v] = true end
 
+-- Topic folders, not cadence. Daily/weekly/repeating live on listType.
+-- Countable names are singular; General stays first, then A-Z.
 local CATEGORIES = {
     "General",
-    "Leveling",
+    "Achievement",
     "Campaign",
-    "Professions",
+    "Collection",
+    "Dungeon",
+    "Event",
+    "Exploration",
+    "Farming",
     "Gearing",
     "Gold Making",
-    "Collections",
+    "Leveling",
+    "Profession",
     "PvP",
-    "Dungeons",
-    "Raids",
+    "Raid",
     "Reputation",
-    "Achievements",
-    "Events",
-    "Dailies",
-    "Weeklies",
-    "Farming",
-    "Mounts",
-    "Pets",
-    "Toys",
-    "Transmog",
-    "Exploration",
 }
+
+-- Saved/imported English strings from older category lists.
+local CATEGORY_REMAP = {
+    Dailies       = "General",
+    Weeklies      = "General",
+    Mounts        = "Collection",
+    Pets          = "Collection",
+    Toys          = "Collection",
+    Transmog      = "Collection",
+    Collections   = "Collection",
+    Professions   = "Profession",
+    Dungeons      = "Dungeon",
+    Raids         = "Raid",
+    Achievements  = "Achievement",
+    Events        = "Event",
+}
+
+local DEFAULT_REPEAT_INTERVAL = 24 * 3600
 
 local TRACK_TYPES = {
     "manual",
@@ -102,6 +116,26 @@ function TD:GetCategories() return CATEGORIES end
 function TD:GetTrackTypes() return TRACK_TYPES end
 function TD:IsValidListType(t) return LIST_TYPE_SET[t] or false end
 function TD:IsValidTrackType(t) return TRACK_TYPE_SET[t] or false end
+
+--- Map a stored category string onto the current picker list.
+--- Unknown custom strings are left as-is so they still display on the list.
+---@param cat string|nil
+---@return string
+function TD:NormalizeCategory(cat)
+    if type(cat) ~= "string" or cat == "" then
+        return "General"
+    end
+    return CATEGORY_REMAP[cat] or cat
+end
+
+function TD:RemapStoredCategories()
+    local lists = self:GetListsDB()
+    for _, list in pairs(lists) do
+        if type(list) == "table" then
+            list.category = self:NormalizeCategory(list.category)
+        end
+    end
+end
 
 --- Unique list id (`tl-...`).
 ---@param prefix string
@@ -254,15 +288,24 @@ function TD:CreateList(opts)
     opts = opts or {}
     local db = GetDB()
 
+    local listType = LIST_TYPE_SET[opts.listType] and opts.listType or "todo"
+    local resetInterval = nil
+    if listType == "repeating" then
+        resetInterval = tonumber(opts.resetInterval)
+        if not resetInterval or resetInterval <= 0 then
+            resetInterval = DEFAULT_REPEAT_INTERVAL
+        end
+    end
+
     local list = {
         id            = GenerateID("tl"),
         title         = opts.title or "Untitled List",
         description   = opts.description or "",
         author        = opts.author or (UnitName("player") or "Unknown"),
         version       = 1,
-        listType      = LIST_TYPE_SET[opts.listType] and opts.listType or "todo",
-        category      = opts.category or "General",
-        resetInterval = tonumber(opts.resetInterval) or nil,
+        listType      = listType,
+        category      = self:NormalizeCategory(opts.category),
+        resetInterval = resetInterval,
         sections      = {},
         created       = time(),
         modified      = time(),
@@ -282,6 +325,12 @@ function TD:CreateList(opts)
     }
 
     db.global.trackerLists[list.id] = list
+
+    if listType == "repeating" then
+        local prog = self:GetProgress(list.id)
+        prog.lastReset = time()
+    end
+
     return list
 end
 
@@ -298,11 +347,29 @@ function TD:UpdateList(listID, changes)
     local list = self:GetList(listID)
     if not list then return false end
 
+    if changes.category ~= nil then
+        changes.category = self:NormalizeCategory(changes.category)
+    end
+
     for k, v in pairs(changes) do
         if k ~= "id" and k ~= "created" and k ~= "sections" then
             list[k] = v
         end
     end
+
+    if list.listType == "repeating" then
+        local ri = tonumber(list.resetInterval)
+        if not ri or ri <= 0 then
+            list.resetInterval = DEFAULT_REPEAT_INTERVAL
+        end
+        local prog = self:GetProgress(listID)
+        if (prog.lastReset or 0) == 0 then
+            prog.lastReset = time()
+        end
+    else
+        list.resetInterval = nil
+    end
+
     list.modified = time()
     return true
 end

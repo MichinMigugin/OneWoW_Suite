@@ -95,6 +95,9 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["TRACKER_LIST_TODO"]             = "할 일",
     ["TRACKER_LIST_REPEATING"]        = "반복",
+    ["TRACKER_REPEAT_EVERY"]          = "초기화 주기",
+    ["TRACKER_REPEAT_HOURS"]          = "시간",
+    ["TRACKER_REPEAT_HINT"]           = "설정한 시간이 지나면 진행 상황이 초기화됩니다.",
 
     ["TRACKER_TYPE_MANUAL"]           = "수동",
     ["TRACKER_TYPE_QUEST"]            = "퀘스트",

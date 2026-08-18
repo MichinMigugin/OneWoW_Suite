@@ -8,9 +8,14 @@ local TE_UI = ns.TrackerEditor
 
 local tinsert, tonumber, tostring = tinsert, tonumber, tostring
 local strtrim, sort, pairs, ipairs = strtrim, sort, pairs, ipairs
+local floor = math.floor
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+
+local DEFAULT_REPEAT_HOURS = 24
+local LIST_FORM_HEIGHT = 340
+local LIST_FORM_HEIGHT_REPEAT = 390
 
 local function MakeLabel(parent, text, x, y)
     local fs = OneWoW_GUI:CreateFS(parent, 10)
@@ -161,6 +166,69 @@ local function CreateDropdown(parent, width, height)
     return dropdown
 end
 
+local function HoursFromInterval(seconds)
+    local n = tonumber(seconds)
+    if not n or n <= 0 then return DEFAULT_REPEAT_HOURS end
+    local hours = n / 3600
+    if hours < 1 then hours = 1 end
+    return floor(hours + 0.5)
+end
+
+local function RepeatSecondsFromHoursText(text)
+    local hours = tonumber(text)
+    if not hours or hours <= 0 then
+        hours = DEFAULT_REPEAT_HOURS
+    end
+    return hours * 3600
+end
+
+--- Hours field under type/category. Shown only for repeating lists; grows the
+--- dialog and shifts the account-wide checkbox down so the row does not overlap.
+local function WireRepeatInterval(dialog, content, typeDD, intervalY, accountWideCheck, listType, resetInterval)
+    local hoursLabel = MakeLabel(content, L["TRACKER_REPEAT_EVERY"], 10, intervalY)
+    local hoursBox = OneWoW_GUI:CreateEditBox(content, {
+        width = 56,
+        height = 26,
+        showClear = false,
+        maxLetters = 4,
+    })
+    hoursBox:SetPoint("LEFT", hoursLabel, "RIGHT", 8, 0)
+    hoursBox:SetNumeric(true)
+    hoursBox:SetText(tostring(HoursFromInterval(resetInterval)))
+    hoursBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dialog._hoursBox = hoursBox
+
+    local hoursUnit = OneWoW_GUI:CreateFS(content, 10)
+    hoursUnit:SetPoint("LEFT", hoursBox, "RIGHT", 8, 0)
+    hoursUnit:SetText(L["TRACKER_REPEAT_HOURS"])
+    hoursUnit:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local hoursHint = OneWoW_GUI:CreateFS(content, 10)
+    hoursHint:SetPoint("TOPLEFT", hoursBox, "BOTTOMLEFT", 0, -2)
+    hoursHint:SetText(L["TRACKER_REPEAT_HINT"])
+    hoursHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local function applyRepeatRow(isRepeating)
+        hoursLabel:SetShown(isRepeating)
+        hoursBox:SetShown(isRepeating)
+        hoursUnit:SetShown(isRepeating)
+        hoursHint:SetShown(isRepeating)
+        accountWideCheck:ClearAllPoints()
+        if isRepeating then
+            accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, intervalY - 44)
+            dialog:SetHeight(LIST_FORM_HEIGHT_REPEAT)
+        else
+            accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, intervalY)
+            dialog:SetHeight(LIST_FORM_HEIGHT)
+        end
+    end
+
+    typeDD.onSelect = function(value)
+        applyRepeatRow(value == "repeating")
+    end
+    applyRepeatRow(listType == "repeating")
+end
+
 local QUICK_START = {
     {
         key = "weekly",
@@ -168,7 +236,7 @@ local QUICK_START = {
         desc = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets on your region's weekly reset day.",
         icon = "Interface\\Icons\\Achievement_General_100kQuests",
         listType = "weekly",
-        category = "Weeklies",
+        category = "General",
         preset = "midnight_weeklies",
     },
     {
@@ -177,7 +245,7 @@ local QUICK_START = {
         desc = "Daily chores that reset every day. World quests, daily hubs, profession cooldowns.",
         icon = "Interface\\Icons\\Spell_Holy_BorrowedTime",
         listType = "daily",
-        category = "Dailies",
+        category = "General",
         preset = "daily_tasks",
     },
     {
@@ -188,6 +256,15 @@ local QUICK_START = {
         listType = "todo",
         category = "General",
         preset = "todo_template",
+    },
+    {
+        key = "repeating",
+        title = "Repeating",
+        desc = "Tasks that clear after a custom number of hours. Set the interval when you create the list.",
+        icon = "Interface\\Icons\\INV_Misc_PocketWatch_01",
+        listType = "repeating",
+        category = "General",
+        showCustomForm = true,
     },
     {
         key = "farmvalue",
@@ -204,7 +281,7 @@ local QUICK_START = {
         desc = "Track your raid, dungeon, and world content progress for the weekly vault.",
         atlas = "greatVault-whole-normal",
         listType = "weekly",
-        category = "Weeklies",
+        category = "Gearing",
         preset = "great_vault",
     },
     {
@@ -213,7 +290,7 @@ local QUICK_START = {
         desc = "Track skill, concentration, knowledge, and weekly tasks for your professions.",
         icon = "Interface\\Icons\\Trade_BlackSmithing",
         listType = "weekly",
-        category = "Professions",
+        category = "Profession",
         showProfPicker = true,
     },
     {
@@ -579,7 +656,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
         name = "TrackerCustomListForm",
         title = "Create Custom List",
         width = 480,
-        height = 340,
+        height = LIST_FORM_HEIGHT,
         destroyOnClose = true,
         buttons = {
             {
@@ -587,13 +664,18 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
                 onClick = function(frame)
                     local title = strtrim(frame._titleBox:GetText() or "")
                     if title == "" then title = "My List" end
-                    local list = TD:CreateList({
+                    local listType = frame._typeDD:GetValue() or defaultType or "todo"
+                    local opts = {
                         title = title,
                         description = strtrim(frame._descBox:GetText() or ""),
-                        listType = frame._typeDD:GetValue() or defaultType or "todo",
+                        listType = listType,
                         category = frame._catDD:GetValue() or defaultCategory or "General",
                         accountWide = frame._accountWideCheck:GetChecked(),
-                    })
+                    }
+                    if listType == "repeating" then
+                        opts.resetInterval = RepeatSecondsFromHoursText(frame._hoursBox:GetText())
+                    end
+                    local list = TD:CreateList(opts)
                     TD:AddSection(list.id, { label = "Tasks" })
                     frame:Hide(); frame:SetParent(nil)
                     if callback then callback(list) end
@@ -650,6 +732,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     catDD:SetSelected(defaultCategory or "General")
     dialog._catDD = catDD
     yOfs = yOfs - 36
+    local intervalY = yOfs
 
     local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] })
     accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
@@ -659,6 +742,8 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
     accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"])
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    WireRepeatInterval(dialog, content, typeDD, intervalY, accountWideCheck, defaultType or "todo", nil)
 
     dialog:Show()
 end
@@ -739,19 +824,24 @@ function TE_UI:ShowListEditor(listID, callback)
         name = "TrackerEditListDialog",
         title = "Edit List",
         width = 480,
-        height = 340,
+        height = LIST_FORM_HEIGHT,
         destroyOnClose = true,
         buttons = {
             {
                 text = SAVE,
                 onClick = function(frame)
-                    TD:UpdateList(listID, {
+                    local listType = frame._typeDD:GetValue() or "todo"
+                    local changes = {
                         title = strtrim(frame._titleBox:GetText() or "Untitled"),
                         description = strtrim(frame._descBox:GetText() or ""),
-                        listType = frame._typeDD:GetValue() or "todo",
+                        listType = listType,
                         category = frame._catDD:GetValue() or "General",
                         accountWide = frame._accountWideCheck:GetChecked(),
-                    })
+                    }
+                    if listType == "repeating" then
+                        changes.resetInterval = RepeatSecondsFromHoursText(frame._hoursBox:GetText())
+                    end
+                    TD:UpdateList(listID, changes)
                     frame:Hide(); frame:SetParent(nil)
                     if callback then callback() end
                 end,
@@ -809,6 +899,7 @@ function TE_UI:ShowListEditor(listID, callback)
     catDD:SetSelected(list.category or "General")
     dialog._catDD = catDD
     yOfs = yOfs - 36
+    local intervalY = yOfs
 
     local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] })
     accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
@@ -819,6 +910,8 @@ function TE_UI:ShowListEditor(listID, callback)
     accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
     accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"])
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    WireRepeatInterval(dialog, content, typeDD, intervalY, accountWideCheck, list.listType or "todo", list.resetInterval)
 
     dialog:Show()
 end

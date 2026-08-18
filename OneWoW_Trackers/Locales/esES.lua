@@ -95,6 +95,9 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
     ["TRACKER_LIST_TODO"]             = "Pendientes",
     ["TRACKER_LIST_REPEATING"]        = "Repetible",
+    ["TRACKER_REPEAT_EVERY"]          = "Cada",
+    ["TRACKER_REPEAT_HOURS"]          = "horas",
+    ["TRACKER_REPEAT_HINT"]           = "El progreso se borra transcurridas estas horas.",
 
     ["TRACKER_TYPE_MANUAL"]           = "Manual",
     ["TRACKER_TYPE_QUEST"]            = "Misión",

@@ -95,6 +95,9 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["TRACKER_LIST_TODO"]             = "待办",
     ["TRACKER_LIST_REPEATING"]        = "重复",
+    ["TRACKER_REPEAT_EVERY"]          = "重置间隔",
+    ["TRACKER_REPEAT_HOURS"]          = "小时",
+    ["TRACKER_REPEAT_HINT"]           = "经过这些小时后进度会清除。",
 
     ["TRACKER_TYPE_MANUAL"]           = "手动",
     ["TRACKER_TYPE_QUEST"]            = "任务",

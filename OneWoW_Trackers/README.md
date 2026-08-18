@@ -7,14 +7,14 @@
 ## Features
 
 ### Tracker Lists
-- Create lists by type: guide, daily, weekly, todo, repeating, or farm value
-- Organize with categories, favorites, and filters (including hide completed)
+- Create lists by type: guide, daily, weekly, todo, repeating, or farm value. Repeating lists clear after a custom hour interval.
+- Organize with topic-folder categories, favorites, and filters (including hide completed)
 - Author sections and steps with rich markup; import, export, and share lists
 - Bundled presets and example lists to get started quickly
 
 ### Auto-Tracking
 - Many step types auto-complete from game events: quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, custom timers, and more
-- Daily, weekly, or one-time reset rules; optional account-wide progress
+- Daily, weekly, repeating (hour interval), or one-time reset rules; optional account-wide progress
 
 ### Pinned Overlays & Map
 - Pin lists as floating progress windows while you play

@@ -22,7 +22,7 @@ function TD:ParseMarkup(text, opts)
         title = opts.title or "Imported Guide",
         description = "",
         listType = opts.listType or "guide",
-        category = opts.category or "General",
+        category = TD:NormalizeCategory(opts.category),
         sections = {},
     }
 
@@ -231,7 +231,7 @@ function TD:CreateListFromParsed(parsed)
         title = parsed.title,
         description = parsed.description,
         listType = parsed.listType or "guide",
-        category = parsed.category or "General",
+        category = parsed.category,
     })
     if not list then return nil end
 

@@ -93,4 +93,6 @@ function ns:InitializeDatabase()
         db.char._charDBDrained = true
         wipe(legacyChar)
     end
+
+    ns.TrackerData:RemapStoredCategories()
 end

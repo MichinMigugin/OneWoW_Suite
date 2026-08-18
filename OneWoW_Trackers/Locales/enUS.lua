@@ -94,6 +94,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["TRACKER_LIST_TODO"]               = "To-Do",
     ["TRACKER_LIST_REPEATING"]          = "Repeating",
+    ["TRACKER_REPEAT_EVERY"]            = "Reset every",
+    ["TRACKER_REPEAT_HOURS"]            = "Hours",
+    ["TRACKER_REPEAT_HINT"]             = "Progress clears after this many hours.",
 
     ["TRACKER_TYPE_MANUAL"]             = "Manual",
     ["TRACKER_TYPE_QUEST"]              = "Quest",
