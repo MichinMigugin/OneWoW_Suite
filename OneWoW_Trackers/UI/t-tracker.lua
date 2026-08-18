@@ -78,14 +78,6 @@ function ns.UI.CreateTrackerTab(parent)
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
-    clearBtn:SetScript("OnClick", function()
-        searchBox:SetText("")
-        searchBox:ClearFocus()
-        searchBox:RestorePlaceholder()
-        searchFilter = ""
-        parent.RefreshList()
-    end)
-
     local typeDropdown, typeText = OneWoW_GUI:CreateDropdown(leftHeader, {
         width = DD_W,
         height = 26,
@@ -146,6 +138,20 @@ function ns.UI.CreateTrackerTab(parent)
         end,
     })
     hideCompletedCheck:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -64)
+
+    clearBtn:SetScript("OnClick", function()
+        searchFilter = ""
+        filterType = "all"
+        filterCategory = "All"
+        hideCompleted = false
+        searchBox:SetText("")
+        searchBox:ClearFocus()
+        searchBox:RestorePlaceholder()
+        typeText:SetText(L["TRACKER_ALL_TYPES"])
+        catText:SetText(L["TRACKER_ALL_CATEGORIES"])
+        hideCompletedCheck:SetChecked(false)
+        parent.RefreshList()
+    end)
 
     local newBtn = OneWoW_GUI:CreateFitTextButton(rightHeader, {
         text = NEW,

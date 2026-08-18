@@ -2,6 +2,17 @@
 
 - **Status**: Draft
 
+### Trackers
+- Clear on the Tracker tab also resets type, category, and Hide Done.
+
+---
+
+*No user-facing changes this release for Home, QoL, Catalog, Bags, AltTracker, Mail, Shopping List, Notes, DevTool, or Direct Deposit.*
+
+---
+
+- **Last Updated**: Aug 18, 2026
+
 ## R6.2608.1804
 
 Released Aug 18, 2026. Midnight Season 2 across Portals, Journal, AltTracker Progress, and Trackers, plus Icon Browser search, Bags replacement toggles, and Mail language/font fixes.
