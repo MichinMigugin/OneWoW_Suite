@@ -27,7 +27,7 @@ FrameXML / API mirrors in `.wow_docs`.
 3. Flat CSVs in `.wow_db2/` (semicolon-delimited).
 4. Journal generator: [`bin/journal_db2_tools.py`](bin/journal_db2_tools.py) → `OneWoW_CatalogData_Journal/Data/Generated/`.
 
-**Build pin** lives in the README (e.g. `12.1.0.69283`). Bump it whenever CSVs are replaced.
+**Build pin** lives in the README (e.g. `12.1.0.69382`). Bump it whenever CSVs are replaced.
 
 ## Rules of use
 
