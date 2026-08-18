@@ -19,7 +19,7 @@ Wago has 1,000+ tables. This list is the Catalog-useful set, not every table.
 - **Lore blurb** — `JournalInstance.Description_lang` — Have (same table; not shown in Catalog yet)
 - **Button / background / lore art** — `JournalInstance` file-data IDs — Have
 - **Which cards exist per expansion** — `JournalTier` + `JournalTierXInstance` — Have
-- **World entrance pin** — `JournalInstanceEntrance` — Have
+- **World entrance pin** — `JournalInstanceEntrance` — Have (Catalog journal card pin)
 - **Queue / meeting-stone pin** — `JournalInstanceQueueLoc` — Have
 - **Area the instance sits in** — `JournalInstance.AreaID` → `AreaTable` — Instance side Have; `AreaTable` No
 - **Covenant / special lock** — `JournalInstance.CovenantID` — Have (column only)

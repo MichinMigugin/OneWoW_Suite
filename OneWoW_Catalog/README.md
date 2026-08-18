@@ -10,6 +10,7 @@
 Browse all dungeons and raids from every expansion:
 - **All Expansions Covered** - Classic through Midnight
 - See all instances and encounters at a glance
+- Pin on a card opens the world map at that instance's entrance
 - Detailed encounter information (if data addon is installed)
 - Look up loot tables and boss mechanics
 - Search for specific raids or dungeons

@@ -8,7 +8,7 @@
 
 ## Tabs (overview)
 
-* **Journal** — dungeons and raids across expansions; encounters and loot when Journal data is installed
+* **Journal** — dungeons and raids across expansions; encounters and loot when Journal data is installed. The pin next to the favorite star opens the map and marks the entrance.
 * **Vendors** — who sells what, where, and for which currency
 * **Tradeskills** — recipes, materials, and profession requirements
 * **Item Search** — find an item and see vendors, crafts, drops, and other sources
@@ -36,6 +36,7 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 ## Tips
 
 * For crafting lists, keep **Tradeskills** installed even if you rarely open Catalog — [Shopping List](Shopping-List) uses it for the Craft button and recipe picker.
+* On Journal cards, the pin beside the star opens the world map and drops a waypoint at the instance entrance. Some current or hub cards have no door in the client data, so the pin is hidden there.
 * Themes follow suite-wide OneWoW settings.
 
 ## Related

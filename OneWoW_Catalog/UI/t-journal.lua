@@ -346,7 +346,7 @@ local function CreateInstanceListRow(parent, _)
 
     local nameText = OneWoW_GUI:CreateFS(card, 12)
     nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -6)
-    nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -34, -6)
+    nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -58, -6)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -379,6 +379,28 @@ local function CreateInstanceListRow(parent, _)
     favBtn:SetPoint("TOPRIGHT", card, "TOPRIGHT", -6, -4)
     favBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
     card.favBtn = favBtn
+
+    -- Frameless atlas chrome matches the favorite star. Same on/off atlas so the
+    -- helper's toggle does not change the pin art; click opens the world map.
+    local pinBtn = OneWoW_GUI:CreateFavoriteToggleButton(card, {
+        size = 20,
+        favorite = false,
+        atlasOn = "Waypoint-MapPin-Untracked",
+        atlasOff = "Waypoint-MapPin-Untracked",
+        tooltipTitle = MAP_PIN,
+        tooltipText = L["JOURNAL_MAP_PIN_TT"],
+        onClick = function(myself)
+            myself:SetFavorite(false)
+            local instData = card.instData
+            if not instData or not instData.instanceID then
+                return
+            end
+            ns.Navigation:OpenInstanceEntrance(instData.instanceID, instData.entrances)
+        end,
+    })
+    pinBtn:SetPoint("TOPRIGHT", favBtn, "TOPLEFT", -4, 0)
+    pinBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
+    card.pinBtn = pinBtn
 
     local infoText = OneWoW_GUI:CreateFS(card, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
@@ -489,6 +511,26 @@ local function BindInstanceListRow(row, _, instData, state)
             row.favBtn:Hide()
         end
     end
+
+    if row.pinBtn then
+        if instData.instanceID and instData.entrances and instData.entrances[1] then
+            row.pinBtn:Show()
+            row.pinBtn:SetFavorite(false)
+        else
+            row.pinBtn:Hide()
+        end
+    end
+
+    row.nameText:ClearAllPoints()
+    row.nameText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -6)
+    local nameRight = -8
+    if row.favBtn and row.favBtn:IsShown() then
+        nameRight = nameRight - 26
+    end
+    if row.pinBtn and row.pinBtn:IsShown() then
+        nameRight = nameRight - 24
+    end
+    row.nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", nameRight, -6)
 end
 
 local function FormatAbsentCategories(names)

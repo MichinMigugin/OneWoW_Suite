@@ -17,6 +17,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["CATALOG_FAVORITE"] = "Favorite",
     ["CATALOG_FAVORITE_TT"] = "Mark this entry as a favorite. Favorites sort to the top of the list.",
+    ["JOURNAL_MAP_PIN_TT"] = "Open the map and place a pin at this instance's entrance.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes is unavailable (disabled or failed to load).",
 

@@ -36,6 +36,7 @@ python bin/journal_db2_tools.py report
 | `Data/Generated/TierMembership.lua` | `ns.JournalTierMembership` |
 | `Data/Generated/MapDifficulties.lua` | `ns.JournalMapDifficulties`, `ns.JournalDifficultyMeta` |
 | `Data/Generated/InstanceFlags.lua` | `ns.JournalInstanceMeta` (flags, name, mapID) |
+| `Data/Generated/InstanceEntrances.lua` | `ns.JournalInstanceEntrances` (world-space door pins) |
 
 CSV schema / mermaid: [`.wow_db2/docs/journal.md`](../../.wow_db2/docs/journal.md).
 Extract build pin: [`.wow_db2/README.md`](../../.wow_db2/README.md).

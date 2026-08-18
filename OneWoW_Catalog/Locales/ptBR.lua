@@ -18,6 +18,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["CATALOG_FAVORITE"] = "Favorito",
     ["CATALOG_FAVORITE_TT"] = "Marca esta entrada como favorita. Os favoritos são classificados no topo da lista.",
+    ["JOURNAL_MAP_PIN_TT"] = "Abre o mapa e coloca um pino na entrada desta instância.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes está indisponível (desativado ou falha ao carregar).",
 

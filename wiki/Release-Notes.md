@@ -10,7 +10,13 @@
 
 ---
 
-*No user-facing changes this release for Home, QoL, Catalog, Bags, AltTracker, Mail, Shopping List, Notes, DevTool, or Direct Deposit.*
+### Catalog
+#### Journal
+- Instance cards get a map pin next to the favorite star. Click it to open the world map and drop a waypoint at the entrance (hidden when the client has no door location).
+
+---
+
+*No user-facing changes this release for Home, QoL, Bags, AltTracker, Mail, Shopping List, Notes, DevTool, or Direct Deposit.*
 
 ---
 

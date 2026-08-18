@@ -17,6 +17,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["CATALOG_FAVORITE"] = "즐겨찾기",
     ["CATALOG_FAVORITE_TT"] = "이 항목을 즐겨찾기로 표시합니다. 즐겨찾기는 목록 상단에 정렬됩니다.",
+    ["JOURNAL_MAP_PIN_TT"] = "지도를 열고 이 인스턴스 입구에 핀을 놓습니다.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes를 사용할 수 없습니다 (비활성화되었거나 불러오지 못했습니다).",
 

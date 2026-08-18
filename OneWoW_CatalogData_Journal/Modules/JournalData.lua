@@ -404,6 +404,7 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         flags              = flags,
         isTimewalker       = (flags % 2) ~= 0,
         validDifficulties  = validDifficulties,
+        entrances          = ns.JournalInstanceEntrances and ns.JournalInstanceEntrances[instanceID] or nil,
     }
     ApplyTotals(entry, encounters)
     return entry

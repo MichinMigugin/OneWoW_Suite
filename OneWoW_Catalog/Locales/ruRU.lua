@@ -18,6 +18,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["CATALOG_FAVORITE"] = "Избранное",
     ["CATALOG_FAVORITE_TT"] = "Отметить эту запись как избранную. Избранное сортируется в начало списка.",
+    ["JOURNAL_MAP_PIN_TT"] = "Открыть карту и поставить метку у входа в это подземелье.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes недоступен (отключен или не удалось загрузить).",
 
