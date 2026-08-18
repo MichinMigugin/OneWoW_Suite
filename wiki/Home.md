@@ -34,13 +34,14 @@ This wiki is the **player** reference — install, hub setup, slash commands, an
 | [Shopping List](Shopping-List) | Shopping/crafting lists with stock checks |
 | [Mail](Mail) | Mailbox UI and shipment helpers |
 | [Direct Deposit](Direct-Deposit) | Warband Bank gold and item transfers |
+| [DevTools](DevTool) | Optional developer inspector (frames, events, errors). Not required to play. |
 
 You do **not** need every folder. Companion data packs for Catalog and AltTracker load with their parent when that feature is enabled.
 
 ## Help
 
 * [FAQ](FAQ) — common install and setup questions
-* Community and support: [https://wow2.xyz/](https://wow2.xyz/)
+* Support (docs, email, Discord, CurseForge, GitHub): [https://wow2.xyz/support/](https://wow2.xyz/support/)
 
 ## Related
 

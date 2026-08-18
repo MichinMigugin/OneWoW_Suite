@@ -17,6 +17,7 @@
 * [Shopping List](Shopping-List)
 * [Mail](Mail)
 * [Direct Deposit](Direct-Deposit)
+* [DevTools](DevTool)
 
 ### [FAQ](FAQ)
 

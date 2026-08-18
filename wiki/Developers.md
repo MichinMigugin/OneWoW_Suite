@@ -32,7 +32,7 @@ Clone the repo (or browse on GitHub) and start with **CONTRIBUTING** + **ARCHITE
 | Mail shipments pipeline | [OneWoW_Mail/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Mail/Docs/ARCHITECTURE.md) |
 | Trackers | [OneWoW_Trackers/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Trackers/Docs/ARCHITECTURE.md) |
 | Slash command inventory | [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) |
-| In-game inspector (opt-in) | [OneWoW_Utility_DevTool/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Utility_DevTool/README.md) |
+| In-game inspector (opt-in) | Player page: [DevTools](DevTool) · [OneWoW_Utility_DevTool/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Utility_DevTool/README.md) |
 
 ## Conventions
 

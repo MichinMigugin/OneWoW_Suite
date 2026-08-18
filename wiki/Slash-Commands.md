@@ -29,6 +29,13 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | Direct Deposit | `/1wdd deposit` | Start a manual deposit |
 | Direct Deposit | `/1wdd pause` or `stop` | Stop an in-progress deposit |
 
+## Utilities
+
+| Feature | Command | What it does |
+|---------|---------|----------------|
+| [DevTools](DevTool) | `/1wdt` | Toggle the DevTools window |
+| [DevTools](DevTool) | `/1wdt devmode` | Toggle the floating error list |
+
 ### Shopping List extras
 
 | Args | Effect |

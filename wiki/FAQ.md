@@ -42,7 +42,7 @@ Enable only one primary bag UI you intend to use, or expect overlapping keybinds
 
 ### Where do I get help?
 
-[https://wow2.xyz/](https://wow2.xyz/) — Discord community or the website. Prefer those channels over editing the GitHub wiki UI.
+[https://wow2.xyz/support/](https://wow2.xyz/support/) lists every channel: this site's docs, email, Discord, CurseForge comments, and GitHub issues. Pick one. Prefer those over editing the GitHub wiki UI.
 
 ## Related
 
