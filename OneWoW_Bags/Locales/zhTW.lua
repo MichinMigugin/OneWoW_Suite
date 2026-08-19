@@ -558,6 +558,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "過期的分類順序項目",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "過期的顯示順序項目",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "命名運算式與自訂關鍵字在 OneWoW 設定 → 搜尋捷徑中管理。",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "命名運算式與自訂關鍵字在 OneWoW 設定 >> 搜尋捷徑中管理。",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

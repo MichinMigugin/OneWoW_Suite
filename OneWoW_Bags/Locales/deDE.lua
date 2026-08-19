@@ -558,6 +558,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Veraltete Kategoriereihenfolge-Einträge",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Veraltete Anzeigereihenfolge-Einträge",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Benannte Ausdrücke und benutzerdefinierte Schlüsselwörter verwaltet Ihr unter OneWoW Einstellungen → Suchverknüpfungen.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Benannte Ausdrücke und benutzerdefinierte Schlüsselwörter verwaltet Ihr unter OneWoW Einstellungen >> Suchverknüpfungen.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

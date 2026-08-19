@@ -558,6 +558,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Entradas de ordem de categoria obsoletas",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Entradas de ordem de exibição obsoletas",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Expressões nomeadas e palavras-chave personalizadas são gerenciadas em OneWoW Configurações → Atalhos de pesquisa.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Expressões nomeadas e palavras-chave personalizadas são gerenciadas em OneWoW Configurações >> Atalhos de pesquisa.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

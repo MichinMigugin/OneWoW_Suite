@@ -35,7 +35,12 @@
 
 ---
 
-*No user-facing changes this release for QoL, Bags, Mail, Shopping List, Notes, or Direct Deposit.*
+### Bags
+- Search settings use ASCII punctuation for the Search Shortcuts note so it shows in every suite font.
+
+---
+
+*No user-facing changes this release for QoL, Mail, Shopping List, Notes, or Direct Deposit.*
 
 ---
 

@@ -491,6 +491,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "오래된 분류 순서 항목",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "오래된 표시 순서 항목",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "OneWoW 설정 → 검색 바로가기에서 명명된 표현식과 사용자 지정 키워드를 관리합니다.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "OneWoW 설정 >> 검색 바로가기에서 명명된 표현식과 사용자 지정 키워드를 관리합니다.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

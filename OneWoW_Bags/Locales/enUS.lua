@@ -557,7 +557,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Stale category order entries",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Stale display order entries",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and custom keywords are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and custom keywords are managed in OneWoW Settings >> Search Shortcuts.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })
 

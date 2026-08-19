@@ -558,6 +558,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Voci ordine categoria obsolete",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Voci ordine visualizzazione obsolete",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Le espressioni con nome e le parole chiave personalizzate si gestiscono in OneWoW Impostazioni → Scorciatoie di ricerca.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Le espressioni con nome e le parole chiave personalizzate si gestiscono in OneWoW Impostazioni >> Scorciatoie di ricerca.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })
