@@ -114,3 +114,9 @@ function OneWoW_QoL_API.GetCVarList()
     end
     return nil
 end
+
+--- Open QoL → Tooltips and select a feature row (e.g. "value").
+---@param featureId string
+function OneWoW_QoL_API.SelectTooltipFeature(featureId)
+    ns.UI.SelectTooltipFeature(featureId)
+end

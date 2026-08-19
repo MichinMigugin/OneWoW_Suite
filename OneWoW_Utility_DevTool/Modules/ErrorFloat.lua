@@ -9,7 +9,6 @@ ns.ErrorFloat = ErrorFloat
 local C_Timer = C_Timer
 local CreateFrame = CreateFrame
 local date = date
-local format = string.format
 local ipairs = ipairs
 local min = math.min
 local type = type

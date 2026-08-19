@@ -576,7 +576,9 @@ function ns.UI.CreateTrackerTab(parent)
         RefreshPinIcon(list.pinned)
         pinBtn:Show()
         hideStepsCheck:SetChecked(list.pinnedHideCompleted and true or false)
-        hideStepsCheck:Show()
+        if list.listType ~= "farmvalue" then
+            hideStepsCheck:Show()
+        end
         LayoutDetailScroll()
 
         local yOffset = 0

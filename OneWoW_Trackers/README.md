@@ -22,8 +22,9 @@
 
 ### Farm Value
 - Track unbound bag items with quantity, unit price, and total value
-- Session snapshot mode ("count from now")
-- Auction House pricing via OneWoW/Auctionator; optional TradeSkillMaster integration
+- Session snapshot mode ("count from now") or full bag totals
+- Watchlist you curate, or every unbound stack in bags
+- Pricing follows QoL > Tooltips > Value (Auction House and optional TradeSkillMaster)
 
 ### Settings
 - Weekly reset region override (auto-detect or US/EU/Asia)

@@ -27,8 +27,9 @@ Many step types complete themselves from game events — quests, renown, vault s
 ### Farm value
 
 * Track unbound bag items with quantity, unit price, and total value
-* Session snapshot mode (“count from now”)
-* Pricing via OneWoW / Auctionator; optional TradeSkillMaster if you use it
+* Session snapshot mode ("count from now") or full bag totals
+* Watchlist you curate, or every unbound stack in bags
+* Pricing follows QoL > Tooltips > Value (Auction House and optional TradeSkillMaster)
 
 ### Settings
 
@@ -39,7 +40,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 ## Tips
 
 * Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub.
-* Farm value is strongest with an AH pricing source installed.
+* Farm value is strongest with Auction House or TSM pricing turned on under QoL > Tooltips > Value.
 
 ## Related
 

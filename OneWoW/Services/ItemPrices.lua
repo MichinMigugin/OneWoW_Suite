@@ -76,7 +76,7 @@ end
 
 -- Single source of truth. SetSetting persists the value and fires the registry's
 -- Notify, which drives every BindAHSourceWatcher subscriber (AH panel, QoL
--- Tooltips/Value, Trackers farm) to re-sync -- so no caller needs an after-hook.
+-- Tooltips/Value) to re-sync -- so no caller needs an after-hook.
 function IP:SetAHPriceSource(value)
     Registry:SetSetting("tooltips", "value", "ahPriceSource", value)
 end
@@ -84,10 +84,9 @@ end
 -- Live two-way sync for AH source pickers. The setting is the single source of
 -- truth; SetSetting already broadcasts via the registry's Notify. Each attached
 -- control subscribes while visible and re-applies the current value, so the AH
--- panel, the QoL Tooltips/Value tab, and the Trackers farm picker all update the
--- moment the source changes anywhere -- no window reopen required. Listeners are
--- registered on show and dropped on hide so they never accumulate or touch dead
--- frames.
+-- panel and the QoL Tooltips/Value tab update the moment the source changes
+-- anywhere -- no window reopen required. Listeners are registered on show and
+-- dropped on hide so they never accumulate or touch dead frames.
 local sourceWatcherCount = 0
 local function BindAHSourceWatcher(frame, refresh)
     sourceWatcherCount = sourceWatcherCount + 1
