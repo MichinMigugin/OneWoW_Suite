@@ -659,17 +659,20 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = RESET, height = 22 })
-        resetBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
-        resetBtn:SetScript("OnClick", function()
-            TD:ResetProgress(list.id)
-            TE:FullScan()
-            parent.RefreshList()
-            parent.ShowDetail(list.id)
-        end)
+        local resetBtn
+        if list.listType ~= "farmvalue" then
+            resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = RESET, height = 22 })
+            resetBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
+            resetBtn:SetScript("OnClick", function()
+                TD:ResetProgress(list.id)
+                TE:FullScan()
+                parent.RefreshList()
+                parent.ShowDetail(list.id)
+            end)
+        end
 
         local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = DELETE, height = 22 })
-        deleteBtn:SetPoint("LEFT", resetBtn, "RIGHT", 4, 0)
+        deleteBtn:SetPoint("LEFT", resetBtn or dupeBtn, "RIGHT", 4, 0)
         deleteBtn:SetScript("OnClick", function()
             if list._bundledID then
                 TP:OnBundledDeleted(list._bundledID)
@@ -680,21 +683,18 @@ function ns.UI.CreateTrackerTab(parent)
             parent.RefreshList()
         end)
 
-        local addSectionBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = "Add Section", height = 22 })
-        addSectionBtn:SetPoint("LEFT", deleteBtn, "RIGHT", 4, 0)
-        addSectionBtn:SetScript("OnClick", function()
-            if ns.TrackerEditor then
-                ns.TrackerEditor:ShowSectionEditor(list.id, nil, function()
-                    TE:RebuildIndices()
-                    parent.RefreshList()
-                    parent.ShowDetail(list.id)
-                end)
-            end
-        end)
-
-        if list.listType == "farmvalue" then
-            addSectionBtn:Hide()
-            resetBtn:Hide()
+        if list.listType ~= "farmvalue" then
+            local addSectionBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = "Add Section", height = 22 })
+            addSectionBtn:SetPoint("LEFT", deleteBtn, "RIGHT", 4, 0)
+            addSectionBtn:SetScript("OnClick", function()
+                if ns.TrackerEditor then
+                    ns.TrackerEditor:ShowSectionEditor(list.id, nil, function()
+                        TE:RebuildIndices()
+                        parent.RefreshList()
+                        parent.ShowDetail(list.id)
+                    end)
+                end
+            end)
         end
 
         yOffset = yOffset - 90
