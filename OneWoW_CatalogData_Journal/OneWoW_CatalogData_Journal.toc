@@ -94,6 +94,7 @@ Data\Generated\TierMembership.lua
 Data\Generated\MapDifficulties.lua
 Data\Generated\InstanceFlags.lua
 Data\Generated\InstanceEntrances.lua
+Data\JournalInstanceEntranceFallbacks.lua
 Data\JournalListingOverrides.lua
 
 # Core

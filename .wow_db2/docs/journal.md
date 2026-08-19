@@ -43,7 +43,8 @@ erDiagram
 
 - `bin/journal_db2_tools.py` → `OneWoW_CatalogData_Journal/Data/Generated/`
 - Runtime: `JournalData` (listing + entrance rows), `EJLiveLoot` (valid diffs),
-  Catalog `Navigation:OpenInstanceEntrance` (card pin)
+  Catalog `Navigation:OpenInstanceEntrance` (card pin). Missing doors use
+  `JournalInstanceEntranceFallbacks.lua` until this table ships a row.
 
 ## Cross-model
 

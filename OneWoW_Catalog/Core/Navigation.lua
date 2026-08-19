@@ -8,8 +8,9 @@ local L = ns.L
 -- coordinates are known, drops a super-tracked user waypoint.
 --
 -- Quest/vendor coords are stored 0-100; the waypoint API wants 0-1, so values
--- > 1 are scaled in OpenMapPin. Journal doors arrive as continent Map.db2 +
+-- > 1 are scaled in OpenMapPin. Journal DB2 doors arrive as continent Map.db2 +
 -- world XY from generated JournalInstanceEntrances and are converted here.
+-- Wowhead fallbacks already carry uiMapID + 0-100 and skip that conversion.
 -- ============================================================================
 
 local tonumber = tonumber
@@ -156,9 +157,9 @@ local function SuperTrackDungeonEntrance(uiMapID, instanceID)
     return false
 end
 
---- Opens the world map on an instance entrance from generated JournalInstanceEntrance rows.
---- Converts world XYZ / continent MapID to a UiMap waypoint, and super-tracks the official
---- dungeon/raid pin when the client exposes it on that map.
+--- Opens the world map on an instance entrance.
+--- DB2 rows convert continent MapID + world XY. Fallback rows already have uiMapID + 0-100.
+--- Super-tracks the official dungeon/raid pin when the client exposes it on that map.
 ---@param instanceID number
 ---@param entrances table|nil
 ---@return boolean opened
@@ -170,11 +171,17 @@ function Navigation:OpenInstanceEntrance(instanceID, entrances)
 
     local bestScore, bestMapID, bestX, bestY, bestContinent = -1, nil, nil, nil, -1
     for _, row in ipairs(FactionCandidates(entrances)) do
-        local uiMapID, x, y = ResolveWorldPos(row.mapID, row.x, row.y)
+        local uiMapID, x, y
+        if row.uiMapID then
+            uiMapID, x, y = row.uiMapID, row.x, row.y
+        elseif row.mapID then
+            uiMapID, x, y = ResolveWorldPos(row.mapID, row.x, row.y)
+        end
         if uiMapID then
             local score = MapPinScore(uiMapID)
-            if score > bestScore or (score == bestScore and row.mapID > bestContinent) then
-                bestScore, bestMapID, bestX, bestY, bestContinent = score, uiMapID, x, y, row.mapID
+            local continentKey = row.mapID or row.uiMapID or 0
+            if score > bestScore or (score == bestScore and continentKey > bestContinent) then
+                bestScore, bestMapID, bestX, bestY, bestContinent = score, uiMapID, x, y, continentKey
             end
         end
     end

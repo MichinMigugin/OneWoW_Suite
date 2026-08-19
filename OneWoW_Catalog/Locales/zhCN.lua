@@ -19,6 +19,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["CATALOG_FAVORITE"] = "收藏",
     ["CATALOG_FAVORITE_TT"] = "将此条目标记为收藏。收藏项会排在列表顶部。",
     ["JOURNAL_MAP_PIN_TT"] = "打开地图并在该副本入口放置一个标记。",
+    ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "来自 Wowhead 的大致入口。官方地图数据尚未加入客户端。",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes 不可用（已禁用或加载失败）。",
 

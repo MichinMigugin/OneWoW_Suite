@@ -36,7 +36,7 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 ## Tips
 
 * For crafting lists, keep **Tradeskills** installed even if you rarely open Catalog — [Shopping List](Shopping-List) uses it for the Craft button and recipe picker.
-* On Journal cards, the pin beside the star opens the world map and drops a waypoint at the instance entrance. Some current or hub cards have no door in the client data, so the pin is hidden there.
+* On Journal cards, the pin beside the star opens the world map and drops a waypoint at the instance entrance. The same pin is on the details side, opposite Difficulty. Gold pins are Wowhead locations used until Blizzard publishes an official door. Hub cards still have no pin.
 * Themes follow suite-wide OneWoW settings.
 
 ## Related

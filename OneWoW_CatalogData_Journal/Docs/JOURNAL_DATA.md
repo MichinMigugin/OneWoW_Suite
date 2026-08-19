@@ -37,6 +37,9 @@ python bin/journal_db2_tools.py report
 | `Data/Generated/MapDifficulties.lua` | `ns.JournalMapDifficulties`, `ns.JournalDifficultyMeta` |
 | `Data/Generated/InstanceFlags.lua` | `ns.JournalInstanceMeta` (flags, name, mapID) |
 | `Data/Generated/InstanceEntrances.lua` | `ns.JournalInstanceEntrances` (world-space door pins) |
+| `Data/JournalInstanceEntranceFallbacks.lua` | `ns.JournalInstanceEntranceFallbacks` (UiMap `/way` pins; used only when DB2 has no row) |
+
+`validate` fails if a fallback instanceID also has a `JournalInstanceEntrance` row: delete that handmade id so DB2 is the only source.
 
 CSV schema / mermaid: [`.wow_db2/docs/journal.md`](../../.wow_db2/docs/journal.md).
 Extract build pin: [`.wow_db2/README.md`](../../.wow_db2/README.md).

@@ -18,7 +18,8 @@
 
 # Catalog
 ## Journal
-- Instance cards get a map pin next to the favorite star. Click it to open the world map and drop a waypoint at the entrance (hidden when the client has no door location).
+- Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.
+- Journal cards and details show a dungeon or raid icon next to the type.
 
 ---
 

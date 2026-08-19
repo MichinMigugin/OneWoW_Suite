@@ -322,6 +322,68 @@ local function ApplyInstanceRowChrome(card, selected)
     end
 end
 
+local function ApplyJournalPinSource(btn, entranceSource)
+    if not btn.pinTex then
+        return
+    end
+    if entranceSource == "wowhead" then
+        btn.pinTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+    else
+        btn.pinTex:SetVertexColor(1, 1, 1, 1)
+    end
+end
+
+local function WireJournalPinButton(btn, getInstData)
+    local pinRegions = { btn:GetRegions() }
+    for i = 1, #pinRegions do
+        local region = pinRegions[i]
+        if region:GetObjectType() == "Texture" then
+            btn.pinTex = region
+            break
+        end
+    end
+    btn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(MAP_PIN, 1, 1, 1)
+        local inst = getInstData()
+        if inst and inst.entranceSource == "wowhead" then
+            GameTooltip:AddLine(L["JOURNAL_MAP_PIN_WOWHEAD_TT"], 0.8, 0.8, 0.8, true)
+        else
+            GameTooltip:AddLine(L["JOURNAL_MAP_PIN_TT"], 0.8, 0.8, 0.8, true)
+        end
+        GameTooltip:Show()
+    end)
+end
+
+local function BindJournalPinButton(btn, instData)
+    if instData and instData.instanceID and instData.entrances and instData.entrances[1] then
+        btn:Show()
+        btn:SetFavorite(false)
+        ApplyJournalPinSource(btn, instData.entranceSource)
+    else
+        btn:Hide()
+    end
+end
+
+-- Map POI atlases inline via |A: so Expansion | Type stays one FontString.
+local function FormatInstanceInfoLine(instData, iconSize)
+    local typeStr = ""
+    if instData.instanceType == "raid" then
+        typeStr = string.format("|A:Raid:%d:%d|a %s", iconSize, iconSize, RAID)
+    elseif instData.instanceType == "party" then
+        typeStr = string.format("|A:Dungeon:%d:%d|a %s", iconSize, iconSize, L["JOURNAL_CARD_DUNGEON"])
+    end
+    if instData.isTimewalker then
+        typeStr = typeStr ~= "" and (typeStr .. "  |  " .. PLAYER_DIFFICULTY_TIMEWALKER)
+            or PLAYER_DIFFICULTY_TIMEWALKER
+    end
+    local expName = instData.expansionName or ""
+    if typeStr ~= "" then
+        return expName .. "  |  " .. typeStr
+    end
+    return expName
+end
+
 local function CreateInstanceListRow(parent, _)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
     card:SetHeight(CARD_HEIGHT)
@@ -400,6 +462,9 @@ local function CreateInstanceListRow(parent, _)
     })
     pinBtn:SetPoint("TOPRIGHT", favBtn, "TOPLEFT", -4, 0)
     pinBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
+    WireJournalPinButton(pinBtn, function()
+        return card.instData
+    end)
     card.pinBtn = pinBtn
 
     local infoText = OneWoW_GUI:CreateFS(card, 10)
@@ -457,14 +522,7 @@ local function BindInstanceListRow(row, _, instData, state)
 
     row.nameText:SetText(instData.name or "")
 
-    local typeStr = instData.instanceType == "raid" and RAID
-        or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
-        or ""
-    if instData.isTimewalker then
-        typeStr = typeStr ~= "" and (typeStr .. "  |  " .. PLAYER_DIFFICULTY_TIMEWALKER)
-            or PLAYER_DIFFICULTY_TIMEWALKER
-    end
-    row.infoText:SetText((instData.expansionName or "") .. "  |  " .. typeStr)
+    row.infoText:SetText(FormatInstanceInfoLine(instData, 12))
 
     local encCount = CountBossEncounters(instData)
     if encCount == 0 and #(instData.encounters or {}) == 0
@@ -513,12 +571,7 @@ local function BindInstanceListRow(row, _, instData, state)
     end
 
     if row.pinBtn then
-        if instData.instanceID and instData.entrances and instData.entrances[1] then
-            row.pinBtn:Show()
-            row.pinBtn:SetFavorite(false)
-        else
-            row.pinBtn:Hide()
-        end
+        BindJournalPinButton(row.pinBtn, instData)
     end
 
     row.nameText:ClearAllPoints()
@@ -870,6 +923,15 @@ local function RefreshDetailView(isSecondRefresh)
     table.insert(detailElements, nameHeader)
     yOffset = yOffset - 22
 
+    local typeLine = OneWoW_GUI:CreateFS(parent, 12)
+    typeLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+    typeLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+    typeLine:SetJustifyH("LEFT")
+    typeLine:SetText(FormatInstanceInfoLine(instData, 14))
+    typeLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    table.insert(detailElements, typeLine)
+    yOffset = yOffset - 18
+
     local infoLine = OneWoW_GUI:CreateFS(parent, 12)
     infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
@@ -1201,6 +1263,9 @@ local function ShowInstanceDetail(panels, instData)
     end
 
     selectedDifficulty = "all"
+    if panels.detailPinBtn then
+        BindJournalPinButton(panels.detailPinBtn, instData)
+    end
     RefreshDetailView(false)
 end
 
@@ -1630,6 +1695,32 @@ function ns.UI.CreateJournalTab(parent)
     diffDropdown:Hide()
     panels.diffDropdown = diffDropdown
     panels.diffText = diffText
+
+    -- Same atlas pin as the list cards. Lives on the detail chrome strip so
+    -- RefreshDetailView rebuilds do not recreate it.
+    local detailPinBtn = OneWoW_GUI:CreateFavoriteToggleButton(panels.detailPanel, {
+        size = 26,
+        favorite = false,
+        atlasOn = "Waypoint-MapPin-Untracked",
+        atlasOff = "Waypoint-MapPin-Untracked",
+        tooltipTitle = MAP_PIN,
+        tooltipText = L["JOURNAL_MAP_PIN_TT"],
+        onClick = function(myself)
+            myself:SetFavorite(false)
+            local instData = selectedInstance
+            if not instData or not instData.instanceID then
+                return
+            end
+            ns.Navigation:OpenInstanceEntrance(instData.instanceID, instData.entrances)
+        end,
+    })
+    detailPinBtn:SetPoint("TOPRIGHT", panels.detailPanel, "TOPRIGHT", -32, -8)
+    detailPinBtn:SetFrameLevel((panels.detailPanel:GetFrameLevel() or 0) + 10)
+    detailPinBtn:Hide()
+    WireJournalPinButton(detailPinBtn, function()
+        return selectedInstance
+    end)
+    panels.detailPinBtn = detailPinBtn
 
     panels.detailScrollFrame:ClearAllPoints()
     panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -38)

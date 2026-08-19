@@ -368,6 +368,22 @@ local function ApplyTotals(inst, encounters)
     inst.totalItems    = totalItems
 end
 
+--- DB2 doors win. Wowhead /way fallbacks fill holes until Blizzard ships a row.
+---@param instanceID number
+---@return table|nil
+---@return string|nil
+local function ResolveEntrances(instanceID)
+    local db2 = ns.JournalInstanceEntrances and ns.JournalInstanceEntrances[instanceID]
+    if db2 and db2[1] then
+        return db2, "db2"
+    end
+    local hand = ns.JournalInstanceEntranceFallbacks and ns.JournalInstanceEntranceFallbacks[instanceID]
+    if hand and hand[1] then
+        return hand, "wowhead"
+    end
+    return nil, nil
+end
+
 ---@param expansionID number
 ---@param instanceID number
 ---@param orderIndex number|nil
@@ -391,6 +407,8 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         validDifficulties = ns.JournalMapDifficulties[mapID]
     end
 
+    local entrances, entranceSource = ResolveEntrances(instanceID)
+
     local entry = {
         cacheKey           = JournalData.CacheKey(expansionID, instanceID),
         instanceID         = instanceID,
@@ -404,7 +422,8 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         flags              = flags,
         isTimewalker       = (flags % 2) ~= 0,
         validDifficulties  = validDifficulties,
-        entrances          = ns.JournalInstanceEntrances and ns.JournalInstanceEntrances[instanceID] or nil,
+        entrances          = entrances,
+        entranceSource     = entranceSource,
     }
     ApplyTotals(entry, encounters)
     return entry

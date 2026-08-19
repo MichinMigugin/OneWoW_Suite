@@ -50,6 +50,7 @@ EXPANSION_FILES = (
 )
 
 INSTANCE_ID_RE = re.compile(r"^\s*\[(\d+)\]\s*=\s*\{", re.M)
+FALLBACK_PATH = DATA_DIR / "JournalInstanceEntranceFallbacks.lua"
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -250,6 +251,43 @@ def parse_att_instance_ids(path: Path) -> set[int]:
     return {int(m.group(1)) for m in INSTANCE_ID_RE.finditer(text)}
 
 
+def load_entrance_fallback_ids() -> set[int]:
+    if not FALLBACK_PATH.is_file():
+        return set()
+    return parse_att_instance_ids(FALLBACK_PATH)
+
+
+def entrance_fallback_overlap_lines(
+    entrances: dict[int, list[dict[str, object]]],
+    instance_meta: dict[int, dict[str, object]],
+) -> list[str]:
+    overlap = sorted(load_entrance_fallback_ids() & set(entrances))
+    lines: list[str] = []
+    for iid in overlap:
+        name = instance_meta.get(iid, {}).get("name", "?")
+        lines.append(
+            f"REMOVE handmade entrance for instance {iid} ({name}): "
+            f"JournalInstanceEntrance now has a DB2 door"
+        )
+    return lines
+
+
+def report_entrance_fallback_overlap(
+    entrances: dict[int, list[dict[str, object]]],
+    instance_meta: dict[int, dict[str, object]],
+    *,
+    fail: bool,
+) -> int:
+    lines = entrance_fallback_overlap_lines(entrances, instance_meta)
+    if not lines:
+        print("Entrance fallbacks: no overlap with DB2 (OK)")
+        return 0
+    print("Entrance fallbacks that must be removed (DB2 now has doors):")
+    for line in lines:
+        print(f"  {line}")
+    return 1 if fail else 0
+
+
 def collect_att_instances() -> dict[int, set[int]]:
     """expansionID -> set of instanceIDs present in *-instances.lua."""
     by_exp: dict[int, set[int]] = {}
@@ -281,6 +319,12 @@ def cmd_generate(db2: Path, out_dir: Path) -> int:
         f"Generated TierMembership ({cards} cards), MapDifficulties, InstanceFlags, "
         f"InstanceEntrances ({len(entrances)} instances) -> {out_dir}"
     )
+    if report_entrance_fallback_overlap(entrances, instance_meta, fail=True):
+        print(
+            "Delete those ids from JournalInstanceEntranceFallbacks.lua, then re-run generate.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
@@ -302,6 +346,8 @@ def cmd_validate(db2: Path) -> int:
     print(f"Unique instanceIDs in membership: {len(membership_ids)}")
     entrances = load_entrances(db2)
     print(f"Entrance pins: {len(entrances)} instanceIDs")
+    fallback_ids = load_entrance_fallback_ids()
+    print(f"Entrance fallbacks: {len(fallback_ids)} handmade instanceIDs")
 
     orphans: list[str] = []
     for eid, ids in sorted(att.items()):
@@ -352,6 +398,9 @@ def cmd_validate(db2: Path) -> int:
         for row in no_map_diff[:20]:
             print(f"  expansion {row[0]} instance {row[1]} map {row[2]}")
 
+    print("\n--- Entrance fallback overlap ---")
+    if report_entrance_fallback_overlap(entrances, instance_meta, fail=True):
+        return 1
     return 0
 
 

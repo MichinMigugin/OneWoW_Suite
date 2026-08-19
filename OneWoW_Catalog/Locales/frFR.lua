@@ -19,6 +19,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["CATALOG_FAVORITE"] = "Favori",
     ["CATALOG_FAVORITE_TT"] = "Marquer cette entrée comme favorite. Les favoris sont classés en haut de la liste.",
     ["JOURNAL_MAP_PIN_TT"] = "Ouvre la carte et place une épingle à l'entrée de cette instance.",
+    ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "Entrée approximative issue de Wowhead. Les données officielles de carte ne sont pas encore dans le client.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes est indisponible (désactivé ou échec de chargement).",
 
