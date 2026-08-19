@@ -3,6 +3,7 @@
 - **Status**: Draft
 
 ### Trackers
+- Pin a list from the pin icon next to its title.
 - Tracker list cards put the name and type up top, with progress along the bottom, so long titles no longer overlap.
 - Repeating lists reset after a custom number of hours you set when creating or editing the list.
 - Tracker categories are topic folders: singular names, no Dailies or Weeklies, and mounts, pets, toys, and transmog sit under Collection.

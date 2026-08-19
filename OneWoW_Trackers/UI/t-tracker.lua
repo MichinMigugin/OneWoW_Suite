@@ -191,10 +191,41 @@ function ns.UI.CreateTrackerTab(parent)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
     local detailTitle = OneWoW_GUI:CreateFS(detailPanel, 12)
-    detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -8)
     detailTitle:SetJustifyH("LEFT")
     detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     detailTitle:Hide()
+
+    local pinBtn = OneWoW_GUI:CreateFavoriteToggleButton(detailPanel, {
+        size     = 18,
+        atlasOn  = "friends-icon-pinned",
+        atlasOff = "friends-icon-pinned-dis",
+        favorite = false,
+        onClick = function()
+            local list = selectedListID and TD:GetList(selectedListID)
+            if not list then return end
+            if list.pinned then
+                TE:DestroyPinnedWindow(list.id)
+            else
+                TE:CreatePinnedWindow(list.id)
+            end
+            parent.RefreshList()
+            parent.ShowDetail(list.id)
+        end,
+    })
+    pinBtn:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, -7)
+    pinBtn:Hide()
+    local function RefreshPinIcon(pinned)
+        pinBtn:SetFavorite(pinned and true or false)
+    end
+    pinBtn:SetScript("OnEnter", function(myself)
+        local list = selectedListID and TD:GetList(selectedListID)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText((list and list.pinned) and L["TRACKER_UNPIN"] or L["TRACKER_PIN"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    detailTitle:SetPoint("LEFT", pinBtn, "RIGHT", 6, 0)
 
     local hideStepsCheck = OneWoW_GUI:CreateCheckbox(detailPanel, {
         label = L["TRACKER_PIN_HIDE_COMPLETED"],
@@ -520,6 +551,7 @@ function ns.UI.CreateTrackerTab(parent)
         wipe(dragRows)
         emptyLabel:Show()
         detailTitle:Hide()
+        pinBtn:Hide()
         hideStepsCheck:Hide()
         LayoutDetailScroll()
     end
@@ -541,6 +573,8 @@ function ns.UI.CreateTrackerTab(parent)
         emptyLabel:Hide()
         detailTitle:SetText(list.title or "Untitled")
         detailTitle:Show()
+        RefreshPinIcon(list.pinned)
+        pinBtn:Show()
         hideStepsCheck:SetChecked(list.pinnedHideCompleted and true or false)
         hideStepsCheck:Show()
         LayoutDetailScroll()
@@ -606,23 +640,8 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local pinBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, {
-            text = list.pinned and (L["TRACKER_UNPIN"]) or (L["TRACKER_PIN"]),
-            height = 22,
-        })
-        pinBtn:SetPoint("LEFT", editBtn, "RIGHT", 4, 0)
-        pinBtn:SetScript("OnClick", function()
-            if list.pinned then
-                TE:DestroyPinnedWindow(list.id)
-            else
-                TE:CreatePinnedWindow(list.id)
-            end
-            parent.RefreshList()
-            parent.ShowDetail(list.id)
-        end)
-
         local exportBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EXPORT"], height = 22 })
-        exportBtn:SetPoint("LEFT", pinBtn, "RIGHT", 4, 0)
+        exportBtn:SetPoint("LEFT", editBtn, "RIGHT", 4, 0)
         exportBtn:SetScript("OnClick", function()
             if ns.TrackerEditor then
                 ns.TrackerEditor:ShowExportDialog(list.id)
