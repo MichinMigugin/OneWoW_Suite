@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "COORDS_DESC",
     version     = "1.1",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles = {
         { id = "show_map_id",      label = "COORDS_TOGGLE_MAPID",         description = "COORDS_TOGGLE_MAPID_DESC",         default = true  },
         { id = "show_zone",        label = "COORDS_TOGGLE_ZONE",          description = "COORDS_TOGGLE_ZONE_DESC",          default = false },

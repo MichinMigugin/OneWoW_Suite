@@ -7,7 +7,7 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description    = "ICONBROWSER_DESC",
     version        = "1.0",
     author         = "OneWoW",
-    contact        = "https://wow2.xyz/",
-    link           = "https://wow2.xyz/",
+    contact        = "https://onewow.net/",
+    link           = "https://onewow.net/",
     defaultEnabled = true,
 })

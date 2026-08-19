@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "COPYTEXT_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles = {
         { id = "mode_tooltips", label = "COPYTEXT_TOGGLE_TOOLTIPS", description = "COPYTEXT_TOGGLE_TOOLTIPS_DESC", default = true  },
         { id = "mode_anything", label = "COPYTEXT_TOGGLE_ANYTHING", description = "COPYTEXT_TOGGLE_ANYTHING_DESC", default = false },

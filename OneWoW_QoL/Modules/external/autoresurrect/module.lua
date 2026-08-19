@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "AUTORESURRECT_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles = {
         { id = "skip_in_instance", label = "AUTORESURRECT_TOGGLE_SKIP_INSTANCE", description = "AUTORESURRECT_TOGGLE_SKIP_INSTANCE_DESC", default = false },
     },

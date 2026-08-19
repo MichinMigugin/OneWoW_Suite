@@ -61,7 +61,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 
-**Website:** https://wow2.xyz/
+**Website:** https://onewow.net/
 
 **Report issues:** Through Discord community or our website
 
@@ -73,6 +73,6 @@ Part of the [OneWoW Suite](../README.md). See the suite README for the full addo
 
 **Author:** MichinMuggin / Ricky
 
-**Website:** https://wow2.xyz/
+**Website:** https://onewow.net/
 
 **All rights reserved.**

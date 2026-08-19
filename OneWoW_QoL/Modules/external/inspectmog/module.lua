@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description    = "INSPECTMOG_DESC",
     version        = "1.1",
     author         = "OneWoW",
-    contact        = "https://wow2.xyz/",
-    link           = "https://wow2.xyz/",
+    contact        = "https://onewow.net/",
+    link           = "https://onewow.net/",
     toggles        = {
         { id = "route_to_collectibles", label = "INSPECTMOG_ROUTE_COLLECTIBLES", default = false },
     },

@@ -2,7 +2,7 @@
 """Pack the shippable OneWoW addons into a stable-named GitHub zip.
 
 Used for the rolling nightly (and current) GitHub release assets. Names stay
-fixed so wow2.xyz can keep the same download doors.
+fixed so onewow.net can keep the same download doors.
 
 Examples:
     python bin/pack_github_zip.py

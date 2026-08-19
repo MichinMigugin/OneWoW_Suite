@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "FASTFORWARD_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles = {
         { id = "skip_movies",           label = "FASTFORWARD_TOGGLE_MOVIES",           description = "FASTFORWARD_TOGGLE_MOVIES_DESC",           default = true  },
         { id = "skip_cinematics",       label = "FASTFORWARD_TOGGLE_CINEMATICS",       description = "FASTFORWARD_TOGGLE_CINEMATICS_DESC",       default = true  },

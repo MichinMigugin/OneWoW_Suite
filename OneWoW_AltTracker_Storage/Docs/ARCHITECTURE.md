@@ -537,4 +537,4 @@ OneWoW_AltTracker_Storage/
 MichinMuggin / Ricky
 
 ## Website
-https://wow2.xyz/
+https://onewow.net/

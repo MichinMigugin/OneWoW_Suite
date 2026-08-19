@@ -87,7 +87,7 @@ function UI:CreateHomeTab(parent)
 
     -- What's New (Home-only); Discord / OneWoW Home match former Settings labels+URLs.
     local DISCORD_URL = "https://discord.gg/6vnabDVnDu"
-    local WEBSITE_URL = "https://wow2.xyz/"
+    local WEBSITE_URL = "https://onewow.net/"
 
     local linksRow = CreateFrame("Frame", nil, content)
     linksRow:SetHeight(24)

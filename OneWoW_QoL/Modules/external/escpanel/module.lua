@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "ESCPANEL_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles     = {
         { id = "esc_show_character_info",    label = "ESCPANEL_TOGGLE_SHOW_CHARACTER",   default = true },
         { id = "esc_show_alerts",            label = "ESCPANEL_TOGGLE_ALERTS",           default = true },

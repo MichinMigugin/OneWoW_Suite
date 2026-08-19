@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description    = "FRAMEMOVER_DESC",
     version        = "1.0",
     author         = "Ricky",
-    contact        = "ricky@wow2.xyz",
-    link           = "https://www.wow2.xyz",
+    contact        = "ricky@onewow.net",
+    link           = "https://www.onewow.net",
     toggles        = {
         { id = "require_shift",  label = "FRAMEMOVER_TOGGLE_REQUIRE_SHIFT",  default = false, group = "FRAMEMOVER_GROUP_BEHAVIOR" },
         { id = "clamp_to_screen",label = "FRAMEMOVER_TOGGLE_CLAMP_SCREEN",   default = true,  group = "FRAMEMOVER_GROUP_BEHAVIOR" },

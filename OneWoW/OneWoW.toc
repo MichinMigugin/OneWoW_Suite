@@ -15,7 +15,7 @@
 ## AddonCompartmentFuncOnLeave: 1WoW_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 
-## X-Website: https://wow2.xyz/
+## X-Website: https://onewow.net/
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 

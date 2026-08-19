@@ -2,7 +2,7 @@
 
 **A modular World of Warcraft addon suite for Retail 12.1+.** One shared hub, unified themes, eleven locales, and optional feature addons you enable only when you need them.
 
-**Website:** https://wow2.xyz/
+**Website:** https://onewow.net/
 
 ---
 
@@ -139,7 +139,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, locale workflow, and pull
 
 ## Support
 
-**Website:** https://wow2.xyz/
+**Website:** https://onewow.net/
 
 **Report issues:** Through Discord community or our website
 
@@ -147,6 +147,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, locale workflow, and pull
 
 **Author:** MichinMuggin / Ricky
 
-**Website:** https://wow2.xyz/
+**Website:** https://onewow.net/
 
 **All rights reserved.**

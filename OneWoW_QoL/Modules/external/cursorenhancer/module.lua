@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "CURSORENHANCER_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles     = {
         { id = "outer_ring",    label = "CURSORENHANCER_OUTER_RING",    default = true,  group = "CURSORENHANCER_MARKER_TOGGLES" },
         { id = "middle_ring",   label = "CURSORENHANCER_MIDDLE_RING",   default = false, group = "CURSORENHANCER_MARKER_TOGGLES" },

@@ -12,8 +12,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "AFKPANEL_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles     = {
         { id = "camera_spin",     label = "AFKPANEL_CAMERA_SPIN", default = true },
         { id = "show_daily",      label = "AFKPANEL_SHOW_DAILY",  default = true  },

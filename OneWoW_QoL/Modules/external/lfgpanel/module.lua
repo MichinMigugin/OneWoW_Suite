@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "LFGPANEL_DESC",
     version     = "1.0",
     author      = "MichinMuggin / Ricky",
-    contact     = "https://wow2.xyz/",
-    link        = "https://wow2.xyz/",
+    contact     = "https://onewow.net/",
+    link        = "https://onewow.net/",
     toggles     = {
         { id = "show_panel", label = "LFGPANEL_SHOW_PANEL", description = "LFGPANEL_SHOW_PANEL_DESC", default = true },
         { id = "filter_results", label = "LFGPANEL_FILTER_RESULTS", description = "LFGPANEL_FILTER_RESULTS_DESC", default = true },

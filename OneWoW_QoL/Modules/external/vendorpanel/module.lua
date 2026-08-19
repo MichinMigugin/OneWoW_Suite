@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "VENDORPANEL_DESC",
     version     = "1.0",
     author      = "MichinMuggin / Ricky",
-    contact     = "https://wow2.xyz/",
-    link        = "https://wow2.xyz/",
+    contact     = "https://onewow.net/",
+    link        = "https://onewow.net/",
     toggles     = {
         { id = "show_panel", label = "VENDORPANEL_SHOW_PANEL", description = "VENDORPANEL_SHOW_PANEL_DESC", default = true },
         { id = "show_blizz_junk", label = "VENDORPANEL_SHOW_BLIZZ_JUNK", description = "VENDORPANEL_SHOW_BLIZZ_JUNK_DESC", default = false },

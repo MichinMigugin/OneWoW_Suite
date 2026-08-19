@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "PROFPANEL_DESC",
     version     = "2.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles     = {
         { id = "auto_show", label = "PROFPANEL_AUTO_SHOW", default = true },
     },

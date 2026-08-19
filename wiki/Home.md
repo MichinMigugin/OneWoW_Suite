@@ -4,7 +4,7 @@
 
 **OneWoW** is a modular World of Warcraft addon suite for **Retail**. One shared hub, unified themes, eleven locales, and optional feature addons you turn on only when you need them.
 
-**Website:** [https://wow2.xyz/](https://wow2.xyz/)
+**Website:** [https://onewow.net/](https://onewow.net/)
 
 This wiki is the **player** reference — install, hub setup, slash commands, and how each feature works in-game. Engineering docs stay in the [repository](https://github.com/kellewic/OneWoW_Suite) (`OneWoW/Docs/` and per-addon `Docs/`). See [Developers](Developers) for links.
 
@@ -41,7 +41,7 @@ You do **not** need every folder. Companion data packs for Catalog and AltTracke
 ## Help
 
 * [FAQ](FAQ) — common install and setup questions
-* Support (docs, email, Discord, CurseForge, GitHub): [https://wow2.xyz/support/](https://wow2.xyz/support/)
+* Support (docs, email, Discord, CurseForge, GitHub): [https://onewow.net/support/](https://onewow.net/support/)
 
 ## Related
 

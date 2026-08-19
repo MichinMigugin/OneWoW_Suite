@@ -9,8 +9,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "PREYBAR_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles = {
         { id = "show_boss",       label = "PREYBAR_TOGGLE_BOSS",          description = "PREYBAR_TOGGLE_BOSS_DESC",          default = true  },
         { id = "show_difficulty", label = "PREYBAR_TOGGLE_DIFFICULTY",    description = "PREYBAR_TOGGLE_DIFFICULTY_DESC",    default = true  },

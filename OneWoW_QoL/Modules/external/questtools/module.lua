@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "QUESTTOOLS_DESC",
     version     = "1.0",
     author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
+    contact     = "ricky@onewow.net",
+    link        = "https://www.onewow.net",
     toggles = {
         { id = "auto_accept",  label = "QUESTTOOLS_TOGGLE_ACCEPT",  description = "QUESTTOOLS_TOGGLE_ACCEPT_DESC",  default = true  },
         { id = "auto_turnin",  label = "QUESTTOOLS_TOGGLE_TURNIN",  description = "QUESTTOOLS_TOGGLE_TURNIN_DESC",  default = true  },

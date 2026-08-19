@@ -8,7 +8,7 @@ Install **OneWoW** (required) plus only the optional `OneWoW_*` folders you want
 | **Discord** | Community bot command that gives a zip in the same shape CurseForge would |
 | **GitHub** | Fine if you already clone repos — this page does not teach git |
 
-Site and community: [https://wow2.xyz/](https://wow2.xyz/)
+Site and community: [https://onewow.net/](https://onewow.net/)
 
 ## Put folders in AddOns
 

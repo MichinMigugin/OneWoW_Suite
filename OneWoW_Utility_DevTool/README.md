@@ -197,7 +197,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for translation and code contribution 
 
 ## Support
 
-- **Website:** https://wow2.xyz/
+- **Website:** https://onewow.net/
 - **Report issues:** Through Discord community or website
 
 ## OneWoW Suite

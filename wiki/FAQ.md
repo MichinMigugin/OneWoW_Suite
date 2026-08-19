@@ -12,7 +12,7 @@ Those features need their companion data folders (`OneWoW_CatalogData_*` / `OneW
 
 ### Where do I get the package?
 
-CurseForge or the Discord community bot zip — same layout either way. Site: [https://wow2.xyz/](https://wow2.xyz/).
+CurseForge or the Discord community bot zip — same layout either way. Site: [https://onewow.net/](https://onewow.net/).
 
 ## Manage Features
 
@@ -42,7 +42,7 @@ Enable only one primary bag UI you intend to use, or expect overlapping keybinds
 
 ### Where do I get help?
 
-[https://wow2.xyz/support/](https://wow2.xyz/support/) lists every channel: this site's docs, email, Discord, CurseForge comments, and GitHub issues. Pick one. Prefer those over editing the GitHub wiki UI.
+[https://onewow.net/support/](https://onewow.net/support/) lists every channel: this site's docs, email, Discord, CurseForge comments, and GitHub issues. Pick one. Prefer those over editing the GitHub wiki UI.
 
 ## Related
 

@@ -2,6 +2,11 @@
 
 - **Status**: Draft
 
+### Home
+- The website link now opens onewow.net.
+
+---
+
 ### Trackers
 - Pin a list from the pin icon next to its title.
 - Farm value details send pricing to QoL Tooltips Value, use dropdowns for session and list mode, and add watchlist items with the usual dropzone.
@@ -30,7 +35,7 @@
 
 ---
 
-*No user-facing changes this release for Home, QoL, Bags, Mail, Shopping List, Notes, or Direct Deposit.*
+*No user-facing changes this release for QoL, Bags, Mail, Shopping List, Notes, or Direct Deposit.*
 
 ---
 

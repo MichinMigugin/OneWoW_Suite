@@ -14,7 +14,7 @@
 ## SavedVariables: OneWoW_Trackers_DB
 ## SavedVariablesPerCharacter: OneWoW_Trackers_CharDB
 
-## X-Website: https://wow2.xyz/
+## X-Website: https://onewow.net/
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 

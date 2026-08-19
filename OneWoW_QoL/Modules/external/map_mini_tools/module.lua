@@ -7,8 +7,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description    = "MMSKIN_DESC",
     version        = "1.0",
     author         = "Ricky",
-    contact        = "ricky@wow2.xyz",
-    link           = "https://www.wow2.xyz",
+    contact        = "ricky@onewow.net",
+    link           = "https://www.onewow.net",
     preview        = false,
     defaultEnabled = false,
 
