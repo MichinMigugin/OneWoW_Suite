@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_COL_OR"] = "ou",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "A des non collectés",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Gouffres abondants",
     ["JOURNAL_LOADING_LOOT"] = "Chargement du butin…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Butin général",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_QUEST_CAT_TT"] = "Les objets listés ici peuvent être obtenus via une quête quelconque.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulté",
+    ["JOURNAL_COL_HDR_POINTS"] = "Points",
+    ["JOURNAL_ACH_WARBAND"] = "Bataillon",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Ouvrir cette instance dans le guide de l'aventurier.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transmog.",
     ["JOURNAL_SPECIAL_MOUNT"] = "Monture",

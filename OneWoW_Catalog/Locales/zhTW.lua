@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_COL_OR"] = "或",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "有未收集",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "僅顯示豐碩",
     ["JOURNAL_LOADING_LOOT"] = "正在載入掉落物…",
 
     ["JOURNAL_GENERAL_LOOT"] = "一般戰利品",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_QUEST_CAT_TT"] = "此處列出的物品是可以透過某種任務獲得的物品。",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "難度",
+    ["JOURNAL_COL_HDR_POINTS"] = "點數",
+    ["JOURNAL_ACH_WARBAND"] = "戰隊",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "在冒險指南中開啟此副本。",
 
     ["JOURNAL_SPECIAL_TMOG"] = "幻化",
     ["JOURNAL_SPECIAL_MOUNT"] = "坐騎",

@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_COL_OR"] = "o",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Ha non raccolti",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Solo fruttuose",
     ["JOURNAL_LOADING_LOOT"] = "Caricamento bottino…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Bottino generale",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_QUEST_CAT_TT"] = "Gli oggetti elencati qui possono essere ottenuti tramite una missione di qualche tipo.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficoltà",
+    ["JOURNAL_COL_HDR_POINTS"] = "Punti",
+    ["JOURNAL_ACH_WARBAND"] = "Brigata",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Apri questa istanza nella Guida alle avventure.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Trasmog.",
     ["JOURNAL_SPECIAL_MOUNT"] = "Cavalcatura",

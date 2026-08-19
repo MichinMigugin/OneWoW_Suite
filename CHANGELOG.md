@@ -19,7 +19,11 @@
 # Catalog
 ## Journal
 - Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.
-- Journal cards and details show a dungeon or raid icon next to the type.
+- Journal cards and details show a dungeon, raid, or Delve icon next to the type. Bountiful delves use the bountiful icon. Delve cards use the official entrance background.
+- Instance Type now includes Delves (The War Within and Midnight). Show Bountiful sits next to Has uncollected and keeps only this week's bountiful doors; it clears when you close Catalog or press Clear. Bountiful cards use a gold border when the filter is off.
+- Details list achievements above items, and the section collapses like loot. Cards show the achievement count next to bosses and items. Status uses a check, Warband mark, and X. The check is green when you earned it; the Warband icon stays its normal color when the Warband has it and a grey account mark when it does not; the X is soft orange when it is still incomplete. Click a row to open it in Achievements.
+- Delves keep the Difficulty dropdown on the details toolbar so the map pin lines up with dungeons and raids. It stays disabled.
+- Dungeons and raids get an Adventure Guide button on the details toolbar.
 
 ---
 
@@ -43,4 +47,4 @@
 
 ---
 
-- **Last Updated**: Aug 19, 2026
+- **Last Updated**: Aug 20, 2026

@@ -11,11 +11,12 @@ local L = ns.L
 -- > 1 are scaled in OpenMapPin. Journal DB2 doors arrive as continent Map.db2 +
 -- world XY from generated JournalInstanceEntrances and are converted here.
 -- Wowhead fallbacks already carry uiMapID + 0-100 and skip that conversion.
+-- Delve doors use AreaPOI; ContinentID 0 rows fall back to a live POI lookup.
 -- ============================================================================
 
 local tonumber = tonumber
 local ipairs = ipairs
-local C_Map, C_SuperTrack, C_EncounterJournal = C_Map, C_SuperTrack, C_EncounterJournal
+local C_Map, C_SuperTrack, C_EncounterJournal, C_AreaPoiInfo = C_Map, C_SuperTrack, C_EncounterJournal, C_AreaPoiInfo
 local CreateVector2D, OpenWorldMap, UnitFactionGroup = CreateVector2D, OpenWorldMap, UnitFactionGroup
 
 ns.Navigation = ns.Navigation or {}
@@ -139,6 +140,28 @@ local function MapPinScore(uiMapID)
     return score
 end
 
+--- Midnight delve doors often have ContinentID 0, so world XY cannot convert.
+--- Walk the player's map parents for a live AreaPOI position.
+---@param areaPoiID number
+---@return number|nil uiMapID
+---@return number|nil x
+---@return number|nil y
+local function ResolveAreaPoiPin(areaPoiID)
+    local uiMapID = C_Map.GetBestMapForUnit("player")
+    local seen = {}
+    while uiMapID and uiMapID ~= 0 and not seen[uiMapID] do
+        seen[uiMapID] = true
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(uiMapID, areaPoiID)
+        local pos = info and info.position
+        if pos then
+            return uiMapID, pos.x, pos.y
+        end
+        local mapInfo = C_Map.GetMapInfo(uiMapID)
+        uiMapID = mapInfo and mapInfo.parentMapID
+    end
+    return nil
+end
+
 ---@param uiMapID number
 ---@param instanceID number
 ---@return boolean
@@ -169,23 +192,34 @@ function Navigation:OpenInstanceEntrance(instanceID, entrances)
         return false
     end
 
-    local bestScore, bestMapID, bestX, bestY, bestContinent = -1, nil, nil, nil, -1
-    for _, row in ipairs(FactionCandidates(entrances)) do
+    local candidates = FactionCandidates(entrances)
+    local bestScore, bestMapID, bestX, bestY, bestContinent, bestPoiID = -1, nil, nil, nil, -1, nil
+    for _, row in ipairs(candidates) do
         local uiMapID, x, y
         if row.uiMapID then
             uiMapID, x, y = row.uiMapID, row.x, row.y
-        elseif row.mapID then
+        elseif row.mapID and row.mapID ~= 0 then
             uiMapID, x, y = ResolveWorldPos(row.mapID, row.x, row.y)
         end
         if uiMapID then
             local score = MapPinScore(uiMapID)
             local continentKey = row.mapID or row.uiMapID or 0
             if score > bestScore or (score == bestScore and continentKey > bestContinent) then
-                bestScore, bestMapID, bestX, bestY, bestContinent = score, uiMapID, x, y, continentKey
+                bestScore, bestMapID, bestX, bestY, bestContinent, bestPoiID = score, uiMapID, x, y, continentKey, row.areaPoiID
             end
         end
     end
     if not bestMapID then
+        for _, row in ipairs(candidates) do
+            if row.areaPoiID then
+                local uiMapID, x, y = ResolveAreaPoiPin(row.areaPoiID)
+                if uiMapID then
+                    self:OpenMapPin(uiMapID, x, y)
+                end
+                C_SuperTrack.SetSuperTrackedMapPin(Enum.SuperTrackingMapPinType.AreaPOI, row.areaPoiID)
+                return true
+            end
+        end
         return false
     end
 
@@ -199,6 +233,9 @@ function Navigation:OpenInstanceEntrance(instanceID, entrances)
     local parentID = parent and parent.parentMapID
     if parentID and parentID ~= 0 then
         SuperTrackDungeonEntrance(parentID, instanceID)
+    end
+    if bestPoiID then
+        C_SuperTrack.SetSuperTrackedMapPin(Enum.SuperTrackingMapPinType.AreaPOI, bestPoiID)
     end
     return true
 end

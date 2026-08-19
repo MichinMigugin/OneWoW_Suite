@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_COL_OR"] = "ou",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Tem não coletados",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Só abundantes",
     ["JOURNAL_LOADING_LOOT"] = "Carregando saque…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Despojo geral",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_QUEST_CAT_TT"] = "Os itens listados aqui podem ser obtidos por meio de algum tipo de missão.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Dificuldade",
+    ["JOURNAL_COL_HDR_POINTS"] = "Pontos",
+    ["JOURNAL_ACH_WARBAND"] = "Bando de Guerra",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Abrir esta instância no Guia da aventura.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transmog.",
     ["JOURNAL_SPECIAL_MOUNT"] = "Montaria",

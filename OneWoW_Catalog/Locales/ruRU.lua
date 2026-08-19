@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_COL_OR"] = "или",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Есть несобранное",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Только многообещающие",
     ["JOURNAL_LOADING_LOOT"] = "Загрузка добычи…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Общая добыча",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_QUEST_CAT_TT"] = "Перечисленные здесь предметы можно получить тем или иным образом за задание.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Сложность",
+    ["JOURNAL_COL_HDR_POINTS"] = "Очки",
+    ["JOURNAL_ACH_WARBAND"] = "Отряд",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Открыть это подземелье в путеводителе по приключениям.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Трансмог.",
     ["JOURNAL_SPECIAL_MOUNT"] = "Транспорт",

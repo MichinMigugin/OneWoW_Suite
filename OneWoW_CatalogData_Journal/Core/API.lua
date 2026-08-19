@@ -19,9 +19,22 @@ function OneWoW_CatalogData_Journal_API.GetSortedInstances(expansionFilter, sear
 end
 
 --- Returns expansion IDs available for journal filtering.
+---@param typeFilter string|nil
 ---@return table expansions
-function OneWoW_CatalogData_Journal_API.GetAvailableExpansions()
-    return ns.JournalData:GetAvailableExpansions()
+function OneWoW_CatalogData_Journal_API.GetAvailableExpansions(typeFilter)
+    return ns.JournalData:GetAvailableExpansions(typeFilter)
+end
+
+--- Refresh live bountiful delve doors for this week.
+function OneWoW_CatalogData_Journal_API.RefreshBountiful()
+    ns.JournalData:RefreshBountiful()
+end
+
+--- Whether this delve map is bountiful on the current weekly rotation.
+---@param mapID number|nil
+---@return boolean
+function OneWoW_CatalogData_Journal_API.IsDelveBountiful(mapID)
+    return ns.JournalData:IsDelveBountiful(mapID)
 end
 
 --- Determines collection status metadata for a journal loot item.

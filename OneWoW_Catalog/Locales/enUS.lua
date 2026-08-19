@@ -82,6 +82,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_COL_OR"] = "or",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Has uncollected",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Show Bountiful",
     ["JOURNAL_LOADING_LOOT"] = "Loading loot…",
 
     ["JOURNAL_GENERAL_LOOT"] = "General Loot",
@@ -98,6 +99,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_QUEST_CAT_TT"] = "Items listed here are items that can be obtained via a Quest of some sort.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulty",
+    ["JOURNAL_COL_HDR_POINTS"] = "Points",
+    ["JOURNAL_ACH_WARBAND"] = "Warband",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Open this instance in the Adventure Guide.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transmog",
     ["JOURNAL_SPECIAL_MOUNT"] = "Mount",

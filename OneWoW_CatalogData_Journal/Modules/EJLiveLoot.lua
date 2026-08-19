@@ -347,11 +347,13 @@ local function enqueueMergeJobs()
     wipe(mergeQueue)
     if not JournalData.journalCache then return end
     for _, inst in pairs(JournalData.journalCache) do
-        mergeQueue[#mergeQueue + 1] = {
-            instanceID = inst.instanceID,
-            expansionID = inst.expansionID,
-            inst = inst,
-        }
+        if inst.instanceType ~= "delve" then
+            mergeQueue[#mergeQueue + 1] = {
+                instanceID = inst.instanceID,
+                expansionID = inst.expansionID,
+                inst = inst,
+            }
+        end
     end
     table.sort(mergeQueue, function(a, b)
         return (a.inst.name or "") < (b.inst.name or "")

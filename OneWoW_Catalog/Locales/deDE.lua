@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_COL_OR"] = "oder",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Hat Ungesammeltes",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Nur großzügige",
     ["JOURNAL_LOADING_LOOT"] = "Beute wird geladen…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Allgemeine Beute",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_QUEST_CAT_TT"] = "Die hier aufgeführten Gegenstände lassen sich auf irgendeine Weise über eine Quest erlangen.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Schwierigkeit",
+    ["JOURNAL_COL_HDR_POINTS"] = "Punkte",
+    ["JOURNAL_ACH_WARBAND"] = "Kriegsmeute",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Diese Instanz im Abenteuerführer öffnen.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transmog",
     ["JOURNAL_SPECIAL_MOUNT"] = "Reittier",

@@ -18,8 +18,10 @@ local instanceTypeFilter = "all"
 ---@type string|number # "all" sentinel, or a numeric EJ difficulty id
 local selectedDifficulty = "all"
 local expandedEncounters = {}
+local achievementsExpanded = true
 local panels_ref = nil
 local RefreshJournalList
+local RefreshDetailView
 
 -- Multi-select Item Type filter: keys from ITEM_TYPE_DEFS map to item.special values.
 -- Empty table = "Show All" (no filter applied).
@@ -27,6 +29,7 @@ local filterItemTypes = {}
 local filterCollection = "all"
 local hideNonCollectable = false
 local hasUncollectedOnly = false
+local showBountifulOnly = false
 
 -- Ordered definition for the Item Type filter menu (taxonomy order; Show All is
 -- the empty-selection sentinel). Keys drive filterItemTypes; `special` matches
@@ -95,6 +98,20 @@ local function FormatBossCount(n)
     return string.format(L["JOURNAL_CARD_ENCOUNTERS"], n)
 end
 
+local function FormatAchievementCount(n)
+    return string.format("%d %s", n or 0, ACHIEVEMENTS)
+end
+
+local function FormatDetailStatusLine(instData)
+    local statusBits = { instData.name }
+    if instData.instanceType ~= "delve" then
+        tinsert(statusBits, FormatBossCount(CountBossEncounters(instData)))
+        tinsert(statusBits, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+    end
+    tinsert(statusBits, FormatAchievementCount(#(instData.achievements or {})))
+    return table.concat(statusBits, " - ")
+end
+
 local CARD_HEIGHT = 85
 local CARD_STRIDE = CARD_HEIGHT + 2
 local ITEM_ROW_HEIGHT = 32
@@ -126,6 +143,7 @@ local diffAbbrev = {
 }
 
 local ejBgCache = {}
+local delveBgCache = {}
 
 local function GetInstanceBackground(instanceID)
     if ejBgCache[instanceID] ~= nil then
@@ -138,6 +156,73 @@ local function GetInstanceBackground(instanceID)
     end
     ejBgCache[instanceID] = false
     return false
+end
+
+-- Official entrance art uses delve-entrance-background-<slug>. A few doors
+-- use a different suffix than the Map name.
+local DELVE_BG_ALIAS = {
+    [2826] = "delves-entrance-background-sewers",
+    [2831] = "delve-entrance-background-goblin-boss",
+}
+
+-- keepPunctAsHyphen: Atal'Aman -> atal-aman. Strip first: Kriegval's Rest -> kriegvals-rest.
+local function SlugDelveName(name, keepPunctAsHyphen)
+    name = (name or ""):lower()
+    if not keepPunctAsHyphen then
+        name = name:gsub("['’`]", "")
+    end
+    name = name:gsub("[^%w]+", "-")
+    name = name:gsub("^-+", ""):gsub("-+$", "")
+    return name
+end
+
+local function TitleCaseSlug(slug)
+    return (slug:gsub("(%f[%w]%a)", string.upper))
+end
+
+local function AddDelveBgCandidates(candidates, slug)
+    if slug == "" then
+        return
+    end
+    tinsert(candidates, "delve-entrance-background-" .. slug)
+    tinsert(candidates, "delves-entrance-background-" .. slug)
+    tinsert(candidates, "delve-entrance-background-" .. TitleCaseSlug(slug))
+    if slug:sub(1, 4) == "the-" then
+        tinsert(candidates, "delve-entrance-background-" .. slug:sub(5))
+    else
+        tinsert(candidates, "delve-entrance-background-the-" .. slug)
+    end
+end
+
+--- Per-delve card art. Probes known atlas names; falls back to the dashboard art.
+---@param instData table
+---@return string|nil atlas
+local function GetDelveBackgroundAtlas(instData)
+    local mid = instData and instData.mapID
+    if not mid then
+        return nil
+    end
+    if delveBgCache[mid] ~= nil then
+        return delveBgCache[mid] or nil
+    end
+
+    local candidates = {}
+    if DELVE_BG_ALIAS[mid] then
+        tinsert(candidates, DELVE_BG_ALIAS[mid])
+    end
+    AddDelveBgCandidates(candidates, SlugDelveName(instData.name, false))
+    AddDelveBgCandidates(candidates, SlugDelveName(instData.name, true))
+    tinsert(candidates, "delves-dashboard-background")
+
+    for i = 1, #candidates do
+        local atlas = candidates[i]
+        if C_Texture.GetAtlasInfo(atlas) then
+            delveBgCache[mid] = atlas
+            return atlas
+        end
+    end
+    delveBgCache[mid] = false
+    return nil
 end
 
 local function GetDataAddon()
@@ -313,6 +398,9 @@ local function ApplyInstanceRowChrome(card, selected)
     if selected then
         card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+    elseif card._bountiful then
+        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     else
         card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -372,6 +460,12 @@ local function FormatInstanceInfoLine(instData, iconSize)
         typeStr = string.format("|A:Raid:%d:%d|a %s", iconSize, iconSize, RAID)
     elseif instData.instanceType == "party" then
         typeStr = string.format("|A:Dungeon:%d:%d|a %s", iconSize, iconSize, L["JOURNAL_CARD_DUNGEON"])
+    elseif instData.instanceType == "delve" then
+        local addon = GetDataAddon()
+        local atlas = (addon and addon.IsDelveBountiful(instData.mapID))
+            and "delves-bountiful"
+            or "delves-regular"
+        typeStr = string.format("|A:%s:%d:%d|a %s", atlas, iconSize, iconSize, DELVE_LABEL)
     end
     if instData.isTimewalker then
         typeStr = typeStr ~= "" and (typeStr .. "  |  " .. PLAYER_DIFFICULTY_TIMEWALKER)
@@ -476,7 +570,9 @@ local function CreateInstanceListRow(parent, _)
 
     local countText = OneWoW_GUI:CreateFS(card, 10)
     countText:SetPoint("TOPLEFT", infoText, "BOTTOMLEFT", 0, -2)
+    countText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, 0)
     countText:SetJustifyH("LEFT")
+    countText:SetWordWrap(false)
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
     card.countText = countText
 
@@ -510,14 +606,31 @@ local CARD_TAG_ROW2_Y = 6
 local function BindInstanceListRow(row, _, instData, state)
     row.instData = instData
     row._rowSelected = state.selected and true or false
+    local addon = GetDataAddon()
+    row._bountiful = instData.instanceType == "delve"
+        and addon
+        and addon.IsDelveBountiful(instData.mapID)
+        or false
     ApplyInstanceRowChrome(row, row._rowSelected)
 
-    local bgImage = GetInstanceBackground(instData.instanceID)
-    if bgImage and bgImage ~= false then
-        row.bgTex:SetTexture(bgImage)
-        row.bgTex:Show()
+    if instData.instanceType == "delve" then
+        local atlas = GetDelveBackgroundAtlas(instData)
+        if atlas then
+            row.bgTex:SetTexture(nil)
+            row.bgTex:SetAtlas(atlas)
+            row.bgTex:Show()
+        else
+            row.bgTex:Hide()
+        end
     else
-        row.bgTex:Hide()
+        local bgImage = GetInstanceBackground(instData.instanceID)
+        if bgImage and bgImage ~= false then
+            row.bgTex:SetAtlas(nil)
+            row.bgTex:SetTexture(bgImage)
+            row.bgTex:Show()
+        else
+            row.bgTex:Hide()
+        end
     end
 
     row.nameText:SetText(instData.name or "")
@@ -525,14 +638,19 @@ local function BindInstanceListRow(row, _, instData, state)
     row.infoText:SetText(FormatInstanceInfoLine(instData, 12))
 
     local encCount = CountBossEncounters(instData)
-    if encCount == 0 and #(instData.encounters or {}) == 0
+    local countParts = {}
+    if instData.instanceType == "delve" then
+        -- Delves have no EJ loot table.
+    elseif encCount == 0 and #(instData.encounters or {}) == 0
             and (not GetDataAddon() or not GetDataAddon().IsLiveMergeComplete
             or not GetDataAddon().IsLiveMergeComplete()) then
-        row.countText:SetText(L["JOURNAL_LOADING_LOOT"])
+        tinsert(countParts, L["JOURNAL_LOADING_LOOT"])
     else
-        row.countText:SetText(FormatBossCount(encCount)
-            .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+        tinsert(countParts, FormatBossCount(encCount))
+        tinsert(countParts, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
     end
+    tinsert(countParts, FormatAchievementCount(#(instData.achievements or {})))
+    row.countText:SetText(table.concat(countParts, "  |  "))
 
     local availW = (row:GetWidth() > 0 and row:GetWidth() or 260) - CARD_TAG_PAD_X * 2
     local xPos = CARD_TAG_PAD_X
@@ -901,7 +1019,277 @@ local function BuildQuestItemRow(parent, item, yOffset)
     return yOffset - (ITEM_ROW_HEIGHT + 2)
 end
 
-local function RefreshDetailView(isSecondRefresh)
+local ACH_DIFF_KEYS = {
+    N   = "JOURNAL_DIFF_N",
+    H   = "JOURNAL_DIFF_H",
+    M   = "JOURNAL_DIFF_M",
+    LFR = "JOURNAL_DIFF_LFR",
+    TW  = "JOURNAL_DIFF_TW",
+    ["M+"] = "JOURNAL_DIFF_M+",
+    ["10N"] = "JOURNAL_DIFF_10N",
+    ["25N"] = "JOURNAL_DIFF_25N",
+    ["10H"] = "JOURNAL_DIFF_10H",
+    ["25H"] = "JOURNAL_DIFF_25H",
+}
+
+-- GetAchievementInfo.completed is Warband-wide. wasEarnedByMe is this character.
+-- There is no separate account flag; Warband is the account progress.
+---@param completed boolean
+---@param wasEarnedByMe boolean
+---@return boolean earnedByMe
+---@return boolean earnedByWarband
+---@return string label
+---@return string colorKey
+---@return string tooltip
+local function AchievementStatus(completed, wasEarnedByMe)
+    local earnedByMe = wasEarnedByMe and true or false
+    local earnedByWarband = completed and true or false
+    if earnedByMe then
+        return earnedByMe, earnedByWarband, CRITERIA_COMPLETED, "TEXT_FEATURES_ENABLED", CRITERIA_COMPLETED
+    end
+    if earnedByWarband then
+        return earnedByMe, earnedByWarband, L["JOURNAL_ACH_WARBAND"], "TEXT_FEATURES_ENABLED", ACCOUNT_WIDE_ACHIEVEMENT_COMPLETED
+    end
+    return false, false, INCOMPLETE, "TEXT_WARNING", INCOMPLETE
+end
+
+local function TintStatusIcon(tex, active, activeKey)
+    if active then
+        tex:SetDesaturated(false)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor(activeKey))
+    else
+        tex:SetDesaturated(true)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+end
+
+-- Grey: questlog-questtypeicon-account (18x18). Done: warband-completed-icon (36x42).
+-- Scale both to the same row height so neither is squashed.
+local ACH_WARBAND_ICON_H = 18
+
+local function SetWarbandStatusIcon(tex, earnedByWarband)
+    local atlas = earnedByWarband and "warband-completed-icon" or "questlog-questtypeicon-account"
+    local info = C_Texture.GetAtlasInfo(atlas)
+    local w = ACH_WARBAND_ICON_H
+    if info and info.height and info.height > 0 then
+        w = info.width * (ACH_WARBAND_ICON_H / info.height)
+    end
+    tex:SetAtlas(atlas)
+    tex:SetSize(w, ACH_WARBAND_ICON_H)
+    if earnedByWarband then
+        tex:SetDesaturated(false)
+        tex:SetVertexColor(1, 1, 1, 1)
+    else
+        tex:SetDesaturated(true)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+end
+
+local function SetDifficultyDropdownInteractive(dropdown, textFS, enabled)
+    if enabled then
+        dropdown:Enable()
+        textFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    else
+        OneWoW_GUI:CloseAttachFilterMenu()
+        dropdown:SetScript("OnClick", nil)
+        dropdown:Disable()
+        textFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+end
+
+local function OpenAchievementUI(achievementID)
+    local ok = OneWoW:EnsureLoaded("Blizzard_AchievementUI")
+    if not ok then
+        return
+    end
+    ShowAchievementFrameForAchievement(achievementID)
+end
+
+---@param parent Frame
+---@param instData table
+---@param yOffset number
+---@return number yOffset
+local function BuildAchievementsTable(parent, instData, yOffset)
+    local rows = instData.achievements
+    if not rows or #rows == 0 then
+        return yOffset
+    end
+
+    -- Same chrome as the Items column header: plus on the left, labels on one row.
+    local COL_DIFF_RIGHT   = -240
+    local COL_POINTS_RIGHT = -170
+    local COL_STATUS_RIGHT = -8
+    local ACH_STATUS_ICON  = 14
+    local ACH_STATUS_GAP   = 3
+
+    local colHdrFrame = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    colHdrFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
+    colHdrFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
+    colHdrFrame:SetHeight(20)
+    colHdrFrame:SetBackdrop(BACKDROP_SIMPLE)
+    colHdrFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    colHdrFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    table.insert(detailElements, colHdrFrame)
+
+    local expandIcon = colHdrFrame:CreateTexture(nil, "ARTWORK")
+    expandIcon:SetSize(14, 14)
+    expandIcon:SetPoint("LEFT", colHdrFrame, "LEFT", 6, 0)
+    expandIcon:SetAtlas(achievementsExpanded and "Gamepad_Rev_Minus_64" or "Gamepad_Rev_Plus_64")
+
+    local hdrName = OneWoW_GUI:CreateFS(colHdrFrame, 10)
+    hdrName:SetPoint("LEFT", expandIcon, "RIGHT", 4, 0)
+    hdrName:SetText(L["ACHIEVEMENT"])
+    hdrName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local hdrDiff = OneWoW_GUI:CreateFS(colHdrFrame, 10)
+    hdrDiff:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_DIFF_RIGHT, 0)
+    hdrDiff:SetText(L["JOURNAL_COL_HDR_DIFFICULTY"])
+    hdrDiff:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    hdrDiff:SetJustifyH("RIGHT")
+
+    local hdrPoints = OneWoW_GUI:CreateFS(colHdrFrame, 10)
+    hdrPoints:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_POINTS_RIGHT, 0)
+    hdrPoints:SetText(L["JOURNAL_COL_HDR_POINTS"])
+    hdrPoints:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    hdrPoints:SetJustifyH("RIGHT")
+
+    local hdrStatus = OneWoW_GUI:CreateFS(colHdrFrame, 10)
+    hdrStatus:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_STATUS_RIGHT, 0)
+    hdrStatus:SetText(STATUS)
+    hdrStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    hdrStatus:SetJustifyH("RIGHT")
+
+    colHdrFrame:SetScript("OnClick", function()
+        achievementsExpanded = not achievementsExpanded
+        RefreshDetailView(true)
+    end)
+    colHdrFrame:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+    end)
+    colHdrFrame:SetScript("OnLeave", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    end)
+
+    yOffset = yOffset - 24
+    if not achievementsExpanded then
+        return yOffset - 8
+    end
+
+    for _, row in ipairs(rows) do
+        local achID = row.id
+        local id, name, points, completed, _, _, _, description, _, icon, rewardText, _, wasEarnedByMe =
+            GetAchievementInfo(achID)
+        if id then
+            local itemRow = CreateFrame("Button", nil, parent, "BackdropTemplate")
+            itemRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
+            itemRow:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
+            itemRow:SetHeight(ITEM_ROW_HEIGHT)
+            itemRow:SetBackdrop(BACKDROP_SIMPLE)
+            itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+            itemRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            table.insert(detailElements, itemRow)
+
+            local iconFrame = CreateFrame("Frame", nil, itemRow, "BackdropTemplate")
+            iconFrame:SetSize(26, 26)
+            iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
+            iconFrame:SetBackdrop(BACKDROP_EDGE)
+            iconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+            iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            table.insert(detailElements, iconFrame)
+
+            local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
+            iconTex:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 1, -1)
+            iconTex:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -1, 1)
+            iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            iconTex:SetTexture(icon)
+
+            local earnedByMe, earnedByWarband, statusLabel, colorKey, statusTooltip =
+                AchievementStatus(completed, wasEarnedByMe)
+            local statusFS = OneWoW_GUI:CreateFS(itemRow, 10)
+            statusFS:SetPoint("RIGHT", itemRow, "RIGHT", COL_STATUS_RIGHT, 0)
+            statusFS:SetJustifyH("RIGHT")
+            statusFS:SetWordWrap(false)
+            statusFS:SetText(statusLabel)
+            local statusTextW = statusFS:GetStringWidth()
+            if statusTextW > 72 then
+                statusFS:SetWidth(72)
+            end
+            statusFS:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
+
+            -- Check | Warband | X | Status. Grey until that flag is a yes.
+            local xIcon = itemRow:CreateTexture(nil, "ARTWORK")
+            xIcon:SetSize(ACH_STATUS_ICON, ACH_STATUS_ICON)
+            xIcon:SetPoint("RIGHT", statusFS, "LEFT", -4, 0)
+            xIcon:SetAtlas("common-icon-redx")
+            TintStatusIcon(xIcon, not earnedByMe and not earnedByWarband, "TEXT_WARNING")
+
+            local warbandIcon = itemRow:CreateTexture(nil, "ARTWORK")
+            warbandIcon:SetPoint("RIGHT", xIcon, "LEFT", -ACH_STATUS_GAP, 0)
+            SetWarbandStatusIcon(warbandIcon, earnedByWarband)
+
+            local checkIcon = itemRow:CreateTexture(nil, "ARTWORK")
+            checkIcon:SetSize(ACH_STATUS_ICON, ACH_STATUS_ICON)
+            checkIcon:SetPoint("RIGHT", warbandIcon, "LEFT", -ACH_STATUS_GAP, 0)
+            checkIcon:SetAtlas("common-icon-checkmark")
+            TintStatusIcon(checkIcon, earnedByMe, "TEXT_FEATURES_ENABLED")
+
+            local pointsFS = OneWoW_GUI:CreateFS(itemRow, 10)
+            pointsFS:SetPoint("RIGHT", itemRow, "RIGHT", COL_POINTS_RIGHT, 0)
+            pointsFS:SetJustifyH("RIGHT")
+            pointsFS:SetText(tostring(points or 0))
+            pointsFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+            local diffKey = row.diff and ACH_DIFF_KEYS[row.diff]
+            local diffFS = OneWoW_GUI:CreateFS(itemRow, 10)
+            diffFS:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)
+            diffFS:SetJustifyH("RIGHT")
+            diffFS:SetText(diffKey and L[diffKey] or "")
+            diffFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+            local nameFS = OneWoW_GUI:CreateFS(itemRow, 12)
+            nameFS:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
+            nameFS:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT - 8, 0)
+            nameFS:SetJustifyH("LEFT")
+            nameFS:SetWordWrap(false)
+            nameFS:SetText(name)
+            nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+            local capturedID = achID
+            itemRow:SetScript("OnClick", function()
+                OpenAchievementUI(capturedID)
+            end)
+            itemRow:SetScript("OnEnter", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetText(name, 1, 1, 1)
+                local tr, tg, tb = OneWoW_GUI:GetThemeColor(colorKey)
+                GameTooltip:AddLine(statusTooltip, tr, tg, tb, true)
+                if description and description ~= "" then
+                    GameTooltip:AddLine(description, 0.8, 0.8, 0.8, true)
+                end
+                if rewardText and rewardText ~= "" then
+                    local rr, gg, bb = OneWoW_GUI:GetThemeColor("TEXT_ACCENT")
+                    GameTooltip:AddLine(rewardText, rr, gg, bb, true)
+                end
+                GameTooltip:Show()
+            end)
+            itemRow:SetScript("OnLeave", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                GameTooltip:Hide()
+            end)
+
+            yOffset = yOffset - (ITEM_ROW_HEIGHT + 2)
+        end
+    end
+
+    return yOffset - 8
+end
+
+RefreshDetailView = function(isSecondRefresh)
     if not panels_ref or not selectedInstance then return end
 
     local panels = panels_ref
@@ -936,9 +1324,10 @@ local function RefreshDetailView(isSecondRefresh)
     infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
-    local infoParts = {
-        L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID,
-    }
+    local infoParts = {}
+    if instData.instanceType ~= "delve" then
+        tinsert(infoParts, L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID)
+    end
     if instData.mapID then
         tinsert(infoParts, L["QUESTS_MAPID"] .. ": " .. instData.mapID)
     end
@@ -951,22 +1340,28 @@ local function RefreshDetailView(isSecondRefresh)
     table.insert(detailElements, divider1)
     yOffset = yOffset - 8
 
-    yOffset = BuildCollectionsSummary(parent, instData, yOffset, addon)
+    if instData.instanceType ~= "delve" then
+        yOffset = BuildCollectionsSummary(parent, instData, yOffset, addon)
+    end
+
+    yOffset = BuildAchievementsTable(parent, instData, yOffset)
 
     if #(instData.encounters or {}) == 0 then
-        local loadingLine = OneWoW_GUI:CreateFS(parent, 12)
-        loadingLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-        loadingLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-        loadingLine:SetJustifyH("LEFT")
-        local mergeDone = addon and addon.IsLiveMergeComplete and addon.IsLiveMergeComplete()
-        loadingLine:SetText(mergeDone and L["JOURNAL_EMPTY"] or L["JOURNAL_LOADING_LOOT"])
-        loadingLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        table.insert(detailElements, loadingLine)
-        yOffset = yOffset - 24
+        if instData.instanceType ~= "delve" then
+            local loadingLine = OneWoW_GUI:CreateFS(parent, 12)
+            loadingLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+            loadingLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+            loadingLine:SetJustifyH("LEFT")
+            local mergeDone = addon and addon.IsLiveMergeComplete()
+            loadingLine:SetText(mergeDone and L["JOURNAL_EMPTY"] or L["JOURNAL_LOADING_LOOT"])
+            loadingLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            table.insert(detailElements, loadingLine)
+            yOffset = yOffset - 24
+        end
         parent:SetHeight(math.abs(yOffset) + 20)
         panels.UpdateDetailThumb()
         if panels.rightStatusText then
-            panels.rightStatusText:SetText(instData.name .. " - " .. L["JOURNAL_LOADING_LOOT"])
+            panels.rightStatusText:SetText(FormatDetailStatusLine(instData))
         end
         return
     end
@@ -1213,7 +1608,7 @@ local function RefreshDetailView(isSecondRefresh)
     panels.UpdateDetailThumb()
 
     if panels.rightStatusText and instData then
-        panels.rightStatusText:SetText(instData.name .. " - " .. FormatBossCount(CountBossEncounters(instData)) .. ", " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems))
+        panels.rightStatusText:SetText(FormatDetailStatusLine(instData))
     end
 
     if not isSecondRefresh then
@@ -1229,34 +1624,40 @@ local function ShowInstanceDetail(panels, instData)
     if not instData then return end
     selectedInstance = instData
     expandedEncounters = {}
+    achievementsExpanded = true
     panels_ref = panels
 
     if panels.diffDropdown then
-        local diffs = GetUniqueDifficulties(instData)
-        if #diffs > 0 then
+        local isDelve = instData.instanceType == "delve"
+        local diffs = isDelve and {} or GetUniqueDifficulties(instData)
+        if isDelve or #diffs > 0 then
             panels.diffDropdown:Show()
             panels.diffText:SetText(L["ALL_DIFFICULTIES"])
-
-            OneWoW_GUI:AttachFilterMenu(panels.diffDropdown, {
-                searchable = false,
-                getActiveValue = function() return selectedDifficulty end,
-                buildItems = function()
-                    local items = { { value = "all", text = L["ALL_DIFFICULTIES"] } }
-                    local curDiffs = GetUniqueDifficulties(selectedInstance)
-                    for _, diff in ipairs(curDiffs) do
-                        table.insert(items, {
-                            value = diff.id,
-                            text  = FormatDifficultyMenuLabel(diff),
-                        })
-                    end
-                    return items
-                end,
-                onSelect = function(value, text)
-                    selectedDifficulty = value
-                    panels.diffText:SetText(value == "all" and L["ALL_DIFFICULTIES"] or text)
-                    RefreshDetailView(false)
-                end,
-            })
+            if isDelve then
+                SetDifficultyDropdownInteractive(panels.diffDropdown, panels.diffText, false)
+            else
+                SetDifficultyDropdownInteractive(panels.diffDropdown, panels.diffText, true)
+                OneWoW_GUI:AttachFilterMenu(panels.diffDropdown, {
+                    searchable = false,
+                    getActiveValue = function() return selectedDifficulty end,
+                    buildItems = function()
+                        local items = { { value = "all", text = L["ALL_DIFFICULTIES"] } }
+                        local curDiffs = GetUniqueDifficulties(selectedInstance)
+                        for _, diff in ipairs(curDiffs) do
+                            table.insert(items, {
+                                value = diff.id,
+                                text  = FormatDifficultyMenuLabel(diff),
+                            })
+                        end
+                        return items
+                    end,
+                    onSelect = function(value, text)
+                        selectedDifficulty = value
+                        panels.diffText:SetText(value == "all" and L["ALL_DIFFICULTIES"] or text)
+                        RefreshDetailView(false)
+                    end,
+                })
+            end
         else
             panels.diffDropdown:Hide()
         end
@@ -1265,6 +1666,13 @@ local function ShowInstanceDetail(panels, instData)
     selectedDifficulty = "all"
     if panels.detailPinBtn then
         BindJournalPinButton(panels.detailPinBtn, instData)
+    end
+    if panels.ejBtn then
+        if instData.instanceType ~= "delve" and instData.instanceID then
+            panels.ejBtn:Show()
+        else
+            panels.ejBtn:Hide()
+        end
     end
     RefreshDetailView(false)
 end
@@ -1303,7 +1711,11 @@ function RefreshJournalList(panels)
         return
     end
 
-    local filtKey = string.format("%d\0%s\0%s", expansionFilter, searchText or "", tostring(instanceTypeFilter or "all"))
+    if instanceTypeFilter == "delve" or instanceTypeFilter == "all" or showBountifulOnly then
+        addon.RefreshBountiful()
+    end
+
+    local filtKey = string.format("%d\0%s\0%s\0%s", expansionFilter, searchText or "", tostring(instanceTypeFilter or "all"), tostring(showBountifulOnly))
     if journalBaseListKey ~= filtKey or not journalBaseList then
         journalBaseList = addon.GetSortedInstances(expansionFilter, searchText, instanceTypeFilter)
         journalBaseListKey = filtKey
@@ -1318,6 +1730,16 @@ function RefreshJournalList(panels)
         local filtered = {}
         for _, inst in ipairs(sorted) do
             if InstanceHasUncollected(inst, addon) then
+                tinsert(filtered, inst)
+            end
+        end
+        sorted = filtered
+    end
+
+    if showBountifulOnly then
+        local filtered = {}
+        for _, inst in ipairs(sorted) do
+            if inst.instanceType == "delve" and addon.IsDelveBountiful(inst.mapID) then
                 tinsert(filtered, inst)
             end
         end
@@ -1407,6 +1829,40 @@ end
 
 ns.UI.RefreshJournalList = RefreshJournalList
 
+local function SnapExpansionToType(panels)
+    if instanceTypeFilter ~= "delve" then
+        return
+    end
+    if expansionFilter ~= 0 and expansionFilter ~= 11 and expansionFilter ~= 12 then
+        expansionFilter = 0
+        if panels.expText then
+            panels.expText:SetText(L["JOURNAL_EXPANSION_ALL"])
+        end
+    end
+end
+
+local function SetBountifulFilterVisible(panels, visible)
+    local chk = panels.bountifulChk
+    if not chk then
+        return
+    end
+    if visible then
+        chk:Show()
+    else
+        chk:Hide()
+        chk:SetChecked(false)
+        showBountifulOnly = false
+    end
+end
+
+local function ResetBountifulFilter(panels)
+    showBountifulOnly = false
+    SetBountifulFilterVisible(panels, instanceTypeFilter == "delve")
+    if panels and panels.bountifulChk then
+        panels.bountifulChk:SetChecked(false)
+    end
+end
+
 local function InitializeDropdowns(panels)
     local addon = GetDataAddon()
     if not addon then return end
@@ -1422,7 +1878,7 @@ local function InitializeDropdowns(panels)
                 local items = { { value = 0, text = L["JOURNAL_EXPANSION_ALL"] } }
                 local da = GetDataAddon()
                 if da then
-                    local expansions = da.GetAvailableExpansions()
+                    local expansions = da.GetAvailableExpansions(instanceTypeFilter)
                     for _, exp in ipairs(expansions) do
                         table.insert(items, {
                             value = exp.expansionID,
@@ -1445,6 +1901,7 @@ local function InitializeDropdowns(panels)
             all   = L["JOURNAL_FILTER_SHOW_ALL"],
             party = DUNGEONS,
             raid  = RAIDS,
+            delve = DELVES_LABEL,
         }
         panels.typeText:SetText(typeLabelFor[instanceTypeFilter] or L["JOURNAL_FILTER_SHOW_ALL"])
         OneWoW_GUI:AttachFilterMenu(panels.typeDropdown, {
@@ -1455,11 +1912,14 @@ local function InitializeDropdowns(panels)
                     { value = "all",   text = L["JOURNAL_FILTER_SHOW_ALL"] },
                     { value = "party", text = DUNGEONS },
                     { value = "raid",  text = RAIDS },
+                    { value = "delve", text = DELVES_LABEL },
                 }
             end,
             onSelect = function(value, text)
                 instanceTypeFilter = value
                 panels.typeText:SetText(text)
+                SnapExpansionToType(panels)
+                SetBountifulFilterVisible(panels, value == "delve")
                 RefreshJournalList(panels)
             end,
         })
@@ -1605,6 +2065,18 @@ function ns.UI.CreateJournalTab(parent)
     })
     hasUncollectedChk:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -64)
 
+    local bountifulChk = OneWoW_GUI:CreateCheckbox(leftHeader, {
+        label = L["JOURNAL_SHOW_BOUNTIFUL"],
+        checked = false,
+        onClick = function()
+            showBountifulOnly = not showBountifulOnly
+            RefreshJournalList(panels)
+        end,
+    })
+    bountifulChk:SetPoint("LEFT", hasUncollectedChk.label, "RIGHT", 16, 0)
+    bountifulChk:SetPoint("TOP", hasUncollectedChk, "TOP", 0, 0)
+    bountifulChk:Hide()
+
     -- RIGHT HEADER: Instance Type → Item Type → Collection (left-packed)
     local DROP_W = 130
     local DROP_GAP = 6
@@ -1663,6 +2135,7 @@ function ns.UI.CreateJournalTab(parent)
         filterCollection   = "all"
         hideNonCollectable = false
         hasUncollectedOnly = false
+        showBountifulOnly  = false
         searchBox:SetText("")
         searchBox:ClearFocus()
         searchBox:RestorePlaceholder()
@@ -1672,6 +2145,7 @@ function ns.UI.CreateJournalTab(parent)
         collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         chkBox:SetChecked(false)
         hasUncollectedChk:SetChecked(false)
+        SetBountifulFilterVisible(panels, false)
         RefreshJournalList(panels)
         if selectedInstance then
             RefreshDetailView(false)
@@ -1722,6 +2196,36 @@ function ns.UI.CreateJournalTab(parent)
     end)
     panels.detailPinBtn = detailPinBtn
 
+    local ejBtn = OneWoW_GUI:CreateFitTextButton(panels.detailPanel, {
+        text = ADVENTURE_JOURNAL,
+        height = 26,
+    })
+    ejBtn:SetPoint("RIGHT", detailPinBtn, "LEFT", -8, 0)
+    ejBtn:SetFrameLevel((panels.detailPanel:GetFrameLevel() or 0) + 10)
+    ejBtn:Hide()
+    ejBtn:SetScript("OnClick", function()
+        local instData = selectedInstance
+        if not instData or instData.instanceType == "delve" or not instData.instanceID then
+            return
+        end
+        local ok = OneWoW:EnsureLoaded("Blizzard_EncounterJournal")
+        if not ok then
+            return
+        end
+        local diffID = selectedDifficulty ~= "all" and selectedDifficulty or nil
+        EncounterJournal_OpenJournal(diffID, instData.instanceID)
+    end)
+    ejBtn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(ADVENTURE_JOURNAL, 1, 1, 1)
+        GameTooltip:AddLine(L["JOURNAL_ADVENTURE_GUIDE_TT"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    ejBtn:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    panels.ejBtn = ejBtn
+
     panels.detailScrollFrame:ClearAllPoints()
     panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -38)
     panels.detailScrollFrame:SetPoint("BOTTOMRIGHT", panels.detailPanel, "BOTTOMRIGHT", -18, 8)
@@ -1736,9 +2240,23 @@ function ns.UI.CreateJournalTab(parent)
     panels.collectionFilterText     = collectionFilterText
     panels.searchBox                = searchBox
     panels.hasUncollectedChk        = hasUncollectedChk
+    panels.bountifulChk             = bountifulChk
 
     ns.UI.journalPanels = panels
     panels_ref = panels
+
+    local mainWindow = OneWoWMainWindow
+    if mainWindow and not mainWindow._oneWoWJournalBountifulReset then
+        mainWindow._oneWoWJournalBountifulReset = true
+        mainWindow:HookScript("OnHide", function()
+            local p = panels_ref or ns.UI.journalPanels
+            ResetBountifulFilter(p)
+            if p then
+                InvalidateJournalFilterCache()
+                RefreshJournalList(p)
+            end
+        end)
+    end
 
     -- Start in the no-data state; the data-ready watcher swaps to the live view
     -- once the Journal data unit's data is queryable. Catch-up covers a tab opened
@@ -1802,6 +2320,7 @@ function ns.UI.OpenToInstance(mapID)
         searchText         = ""
         instanceTypeFilter = "all"
         hasUncollectedOnly = false
+        showBountifulOnly  = false
         if panels.searchBox then
             panels.searchBox:SetText("")
             panels.searchBox:RestorePlaceholder()
@@ -1815,6 +2334,7 @@ function ns.UI.OpenToInstance(mapID)
         if panels.hasUncollectedChk then
             panels.hasUncollectedChk:SetChecked(false)
         end
+        SetBountifulFilterVisible(panels, false)
         selectedInstance = instData
         RefreshJournalList(panels)
         if journalListAPI then

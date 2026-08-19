@@ -94,6 +94,9 @@ Data\Generated\TierMembership.lua
 Data\Generated\MapDifficulties.lua
 Data\Generated\InstanceFlags.lua
 Data\Generated\InstanceEntrances.lua
+Data\Generated\DelveMembership.lua
+Data\Generated\DelveEntrances.lua
+Data\Generated\Achievements.lua
 Data\JournalInstanceEntranceFallbacks.lua
 Data\JournalListingOverrides.lua
 

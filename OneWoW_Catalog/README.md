@@ -6,14 +6,18 @@
 
 ## Features
 
-### Journal Tab - Instances & Raids
-Browse all dungeons and raids from every expansion:
-- **All Expansions Covered** - Classic through Midnight
+### Journal Tab - Instances, Raids & Delves
+Browse dungeons, raids, and Delves from every expansion:
+- **All Expansions Covered** - Classic through Midnight (Delves: The War Within and Midnight)
 - See all instances and encounters at a glance
 - Pin on a card or the details toolbar opens the world map at that instance's entrance (gold pins are Wowhead locations until official doors ship)
+- Delves use the Instance Type filter, with a Show Bountiful checkbox for this week's bountiful doors
+- Delve cards use official entrance background art
+- Achievements sit above loot on the details side (collapsible, same header as Items). Cards show bosses, items, and the achievement count. Status is a check / Warband mark / X
+- Adventure Guide button on dungeon and raid details. Delves keep a disabled Difficulty dropdown so the map pin lines up
 - Detailed encounter information (if data addon is installed)
 - Look up loot tables and boss mechanics
-- Search for specific raids or dungeons
+- Search for specific raids, dungeons, or delves
 - Perfect for planning raid nights or preparing for content
 
 ### Vendors Tab

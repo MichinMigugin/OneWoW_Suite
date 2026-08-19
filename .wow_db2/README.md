@@ -20,12 +20,13 @@ docs live under [`docs/`](docs/):
 | --- | --- | --- |
 | Catalog lookup (have / not have) | [`docs/available-data.md`](docs/available-data.md) | What each feature uses, and whether the CSV is already here |
 | Journal (EJ) | [`docs/journal.md`](docs/journal.md) | `Journal*`, `MapDifficulty*`, `Difficulty`, `DungeonEncounter` |
+| Achievements + delves | [`docs/achievements.md`](docs/achievements.md) | `Achievement`, `Achievement_Category`, `Map`, `AreaPOI` |
 | Item bonus seasons | [`docs/item-bonus-seasons.md`](docs/item-bonus-seasons.md) | `ItemBonusListGroup`, `ItemBonusListGroupEntry`, `DisplaySeason` |
 | Conditions (shared) | *(cross-links only for now)* | `PlayerCondition`, `*XCondition`, `GlobalPlayerCondition*` |
 
-Future groups (achievements, etc.) get their own `docs/<group>.md` with a
-relationship chart, plus a cross-model note here when they share keys with
-Journal (MapID, criteria, etc.).
+`Map` / `AreaPOI` / `Achievement*` in this drop are Wago **`12.1.0.69273`**
+(same 12.1.0 patch; Wago `69382` CSV returned 500). Re-pull those four when a
+matching pin build is available.
 
 ## Cross-model notes
 
@@ -34,6 +35,9 @@ Journal (MapID, criteria, etc.).
   `MapDifficultyXCondition` reference player-condition tables. Catalog Journal
   does **not** evaluate these in-addon yet.
 - **Journal ↔ Map:** `JournalInstance.MapID` aligns with `MapDifficulty.MapID`.
+- **Achievements ↔ Map:** dungeon/raid `Achievement.Instance_ID` is `Map.ID`.
+  Delve achievements are `Instance_ID = -1`; join by `{MapName} Stories` /
+  `Discoveries`. Delve doors are `AreaPOI` rows on the continent `Map`.
 - **Journal ↔ Combat:** `JournalEncounter.DungeonEncounterID` → `DungeonEncounter`.
 - **Item bonus seasons:** `DisplaySeason` is a season dictionary only — it does
   **not** join to `ItemBonusListGroup`. PvE track list IDs are generated from a

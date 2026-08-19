@@ -32,7 +32,28 @@ REQUIRED_FOR_GENERATE = (
     "JournalInstanceEntrance.csv",
     "MapDifficulty.csv",
     "Difficulty.csv",
+    "Map.csv",
+    "AreaPOI.csv",
+    "Achievement.csv",
+    "Achievement_Category.csv",
 )
+
+DELVE_DIFFICULTY_ID = 208
+# Season/story duplicate maps that share a display name with a primary delve.
+COLLAPSE_DELVE_MAP_IDS = {2767, 2768, 2836}
+# Map.ExpansionID is suite expansionID - 1 (TWW 10 -> 11, Midnight 11 -> 12).
+MAP_EXPANSION_TO_SUITE = 1
+STATS_CATEGORY_ROOT = 1
+GUILD_CATEGORY_ROOT = 15076
+GLORY_DELVER_BY_SUITE = {
+    11: 40438,  # Glory of the War Within Delver
+    12: 61906,  # Glory of the Midnight Delver
+}
+LAIR_SOLO_TITLES = {
+    "Let Me Solo Him: Zekvir": 2682,
+    "Let Me Solo Him: The Underpin": 2831,
+    "Let Me Solo Her: Nexus-Princess Ky'veza": 2951,
+}
 
 EXPANSION_FILES = (
     ("Classic", 1),
@@ -225,6 +246,303 @@ def emit_instance_flags(path: Path, instance_meta: dict[int, dict[str, object]])
     path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
 
+def load_categories(db2: Path) -> dict[int, int]:
+    """Achievement_Category ID -> Parent."""
+    parents: dict[int, int] = {}
+    for row in read_csv(db2 / "Achievement_Category.csv"):
+        parents[int(row["ID"])] = int(row["Parent"] or -1)
+    return parents
+
+
+def category_is_stats_or_guild(category_id: int, parents: dict[int, int]) -> bool:
+    seen: set[int] = set()
+    cid = category_id
+    while cid and cid not in seen:
+        if cid in (STATS_CATEGORY_ROOT, GUILD_CATEGORY_ROOT):
+            return True
+        seen.add(cid)
+        parent = parents.get(cid, -1)
+        if parent in (STATS_CATEGORY_ROOT, GUILD_CATEGORY_ROOT):
+            return True
+        cid = parent
+        if cid == -1:
+            break
+    return False
+
+
+def achievement_diff_token(title: str) -> str | None:
+    """Parse an English achievement title into a JOURNAL_DIFF_* suffix."""
+    low = title.lower()
+    if low.startswith("heroic:"):
+        return "H"
+    if low.startswith("mythic:"):
+        return "M"
+    if low.startswith("normal:"):
+        return "N"
+    if "keystone" in low:
+        return "M+"
+    if "timewalking" in low or low.startswith("timewalker"):
+        return "TW"
+    if "looking for raid" in low or "raid finder" in low or low.startswith("lfr:"):
+        return "LFR"
+    heroic = "heroic" in low
+    if "(10 player)" in low:
+        return "10H" if heroic else "10N"
+    if "(25 player)" in low:
+        return "25H" if heroic else "25N"
+    return None
+
+
+def load_delves(db2: Path) -> dict[int, dict[int, dict[str, object]]]:
+    """suite expansionID -> { mapID: { order, name } } for primary delves."""
+    delve_maps: set[int] = set()
+    for row in read_csv(db2 / "MapDifficulty.csv"):
+        if int(row["DifficultyID"] or 0) == DELVE_DIFFICULTY_ID:
+            mid = int(row["MapID"] or 0)
+            if mid and mid not in COLLAPSE_DELVE_MAP_IDS:
+                delve_maps.add(mid)
+
+    by_exp: dict[int, list[tuple[str, int]]] = defaultdict(list)
+    for row in read_csv(db2 / "Map.csv"):
+        mid = int(row["ID"])
+        if mid not in delve_maps:
+            continue
+        if int(row["InstanceType"] or 0) != 5:
+            continue
+        suite_exp = int(row["ExpansionID"] or 0) + MAP_EXPANSION_TO_SUITE
+        name = row.get("MapName_lang") or f"Delve {mid}"
+        by_exp[suite_exp].append((name, mid))
+
+    membership: dict[int, dict[int, dict[str, object]]] = {}
+    for eid, rows in by_exp.items():
+        rows.sort(key=lambda kv: (kv[0].lower(), kv[1]))
+        membership[eid] = {
+            mid: {"order": order, "name": name} for order, (name, mid) in enumerate(rows)
+        }
+    return membership
+
+
+def load_delve_names(
+    db2: Path,
+    membership: dict[int, dict[int, dict[str, object]]],
+) -> dict[int, str]:
+    names: dict[int, str] = {}
+    for cards in membership.values():
+        for mid, info in cards.items():
+            names[mid] = str(info["name"])
+    if names:
+        return names
+    wanted = {mid for cards in membership.values() for mid in cards}
+    for row in read_csv(db2 / "Map.csv"):
+        mid = int(row["ID"])
+        if mid in wanted:
+            names[mid] = row.get("MapName_lang") or f"Delve {mid}"
+    return names
+
+
+def load_delve_entrances(
+    db2: Path,
+    names: dict[int, str],
+) -> dict[int, list[dict[str, object]]]:
+    """mapID -> one regular Delve door (plus matching bountiful POI id)."""
+    name_to_map = {name: mid for mid, name in names.items()}
+    regular: dict[int, dict[str, object]] = {}
+    bountiful: dict[int, list[dict[str, object]]] = defaultdict(list)
+
+    for row in read_csv(db2 / "AreaPOI.csv"):
+        name = row.get("Name_lang") or ""
+        mid = name_to_map.get(name)
+        if not mid:
+            continue
+        desc = row.get("Description_lang") or ""
+        entry = {
+            "areaPoiID": int(row["ID"]),
+            "mapID": int(row["ContinentID"] or 0),
+            "x": float(row["Pos_0"] or 0),
+            "y": float(row["Pos_1"] or 0),
+            "faction": -1,
+        }
+        if desc == "Delve":
+            if mid not in regular:
+                regular[mid] = entry
+        elif "Bountiful Delve" in desc:
+            bountiful[mid].append(entry)
+
+    by_mid: dict[int, list[dict[str, object]]] = {}
+    for mid, door in regular.items():
+        match_id = None
+        for cand in bountiful.get(mid, []):
+            if (
+                cand["mapID"] == door["mapID"]
+                and abs(float(cand["x"]) - float(door["x"])) < 0.05
+                and abs(float(cand["y"]) - float(door["y"])) < 0.05
+            ):
+                match_id = int(cand["areaPoiID"])
+                break
+        if match_id is None and bountiful.get(mid):
+            match_id = int(bountiful[mid][0]["areaPoiID"])
+        row = {
+            "mapID": door["mapID"],
+            "x": door["x"],
+            "y": door["y"],
+            "faction": -1,
+            "areaPoiID": int(door["areaPoiID"]),
+        }
+        if match_id:
+            row["bountifulPoiID"] = match_id
+        by_mid[mid] = [row]
+    return by_mid
+
+
+def load_journal_achievements(db2: Path) -> dict[int, list[dict[str, object]]]:
+    """JournalInstance.MapID -> achievement rows (player tree only)."""
+    map_ids: set[int] = set()
+    for row in read_csv(db2 / "JournalInstance.csv"):
+        mid = int(row["MapID"] or 0)
+        if mid:
+            map_ids.add(mid)
+
+    parents = load_categories(db2)
+    by_map: dict[int, list[dict[str, object]]] = defaultdict(list)
+    for row in read_csv(db2 / "Achievement.csv"):
+        title = row.get("Title_lang") or ""
+        if " (copy)" in title:
+            continue
+        mid = int(row["Instance_ID"] or 0)
+        if mid <= 0 or mid not in map_ids:
+            continue
+        if category_is_stats_or_guild(int(row["Category"] or 0), parents):
+            continue
+        entry: dict[str, object] = {"id": int(row["ID"])}
+        diff = achievement_diff_token(title)
+        if diff:
+            entry["diff"] = diff
+        by_map[mid].append(entry)
+    for mid in by_map:
+        by_map[mid].sort(key=lambda r: int(r["id"]))
+    return dict(by_map)
+
+
+def load_delve_achievements(
+    db2: Path,
+    membership: dict[int, dict[int, dict[str, object]]],
+    names: dict[int, str],
+) -> dict[int, list[dict[str, object]]]:
+    """Delve mapID -> Stories/Discoveries + expansion Glory + matching lair solos."""
+    by_map: dict[int, list[dict[str, object]]] = defaultdict(list)
+    seen: dict[int, set[int]] = defaultdict(set)
+
+    def add(mid: int, ach_id: int) -> None:
+        if ach_id in seen[mid]:
+            return
+        seen[mid].add(ach_id)
+        by_map[mid].append({"id": ach_id})
+
+    title_index: dict[str, int] = {}
+    for row in read_csv(db2 / "Achievement.csv"):
+        title = row.get("Title_lang") or ""
+        if " (copy)" in title:
+            continue
+        title_index[title] = int(row["ID"])
+
+    for mid, name in names.items():
+        stories = title_index.get(f"{name} Stories")
+        discoveries = title_index.get(f"{name} Discoveries")
+        if stories:
+            add(mid, stories)
+        if discoveries:
+            add(mid, discoveries)
+
+    for suite_exp, cards in membership.items():
+        glory = GLORY_DELVER_BY_SUITE.get(suite_exp)
+        if not glory:
+            continue
+        for mid in cards:
+            add(mid, glory)
+
+    for title, mid in LAIR_SOLO_TITLES.items():
+        ach_id = title_index.get(title)
+        if ach_id and mid in names:
+            add(mid, ach_id)
+
+    for mid in by_map:
+        by_map[mid].sort(key=lambda r: int(r["id"]))
+    return dict(by_map)
+
+
+def emit_delve_membership(path: Path, membership: dict[int, dict[int, dict[str, object]]]) -> None:
+    lines: list[str] = []
+    write_lua_header(lines, "DelveMembership.lua")
+    lines.append("-- Primary delve MapIDs. Not EJ; cache key is expansionID .. \":delve:\" .. mapID.")
+    lines.append("-- [expansionID] = { [mapID] = { order, name }, ... }")
+    lines.append("ns.DelveMembership = {")
+    for eid in sorted(membership):
+        lines.append(f"\t[{eid}] = {{")
+        for mid, info in sorted(membership[eid].items(), key=lambda kv: (int(kv[1]["order"]), kv[0])):
+            name = lua_escape(str(info["name"]))
+            lines.append(f'\t\t[{mid}] = {{ order = {int(info["order"])}, name = "{name}" }},')
+        lines.append("\t},")
+    lines.append("}")
+    lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+
+
+def emit_delve_entrances(path: Path, entrances: dict[int, list[dict[str, object]]]) -> None:
+    lines: list[str] = []
+    write_lua_header(lines, "DelveEntrances.lua")
+    lines.append("-- World-space delve doors from AreaPOI (Description == Delve).")
+    lines.append("-- mapID is the continent Map.db2 id. Convert with C_Map.GetMapPosFromWorldPos.")
+    lines.append("-- [mapID] = { { mapID, x, y, faction, areaPoiID, bountifulPoiID? }, ... }")
+    lines.append("ns.DelveEntrances = {")
+    for mid in sorted(entrances):
+        lines.append(f"\t[{mid}] = {{")
+        for row in entrances[mid]:
+            extra = ""
+            if row.get("bountifulPoiID"):
+                extra = f", bountifulPoiID = {int(row['bountifulPoiID'])}"
+            lines.append(
+                f'\t\t{{ mapID = {int(row["mapID"])}, x = {lua_num(row["x"])}, '
+                f'y = {lua_num(row["y"])}, faction = {int(row["faction"])}, '
+                f'areaPoiID = {int(row["areaPoiID"])}{extra} }},'
+            )
+        lines.append("\t},")
+    lines.append("}")
+    lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+
+
+def emit_achievements(
+    path: Path,
+    journal: dict[int, list[dict[str, object]]],
+    delves: dict[int, list[dict[str, object]]],
+) -> None:
+    lines: list[str] = []
+    write_lua_header(lines, "Achievements.lua")
+    lines.append("-- Achievement IDs only. Names/points/status come from GetAchievementInfo.")
+    lines.append("-- [mapID] = { { id, diff? }, ... }  diff is a JOURNAL_DIFF_* suffix.")
+    lines.append("ns.JournalAchievements = {")
+    _emit_ach_table(lines, journal)
+    lines.append("}")
+    lines.append("")
+    lines.append("-- Delve Stories/Discoveries + expansion Glory + matching lair solos.")
+    lines.append("ns.DelveAchievements = {")
+    _emit_ach_table(lines, delves)
+    lines.append("}")
+    lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+
+
+def _emit_ach_table(lines: list[str], by_map: dict[int, list[dict[str, object]]]) -> None:
+    for mid in sorted(by_map):
+        lines.append(f"\t[{mid}] = {{")
+        for row in by_map[mid]:
+            if row.get("diff"):
+                lines.append(f'\t\t{{ id = {int(row["id"])}, diff = "{row["diff"]}" }},')
+            else:
+                lines.append(f'\t\t{{ id = {int(row["id"])} }},')
+        lines.append("\t},")
+
+
 def emit_instance_entrances(path: Path, entrances: dict[int, list[dict[str, object]]]) -> None:
     lines: list[str] = []
     write_lua_header(lines, "InstanceEntrances.lua")
@@ -308,16 +626,27 @@ def cmd_generate(db2: Path, out_dir: Path) -> int:
 
     membership, instance_meta, map_difficulties, difficulty_meta = load_membership(db2)
     entrances = load_entrances(db2)
+    delve_membership = load_delves(db2)
+    delve_names = load_delve_names(db2, delve_membership)
+    delve_entrances = load_delve_entrances(db2, delve_names)
+    journal_achs = load_journal_achievements(db2)
+    delve_achs = load_delve_achievements(db2, delve_membership, delve_names)
     out_dir.mkdir(parents=True, exist_ok=True)
     emit_tier_membership(out_dir / "TierMembership.lua", membership)
     emit_map_difficulties(out_dir / "MapDifficulties.lua", map_difficulties, difficulty_meta)
     emit_instance_flags(out_dir / "InstanceFlags.lua", instance_meta)
     emit_instance_entrances(out_dir / "InstanceEntrances.lua", entrances)
+    emit_delve_membership(out_dir / "DelveMembership.lua", delve_membership)
+    emit_delve_entrances(out_dir / "DelveEntrances.lua", delve_entrances)
+    emit_achievements(out_dir / "Achievements.lua", journal_achs, delve_achs)
 
     cards = sum(len(v) for v in membership.values())
+    delve_cards = sum(len(v) for v in delve_membership.values())
     print(
         f"Generated TierMembership ({cards} cards), MapDifficulties, InstanceFlags, "
-        f"InstanceEntrances ({len(entrances)} instances) -> {out_dir}"
+        f"InstanceEntrances ({len(entrances)} instances), "
+        f"DelveMembership ({delve_cards} delves), DelveEntrances ({len(delve_entrances)}), "
+        f"Achievements ({len(journal_achs)} maps, {len(delve_achs)} delves) -> {out_dir}"
     )
     if report_entrance_fallback_overlap(entrances, instance_meta, fail=True):
         print(
@@ -348,6 +677,15 @@ def cmd_validate(db2: Path) -> int:
     print(f"Entrance pins: {len(entrances)} instanceIDs")
     fallback_ids = load_entrance_fallback_ids()
     print(f"Entrance fallbacks: {len(fallback_ids)} handmade instanceIDs")
+    delve_membership = load_delves(db2)
+    delve_names = load_delve_names(db2, delve_membership)
+    delve_entrances = load_delve_entrances(db2, delve_names)
+    journal_achs = load_journal_achievements(db2)
+    delve_achs = load_delve_achievements(db2, delve_membership, delve_names)
+    print(f"Delve cards: {sum(len(v) for v in delve_membership.values())} across {len(delve_membership)} expansions")
+    print(f"Delve entrance pins: {len(delve_entrances)}")
+    print(f"Journal achievement maps: {len(journal_achs)}")
+    print(f"Delve achievement maps: {len(delve_achs)}")
 
     orphans: list[str] = []
     for eid, ids in sorted(att.items()):

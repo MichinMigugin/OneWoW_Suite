@@ -37,8 +37,12 @@ JournalData.QUEST_ENC_ID = QUEST_ENC_ID
 --- Composite cache / favorites key for a journal card.
 ---@param expansionID number
 ---@param instanceID number
+---@param instanceType string|nil
 ---@return string
-function JournalData.CacheKey(expansionID, instanceID)
+function JournalData.CacheKey(expansionID, instanceID, instanceType)
+    if instanceType == "delve" then
+        return tostring(expansionID) .. ":delve:" .. tostring(instanceID)
+    end
     return tostring(expansionID) .. ":" .. tostring(instanceID)
 end
 
@@ -384,6 +388,28 @@ local function ResolveEntrances(instanceID)
     return nil, nil
 end
 
+---@param mapID number
+---@return table|nil
+---@return string|nil
+local function ResolveDelveEntrances(mapID)
+    local db2 = ns.DelveEntrances and ns.DelveEntrances[mapID]
+    if db2 and db2[1] then
+        return db2, "db2"
+    end
+    return nil, nil
+end
+
+---@param mapID number|nil
+---@param instanceType string
+---@return table
+local function AchievementsFor(mapID, instanceType)
+    if not mapID then
+        return {}
+    end
+    local src = instanceType == "delve" and ns.DelveAchievements or ns.JournalAchievements
+    return (src and src[mapID]) or {}
+end
+
 ---@param expansionID number
 ---@param instanceID number
 ---@param orderIndex number|nil
@@ -407,10 +433,15 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         validDifficulties = ns.JournalMapDifficulties[mapID]
     end
 
-    local entrances, entranceSource = ResolveEntrances(instanceID)
+    local entrances, entranceSource
+    if instanceType == "delve" then
+        entrances, entranceSource = ResolveDelveEntrances(mapID)
+    else
+        entrances, entranceSource = ResolveEntrances(instanceID)
+    end
 
     local entry = {
-        cacheKey           = JournalData.CacheKey(expansionID, instanceID),
+        cacheKey           = JournalData.CacheKey(expansionID, instanceID, instanceType),
         instanceID         = instanceID,
         name               = name,
         mapID              = mapID,
@@ -424,6 +455,7 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         validDifficulties  = validDifficulties,
         entrances          = entrances,
         entranceSource     = entranceSource,
+        achievements       = AchievementsFor(mapID, instanceType),
     }
     ApplyTotals(entry, encounters)
     return entry
@@ -500,6 +532,20 @@ function JournalData:BuildJournalCache()
         )
     end
 
+    local function AddDelveCard(expansionID, mapID, orderIndex, name)
+        local key = self.CacheKey(expansionID, mapID, "delve")
+        if overrides.forceHide and overrides.forceHide[key] then
+            return
+        end
+        self.journalCache[key] = MakeCacheEntry(
+            expansionID,
+            mapID,
+            orderIndex,
+            { name = name, mapID = mapID, instanceType = "delve" },
+            {}
+        )
+    end
+
     if membership then
         for expansionID, cards in pairs(membership) do
             for instanceID, orderIndex in pairs(cards) do
@@ -518,14 +564,32 @@ function JournalData:BuildJournalCache()
         end
     end
 
+    if ns.DelveMembership then
+        for expansionID, cards in pairs(ns.DelveMembership) do
+            for mapID, info in pairs(cards) do
+                AddDelveCard(expansionID, mapID, info.order, info.name)
+            end
+        end
+    end
+
     if overrides.forceShow then
         for key in pairs(overrides.forceShow) do
             if not self.journalCache[key] then
-                local expansionID, instanceID = strsplit(":", key)
+                local expansionID, mid, mapID = strsplit(":", key)
                 expansionID = tonumber(expansionID)
-                instanceID = tonumber(instanceID)
-                if expansionID and instanceID then
-                    AddCard(expansionID, instanceID, 0)
+                if mid == "delve" then
+                    mapID = tonumber(mapID)
+                    if expansionID and mapID then
+                        local delveInfo = ns.DelveMembership
+                            and ns.DelveMembership[expansionID]
+                            and ns.DelveMembership[expansionID][mapID]
+                        AddDelveCard(expansionID, mapID, 0, delveInfo and delveInfo.name)
+                    end
+                else
+                    local instanceID = tonumber(mid)
+                    if expansionID and instanceID then
+                        AddCard(expansionID, instanceID, 0)
+                    end
                 end
             end
         end
@@ -588,11 +652,13 @@ function JournalData:GetSortedInstances(expansionFilter, searchText, instanceTyp
     return result
 end
 
-function JournalData:GetAvailableExpansions()
+function JournalData:GetAvailableExpansions(typeFilter)
     self:BuildJournalCache()
     local present = {}
     for _, inst in pairs(self.journalCache) do
-        present[inst.expansionID] = inst.expansionName
+        if not typeFilter or typeFilter == "all" or inst.instanceType == typeFilter then
+            present[inst.expansionID] = inst.expansionName
+        end
     end
     local result = {}
     for _, exp in ipairs(expansionList) do
@@ -634,8 +700,85 @@ function JournalData:GetInstanceByMapID(mapID)
     return all[#all]
 end
 
+JournalData.bountifulMapIDs = {}
+
+local function MarkBountifulFromPOI(self, uiMapID, poiID, poiToMap, nameToMap)
+    local mapped = poiToMap[poiID]
+    if mapped then
+        self.bountifulMapIDs[mapped] = true
+        return
+    end
+    local info = C_AreaPoiInfo.GetAreaPOIInfo(uiMapID, poiID)
+    local atlas = info and info.atlasName
+    if atlas and atlas:lower():find("bountiful", 1, true) then
+        local mid = info.name and nameToMap[info.name]
+        if mid then
+            self.bountifulMapIDs[mid] = true
+        end
+    end
+end
+
+local function WalkDelveMaps(self, startID, seenMaps, poiToMap, nameToMap)
+    local uiMapID = startID
+    while uiMapID and uiMapID ~= 0 and not seenMaps[uiMapID] do
+        seenMaps[uiMapID] = true
+        local pois = C_AreaPoiInfo.GetDelvesForMap(uiMapID)
+        if pois then
+            for i = 1, #pois do
+                MarkBountifulFromPOI(self, uiMapID, pois[i], poiToMap, nameToMap)
+            end
+        end
+        local mapInfo = C_Map.GetMapInfo(uiMapID)
+        uiMapID = mapInfo and mapInfo.parentMapID
+    end
+end
+
+--- Live bountiful doors this week. atlasName or generated bountifulPoiID.
+function JournalData:RefreshBountiful()
+    wipe(self.bountifulMapIDs)
+    self:BuildJournalCache()
+
+    local nameToMap = {}
+    local poiToMap = {}
+    for _, inst in pairs(self.journalCache) do
+        if inst.instanceType == "delve" and inst.mapID then
+            nameToMap[inst.name] = inst.mapID
+            for _, row in ipairs(inst.entrances or {}) do
+                if row.bountifulPoiID then
+                    poiToMap[row.bountifulPoiID] = inst.mapID
+                end
+            end
+        end
+    end
+
+    local seenMaps = {}
+    for _, inst in pairs(self.journalCache) do
+        if inst.instanceType == "delve" then
+            for _, row in ipairs(inst.entrances or {}) do
+                if row.mapID and row.mapID ~= 0 then
+                    local uiMapID = C_Map.GetMapPosFromWorldPos(row.mapID, CreateVector2D(row.x, row.y))
+                    WalkDelveMaps(self, uiMapID, seenMaps, poiToMap, nameToMap)
+                end
+            end
+        end
+    end
+
+    -- Midnight doors often ship ContinentID 0; the player map still lists live POIs.
+    local playerMap = C_Map.GetBestMapForUnit("player")
+    if playerMap then
+        WalkDelveMaps(self, playerMap, seenMaps, poiToMap, nameToMap)
+    end
+end
+
+---@param mapID number|nil
+---@return boolean
+function JournalData:IsDelveBountiful(mapID)
+    return mapID ~= nil and self.bountifulMapIDs[mapID] == true
+end
+
 function JournalData:ClearCache()
     self.journalCache = nil
+    wipe(self.bountifulMapIDs)
     if ns.EJLiveLoot and ns.EJLiveLoot.OnJournalCacheCleared then
         ns.EJLiveLoot:OnJournalCacheCleared()
     end

@@ -51,8 +51,9 @@ Wago has 1,000+ tables. This list is the Catalog-useful set, not every table.
 - **Difficulty names / max players** — `Difficulty` — Have
 - **“Why this difficulty is locked” text** — `MapDifficultyXCondition` — Have
 - **UiMap names / hierarchy** — `UiMap` — No
-- **Continent / zone map** — `Map` — No
+- **Continent / zone map** — `Map` — Have (delve names, expansion, InstanceType 5)
 - **Area names** — `AreaTable` — No
+- **Delve / bountiful world doors** — `AreaPOI` — Have (regular `Delve` vs `Bountiful Delve`)
 
 ## Seasons and upgrade tracks
 
@@ -89,11 +90,13 @@ Wago has 1,000+ tables. This list is the Catalog-useful set, not every table.
 - **Recipes / reagents** — `SkillLineAbility` + `SpellReagents` + `CraftingData*` — No
 - **Currency names** — `CurrencyTypes` — No
 
-## Achievements (future group)
+## Achievements
 
-- **Achievement name / description** — `Achievement` — No
+- **Achievement name / description** — `Achievement` — Have (generator emits IDs; names at runtime)
+- **Category tree** — `Achievement_Category` — Have (skip Statistics / Guild)
+- **Dungeon / raid link** — `Achievement.Instance_ID` → `Map.ID` / `JournalInstance.MapID` — Have
+- **Delve Stories / Discoveries** — title match on `Map.MapName_lang` (`Instance_ID` is -1) — Have
 - **Criteria** — `Criteria` + `CriteriaTree` — No
-- **Dungeon / raid criteria link** — often via MapID / encounter IDs you already have
 
 ## NPCs and world content (limited)
 

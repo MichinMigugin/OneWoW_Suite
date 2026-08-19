@@ -8,7 +8,7 @@
 
 ## Tabs (overview)
 
-* **Journal** — dungeons and raids across expansions; encounters and loot when Journal data is installed. The pin next to the favorite star opens the map and marks the entrance.
+* **Journal** — dungeons, raids, and Delves across expansions; encounters, loot, and achievements when Journal data is installed. The pin next to the favorite star opens the map and marks the entrance.
 * **Vendors** — who sells what, where, and for which currency
 * **Tradeskills** — recipes, materials, and profession requirements
 * **Item Search** — find an item and see vendors, crafts, drops, and other sources
@@ -24,7 +24,7 @@ Each pack is optional. Disable packs you do not need to save memory; Catalog its
 
 | Pack | Fills |
 |------|--------|
-| **Journal** | Instances, encounters, loot |
+| **Journal** | Instances, encounters, loot, achievements, and Delves |
 | **Vendors** | Vendor NPCs and stock |
 | **Tradeskills** | Recipes and materials |
 | **Quests** | Quest DB and completion |
@@ -37,6 +37,11 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 
 * For crafting lists, keep **Tradeskills** installed even if you rarely open Catalog — [Shopping List](Shopping-List) uses it for the Craft button and recipe picker.
 * On Journal cards, the pin beside the star opens the world map and drops a waypoint at the instance entrance. The same pin is on the details side, opposite Difficulty. Gold pins are Wowhead locations used until Blizzard publishes an official door. Hub cards still have no pin.
+* Instance Type includes Delves (The War Within and Midnight). While Delves is selected, **Show Bountiful** sits next to Has uncollected and keeps only this week's bountiful doors. The checkbox clears when you close Catalog or press Clear.
+* Bountiful delve cards use the bountiful type icon, and a gold border when the filter is off. Delve cards use the official entrance background.
+* Cards show bosses, items, and achievements on one line. Delves show the achievement count only (no Adventure Guide loot table).
+* Details list achievements above items. Click the Achievement header (same plus/minus as Items) to collapse the table. Status uses a check (this character), a Warband mark, and an X (incomplete). The check is green when you earned it; the Warband icon uses its normal art when the Warband has it and a grey account mark when it does not; the X turns soft orange when it is still incomplete. Click a row to open it in the in-game Achievements window.
+* Dungeons and raids have an Adventure Guide button on the details toolbar. Delves keep the Difficulty dropdown in place so the map pin lines up, but it stays disabled (Delves have no difficulty filter and no Adventure Guide page).
 * Themes follow suite-wide OneWoW settings.
 
 ## Related

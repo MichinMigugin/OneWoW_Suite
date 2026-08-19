@@ -5,6 +5,10 @@ OneWoW:BootStore(ns, {
     savedVar = "OneWoW_CatalogData_Journal_DB",
     withScanCallbacks = true,
     onEnteringWorld = function(_, _, isZoning)
+        OneWoW.Restriction.RunWhenUnrestricted("restricted", "journal-bountiful", function()
+            ns.JournalData:RefreshBountiful()
+            ns:FireScanCallbacks("bountiful")
+        end)
         if isZoning then
             ns:FireScanCallbacks(nil)
         end

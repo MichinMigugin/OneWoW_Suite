@@ -83,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["JOURNAL_COL_OR"] = "o",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Tiene sin coleccionar",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "Solo pródigas",
     ["JOURNAL_LOADING_LOOT"] = "Cargando botín…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Botín general",
@@ -99,6 +100,9 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["JOURNAL_QUEST_CAT_TT"] = "Los objetos que aparecen aquí se pueden conseguir mediante algún tipo de misión.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Dificultad",
+    ["JOURNAL_COL_HDR_POINTS"] = "Puntos",
+    ["JOURNAL_ACH_WARBAND"] = "Banda guerrera",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Abrir esta estancia en la Guía de aventuras.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transfig.",
     ["JOURNAL_SPECIAL_MOUNT"] = "Montura",

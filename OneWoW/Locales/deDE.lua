@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto-Reittier",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto-Reittier pausiert im Kampf und in anderen aura-beschränkten Situationen, erkennt Verstohlenheit ohne geheime Stärkungszauber zu scannen und löst keinen Fehler mehr aus, wenn Auradaten eingeschränkt sind. Spieler-Reittiere-Tooltips nutzen denselben Schutz.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Das Midnight-Journal enthält jetzt Begegnungen und Beute für Die Gezeitengebundene Grotte, Der Giftige Abgrund und Altar der Fänge.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Das Journal listet jetzt Tiefen für The War Within und Midnight, mit einem Filter für großzügige Tiefen. Dungeon- und Schlachtzugskarten zeigen Erfolge und einen Abenteuerführer-Button.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Unter Taschen-Einstellungen → Allgemein könnt ihr Taschen, Bank (persönlich und Kriegsmeute gemeinsam) und Gildenbank unabhängig ersetzen. Mit #disenchantable (#de) findet ihr Gegenstände, die entzaubert werden können, und mit #midnights1 / #midnights2 Ausrüstung von Saison 1 und Saison 2 von Midnight.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Symbolbrowser",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Unter QoL-Funktionen gibt es den Symbolbrowser. Damit lassen sich Symbole für Makros, Banktabs, Gildenbanktabs, Ausrüstungssets und Transmog-Outfits suchen und filtern.",

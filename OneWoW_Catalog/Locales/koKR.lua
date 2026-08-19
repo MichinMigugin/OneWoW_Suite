@@ -82,6 +82,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_COL_OR"] = "또는",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "미수집 있음",
+    ["JOURNAL_SHOW_BOUNTIFUL"] = "풍요로운 구렁만",
     ["JOURNAL_LOADING_LOOT"] = "전리품 불러오는 중…",
 
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
@@ -98,6 +99,9 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_QUEST_CAT_TT"] = "여기에 나열된 아이템은 어떤 형태로든 퀘스트를 통해 얻을 수 있는 아이템입니다.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "난이도",
+    ["JOURNAL_COL_HDR_POINTS"] = "점수",
+    ["JOURNAL_ACH_WARBAND"] = "전투부대",
+    ["JOURNAL_ADVENTURE_GUIDE_TT"] = "모험 안내서에서 이 인스턴스를 엽니다.",
 
     ["JOURNAL_SPECIAL_TMOG"] = "형상변환",
     ["JOURNAL_SPECIAL_MOUNT"] = "탈것",

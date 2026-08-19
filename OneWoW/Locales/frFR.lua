@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Monture auto",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Monture auto se met en pause en combat et dans les autres situations où les auras sont restreintes, détecte la furtivité sans scanner les buffs secrets, et ne provoque plus d’erreur quand les données d’aura sont restreintes. Les infobulles de Montures des joueurs utilisent la même protection.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Le Journal Midnight inclut désormais les rencontres et le butin de La grotte des Marées, L’abîme Venimeux et Autel des crochets.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Le Journal liste maintenant les Gouffres de The War Within et Midnight, avec un filtre Gouffres abondants. Les cartes de donjons et de raids affichent les hauts faits et un bouton Guide de l'aventurier.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Dans les réglages Sacs → Général, vous pouvez remplacer indépendamment les sacs, la banque (personnelle et bataillon ensemble) et la banque de guilde. Recherchez #disenchantable (#de) pour les objets désenchantables, et #midnights1 / #midnights2 pour l'équipement de Saison Midnight 1 et 2.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navigateur d’icônes",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Les fonctionnalités QoL incluent le Navigateur d’icônes. Recherchez et filtrez les icônes des macros, onglets de banque, onglets de banque de guilde, ensembles d’équipement et tenues de transmogrification.",

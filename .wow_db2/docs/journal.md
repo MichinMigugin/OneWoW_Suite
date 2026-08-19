@@ -48,5 +48,5 @@ erDiagram
 
 ## Cross-model
 
-See [`.wow_db2/README.md`](../README.md) — conditions and MapID links. Achievements
-(later) should note shared MapID / dungeon criteria here when added.
+See [`.wow_db2/README.md`](../README.md) — conditions and MapID links.
+Achievements / delves: [`docs/achievements.md`](achievements.md).
