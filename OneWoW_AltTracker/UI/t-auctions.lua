@@ -1137,7 +1137,33 @@ function ns.UI.CreateAuctionsTab(parent)
         },
     })
 
-    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
+    local searchBar = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
+
+    local searchDebounce
+    local searchBox = OneWoW_GUI:CreateEditBox(searchBar, {
+        height = 24,
+        placeholderText = L["SEARCH_ITEMS"],
+        onTextChanged = function(text)
+            if searchDebounce then
+                searchDebounce:Cancel()
+                searchDebounce = nil
+            end
+            searchDebounce = C_Timer.NewTimer(0.3, function()
+                searchDebounce = nil
+                itemSearchText = text or ""
+                if ns.UI.RefreshAuctionsTab then
+                    ns.UI.RefreshAuctionsTab(parent)
+                end
+            end)
+        end,
+    })
+    searchBox:SetPoint("LEFT", searchBar, "LEFT", 8, 0)
+    OneWoW_GUI:AttachSearchTooltip(searchBox)
+    local searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(searchBar, { editBox = searchBox, size = 20 })
+    searchHelpBtn:SetPoint("RIGHT", searchBar, "RIGHT", -8, 0)
+    searchBox:SetPoint("RIGHT", searchHelpBtn, "LEFT", -4, 0)
+
+    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = searchBar, offset = -4 })
 
     parent.auctionFilter = "all"
 
@@ -1243,30 +1269,6 @@ function ns.UI.CreateAuctionsTab(parent)
     })
     realmDropdown:SetPoint("LEFT", altDropdown, "RIGHT", 4, 0)
 
-    local searchDebounce
-    local searchBox = OneWoW_GUI:CreateEditBox(filterPanel, {
-        width = 160,
-        height = 24,
-        placeholderText = L["SEARCH_ITEMS"],
-        onTextChanged = function(text)
-            if searchDebounce then
-                searchDebounce:Cancel()
-                searchDebounce = nil
-            end
-            searchDebounce = C_Timer.NewTimer(0.3, function()
-                searchDebounce = nil
-                itemSearchText = text or ""
-                if ns.UI.RefreshAuctionsTab then
-                    ns.UI.RefreshAuctionsTab(parent)
-                end
-            end)
-        end,
-    })
-    searchBox:SetPoint("LEFT", realmDropdown, "RIGHT", 4, 0)
-    OneWoW_GUI:AttachSearchTooltip(searchBox)
-    local searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(filterPanel, { editBox = searchBox, size = 20 })
-    searchHelpBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
-
     local filterButtons = {}
     local filterOptions = {
         {key = "all", label = ALL, tooltip = L["AUCTIONS_FILTER_ALL_DESC"]},
@@ -1279,7 +1281,7 @@ function ns.UI.CreateAuctionsTab(parent)
     for i, option in ipairs(filterOptions) do
         local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = option.label, height = 24 })
         if i == 1 then
-            btn:SetPoint("LEFT", searchHelpBtn, "RIGHT", 4, 0)
+            btn:SetPoint("LEFT", realmDropdown, "RIGHT", 4, 0)
         else
             btn:SetPoint("LEFT", filterButtons[i - 1], "RIGHT", 4, 0)
         end

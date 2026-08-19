@@ -21,8 +21,14 @@
 
 ---
 
-*No user-facing changes this release for Home, QoL, Bags, AltTracker, Mail, Shopping List, Notes, or Direct Deposit.*
+# AltTracker
+## Auctions
+- Search sits on its own row and stretches across the bar so alt, realm, and filter buttons no longer hang off the window.
 
 ---
 
-- **Last Updated**: Aug 18, 2026
+*No user-facing changes this release for Home, QoL, Bags, Mail, Shopping List, Notes, or Direct Deposit.*
+
+---
+
+- **Last Updated**: Aug 19, 2026
