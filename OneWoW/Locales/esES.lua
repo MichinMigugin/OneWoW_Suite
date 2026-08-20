@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montura automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montura automática se pausa en combate y en otras situaciones con auras restringidas, detecta el sigilo sin escanear beneficios secretos y ya no da error cuando los datos de aura están restringidos. Las descripciones emergentes de Monturas de jugadores usan la misma protección.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "El Journal ahora lista Profundidades de The War Within y Midnight, con un filtro de profundidades pródigas. Las fichas de mazmorras y bandas muestran logros y un botón de Guía de aventuras.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "El botín del Journal ahora coincide con la Guía de aventuras. Los objetos extra de AllTheThings van en su propia sección También de ATT. El tipo de estancia incluye Mundo. Las Profundidades siguen en The War Within y Midnight, con el filtro de profundidades pródigas.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "En Ajustes de bolsas → General podéis reemplazar por separado Bolsas, Banco (personal y banda guerrera juntos) y Banco de hermandad. Buscad #disenchantable (#de) para objetos que se pueden desencantar, y #midnights1 / #midnights2 para equipo de Midnight temporada 1 y 2.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navegador de iconos",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Funciones de QoL incluye el módulo Navegador de iconos. Busca y filtra iconos al elegir el de una macro, pestaña de banco, pestaña de banco de hermandad, conjunto de equipo o atuendo de transfiguración.",

@@ -11,6 +11,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["JOURNAL_STATUS_NA"] = "不适用",
 
     ["JOURNAL_GENERAL_LOOT"] = "普通战利品",
+    ["JOURNAL_ALSO_FROM_ATT"] = "来自 ATT 的额外内容",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "成就",
     ["JOURNAL_QUEST_LOOT"] = "任务相关 / 任务掉落",
     ["JOURNAL_UNKNOWN_ITEM"] = "未知物品",

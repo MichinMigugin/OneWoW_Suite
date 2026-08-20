@@ -21,6 +21,8 @@
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 
 ## Journal
+- Loot on a card now matches the Adventure Guide. Extra AllTheThings drops (trash, quest items, outdoor rares) sit in their own Also from ATT section, not mixed into boss loot.
+- Instance Type includes World. Classic through Cataclysm get a World card; later expansions use the Adventure Guide outdoor hubs.
 - Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.
 - Journal cards and details show a dungeon, raid, or Delve icon next to the type. Bountiful delves use the bountiful icon. Delve cards use the official entrance background.
 - Instance Type now includes Delves (The War Within and Midnight). Show Bountiful sits next to Has uncollected and keeps only this week's bountiful doors; it clears when you close Catalog or press Clear. Bountiful cards use a gold border when the filter is off.

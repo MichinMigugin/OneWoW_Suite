@@ -11,6 +11,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_STATUS_NA"] = "N/D",
 
     ["JOURNAL_GENERAL_LOOT"] = "Bottino generale",
+    ["JOURNAL_ALSO_FROM_ATT"] = "Anche da ATT",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Impresa",
     ["JOURNAL_QUEST_LOOT"] = "Relativo a missione / Bottino di missione",
     ["JOURNAL_UNKNOWN_ITEM"] = "Oggetto sconosciuto",

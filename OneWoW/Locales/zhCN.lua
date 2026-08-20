@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自动坐骑",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自动坐骑会在战斗及其他光环受限情况下暂停，无需扫描保密增益即可检测潜行，并在光环数据受限时不再报错。玩家坐骑的鼠标提示使用同样的保护。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 现已列出地心之战与至暗之夜的地下堡，并提供丰裕筛选。地下城与团队副本卡片会显示成就，以及冒险指南按钮。",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 掉落现已与冒险指南一致。AllTheThings 额外物品单独显示在来自 ATT 的额外内容分区。实例类型包含世界。地下堡仍在地心之战与至暗之夜，并保留丰裕筛选。",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包设置 → 常规中，可以分别替换背包、银行（个人与战团一起）和公会银行。用 #disenchantable (#de) 查找可分解物品，用 #midnights1 / #midnights2 查找至暗之夜第1赛季和第2赛季装备。",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 图标浏览器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能现已包含图标浏览器。选择宏、银行标签、公会银行标签、装备方案或幻化套装图标时可搜索并筛选。",

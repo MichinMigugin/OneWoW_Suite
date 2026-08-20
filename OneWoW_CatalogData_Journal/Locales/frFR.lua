@@ -11,6 +11,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_STATUS_NA"] = "N/A",
 
     ["JOURNAL_GENERAL_LOOT"] = "Butin général",
+    ["JOURNAL_ALSO_FROM_ATT"] = "Aussi depuis ATT",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Haut fait",
     ["JOURNAL_QUEST_LOOT"] = "Lié à une quête / Butin de quête",
     ["JOURNAL_UNKNOWN_ITEM"] = "Objet inconnu",

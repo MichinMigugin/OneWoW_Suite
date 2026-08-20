@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "자동 탈것",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "자동 탈것은 전투 및 다른 오라 제한 상황에서 감지를 멈추고, 비밀 강화 효과를 검사하지 않고 은신을 감지하며, 오라 데이터가 제한되어도 오류가 나지 않습니다. 플레이어 탈것 툴팁도 같은 보호를 사용합니다.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal에 내부 전쟁과 한밤의 구렁이 추가되었고, 풍요로운 구렁 필터를 사용할 수 있습니다. 던전과 공격대 카드에 업적과 모험 안내서 버튼이 표시됩니다.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 전리품이 이제 모험 안내서와 같습니다. AllTheThings 추가 아이템은 ATT 추가 항목 칸에 따로 표시됩니다. 인스턴스 유형에 세계가 포함됩니다. 구렁은 내부 전쟁과 한밤에 있으며, 풍요로운 구렁 필터는 그대로입니다.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "가방 설정 → 일반에서 가방, 은행(개인과 전투부대 함께), 길드 은행을 각각 따로 대체할 수 있습니다. #disenchantable (#de)로 마력 추출이 가능한 아이템을, #midnights1 / #midnights2로 한밤 1 시즌과 2 시즌 장비를 찾습니다.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 아이콘 브라우저",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 기능에 아이콘 브라우저가 있습니다. 매크로, 은행 탭, 길드 은행 탭, 장비 구성, 형상변환 복장 아이콘을 고를 때 검색하고 필터할 수 있습니다.",

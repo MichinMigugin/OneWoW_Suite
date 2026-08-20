@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自動坐騎",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自動坐騎會在戰鬥及其他光環受限情況下暫停，無需掃描保密增益即可偵測潛行，並在光環資料受限時不再出錯。玩家坐騎的滑鼠提示使用同樣的保護。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 現已列出地心之戰與至暗之夜的探究，並提供豐碩篩選。地城與團隊副本卡片會顯示成就，以及冒險指南按鈕。",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 掉落現已與冒險指南一致。AllTheThings 額外物品會單獨顯示在來自 ATT 的額外內容區塊。副本類型包含世界。探究仍在地心之戰與至暗之夜，並保留豐碩篩選。",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包設定 → 一般中，可以分別取代背包、銀行（個人與戰隊一起）和公會銀行。用 #disenchantable (#de) 尋找可分解物品，用 #midnights1 / #midnights2 尋找至暗之夜賽季1與賽季2裝備。",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 圖示瀏覽器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能現已包含圖示瀏覽器。選擇巨集、銀行分頁、公會銀行分頁、裝備設定或塑形套裝圖示時可搜尋並篩選。",

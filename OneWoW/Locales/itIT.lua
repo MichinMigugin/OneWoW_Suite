@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Cavalcatura automatica",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Cavalcatura automatica si mette in pausa in combattimento e in altre situazioni con auree riservate, rileva lo stealth senza scansionare i buff segreti e non genera più errori quando i dati delle auree sono riservati. I tooltip di Cavalcature dei giocatori usano la stessa protezione.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Il Journal ora elenca le Scorribande di The War Within e Midnight, con un filtro per le Scorribande Fruttuose. Le schede di spedizioni e incursioni mostrano imprese e un pulsante Guida alle avventure.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Il bottino del Journal ora coincide con la Guida alle avventure. Gli oggetti extra di AllTheThings stanno nella sezione Anche da ATT. Il tipo di istanza include Mondo. Le Scorribande restano su The War Within e Midnight, con il filtro Scorribande Fruttuose.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "In Impostazioni Borse → Generale puoi sostituire in modo indipendente Borse, Banca (personale e Brigata insieme) e Banca di gilda. Cerca #disenchantable (#de) per gli oggetti disincantabili, e #midnights1 / #midnights2 per l'equipaggiamento di Midnight Stagione 1 e 2.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Browser delle icone",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Le funzioni QoL includono il Browser delle icone. Cerca e filtra le icone di macro, schede della banca, schede della banca di gilda, set di equipaggiamento e outfit di trasmogrificazione.",

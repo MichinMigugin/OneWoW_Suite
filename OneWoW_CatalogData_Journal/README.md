@@ -1,6 +1,6 @@
 # OneWoW - Data: Journal
 
-**Complete instance and encounter database for the OneWoW Catalog. Provides detailed information about all dungeons, raids, and Delves from every expansion.**
+**Complete instance and encounter database for the OneWoW Catalog. Provides detailed information about all dungeons, raids, Delves, and World hubs from every expansion.**
 
 ---
 
@@ -8,9 +8,9 @@
 
 This is a companion data addon for the OneWoW Catalog. It provides:
 
-- **Instance Information** - Detailed data about all dungeons, raids, and Delves
+- **Instance Information** - Detailed data about all dungeons, raids, Delves, and World hubs
 - **Encounter Details** - Information about bosses and encounters
-- **Loot Tables** - What drops from each instance
+- **Loot Tables** - Adventure Guide loot, plus a separate Also from ATT extras section
 - **Achievements** - Dungeon, raid, and Delve achievements on Journal cards
 - **Expansion Coverage** - All expansions from Classic through Midnight (Delves: The War Within and Midnight)
 
@@ -42,7 +42,7 @@ Classic, The Burning Crusade, Wrath of the Lich King, Cataclysm, Mists of Pandar
 
 1. Open the OneWoW Catalog
 2. Click the "Journal" tab
-3. Browse instances by expansion or search for specific raids, dungeons, or Delves
+3. Browse instances by expansion or search for specific raids, dungeons, Delves, or World hubs
 4. Click on an instance to see detailed encounter information
 5. View loot and other relevant data
 

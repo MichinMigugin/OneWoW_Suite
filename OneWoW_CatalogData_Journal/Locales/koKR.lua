@@ -11,6 +11,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_STATUS_NA"] = "해당 없음",
 
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
+    ["JOURNAL_ALSO_FROM_ATT"] = "ATT 추가 항목",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "업적",
     ["JOURNAL_QUEST_LOOT"] = "퀘스트 관련 / 퀘스트 전리품",
     ["JOURNAL_UNKNOWN_ITEM"] = "알 수 없는 아이템",

@@ -5,6 +5,7 @@
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW
+## OptionalDeps: AllTheThings
 ## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW_Catalog
@@ -97,6 +98,9 @@ Data\Generated\InstanceEntrances.lua
 Data\Generated\DelveMembership.lua
 Data\Generated\DelveEntrances.lua
 Data\Generated\Achievements.lua
+Data\Generated\JournalEncounters.lua
+Data\Generated\JournalLoot.lua
+Data\Generated\JournalWorldHubs.lua
 Data\JournalInstanceEntranceFallbacks.lua
 Data\JournalListingOverrides.lua
 
@@ -108,6 +112,7 @@ Core\Core.lua
 # Modules
 Modules\JournalData.lua
 Modules\EJLiveLoot.lua
+Modules\ATTLiveExtras.lua
 Modules\JournalScanner.lua
 
 # Main

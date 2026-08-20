@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montaria automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montaria automática pausa em combate e em outras situações com auras restritas, detecta furtividade sem varrer bônus secretos e não dá mais erro quando os dados de aura estão restritos. As dicas de Montarias dos jogadores usam a mesma proteção.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "O Journal agora lista Imersões de The War Within e Midnight, com um filtro de Imersões Abundantes. Cartões de masmorras e raides mostram conquistas e um botão do Guia da aventura.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "O saque do Journal agora coincide com o Guia da aventura. Itens extras do AllTheThings ficam na seção Também do ATT. O tipo de instância inclui Mundo. Imersões continuam em The War Within e Midnight, com o filtro de Imersões Abundantes.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Em Configurações de Bolsas → Geral, você pode substituir independentemente Bolsas, Banco (pessoal e Bando de Guerra juntos) e Banco da guilda. Pesquise #disenchantable (#de) para itens que podem ser desencantados, e #midnights1 / #midnights2 para equipamento da Temporada 1 e 2 de Midnight.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navegador de ícones",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Os Recursos de QoL incluem o Navegador de ícones. Pesquise e filtre ícones ao escolher o de uma macro, aba do banco, aba do banco da guilda, conjunto de equipamento ou traje de transmogrificação.",

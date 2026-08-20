@@ -116,3 +116,10 @@ end
 function OneWoW_CatalogData_Journal_API.IsLiveMergeComplete()
     return ns.EJLiveLoot and ns.EJLiveLoot.ejMergeComplete == true
 end
+
+--- Append unseen ATT extras onto a card if AllTheThings is already loaded.
+---@param inst table
+---@return boolean added
+function OneWoW_CatalogData_Journal_API.MergeLiveATTExtras(inst)
+    return ns.JournalData:MergeLiveATTExtras(inst)
+end

@@ -460,6 +460,8 @@ local function FormatInstanceInfoLine(instData, iconSize)
         typeStr = string.format("|A:Raid:%d:%d|a %s", iconSize, iconSize, RAID)
     elseif instData.instanceType == "party" then
         typeStr = string.format("|A:Dungeon:%d:%d|a %s", iconSize, iconSize, L["JOURNAL_CARD_DUNGEON"])
+    elseif instData.instanceType == "world" then
+        typeStr = string.format("|A:worldquest-icon:%d:%d|a %s", iconSize, iconSize, WORLD)
     elseif instData.instanceType == "delve" then
         local addon = GetDataAddon()
         local atlas = (addon and addon.IsDelveBountiful(instData.mapID))
@@ -1627,6 +1629,11 @@ local function ShowInstanceDetail(panels, instData)
     achievementsExpanded = true
     panels_ref = panels
 
+    local dataAddon = GetDataAddon()
+    if dataAddon then
+        dataAddon.MergeLiveATTExtras(instData)
+    end
+
     if panels.diffDropdown then
         local isDelve = instData.instanceType == "delve"
         local diffs = isDelve and {} or GetUniqueDifficulties(instData)
@@ -1668,7 +1675,7 @@ local function ShowInstanceDetail(panels, instData)
         BindJournalPinButton(panels.detailPinBtn, instData)
     end
     if panels.ejBtn then
-        if instData.instanceType ~= "delve" and instData.instanceID then
+        if instData.instanceType ~= "delve" and instData.instanceID and instData.instanceID > 0 then
             panels.ejBtn:Show()
         else
             panels.ejBtn:Hide()
@@ -1901,6 +1908,7 @@ local function InitializeDropdowns(panels)
             all   = L["JOURNAL_FILTER_SHOW_ALL"],
             party = DUNGEONS,
             raid  = RAIDS,
+            world = WORLD,
             delve = DELVES_LABEL,
         }
         panels.typeText:SetText(typeLabelFor[instanceTypeFilter] or L["JOURNAL_FILTER_SHOW_ALL"])
@@ -1912,6 +1920,7 @@ local function InitializeDropdowns(panels)
                     { value = "all",   text = L["JOURNAL_FILTER_SHOW_ALL"] },
                     { value = "party", text = DUNGEONS },
                     { value = "raid",  text = RAIDS },
+                    { value = "world", text = WORLD },
                     { value = "delve", text = DELVES_LABEL },
                 }
             end,

@@ -11,6 +11,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_STATUS_NA"] = "N/A",
 
     ["JOURNAL_GENERAL_LOOT"] = "Saque geral",
+    ["JOURNAL_ALSO_FROM_ATT"] = "Também do ATT",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Conquista",
     ["JOURNAL_QUEST_LOOT"] = "Relacionado a missão / Saque de missão",
     ["JOURNAL_UNKNOWN_ITEM"] = "Item desconhecido",

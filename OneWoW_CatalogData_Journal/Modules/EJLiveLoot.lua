@@ -347,7 +347,7 @@ local function enqueueMergeJobs()
     wipe(mergeQueue)
     if not JournalData.journalCache then return end
     for _, inst in pairs(JournalData.journalCache) do
-        if inst.instanceType ~= "delve" then
+        if inst.instanceType ~= "delve" and inst.instanceID and inst.instanceID > 0 then
             mergeQueue[#mergeQueue + 1] = {
                 instanceID = inst.instanceID,
                 expansionID = inst.expansionID,
@@ -368,38 +368,7 @@ local function findEncounter(inst, encounterID)
     end
 end
 
-local function buildItemRowFromEJ(itemID, ejRow, JournalDataRef)
-    local name, link, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
-    if not name then
-        name = ejRow.name or (ns.L and ns.L["JOURNAL_UNKNOWN_ITEM"]) or "Unknown Item"
-    end
-    local idata = {
-        itemID       = itemID,
-        name         = name,
-        icon         = icon or ejRow.icon or 134400,
-        quality      = quality or 1,
-        itemType     = "",
-        itemSubType  = "",
-        fromLiveEJ   = true,
-    }
-    if link then
-        idata.link = link
-    end
-    return {
-        itemID       = itemID,
-        itemData     = idata,
-        name         = name,
-        icon         = idata.icon,
-        quality      = idata.quality,
-        special      = JournalDataRef:DetermineItemSpecial(idata),
-        difficulties = CopyTable(ejRow.difficulties or {}),
-        linkByDiff   = CopyTable(ejRow.linkByDiff or {}),
-        source       = "ej",
-        fromLiveEJ   = true,
-    }
-end
-
-local function mergeEJRowsIntoEncounter(enc, ejMap, JournalDataRef)
+local function mergeEJRowsIntoEncounter(enc, ejMap)
     local byItemID = {}
     for _, row in ipairs(enc.items) do
         byItemID[row.itemID] = row
@@ -423,11 +392,13 @@ local function mergeEJRowsIntoEncounter(enc, ejMap, JournalDataRef)
                     row.linkByDiff[diffID] = link
                 end
             end
+            if (not row.name or row.name == "" or row.name == (ns.L and ns.L["JOURNAL_UNKNOWN_ITEM"])) and ejRow.name then
+                row.name = ejRow.name
+                if row.itemData then
+                    row.itemData.name = ejRow.name
+                end
+            end
             row.fromLiveEJ = true
-        else
-            local newRow = buildItemRowFromEJ(itemID, ejRow, JournalDataRef)
-            tinsert(enc.items, newRow)
-            byItemID[itemID] = newRow
         end
     end
     sort(enc.items, function(a, b)
@@ -440,7 +411,8 @@ local function processOneInstance(job)
     local inst = job.inst
     local instanceID = job.instanceID
     local expansionID = job.expansionID or inst.expansionID
-    local iidWorld = (instanceID == WORLD_BOSS_INSTANCE_ID)
+    local iidWorld = (ns.JournalWorldHubs and ns.JournalWorldHubs[instanceID])
+        or (instanceID == WORLD_BOSS_INSTANCE_ID)
     local skipNormal = false
     if inst.instanceType == "party" then
         if dungeonNormalCache[instanceID] == nil then
@@ -471,24 +443,16 @@ local function processOneInstance(job)
             local bossName, _, bossID = EJ_GetEncounterInfoByIndexCompat(bi)
             if not bossName or not bossID then break end
             local enc = findEncounter(inst, bossID)
-            if not enc then
-                enc = {
-                    encounterID = bossID,
-                    name        = bossName,
-                    bossIndex   = bi,
-                    items       = {},
-                }
-                tinsert(inst.encounters, enc)
-            else
-                if (not enc.name or enc.name == (ns.L and ns.L["JOURNAL_UNKNOWN_INST"])) and bossName then
+            if enc then
+                if bossName then
                     enc.name = bossName
                 end
                 if not enc.bossIndex or enc.bossIndex == 0 then
                     enc.bossIndex = bi
                 end
+                local ejMap = EJLive:ScanEncounterDifficulties(instanceID, bossID, inst, iidWorld, skipNormal)
+                mergeEJRowsIntoEncounter(enc, ejMap)
             end
-            local ejMap = EJLive:ScanEncounterDifficulties(instanceID, bossID, inst, iidWorld, skipNormal)
-            mergeEJRowsIntoEncounter(enc, ejMap, JournalData)
             bi = bi + 1
         end
         JournalData:SortEncountersInPlace(inst)

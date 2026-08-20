@@ -31,8 +31,10 @@ JournalData.initialized = false
 -- achievement, or quest.
 local ACHIEVEMENT_ENC_ID = -2
 local QUEST_ENC_ID = -3
+local EXTRAS_ENC_ID = -4
 JournalData.ACHIEVEMENT_ENC_ID = ACHIEVEMENT_ENC_ID
 JournalData.QUEST_ENC_ID = QUEST_ENC_ID
+JournalData.EXTRAS_ENC_ID = EXTRAS_ENC_ID
 
 --- Composite cache / favorites key for a journal card.
 ---@param expansionID number
@@ -43,11 +45,15 @@ function JournalData.CacheKey(expansionID, instanceID, instanceType)
     if instanceType == "delve" then
         return tostring(expansionID) .. ":delve:" .. tostring(instanceID)
     end
+    if instanceType == "world" and (not instanceID or instanceID == 0) then
+        return tostring(expansionID) .. ":world"
+    end
     return tostring(expansionID) .. ":" .. tostring(instanceID)
 end
 
--- Encounter display order: bosses (by bossIndex) -> Achievement -> Quest -> General.
+-- Encounter display order: bosses -> Achievement -> Quest -> General -> ATT extras.
 local function EncounterSortRank(enc)
+    if enc.encounterID == EXTRAS_ENC_ID then return 5 end
     if enc.encounterID == 0 then return 4 end
     if enc.encounterID == QUEST_ENC_ID then return 3 end
     if enc.encounterID == ACHIEVEMENT_ENC_ID then return 2 end
@@ -214,23 +220,61 @@ function JournalData:DetermineItemStatus(itemID, itemData, specialType)
     return nil
 end
 
---- Deduped item-location rows for one instanceID across every expansion tables file.
----@param itemsByEncByInst table
+---@param diffIDs table|nil
+---@return table
+local function DiffRowsFromIDs(diffIDs)
+    local rows = {}
+    if not diffIDs then
+        return rows
+    end
+    for _, did in ipairs(diffIDs) do
+        local name = GetDifficultyInfo(did)
+        if (not name or name == "") and ns.JournalDifficultyMeta and ns.JournalDifficultyMeta[did] then
+            name = ns.JournalDifficultyMeta[did].name
+        end
+        tinsert(rows, { id = did, name = name or ("Difficulty " .. did) })
+    end
+    return rows
+end
+
+---@param itemID number
+---@return table
+local function ItemDataFromClient(itemID)
+    local name, link, quality, _, _, itemType, itemSubType, _, itemEquipLoc, icon = C_Item.GetItemInfo(itemID)
+    if not icon then
+        local _, instantType, instantSub, instantLoc, instantIcon = C_Item.GetItemInfoInstant(itemID)
+        itemType = itemType or instantType
+        itemSubType = itemSubType or instantSub
+        itemEquipLoc = itemEquipLoc or instantLoc
+        icon = instantIcon
+    end
+    if not name then
+        C_Item.RequestLoadItemDataByID(itemID)
+    end
+    return {
+        itemID      = itemID,
+        name        = name,
+        icon        = icon or 134400,
+        quality     = quality or 1,
+        itemType    = itemType or "",
+        itemSubType = itemSubType or "",
+        isTransmog  = itemEquipLoc and itemEquipLoc ~= "" and itemEquipLoc ~= "INVTYPE_NON_EQUIP_IGNORE" or false,
+        link        = link,
+        source      = "ej",
+    }
+end
+
+--- ATT extras for one expansion+instance (or synthetic world). No cross-expansion union.
+---@param extrasByKey table
+---@param key string
 ---@param itemID number
 ---@param itemData table
 ---@param loc table
-local function AddLocationEntry(itemsByEncByInst, itemID, itemData, loc)
-    local instID = loc.instanceID
-    local encID = loc.encounterID or 0
-    if not instID then
-        return
-    end
-    itemsByEncByInst[instID] = itemsByEncByInst[instID] or {}
-    itemsByEncByInst[instID][encID] = itemsByEncByInst[instID][encID] or {}
-    local bucket = itemsByEncByInst[instID][encID]
+local function AddExtraEntry(extrasByKey, key, itemID, itemData, loc)
+    extrasByKey[key] = extrasByKey[key] or {}
+    local bucket = extrasByKey[key]
     for _, existing in ipairs(bucket) do
         if existing.itemID == itemID then
-            -- Same item already placed on this encounter from another tables file.
             return
         end
     end
@@ -238,9 +282,10 @@ local function AddLocationEntry(itemsByEncByInst, itemID, itemData, loc)
         itemID       = itemID,
         itemData     = itemData,
         difficulties = loc.difficulties,
-        source       = loc.source,
-        encounterID  = encID,
-        instanceID   = instID,
+        source       = loc.source or "att",
+        encounterID  = loc.encounterID or 0,
+        instanceID   = loc.instanceID,
+        npcID        = loc.npcID,
     })
 end
 
@@ -342,6 +387,99 @@ function JournalData:BuildEncountersForInstance(encByID, encountersGlobal, fallb
     return encounters
 end
 
+--- Adventure Guide bosses + loot for one instance. IDs from Generated; names from DB2 / C_Item.
+---@param instanceID number
+---@return table encounters
+function JournalData:BuildEJEncounters(instanceID)
+    local L = ns.L
+    local encList = ns.JournalEncounters and ns.JournalEncounters[instanceID]
+    local lootList = ns.JournalLoot and ns.JournalLoot[instanceID]
+    local itemsByEnc = {}
+    if lootList then
+        for _, row in ipairs(lootList) do
+            local encID = row.encounterID
+            itemsByEnc[encID] = itemsByEnc[encID] or {}
+            local idata = ItemDataFromClient(row.itemID)
+            tinsert(itemsByEnc[encID], {
+                itemID       = row.itemID,
+                itemData     = idata,
+                name         = idata.name or L["JOURNAL_UNKNOWN_ITEM"],
+                icon         = idata.icon,
+                quality      = idata.quality,
+                special      = self:DetermineItemSpecial(idata),
+                difficulties = DiffRowsFromIDs(row.diffs),
+                source       = "ej",
+            })
+        end
+    end
+
+    local function ByName(a, b)
+        return (a.name or "") < (b.name or "")
+    end
+
+    local encounters = {}
+    if encList then
+        for _, enc in ipairs(encList) do
+            local items = itemsByEnc[enc.id] or {}
+            itemsByEnc[enc.id] = nil
+            sort(items, ByName)
+            tinsert(encounters, {
+                encounterID = enc.id,
+                name        = enc.name,
+                bossIndex   = enc.order,
+                items       = items,
+            })
+        end
+    end
+    for encID, items in pairs(itemsByEnc) do
+        sort(items, ByName)
+        tinsert(encounters, {
+            encounterID = encID,
+            name        = L["JOURNAL_UNKNOWN_INST"],
+            bossIndex   = 999,
+            items       = items,
+        })
+    end
+    sort(encounters, SortEncounters)
+    return encounters
+end
+
+--- One labeled extras pile. Does not mix into Adventure Guide boss rows.
+---@param extras table|nil
+---@return table|nil encounter
+function JournalData:BuildExtrasEncounter(extras)
+    if not extras or #extras == 0 then
+        return nil
+    end
+    local L = ns.L
+    local items = {}
+    for _, entry in ipairs(extras) do
+        local idata = entry.itemData
+        tinsert(items, {
+            itemID       = entry.itemID,
+            itemData     = idata,
+            name         = (idata and idata.name) or L["JOURNAL_UNKNOWN_ITEM"],
+            icon         = (idata and idata.icon) or 134400,
+            quality      = (idata and idata.quality) or 1,
+            special      = self:DetermineItemSpecial(idata or {}),
+            difficulties = entry.difficulties or {},
+            source       = entry.source or "att",
+            questSources = idata and idata.questSources,
+            npcID        = entry.npcID,
+        })
+    end
+    sort(items, function(a, b)
+        return (a.name or "") < (b.name or "")
+    end)
+    return {
+        encounterID     = EXTRAS_ENC_ID,
+        name            = L["JOURNAL_ALSO_FROM_ATT"],
+        bossIndex       = 999,
+        items           = items,
+        extrasCategory  = true,
+    }
+end
+
 local function ApplyTotals(inst, encounters)
     local hasTMog, hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing =
         false, false, false, false, false, false, false
@@ -424,10 +562,19 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
     local mapID = (instInfo and instInfo.mapID)
         or (ejMeta and ejMeta.mapID)
         or nil
-    local name = (instInfo and instInfo.name)
-        or (ejMeta and ejMeta.name)
+    local name = (ejMeta and ejMeta.name)
+        or (instInfo and instInfo.name)
         or L["JOURNAL_UNKNOWN_INST"]
-    local instanceType = (instInfo and instInfo.instanceType) or "party"
+    local instanceType
+    if instInfo and instInfo.instanceType then
+        instanceType = instInfo.instanceType
+    elseif ns.JournalWorldHubs and ns.JournalWorldHubs[instanceID] then
+        instanceType = "world"
+    elseif ejMeta and ejMeta.instanceType then
+        instanceType = ejMeta.instanceType
+    else
+        instanceType = "party"
+    end
     local validDifficulties = nil
     if mapID and ns.JournalMapDifficulties then
         validDifficulties = ns.JournalMapDifficulties[mapID]
@@ -468,51 +615,118 @@ function JournalData:BuildJournalCache()
     local membership = ns.JournalTierMembership
     local overrides = ns.JournalListingOverrides or { forceHide = {}, forceShow = {} }
 
-    -- Index ATT instances / encounters per expansion, and union loot by instanceID.
-    local instancesByExp = {}
-    local encountersByExp = {}
-    local itemsByEncByInst = {}
-    local anyEncounterByID = {}
+    local ejItemOnInst = {}
+    if ns.JournalLoot then
+        for instanceID, rows in pairs(ns.JournalLoot) do
+            local set = {}
+            for _, row in ipairs(rows) do
+                set[row.itemID] = true
+            end
+            ejItemOnInst[instanceID] = set
+        end
+    end
+
+    -- Extras keyed by CacheKey. Legacy ATT tables stay expansion-scoped (no union).
+    local extrasByKey = {}
+
+    local function IsEJItem(instanceID, itemID)
+        local set = instanceID and ejItemOnInst[instanceID]
+        return set and set[itemID] == true
+    end
 
     for _, expansion in ipairs(expansionList) do
-        local instancesGlobal  = _G["OneWoWInstances_"  .. expansion.name]
-        local encountersGlobal = _G["OneWoWEncounters_" .. expansion.name]
-        local itemsGlobal      = _G["OneWoWItems_"      .. expansion.name]
-
-        if instancesGlobal then
-            instancesByExp[expansion.expansionID] = instancesGlobal
-        end
-        if encountersGlobal then
-            encountersByExp[expansion.expansionID] = encountersGlobal
-            for encID, encInfo in pairs(encountersGlobal) do
-                if not anyEncounterByID[encID] then
-                    anyEncounterByID[encID] = encInfo
+        local extrasGlobal = _G["OneWoWExtras_" .. expansion.name]
+        if extrasGlobal then
+            for _, row in ipairs(extrasGlobal) do
+                local itemID = row.itemID
+                if itemID then
+                    local instID = row.instanceID
+                    local isWorld = row.world == true or (not instID or instID == 0)
+                    if not isWorld and IsEJItem(instID, itemID) then
+                        -- already on the Adventure Guide page
+                    else
+                        local key = isWorld
+                            and self.CacheKey(expansion.expansionID, 0, "world")
+                            or self.CacheKey(expansion.expansionID, instID)
+                        AddExtraEntry(extrasByKey, key, itemID, row, row)
+                    end
                 end
             end
         end
+
+        local itemsGlobal = _G["OneWoWItems_" .. expansion.name]
         if itemsGlobal then
             for itemID, itemData in pairs(itemsGlobal) do
                 if itemData.locations then
                     for _, loc in ipairs(itemData.locations) do
-                        AddLocationEntry(itemsByEncByInst, itemID, itemData, loc)
+                        local instID = loc.instanceID
+                        local isWorld = loc.world == true or (not instID or instID == 0)
+                        if not isWorld and IsEJItem(instID, itemID) then
+                            -- skip Adventure Guide duplicates
+                        elseif isWorld then
+                            AddExtraEntry(
+                                extrasByKey,
+                                self.CacheKey(expansion.expansionID, 0, "world"),
+                                itemID, itemData, loc
+                            )
+                        elseif instID then
+                            AddExtraEntry(
+                                extrasByKey,
+                                self.CacheKey(expansion.expansionID, instID),
+                                itemID, itemData, loc
+                            )
+                        end
                     end
                 end
             end
         end
     end
 
-    local function ResolveInstInfo(expansionID, instanceID)
-        local primary = instancesByExp[expansionID] and instancesByExp[expansionID][instanceID]
-        if primary then
-            return primary
+    local function MergeExtrasLists(a, b)
+        if not a or #a == 0 then
+            return b
         end
-        for _, expansion in ipairs(expansionList) do
-            local bag = instancesByExp[expansion.expansionID]
-            if bag and bag[instanceID] then
-                return bag[instanceID]
+        if not b or #b == 0 then
+            return a
+        end
+        local seen = {}
+        local out = {}
+        for i = 1, #a do
+            local entry = a[i]
+            local itemID = entry.itemID
+            if itemID and not seen[itemID] then
+                seen[itemID] = true
+                tinsert(out, entry)
             end
         end
-        return nil
+        for i = 1, #b do
+            local entry = b[i]
+            local itemID = entry.itemID
+            if itemID and not seen[itemID] then
+                seen[itemID] = true
+                tinsert(out, entry)
+            end
+        end
+        return out
+    end
+
+    local function FinishEncounters(expansionID, instanceID, instanceType)
+        local key = self.CacheKey(expansionID, instanceID, instanceType)
+        local encounters = {}
+        if instanceType ~= "world" or (instanceID and instanceID > 0) then
+            encounters = self:BuildEJEncounters(instanceID)
+        end
+        local extras = extrasByKey[key]
+        -- Outdoor extras are keyed exp:world. MoP+ hub cards also need that pile.
+        if ns.JournalWorldHubs and ns.JournalWorldHubs[instanceID] then
+            extras = MergeExtrasLists(extras, extrasByKey[self.CacheKey(expansionID, 0, "world")])
+        end
+        local extrasEnc = self:BuildExtrasEncounter(extras)
+        if extrasEnc then
+            tinsert(encounters, extrasEnc)
+        end
+        sort(encounters, SortEncounters)
+        return encounters
     end
 
     local function AddCard(expansionID, instanceID, orderIndex)
@@ -520,15 +734,29 @@ function JournalData:BuildJournalCache()
         if overrides.forceHide and overrides.forceHide[key] then
             return
         end
-        local encByID = itemsByEncByInst[instanceID] or {}
-        local encounters = self:BuildEncountersForInstance(
-            encByID,
-            encountersByExp[expansionID],
-            anyEncounterByID
-        )
-        local instInfo = ResolveInstInfo(expansionID, instanceID)
+        local encounters = FinishEncounters(expansionID, instanceID)
         self.journalCache[key] = MakeCacheEntry(
-            expansionID, instanceID, orderIndex, instInfo, encounters
+            expansionID, instanceID, orderIndex, nil, encounters
+        )
+    end
+
+    local function AddSyntheticWorldCard(expansionID)
+        local key = self.CacheKey(expansionID, 0, "world")
+        if overrides.forceHide and overrides.forceHide[key] then
+            return
+        end
+        if self.journalCache[key] then
+            return
+        end
+        local exp = expansionByID[expansionID]
+        local name = (exp and exp.displayName or tostring(expansionID)) .. " - " .. WORLD
+        local encounters = FinishEncounters(expansionID, 0, "world")
+        self.journalCache[key] = MakeCacheEntry(
+            expansionID,
+            0,
+            0,
+            { name = name, instanceType = "world" },
+            encounters
         )
     end
 
@@ -552,15 +780,12 @@ function JournalData:BuildJournalCache()
                 AddCard(expansionID, instanceID, orderIndex)
             end
         end
-    else
-        -- Membership missing: fall back to ATT instances (legacy single-key behavior avoided).
-        for _, expansion in ipairs(expansionList) do
-            local instancesGlobal = instancesByExp[expansion.expansionID]
-            if instancesGlobal then
-                for instanceID in pairs(instancesGlobal) do
-                    AddCard(expansion.expansionID, instanceID, 0)
-                end
-            end
+    end
+
+    local synth = ns.JournalSyntheticWorldExpansions
+    if synth then
+        for i = 1, #synth do
+            AddSyntheticWorldCard(synth[i])
         end
     end
 
@@ -584,6 +809,10 @@ function JournalData:BuildJournalCache()
                             and ns.DelveMembership[expansionID]
                             and ns.DelveMembership[expansionID][mapID]
                         AddDelveCard(expansionID, mapID, 0, delveInfo and delveInfo.name)
+                    end
+                elseif mid == "world" then
+                    if expansionID then
+                        AddSyntheticWorldCard(expansionID)
                     end
                 else
                     local instanceID = tonumber(mid)
