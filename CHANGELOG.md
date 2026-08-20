@@ -19,6 +19,7 @@
 # Catalog
 ## Quests
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
+- About 100 more Midnight quests now have giver pins, and more of them show quest text.
 
 ## Journal
 - Loot on a card now matches the Adventure Guide. Extra AllTheThings drops (trash, quest items, outdoor rares) sit in their own Also from ATT section, not mixed into boss loot.
