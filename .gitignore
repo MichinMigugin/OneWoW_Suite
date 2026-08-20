@@ -40,3 +40,17 @@ ONEWOW_SUITE.code-workspace
 
 # Addon-local diagnostic tools belong outside shipped load units.
 OneWoW*/[Tt]ools/
+
+# Private toolchain lives in OneWoW_Devs — never re-add it here.
+.cursor/
+.agents/
+.claude/
+.wow_docs/
+.wow_db2/
+.lua-defs/
+.vscode/
+devconfig/
+website/
+AGENTS.md
+CLAUDE.md
+OneWoW_Utility_Extractor/

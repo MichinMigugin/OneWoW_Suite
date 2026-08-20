@@ -1,7 +1,7 @@
 # Catalog Journal — data rules
 
 Runtime rules for `OneWoW_CatalogData_Journal` and how they relate to client DB2
-extracts under [`.wow_db2`](../../.wow_db2/README.md).
+extracts under OneWoW_Devs `.wow_db2`.
 
 ## Two boxes
 
@@ -76,8 +76,8 @@ python bin/journal_db2_tools.py report
 
 `validate` fails if a fallback instanceID also has a `JournalInstanceEntrance` row: delete that handmade id so DB2 is the only source.
 
-CSV schema / mermaid: [`.wow_db2/docs/journal.md`](../../.wow_db2/docs/journal.md).
-Extract build pin: [`.wow_db2/README.md`](../../.wow_db2/README.md).
+CSV schema / mermaid: OneWoW_Devs `.wow_db2/docs/journal.md`.
+Extract build pin: OneWoW_Devs `.wow_db2/README.md`.
 Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
 ## Live EJ merge

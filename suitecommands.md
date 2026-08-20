@@ -298,7 +298,9 @@ of a slash command (including subcommands or alias sets) must update
 
 ### Recommended automation (not yet installed)
 
-1. **Generator script** — `bin/gen_suite_commands.py`
+Would live in **OneWoW_Devs** `bin/` if added.
+
+1. **Generator script** — `OneWoW_Devs/bin/gen_suite_commands.py`
    - Scan `OneWoW*/**/*.lua` (exclude `Libs/`) for:
      - `SLASH_<KEY>N = "/alias"`
      - `_G["SLASH_<KEY>N"] = "/alias"`
@@ -307,8 +309,8 @@ of a slash command (including subcommands or alias sets) must update
    - Subcommand docs stay hand-maintained in annotated blocks (or extracted from
      nearby `usage:` print strings where present)
 
-2. **Pre-commit check** — `bin/check_suite_commands.py` wired in
-   `.pre-commit-config.yaml`
+2. **Pre-commit check** — `OneWoW_Devs/bin/check_suite_commands.py` wired in
+   Suite `.pre-commit-config.yaml` via `run_devs.py`
    - Fail if registered aliases are missing from `suitecommands.md`, or if the
      markdown lists an alias that no longer exists in code
    - Same style as existing local hooks (`check_no_g_literal.py`, etc.)

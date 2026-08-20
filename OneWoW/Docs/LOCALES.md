@@ -85,13 +85,13 @@ Future maintainers and LLMs: these are deliberate, not gaps.
 
 Established WoW terminology must match what the player sees in their own client — not a
 plausible-sounding alternative. The **source of truth** is Blizzard's per-locale
-GlobalStrings, committed to the repo at:
+GlobalStrings, in **OneWoW_Devs** at:
 
 ```
 .wow_docs/blizzard-interface-resources/Resources/GlobalStrings/<locale>.lua   (all 11 locales)
 ```
 
-These are indexed in `.wow_docs/manifest.json` — use it as a quick scan for what reference
+These are indexed in OneWoW_Devs `.wow_docs/manifest.json` — use it as a quick scan for what reference
 material is available. To find an official term: locate the English value's key in
 `…/GlobalStrings/enUS.lua`, then read that same key in each locale file.
 
