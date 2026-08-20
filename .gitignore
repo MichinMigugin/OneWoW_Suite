@@ -9,7 +9,6 @@ __pycache__/
 .venv/
 venv/
 CURSEFORGE.md
-.wow_docs/manifest-review.txt
 
 # OS / editor junk
 Thumbs.db
@@ -23,13 +22,7 @@ Thumbs.db
 # Local scratch
 temp.txt
 
-# Ricky's Cursor rules - local only, never commit or push
-# (AccountSync, Triggers, Gitmode, Audit, BugReport, ChangeLog, Dev-AddOn-Links, Update-Time, etc.)
-# `git add` will refuse these unless you force; keep them out of the shared repo.
-.cursor/rules/1W-Ricky-*.mdc
-.cursor/rules/Git-Commit-Rules.mdc
-
-# Claude Code local permissions (personal)
+# Claude Code local permissions (personal) — leftover if a local .claude appears
 .claude/settings.local.json
 
 # Local secrets (never commit)
@@ -41,16 +34,9 @@ guiplanner.md
 apiplanner.md
 dbplanner.md
 
-# Local Developer Tools - Never Commit
+# Host workspace files live outside the clone
+*.code-workspace
 ONEWOW_SUITE.code-workspace
-OneWoW_CatalogData_Quests/Tools/
-
-# Audit tools: ignore everything EXCEPT the two published report files
-bin/audit-tools/*
-!bin/audit-tools/reports/
-bin/audit-tools/reports/*
-!bin/audit-tools/reports/summary.json
-!bin/audit-tools/reports/AUDIT_SUMMARY.md
 
 # Addon-local diagnostic tools belong outside shipped load units.
 OneWoW*/[Tt]ools/

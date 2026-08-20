@@ -1,9 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "workspace.ignoreDir": [
-    ".wow_docs",
-    ".vscode",
-    ".lua-defs",
     "OneWoW_Utility_DevTool/Data/AtlasInfo*.lua",
     "OneWoW_Utility_DevTool/Data/SoundFiles*.lua",
     "OneWoW_CatalogData_Journal/Data/",
@@ -184,6 +181,7 @@
     "AUCTION_INVOICE_FUNDS_NOT_YET_SENT",
     "AUCTION_INVOICE_PENDING_FUNDS_COLON",
     "AUCTION_MAIL_ITEM_STACK",
+    "AllTheThings",
     "Auctionator",
     "AUCTIONS",
     "BACK",

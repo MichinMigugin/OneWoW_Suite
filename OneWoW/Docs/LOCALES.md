@@ -145,7 +145,8 @@ translated — never collapse keys by value without a meaning check:
 
 ## 6. Tooling
 
-All under `bin/` unless noted; run from the repo root.
+All under `OneWoW_Devs/bin/` unless noted. Run from the **OneWoW_Devs** repo
+root (Suite pre-commit calls the same scripts via `bin/run_devs.py`).
 
 | Tool | Purpose | When |
 |---|---|---|

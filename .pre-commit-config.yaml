@@ -41,7 +41,7 @@ repos:
           Forbids `_G.SomeGlobal` (literal field access on _G).
           Allowed: bare global name, or `_G[expr]` for computed keys.
           See .cursor/rules/OneWoW-Lua-Conventions.mdc.
-        entry: python bin/check_no_g_literal.py
+        entry: python bin/run_devs.py check_no_g_literal.py
         language: python
         types: [lua]
         # Mirror .luarc.json workspace.ignoreDir — these are reference / vendored / generated.
@@ -61,7 +61,7 @@ repos:
           Warns when widget color APIs use hardcoded RGB literals instead of
           OneWoW_GUI:GetThemeColor. See OneWoW/Docs/GUI.md §Theme System and
           bin/check_theme_color_bypass.py (WARN_ONLY=True; does not block).
-        entry: python bin/check_theme_color_bypass.py
+        entry: python bin/run_devs.py check_theme_color_bypass.py
         language: python
         types: [lua]
         exclude: |
@@ -85,7 +85,7 @@ repos:
           owner unit's public `OneWoW_<Unit>_API` instead. Phase 0 is
           warn-only (never blocks). See OneWoW/Docs/ARCHITECTURE.md §6/§7
           and the hook docstring.
-        entry: python bin/check_no_data_manager_bypass.py
+        entry: python bin/run_devs.py check_no_data_manager_bypass.py
         language: python
         types: [lua]
         # Same reference / vendored / generated trees as no-g-literal-access,
@@ -109,7 +109,7 @@ repos:
           `_G[...] = OneWoW` / `OneWoW_*`), renamed vararg namespaces, `ns.addon`
           hops, and `.db` on published globals. Warn-only (grandfather list); see
           OneWoW/Docs/ARCHITECTURE.md §6.1.
-        entry: python bin/check_no_namespace_publish.py
+        entry: python bin/run_devs.py check_no_namespace_publish.py
         language: python
         types: [lua]
         exclude: |
@@ -128,7 +128,7 @@ repos:
           Forbids RegisterEvent on ADDON_LOADED, PLAYER_LOGIN, or
           PLAYER_ENTERING_WORLD in orchestrated load units. Use core
           lifecycle hooks instead. See OneWoW/Docs/ARCHITECTURE.md §3.7.
-        entry: python bin/check_suite_lifecycle.py
+        entry: python bin/run_devs.py check_suite_lifecycle.py
         language: python
         types: [lua]
         exclude: |
@@ -148,7 +148,7 @@ repos:
           (`db.global.settings`, including aliased access) outside
           SettingsFeatureRegistry.lua / Database.lua. Use the
           SettingsFeatureRegistry funnel. See OneWoW/Docs/ARCHITECTURE.md §8.5.
-        entry: python bin/check_no_settings_bypass.py
+        entry: python bin/run_devs.py check_no_settings_bypass.py
         language: python
         types: [lua]
         exclude: |
@@ -170,7 +170,7 @@ repos:
           (secure-frame / protected actions; excl. Map), IsAddonRestricted() (broad gate, only
           when the action must also stand down in a restricted map), IsInCombat() (combat-only
           UX/perf), or IsSecret() (secret values). See OneWoW/Docs/ARCHITECTURE.md.
-        entry: python bin/check_no_restriction_bypass.py
+        entry: python bin/run_devs.py check_no_restriction_bypass.py
         language: python
         types: [lua]
         exclude: |
@@ -191,7 +191,7 @@ repos:
           MERCHANT_* -> Merchant.lua). Consume the funnel's scan/show/closed
           channels (OneWoW.Merchant) or IsMerchantOpen() instead. See
           OneWoW/Docs/MERCHANT.md and OneWoW/Docs/ARCHITECTURE.md §3.10 / §8.8.
-        entry: python bin/check_no_core_event_bypass.py
+        entry: python bin/run_devs.py check_no_core_event_bypass.py
         language: python
         types: [lua]
         exclude: |
@@ -211,7 +211,7 @@ repos:
           tables, FlagsUtil, and ItemLocation (e.g. C_Item and C_Item.GetItemInfo).
           OneWoW targets Retail 12+ only — call APIs directly. See
           .cursor/rules/No-Defensive-Guards.mdc.
-        entry: python bin/check_no_api_existence_guards.py
+        entry: python bin/run_devs.py check_no_api_existence_guards.py
         language: python
         types: [lua]
         exclude: |
@@ -233,7 +233,7 @@ repos:
           Raw loads bypass soft opt-out, combat deferral, and lifecycle
           dispatch. Use EnsureLoaded / WithAddon / BringUp. See
           OneWoW/Docs/ARCHITECTURE.md.
-        entry: python bin/check_no_raw_loadaddon.py
+        entry: python bin/run_devs.py check_no_raw_loadaddon.py
         language: python
         types: [lua]
         # Same reference / vendored / generated trees as no-g-literal-access.
@@ -257,7 +257,7 @@ repos:
           Forbids OneWoW_* entries in ## OptionalDeps (bypasses soft
           opt-out). Use EnsureLoaded/WithAddon instead. See
           OneWoW/Docs/ARCHITECTURE.md §2.
-        entry: python bin/check_toc_optional_deps.py
+        entry: python bin/run_devs.py check_toc_optional_deps.py
         language: python
         files: \.toc$
 
@@ -268,7 +268,7 @@ repos:
           STORE_LABEL_KEYS) and consumer pulls (FirstRun.CATALOG.datastores)
           consistent without requiring them to be identical. Also checks
           parent-required TOC RequiredDeps. See ARCHITECTURE.md §4.1.
-        entry: python bin/check_manifest_catalog_alignment.py
+        entry: python bin/run_devs.py check_manifest_catalog_alignment.py
         language: python
         pass_filenames: false
         files: |
@@ -284,7 +284,7 @@ repos:
           OneWoW/Media/ (shared root or OneWoW/Media/<AddonName>/
           subfolders). Use OneWoW_GUI.Constants.MEDIA_BASE in Lua.
           See OneWoW/Docs/GUI.md (Media assets).
-        entry: python bin/check_no_per_addon_media.py
+        entry: python bin/run_devs.py check_no_per_addon_media.py
         language: python
         pass_filenames: false
         always_run: true
@@ -296,7 +296,7 @@ repos:
           enUS.lua: key parity (missing/extra), matching printf specifiers
           (%s/%d/%d%%), and no duplicate keys (duplicate-index). A changed
           enUS.lua re-checks all siblings. See OneWoW/Docs/LOCALES.md.
-        entry: python bin/locale_verify.py
+        entry: python bin/run_devs.py locale_verify.py
         language: python
         files: (^|/)Locales/.*\.lua$
 
@@ -306,7 +306,7 @@ repos:
           For each changed Locales/*.lua file, checks Register() string values
           for Windows-1252 mojibake of UTF-8 (e.g. ÐŸÐ¾Ñ‡Ñ‚Ð° instead of
           Почта). Comments are ignored. See OneWoW/Docs/LOCALES.md.
-        entry: python bin/check_locale_encoding.py
+        entry: python bin/run_devs.py check_locale_encoding.py
         language: python
         files: (^|/)Locales/.*\.lua$
 
@@ -317,7 +317,7 @@ repos:
           all 11 Blizzard GlobalStrings locales (|4 and plain %d forms), and
           that USE_COLON / equip / unique globals exist and are non-empty.
           See OneWoW/Docs/TOOLTIP_SCANNER.md and bin/check_tooltip_patterns.py.
-        entry: python bin/check_tooltip_patterns.py
+        entry: python bin/run_devs.py check_tooltip_patterns.py
         language: python
         pass_filenames: false
         files: |

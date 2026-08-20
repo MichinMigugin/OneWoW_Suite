@@ -1,1 +1,0 @@
-# Wowhead listview scrape helpers.
