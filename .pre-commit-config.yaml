@@ -5,7 +5,7 @@
 #   python -m pre_commit install
 #
 # Run manually against all files:
-#   python -m pre-commit run --all-files
+#   python -m pre_commit run --all-files
 #
 # Bypass for a single commit (use sparingly):
 #   git commit --no-verify

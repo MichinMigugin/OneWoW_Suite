@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Run a script from sibling OneWoW_Devs/bin (Suite pre-commit bridge).
+"""Run a script from OneWoW_Devs/bin (Suite pre-commit bridge).
 
 Usage:
     python bin/run_devs.py locale_verify.py OneWoW/Locales
 
-If OneWoW_Devs is not next to this repo and ONEWOW_DEVS is unset, exit 0
-so public forks without the private toolchain can still commit.
+Devs is the parent of this clone (nested) or a sibling named OneWoW_Devs.
+Override with ONEWOW_DEVS. If Devs is missing, exit 0 so public forks
+without the private toolchain can still commit.
 """
-
 from __future__ import annotations
 
 import os
@@ -18,13 +18,20 @@ from pathlib import Path
 SUITE_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _looks_like_devs(path: Path) -> bool:
+    return (path / "bin").is_dir()
+
+
 def find_devs() -> Path | None:
     env = os.environ.get("ONEWOW_DEVS")
     if env:
         path = Path(env).expanduser().resolve()
-        return path if (path / "bin").is_dir() else None
-    sibling = SUITE_ROOT.parent / "OneWoW_Devs"
-    if (sibling / "bin").is_dir():
+        return path if _looks_like_devs(path) else None
+    parent = SUITE_ROOT.parent
+    if _looks_like_devs(parent):
+        return parent
+    sibling = parent / "OneWoW_Devs"
+    if _looks_like_devs(sibling):
         return sibling
     return None
 
