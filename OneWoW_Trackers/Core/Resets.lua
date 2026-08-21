@@ -263,8 +263,8 @@ function TD:CheckCustomTimerResets()
                     local interval = tonumber(step.trackParams.interval) or 0
                     if interval > 0 then
                         local sp = self:GetStepProgress(listID, sec.key, step.key)
-                        local lastComplete = sp.lastComplete or 0
-                        if sp.completed and (now - lastComplete) >= interval then
+                        local lastCompleted = sp.lastCompleted or 0
+                        if sp.completed and (now - lastCompleted) >= interval then
                             sp.current = 0
                             sp.completed = false
                         end

@@ -197,11 +197,16 @@ Recorded so the same claims do not get re-derived from the older text:
   a session filter over the left rail that hides fully complete *lists*.
 - Cross-alt quest completion **ships** (P-2). Two docs described it as missing.
 
-### Bugs found during the review (not yet fixed)
+### Bugs found during the review — fixed
 
-- `custom_timer` interval reset reads `sp.lastComplete` (`Core/Resets.lua`), but every writer
-  sets `sp.lastCompleted` (`TrackerData.lua`, `TrackerEngine.lua`). The read is always nil, so
-  `now - 0 >= interval` is always true and a completed timer step clears on the next reconcile.
-  Trackers §11 (interval world events) builds on this type.
-- `TM:GetDistanceToStep` (`TrackerMap.lua`) is defined and called nowhere. Trackers §6 prune
-  and §11 POI pins are its natural consumers.
+- **`custom_timer` interval reset.** `Core/Resets.lua` read `sp.lastComplete` while every
+  writer sets `sp.lastCompleted`, so the read was always nil, `now - 0 >= interval` was always
+  true, and a completed timer step cleared on the next reconcile. Reachable by players today
+  through list import. Fixed by reading the field the writers actually set. Trackers §11
+  (interval world events) can now build on this type.
+- **Dead distance helpers.** `TM:GetDistanceToStep` *and* `TM:GetDistanceToCoordinate`
+  (`TrackerMap.lua`) both had zero callers, and the former was a nil-guarded wrapper around the
+  latter. Removed rather than left as speculative surface. `Evaluators/Location.lua` already
+  owns the shipped "am I near this point" math for the `coordinates` type; when §6 prune or §11
+  POI pins need distance, add the helper the consumer actually wants — `git log` has these two
+  if the old shape turns out to be right.
