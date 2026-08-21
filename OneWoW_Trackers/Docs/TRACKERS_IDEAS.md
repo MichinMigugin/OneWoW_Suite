@@ -88,9 +88,14 @@ Three layers, not one screen: **data** (`TrackerData` — lists → sections →
 
 | Uses the toolkit | Rolls its own |
 | --- | --- |
-| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateIconButton`, `CreateDivider`, `CreateLayoutFrame`, `CreateReorderDrag`, `CreateListRowBasic` (left rail compose), `CreateVirtualizer` (left rail, 56px), `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Detail section/step rows: raw `CreateFrame("Button", …, "BackdropTemplate")` (collapse, hover icons, checkboxes, `CreateReorderDrag` need a complete frame list). Do not extend `CreateListRowBasic` for those this slice. |
-| Theme / language callbacks on the lifecycle root | Detail-tree virtualizer: blocked until `CreateReorderDrag` can address by data index (windowed pool would lie to `fromIdx`/`toIdx`). Progress/scan binds in place; `ShowDetail` is structure-only (select, collapse, add/delete, reorder, hide-completed). |
-| Pinned overlay: `CreateFrame` + `CreateFS` + pooled rows (reasonable for a float) | |
+| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateIconButton`, `CreateDivider`, `CreateLayoutFrame`, `CreateReorderDrag`, `CreateListRowBasic` (left rail compose), `CreateVirtualizer` (left rail, 56px), `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Detail section/step rows (`t-tracker.lua` 906, 1022): raw `CreateFrame("Button", …, "BackdropTemplate")`. **Declined, not blocked** — they need collapse chrome, a hover icon strip, checkboxes, and a complete frame list for the drag controller. |
+| Theme / language callbacks on the lifecycle root | Editor picker / import cards (`ui-tracker-editor.lua` 537, 608, 1144) — **§0 remaining**. Farm-value item rows (`ui-tracker-farmvalue.lua` 375) — **§0 remaining**. |
+| Pinned overlay shell: `CreateFrame` + `CreateTitleBar` + `CreateFS` | Pinned overlay rows: pooled raw frames (section `BackdropTemplate` at 32, steps plain Buttons). Reasonable for a float; **not part of §0**. |
+
+**No detail-tree virtualizer, and therefore no `CreateReorderDrag` data-index API.** Both
+declined — see §0. `ShowDetail` is structure-only (select, collapse, add/delete, reorder,
+hide-completed); progress and scan bind the open detail in place, and collapsed sections build
+no step rows, so row counts stay well under what windowing would earn.
 
 **Shipped hub chrome:** sticky pin + title, list-action strip + Hide completed under the title, author on left cards, account-wide / progress / hover hint in the scroll, divider above the section tree. Section/step add-edit-delete icons reveal on row hover (collapse plus/minus always visible); counts stay on the right, icons to their left. Drag is the only reorder chrome (two `CreateReorderDrag` controllers; section headers are drop targets for steps, not Attached to the step controller). Step right-click is Edit / mark complete / Delete. `TD:MoveSection` / `MoveStep` / `MoveStepToSection` stay as data.
 
@@ -98,7 +103,8 @@ Three layers, not one screen: **data** (`TrackerData` — lists → sections →
 
 **Shipped editor locales:** wizard, quick-start, step categories, field labels, and hub leftovers (`Untitled`, waypoint print, default section `Tasks`) go through Trackers locale keys. Reused `SAVE` / `CANCEL` / `CLOSE` and existing `TRACKER_*` titles. Stored category folder `"General"` stays data.
 
-The pin overlay is the play surface and was out of scope for this pass. Do not rebuild pinned as part of remaining §0.
+The pin overlay is the **play** surface; the hub tab is the **authoring** surface. §0 covers the
+authoring surface only.
 
 ---
 
@@ -115,10 +121,11 @@ its own. Trackers' own slices, for orientation:
 | **1** — collectible-key handoff (§1) | Next, after the tab is a place you'd want to land |
 | **2** — lockout skip for the logged-in character (§3) | Blocked on the Endgame lockout `_API` (roadmap P-3) |
 
-Slice 0 remaining: pinned overlay restyle, farm-value row widgets, dwell-expand during drag,
-extending `CreateListRowBasic` / `CreateReorderDrag` (detail-tree virtualizer blocked on a
-data-index API), localizing stored `"General"` categories. `UI/Framework.lua` is gone. Not a
-new product.
+Slice 0 remaining, in full: farm-value item rows, editor picker / import cards, and localizing
+the stored `"General"` category. Everything else once listed under §0 is now either declined
+(detail-tree virtualizer, the `CreateReorderDrag` data-index API it needed, detail rows staying
+custom) or out of scope (pinned overlay restyle, dwell-expand during drag). See §0 for the
+reasoning. Not a new product.
 
 Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or
 instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on
@@ -130,12 +137,53 @@ the current authoring tab.
 
 ### 0. Hub tab GUI-first pass
 
-Finish the authoring tab so it matches bags / hub pins. Engine and pinned overlay stay.
+Finish the **authoring tab** so it matches bags / hub pins. Engine and pinned overlay stay.
+Scope is the hub tab and its editor dialogs — nothing else. This slice has an ending; see
+Remaining below.
 
-- **Shipped:** `CreateReorderDrag` on section headers and steps (including drop onto another section). List/section/step actions are `CreateIconButton` (`EDIT` / `DELETE` / `RESET` / `L[]`, textures/atlases). No header arrows, no step-menu Move Up/Down. `MoveSection` / `MoveStep` / `MoveStepToSection` remain data-only. Detail chrome restack (sticky pin/title + action strip; hover-reveal row actions; counts on the right). Left rail: `CreateListRowBasic` compose + `CreateVirtualizer` 56px. Editor/hub English replaced with locale keys. Progress/scan binds the open detail in place (`ShowDetail` is structure-only).
-- **Still open:** detail section/step BackdropTemplate (blocked on `CreateReorderDrag` data-index API before a tree virtualizer). Pinned overlay restyle, farm-value row widgets, dwell-expand during drag, localizing stored `"General"`.
-- **Closed:** `CreateCard` vs dense-row for the left rail (dense compose on `CreateListRowBasic`; do not extend the shared helper this slice).
-- **Do not** restyle the pinned overlay, add dwell-expand during drag, or invent a second Trackers product in this pass.
+**Shipped:** `CreateReorderDrag` on section headers and steps (including drop onto another
+section). List/section/step actions are `CreateIconButton` (`EDIT` / `DELETE` / `RESET` /
+`L[]`, textures/atlases). No header arrows, no step-menu Move Up/Down. `MoveSection` /
+`MoveStep` / `MoveStepToSection` remain data-only. Detail chrome restack (sticky pin/title +
+action strip; hover-reveal row actions; counts on the right). Left rail: `CreateListRowBasic`
+compose + `CreateVirtualizer` 56px. Editor/hub English replaced with locale keys.
+Progress/scan binds the open detail in place (`ShowDetail` is structure-only).
+`UI/Framework.lua` is gone.
+
+**Remaining — the whole list:**
+
+- Farm-value item rows (`ui-tracker-farmvalue.lua` ~375) — last raw row surface in the tab
+- Editor picker / import cards (`ui-tracker-editor.lua` 537, 608, 1144)
+- Localize the stored `"General"` category folder
+
+**Declined — decided, do not re-litigate:**
+
+- **Detail-tree virtualizer.** Lists do not get big enough to earn it. `ShowDetail` is
+  structure-only (rebuild on select / collapse / add / delete / reorder / hide-completed, not
+  on progress ticks, which bind in place), and collapsed sections build no step rows at all,
+  so the worst case is the visible steps of one expanded list.
+- **`CreateReorderDrag` data-index API.** Only the virtualizer wanted it. `CreateReorderDrag`
+  takes a *complete* frame list through `getItems` and reorders by index into it; a windowed
+  pool would hand it pool indices, not data indices. Fixing that is a shared-GUI change
+  affecting bags and hub pins for the benefit of one consumer that no longer needs it. Cross-
+  section drag compounds it — the step controller deliberately flattens headers and steps into
+  one item list so a step can be dropped on a header, and a windowed pool cannot guarantee the
+  target is realized.
+- **Detail section/step rows stay custom `BackdropTemplate`** (`t-tracker.lua` 906, 1022).
+  Not blocked — chosen. They need collapse chrome, a hover icon strip, checkboxes, and a
+  complete frame list for the drag controller, none of which `CreateListRowBasic` offers.
+- **`CreateCard` vs dense-row for the left rail.** Dense compose on `CreateListRowBasic` won;
+  do not extend the shared helper for this.
+
+**Not part of §0:**
+
+- **Pinned overlay restyle.** `ui-tracker-pinned.lua` rows are pooled raw frames (section rows
+  `BackdropTemplate` at 32; steps plain Buttons) under a toolkit shell. The overlay is the play
+  surface, not the authoring surface — its own pass if it ever happens.
+- **Dwell-expand during drag.** Hovering a collapsed section header mid-drag to auto-expand it.
+  Today a step dropped on a header lands at position 1, which is all a collapsed section can
+  offer since its step rows are never built. A drag-UX enhancement, not GUI-first work.
+- Inventing a second Trackers product.
 
 ### 1. Collectible-key handoff
 
@@ -347,7 +395,7 @@ Helper’s Gilded Stash has **no live API**; they infer progress from a Delve Lo
 Cross-leg questions (temporal helper, instance→collectible map, one-list-per-key) are tracked
 in [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) so they get one answer, not three.
 
-- Detail-tree virtualizer (§0): blocked on `CreateReorderDrag` addressing by data index (complete frame list is required for cross-section drop + header targets). Left rail dense compose is closed.
+- ~~Detail-tree virtualizer (§0): blocked on `CreateReorderDrag` addressing by data index?~~ **Answered:** declined. Lists do not get big enough, and the shared data-index API it needed is declined with it. Left rail dense compose is closed.
 - ~~Handoff: auto-spawn a plan on `farming` intent, or only on an explicit “Track this”?~~ **Answered:** explicit “Track this” for v1.
 - ~~Rare capture: share vendor `off|prompt|auto` UI chrome but a separate SV key?~~ **Answered:** separate SV key, same vocabulary.
 - **Rare alerts (§9): do the two settings compose?** Pin mode defaults `off` but capture mode defaults `prompt`. If capture is independent, installing SilverDragon produces StaticPopups the player never opted into — the exact vendor-auto failure §9 argues against. Recommended: gate capture on pin mode being non-`off`.
