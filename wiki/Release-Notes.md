@@ -8,6 +8,8 @@
 ---
 
 ### Trackers
+- New List, step types, and editor dialogs use your game language instead of English.
+- Checking off steps and scrolling a long tracker list feels snappier.
 - Pin a list from the pin icon next to its title. List actions and Hide completed sit on the row under the title.
 - Drag a section header or a step to reorder, including dropping a step onto another section. Right-click no longer has Move Up or Move Down.
 - Hover a section or step for add, edit, and delete. Counts stay on the right; a divider sits above the section list.
