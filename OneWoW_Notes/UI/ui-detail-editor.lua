@@ -175,53 +175,16 @@ end
 function ns.UI.CreateHeaderIconButton(header, options)
     options = options or {}
     local D = Detail()
-    local size = D.HEADER_ICON_SIZE
-    local texturePath = MEDIA .. (options.texture or "icon-gears.png")
-
-    local btn
-    if options.check then
-        btn = CreateFrame("CheckButton", nil, header)
-        btn:SetSize(size, size)
-
-        local normalTex = btn:CreateTexture(nil, "BACKGROUND")
-        normalTex:SetAllPoints()
-        normalTex:SetTexture(texturePath)
-        normalTex:SetDesaturated(true)
-        normalTex:SetAlpha(0.3)
-        btn:SetNormalTexture(normalTex)
-
-        local checkedTex = btn:CreateTexture(nil, "BACKGROUND")
-        checkedTex:SetAllPoints()
-        checkedTex:SetTexture(texturePath)
-        btn:SetCheckedTexture(checkedTex)
-
-        local highlightTex = btn:CreateTexture(nil, "HIGHLIGHT")
-        highlightTex:SetAllPoints()
-        highlightTex:SetTexture(texturePath)
-        highlightTex:SetAlpha(0.5)
-        btn:SetHighlightTexture(highlightTex)
-
-        --- Apply active/inactive chrome for check-style header icons.
-        function btn:SetActiveVisual(active)
-            local tex = self:GetNormalTexture()
-            if active then
-                tex:SetDesaturated(false)
-                tex:SetAlpha(1.0)
-                self:SetChecked(true)
-            else
-                tex:SetDesaturated(true)
-                tex:SetAlpha(0.3)
-                self:SetChecked(false)
-            end
-        end
-    else
-        btn = CreateFrame("Button", nil, header)
-        btn:SetSize(size, size)
-        btn:SetNormalTexture(texturePath)
-        btn:SetPushedTexture(texturePath)
-        btn:SetHighlightTexture(texturePath)
-        btn:GetHighlightTexture():SetAlpha(0.5)
-    end
+    local btn = OneWoW_GUI:CreateIconButton(header, {
+        iconTexture = MEDIA .. (options.texture or "icon-gears.png"),
+        size = D.HEADER_ICON_SIZE,
+        check = options.check,
+        checked = options.checked,
+        tooltipTitle = options.tooltipTitle,
+        tooltipText = options.tooltipDesc,
+        onClick = options.onClick,
+        onToggle = options.onToggle,
+    })
 
     if options.relativeTo then
         btn:SetPoint(
@@ -239,24 +202,6 @@ function ns.UI.CreateHeaderIconButton(header, options)
             options.x or -12,
             options.y or -12
         )
-    end
-
-    if options.onClick then
-        btn:SetScript("OnClick", options.onClick)
-    end
-
-    if options.tooltipTitle then
-        local title = options.tooltipTitle
-        local desc = options.tooltipDesc
-        btn:SetScript("OnEnter", function(myself)
-            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-            GameTooltip:SetText(title, 1, 1, 1)
-            if desc then
-                GameTooltip:AddLine(desc, 0.8, 0.8, 0.8, true)
-            end
-            GameTooltip:Show()
-        end)
-        btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     end
 
     return btn

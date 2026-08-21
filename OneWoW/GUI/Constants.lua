@@ -92,6 +92,7 @@ OneWoW_GUI.Constants = {
         SEARCH_HEIGHT = 22,
         SEARCH_WIDTH = 200,
         CHECKBOX_SIZE = 24,
+        ICON_BUTTON_SIZE = 20,
         ROW1_HEIGHT = 35,
         ROW2_HEIGHT = 30,
         ROW2_FAVORITE_HEIGHT = 22,

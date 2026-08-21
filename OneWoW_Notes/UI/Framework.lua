@@ -241,52 +241,22 @@ local function AttachRowTooltip(btn, tip)
 end
 
 local function MakeActionButton(row, iconPath)
-    local b = CreateFrame("Button", nil, row)
-    b:SetSize(ACTION_BTN, ACTION_BTN)
-    b:SetNormalTexture(iconPath)
-    b:SetPushedTexture(iconPath)
-    b:SetHighlightTexture(iconPath)
-    b:GetHighlightTexture():SetAlpha(0.5)
-    return b
+    return OneWoW_GUI:CreateIconButton(row, {
+        iconTexture = iconPath,
+        size = ACTION_BTN,
+    })
 end
 
 -- Toggle button: owns its desaturate/alpha/checked visuals. onToggle(newState)
 -- is called after the visual flips so callers just persist the new value.
 local function MakeToggleButton(row, iconPath, active, onToggle)
-    local b = CreateFrame("CheckButton", nil, row)
-    b:SetSize(ACTION_BTN, ACTION_BTN)
-
-    local tex = b:CreateTexture(nil, "BACKGROUND")
-    tex:SetAllPoints()
-    tex:SetTexture(iconPath)
-    local function render(a)
-        tex:SetDesaturated(not a)
-        tex:SetAlpha(a and 1.0 or 0.3)
-        b:SetChecked(a and true or false)
-    end
-    render(active)
-    b:SetNormalTexture(tex)
-
-    local chk = b:CreateTexture(nil, "BACKGROUND")
-    chk:SetAllPoints()
-    chk:SetTexture(iconPath)
-    b:SetCheckedTexture(chk)
-
-    local hl = b:CreateTexture(nil, "HIGHLIGHT")
-    hl:SetAllPoints()
-    hl:SetTexture(iconPath)
-    hl:SetAlpha(0.5)
-    b:SetHighlightTexture(hl)
-
-    b._active = active and true or false
-    b._render = render
-    b:SetScript("OnClick", function(self)
-        local newState = not self._active
-        self._active = newState
-        render(newState)
-        if onToggle then onToggle(newState) end
-    end)
-    return b
+    return OneWoW_GUI:CreateIconButton(row, {
+        iconTexture = iconPath,
+        size = ACTION_BTN,
+        check = true,
+        checked = active,
+        onToggle = onToggle,
+    })
 end
 
 -- opts:

@@ -181,26 +181,17 @@ function ns.UI.CreateNPCsTab(parent)
         parent.RefreshNPCsList()
     end
 
-    local manageCategoriesBtn = CreateFrame("Button", nil, controlPanel)
-    manageCategoriesBtn:SetSize(20, 20)
-    manageCategoriesBtn:SetPoint("LEFT", catDD, "RIGHT", 4, 0)
-    manageCategoriesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetNormalTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetHighlightTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:GetHighlightTexture():SetAlpha(0.5)
-    manageCategoriesBtn:SetScript("OnClick", function()
-        if ns.UI and ns.UI.ShowCategoryManager then
+    local manageCategoriesBtn = OneWoW_GUI:CreateIconButton(controlPanel, {
+        iconTexture = MEDIA .. "icon-gears.png",
+        size = 20,
+        texCoord = { 0.1, 0.9, 0.1, 0.9 },
+        tooltipTitle = L["CATMGR_TITLE"],
+        tooltipText = L["UI_MANAGE_CATEGORIES_DESC"],
+        onClick = function()
             ns.UI.ShowCategoryManager("npcs")
-        end
-    end)
-    manageCategoriesBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["CATMGR_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end,
+    })
+    manageCategoriesBtn:SetPoint("LEFT", catDD, "RIGHT", 4, 0)
 
     storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
@@ -436,13 +427,9 @@ function ns.UI.CreateNPCsTab(parent)
             ignoreIfDeadCheck:Hide()
             editorHeader.ignoreIfDeadCheck = ignoreIfDeadCheck
 
-            local deleteBtn = CreateFrame("Button", nil, editorHeader)
-            deleteBtn:SetSize(22, 22)
-            deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
+            local deleteBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-trash.png",
+            })
             deleteBtn:SetScript("OnClick", function()
                 if selectedNPC then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
@@ -475,13 +462,10 @@ function ns.UI.CreateNPCsTab(parent)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.deleteBtn = deleteBtn
 
-            local propertiesBtn = CreateFrame("Button", nil, editorHeader)
-            propertiesBtn:SetSize(22, 22)
-            propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
-            propertiesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:GetHighlightTexture():SetAlpha(0.5)
+            local propertiesBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-gears.png",
+                relativeTo = deleteBtn,
+            })
             propertiesBtn:SetScript("OnClick", function()
                 if selectedNPC and ns.UI and ns.UI.ShowNPCPropertiesDialog then
                     ns.UI.ShowNPCPropertiesDialog(selectedNPC, parent)
@@ -496,13 +480,10 @@ function ns.UI.CreateNPCsTab(parent)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.propertiesBtn = propertiesBtn
 
-            local gotoBtn = CreateFrame("Button", nil, editorHeader)
-            gotoBtn:SetSize(22, 22)
-            gotoBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
-            gotoBtn:SetNormalTexture(MEDIA .. "icon-compass.png")
-            gotoBtn:SetPushedTexture(MEDIA .. "icon-compass.png")
-            gotoBtn:SetHighlightTexture(MEDIA .. "icon-compass.png")
-            gotoBtn:GetHighlightTexture():SetAlpha(0.5)
+            local gotoBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-compass.png",
+                relativeTo = propertiesBtn,
+            })
             gotoBtn:SetScript("OnClick", function()
                 if selectedNPC and ns.NPCs then
                     local nd = ns.NPCs:GetNPC(selectedNPC)

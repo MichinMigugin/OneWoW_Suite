@@ -194,26 +194,17 @@ function ns.UI.CreateZonesTab(parent)
         parent.RefreshZonesList()
     end
 
-    local manageCategoriesBtn = CreateFrame("Button", nil, controlPanel)
-    manageCategoriesBtn:SetSize(20, 20)
-    manageCategoriesBtn:SetPoint("LEFT", categoryDropdown, "RIGHT", 4, 0)
-    manageCategoriesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetNormalTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetHighlightTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:GetHighlightTexture():SetAlpha(0.5)
-    manageCategoriesBtn:SetScript("OnClick", function()
-        if ns.UI and ns.UI.ShowCategoryManager then
+    local manageCategoriesBtn = OneWoW_GUI:CreateIconButton(controlPanel, {
+        iconTexture = MEDIA .. "icon-gears.png",
+        size = 20,
+        texCoord = { 0.1, 0.9, 0.1, 0.9 },
+        tooltipTitle = L["CATMGR_TITLE"],
+        tooltipText = L["UI_MANAGE_CATEGORIES_DESC"],
+        onClick = function()
             ns.UI.ShowCategoryManager("zones")
-        end
-    end)
-    manageCategoriesBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["CATMGR_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end,
+    })
+    manageCategoriesBtn:SetPoint("LEFT", categoryDropdown, "RIGHT", 4, 0)
 
     storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
@@ -388,13 +379,9 @@ function ns.UI.CreateZonesTab(parent)
             zoneTitleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             editorHeader.zoneTitleFS = zoneTitleFS
 
-            local deleteBtn = CreateFrame("Button", nil, editorHeader)
-            deleteBtn:SetSize(22, 22)
-            deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
+            local deleteBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-trash.png",
+            })
             deleteBtn:SetScript("OnClick", function()
                 if selectedZone then
                     local zId = selectedZone
@@ -436,13 +423,10 @@ function ns.UI.CreateZonesTab(parent)
             end)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-            local propertiesBtn = CreateFrame("Button", nil, editorHeader)
-            propertiesBtn:SetSize(22, 22)
-            propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
-            propertiesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:GetHighlightTexture():SetAlpha(0.5)
+            local propertiesBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-gears.png",
+                relativeTo = deleteBtn,
+            })
             propertiesBtn:SetScript("OnClick", function()
                 if selectedZone then
                     ns.UI.ShowZonePropertiesDialog(selectedZone, parent)
@@ -731,35 +715,30 @@ function ns.UI.CreateZonesTab(parent)
             todoLabel:SetText(L["ZONE_TODO_HEADER"])
             todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local resetTasksBtn = CreateFrame("Button", nil, todoHeader)
-            resetTasksBtn:SetSize(20, 20)
-            resetTasksBtn:SetPoint("LEFT", todoLabel, "RIGHT", 5, 0)
-            resetTasksBtn:SetNormalAtlas("talents-button-undo")
-            resetTasksBtn:SetPushedAtlas("talents-button-undo")
-            resetTasksBtn:SetHighlightAtlas("talents-button-undo")
-            resetTasksBtn:GetHighlightTexture():SetAlpha(0.5)
-            resetTasksBtn:SetScript("OnClick", function()
-                if selectedZone and ns.Zones then
-                    local d = ns.Zones:GetZone(selectedZone)
-                    if d and d.todos then
-                        for _, todo in ipairs(d.todos) do
-                            todo.done = false
+            local resetTasksBtn = OneWoW_GUI:CreateIconButton(todoHeader, {
+                atlas = "talents-button-undo",
+                size = 20,
+                tooltipTitle = L["NOTE_RESET_TODOS"],
+                tooltipText = L["NOTE_RESET_TODOS_DESC"],
+                onClick = function()
+                    if selectedZone and ns.Zones then
+                        local d = ns.Zones:GetZone(selectedZone)
+                        if d and d.todos then
+                            for _, todo in ipairs(d.todos) do
+                                todo.done = false
+                            end
+                            ns.Zones:SaveZone(selectedZone, d)
+                            if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
                         end
-                        ns.Zones:SaveZone(selectedZone, d)
-                        if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
                     end
-                end
-            end)
-            resetTasksBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:SetText(L["NOTE_RESET_TODOS"], 1, 1, 1)
-                GameTooltip:AddLine(L["NOTE_RESET_TODOS_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            resetTasksBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                end,
+            })
+            resetTasksBtn:SetPoint("LEFT", todoLabel, "RIGHT", 5, 0)
 
-            local addTaskBtn = CreateFrame("Button", nil, todoHeader)
-            addTaskBtn:SetSize(24, 24)
+            local addTaskBtn = OneWoW_GUI:CreateIconButton(todoHeader, {
+                iconTexture = MEDIA .. "icon-add.png",
+                size = 24,
+            })
             addTaskBtn:SetPoint("RIGHT", todoHeader, "RIGHT", 0, 0)
 
             local taskInputBox = OneWoW_GUI:CreateEditBox(todoHeader, {
@@ -782,10 +761,6 @@ function ns.UI.CreateZonesTab(parent)
                 end
                 self:ClearFocus()
             end)
-            addTaskBtn:SetNormalTexture(MEDIA .. "icon-add.png")
-            addTaskBtn:SetHighlightTexture(MEDIA .. "icon-add.png")
-            addTaskBtn:SetPushedTexture(MEDIA .. "icon-add.png")
-            addTaskBtn:GetHighlightTexture():SetAlpha(0.5)
             addTaskBtn:SetScript("OnClick", function()
                 local text = taskInputBox:GetText()
                 if text and text ~= "" and selectedZone and ns.Zones then
@@ -1036,21 +1011,19 @@ function ns.UI.CreateZonesTab(parent)
                 ns.NotesHyperlinks:EnhanceEditBox(todoEditBox)
             end
 
-            local deleteTodoBtn = CreateFrame("Button", nil, todoFrame)
-            deleteTodoBtn:SetSize(16, 16)
+            local deleteTodoBtn = OneWoW_GUI:CreateIconButton(todoFrame, {
+                iconTexture = MEDIA .. "icon-minus.png",
+                size = 16,
+                onClick = function()
+                    local d = ns.Zones:GetZone(selectedZone)
+                    if d and d.todos then
+                        table.remove(d.todos, i)
+                        ns.Zones:SaveZone(selectedZone, d)
+                        parent.RefreshZoneTodos()
+                    end
+                end,
+            })
             deleteTodoBtn:SetPoint("RIGHT", todoFrame, "RIGHT", -5, 0)
-            deleteTodoBtn:SetNormalTexture(MEDIA .. "icon-minus.png")
-            deleteTodoBtn:SetPushedTexture(MEDIA .. "icon-minus.png")
-            deleteTodoBtn:SetHighlightTexture(MEDIA .. "icon-minus.png")
-            deleteTodoBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteTodoBtn:SetScript("OnClick", function()
-                local d = ns.Zones:GetZone(selectedZone)
-                if d and d.todos then
-                    table.remove(d.todos, i)
-                    ns.Zones:SaveZone(selectedZone, d)
-                    parent.RefreshZoneTodos()
-                end
-            end)
 
             yOffset = yOffset - 30
         end

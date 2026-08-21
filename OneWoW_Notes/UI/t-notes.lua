@@ -126,26 +126,17 @@ function ns.UI.CreateNotesTab(parent)
         if parent.RefreshNotesList then parent.RefreshNotesList() end
     end
 
-    local manageCategoriesBtn = CreateFrame("Button", nil, controlPanel)
-    manageCategoriesBtn:SetSize(20, 20)
-    manageCategoriesBtn:SetPoint("LEFT", categoryDropdown, "RIGHT", 4, 0)
-    manageCategoriesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetNormalTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetHighlightTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:GetHighlightTexture():SetAlpha(0.5)
-    manageCategoriesBtn:SetScript("OnClick", function()
-        if ns.UI and ns.UI.ShowCategoryManager then
+    local manageCategoriesBtn = OneWoW_GUI:CreateIconButton(controlPanel, {
+        iconTexture = MEDIA .. "icon-gears.png",
+        size = 20,
+        texCoord = { 0.1, 0.9, 0.1, 0.9 },
+        tooltipTitle = L["CATMGR_TITLE"],
+        tooltipText = L["UI_MANAGE_CATEGORIES_DESC"],
+        onClick = function()
             ns.UI.ShowCategoryManager("notes")
-        end
-    end)
-    manageCategoriesBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["CATMGR_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end,
+    })
+    manageCategoriesBtn:SetPoint("LEFT", categoryDropdown, "RIGHT", 4, 0)
 
     storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
@@ -331,159 +322,91 @@ function ns.UI.CreateNotesTab(parent)
             titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             editorHeader.titleFS = titleFS
 
-            local deleteBtn = CreateFrame("Button", nil, editorHeader)
-            deleteBtn:SetSize(22, 22)
-            deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteBtn:SetScript("OnClick", function()
-                if selectedNote then
-                    StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE"] = {
-                        text = string.format(L["POPUP_DELETE_NOTE"], selectedNote),
-                        button1 = DELETE,
-                        button2 = CANCEL,
-                        OnAccept = function()
-                            if ns.NotesData then
-                                ns.NotesData:RemoveNote(selectedNote)
-                                selectedNote = nil
-                                if detailPanel.editorContent then
-                                    for _, frame in pairs(detailPanel.editorContent) do
-                                        if frame and frame.Hide then frame:Hide() end
+            local deleteBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-trash.png",
+                tooltipTitle = L["TOOLTIP_NOTE_DELETE"],
+                tooltipDesc = L["TOOLTIP_NOTE_DELETE_DESC"],
+                onClick = function()
+                    if selectedNote then
+                        StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE"] = {
+                            text = string.format(L["POPUP_DELETE_NOTE"], selectedNote),
+                            button1 = DELETE,
+                            button2 = CANCEL,
+                            OnAccept = function()
+                                if ns.NotesData then
+                                    ns.NotesData:RemoveNote(selectedNote)
+                                    selectedNote = nil
+                                    if detailPanel.editorContent then
+                                        for _, frame in pairs(detailPanel.editorContent) do
+                                            if frame and frame.Hide then frame:Hide() end
+                                        end
                                     end
+                                    parent.RefreshNotesList()
+                                    emptyMessage:Show()
                                 end
-                                parent.RefreshNotesList()
-                                emptyMessage:Show()
-                            end
-                        end,
-                        timeout = 0, whileDead = true, hideOnEscape = true
-                    }
-                    StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE")
-                end
-            end)
-            deleteBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_DELETE"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_DELETE_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                            end,
+                            timeout = 0, whileDead = true, hideOnEscape = true
+                        }
+                        StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE")
+                    end
+                end,
+            })
             editorHeader.deleteBtn = deleteBtn
 
-            local propertiesBtn = CreateFrame("Button", nil, editorHeader)
-            propertiesBtn:SetSize(22, 22)
-            propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
-            propertiesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:GetHighlightTexture():SetAlpha(0.5)
-            propertiesBtn:SetScript("OnClick", function()
-                if selectedNote and ns.UI and ns.UI.ShowNotePropertiesDialog then
-                    ns.UI.ShowNotePropertiesDialog(selectedNote)
-                end
-            end)
-            propertiesBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PROPERTIES"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PROPERTIES_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            local propertiesBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-gears.png",
+                relativeTo = deleteBtn,
+                tooltipTitle = L["TOOLTIP_NOTE_PROPERTIES"],
+                tooltipDesc = L["TOOLTIP_NOTE_PROPERTIES_DESC"],
+                onClick = function()
+                    if selectedNote and ns.UI.ShowNotePropertiesDialog then
+                        ns.UI.ShowNotePropertiesDialog(selectedNote)
+                    end
+                end,
+            })
             editorHeader.propertiesBtn = propertiesBtn
 
-            local pinBtn = CreateFrame("CheckButton", nil, editorHeader)
-            pinBtn:SetSize(22, 22)
-            pinBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
-
-            local pinNormalTex = pinBtn:CreateTexture(nil, "BACKGROUND")
-            pinNormalTex:SetAllPoints()
-            pinNormalTex:SetTexture(MEDIA .. "icon-pin.png")
-            pinNormalTex:SetDesaturated(true)
-            pinNormalTex:SetAlpha(0.3)
-            pinBtn:SetNormalTexture(pinNormalTex)
-
-            local pinHighlightTex = pinBtn:CreateTexture(nil, "HIGHLIGHT")
-            pinHighlightTex:SetAllPoints()
-            pinHighlightTex:SetTexture(MEDIA .. "icon-pin.png")
-            pinHighlightTex:SetAlpha(0.5)
-            pinBtn:SetHighlightTexture(pinHighlightTex)
-
-            pinBtn:SetScript("OnClick", function(self)
-                if selectedNote and ns.NotesPins and ns.NotesData then
-                    local allNotes = ns.NotesData:GetAllNotes()
-                    local noteData = allNotes[selectedNote]
-                    if noteData then
-                        if noteData.pinEnabled and ns.notePins and ns.notePins[selectedNote] then
-                            ns.NotesPins:HideNotePin(selectedNote)
-                            noteData.pinEnabled = false
-                            self:GetNormalTexture():SetDesaturated(true)
-                            self:GetNormalTexture():SetAlpha(0.3)
-                            self:SetChecked(false)
-                        else
-                            noteData.pinEnabled = true
-                            ns.NotesPins:ShowNotePin(selectedNote)
-                            self:GetNormalTexture():SetDesaturated(false)
-                            self:GetNormalTexture():SetAlpha(1.0)
-                            self:SetChecked(true)
+            local pinBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-pin.png",
+                check = true,
+                relativeTo = propertiesBtn,
+                tooltipTitle = L["TOOLTIP_NOTE_PIN"],
+                tooltipDesc = L["TOOLTIP_NOTE_PIN_DESC"],
+                onClick = function(self)
+                    if selectedNote and ns.NotesPins and ns.NotesData then
+                        local allNotes = ns.NotesData:GetAllNotes()
+                        local noteData = allNotes[selectedNote]
+                        if noteData then
+                            if noteData.pinEnabled and ns.notePins and ns.notePins[selectedNote] then
+                                ns.NotesPins:HideNotePin(selectedNote)
+                                noteData.pinEnabled = false
+                                self:SetActiveVisual(false)
+                            else
+                                noteData.pinEnabled = true
+                                ns.NotesPins:ShowNotePin(selectedNote)
+                                self:SetActiveVisual(true)
+                            end
+                            parent.RefreshNotesList()
                         end
-                        parent.RefreshNotesList()
                     end
-                end
-            end)
-            pinBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                end,
+            })
             editorHeader.pinBtn = pinBtn
 
-            local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
-            favoriteBtn:SetSize(22, 22)
-            favoriteBtn:SetPoint("RIGHT", pinBtn, "LEFT", -2, 0)
-
-            local favNormalTex = favoriteBtn:CreateTexture(nil, "BACKGROUND")
-            favNormalTex:SetAllPoints()
-            favNormalTex:SetTexture(MEDIA .. "icon-fav.png")
-            favNormalTex:SetDesaturated(true)
-            favNormalTex:SetAlpha(0.3)
-            favoriteBtn:SetNormalTexture(favNormalTex)
-
-            local favCheckedTex = favoriteBtn:CreateTexture(nil, "BACKGROUND")
-            favCheckedTex:SetAllPoints()
-            favCheckedTex:SetTexture(MEDIA .. "icon-fav.png")
-            favoriteBtn:SetCheckedTexture(favCheckedTex)
-
-            local favHighlightTex = favoriteBtn:CreateTexture(nil, "HIGHLIGHT")
-            favHighlightTex:SetAllPoints()
-            favHighlightTex:SetTexture(MEDIA .. "icon-fav.png")
-            favHighlightTex:SetAlpha(0.5)
-            favoriteBtn:SetHighlightTexture(favHighlightTex)
-
-            favoriteBtn:SetScript("OnClick", function(self)
-                if selectedNote and ns.NotesData then
-                    local isFav = ns.NotesData:ToggleFavorite(selectedNote)
-                    if isFav then
-                        self:GetNormalTexture():SetDesaturated(false)
-                        self:GetNormalTexture():SetAlpha(1.0)
-                        self:SetChecked(true)
-                    else
-                        self:GetNormalTexture():SetDesaturated(true)
-                        self:GetNormalTexture():SetAlpha(0.3)
-                        self:SetChecked(false)
+            local favoriteBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-fav.png",
+                check = true,
+                relativeTo = pinBtn,
+                tooltipTitle = L["TOOLTIP_NOTE_FAVORITE"],
+                tooltipDesc = L["TOOLTIP_NOTE_FAVORITE_DESC"],
+                onClick = function(self)
+                    if selectedNote and ns.NotesData then
+                        local isFav = ns.NotesData:ToggleFavorite(selectedNote)
+                        self:SetActiveVisual(isFav)
+                        parent.RefreshNotesList()
                     end
-                    parent.RefreshNotesList()
-                end
-            end)
-            favoriteBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_FAVORITE"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_FAVORITE_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                end,
+            })
             editorHeader.favoriteBtn = favoriteBtn
 
             local noteTypeLine = OneWoW_GUI:CreateFS(editorHeader, 10)
@@ -633,35 +556,30 @@ function ns.UI.CreateNotesTab(parent)
             todoLabel:SetText(L["UI_TASKS"])
             todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local resetTasksBtn = CreateFrame("Button", nil, todoHeader)
-            resetTasksBtn:SetSize(20, 20)
-            resetTasksBtn:SetPoint("LEFT", todoLabel, "RIGHT", 5, 0)
-            resetTasksBtn:SetNormalAtlas("talents-button-undo")
-            resetTasksBtn:SetPushedAtlas("talents-button-undo")
-            resetTasksBtn:SetHighlightAtlas("talents-button-undo")
-            resetTasksBtn:GetHighlightTexture():SetAlpha(0.5)
-            resetTasksBtn:SetScript("OnClick", function()
-                if selectedNote and ns.NotesData then
-                    local allNotes = ns.NotesData:GetAllNotes()
-                    local note = allNotes[selectedNote]
-                    if note and note.todos then
-                        for _, todo in ipairs(note.todos) do
-                            todo.completed = false
+            local resetTasksBtn = OneWoW_GUI:CreateIconButton(todoHeader, {
+                atlas = "talents-button-undo",
+                size = 20,
+                tooltipTitle = L["NOTE_RESET_TODOS"],
+                tooltipText = L["NOTE_RESET_TODOS_DESC"],
+                onClick = function()
+                    if selectedNote and ns.NotesData then
+                        local allNotes = ns.NotesData:GetAllNotes()
+                        local note = allNotes[selectedNote]
+                        if note and note.todos then
+                            for _, todo in ipairs(note.todos) do
+                                todo.completed = false
+                            end
+                            if parent.RefreshTodoList then parent.RefreshTodoList() end
                         end
-                        if parent.RefreshTodoList then parent.RefreshTodoList() end
                     end
-                end
-            end)
-            resetTasksBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:SetText(L["NOTE_RESET_TODOS"], 1, 1, 1)
-                GameTooltip:AddLine(L["NOTE_RESET_TODOS_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            resetTasksBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                end,
+            })
+            resetTasksBtn:SetPoint("LEFT", todoLabel, "RIGHT", 5, 0)
 
-            local addTaskBtn = CreateFrame("Button", nil, todoHeader)
-            addTaskBtn:SetSize(24, 24)
+            local addTaskBtn = OneWoW_GUI:CreateIconButton(todoHeader, {
+                iconTexture = MEDIA .. "icon-add.png",
+                size = 24,
+            })
             addTaskBtn:SetPoint("RIGHT", todoHeader, "RIGHT", 0, 0)
 
             local taskInputBox = OneWoW_GUI:CreateEditBox(todoHeader, {
@@ -679,10 +597,6 @@ function ns.UI.CreateNotesTab(parent)
                 end
                 self:ClearFocus()
             end)
-            addTaskBtn:SetNormalTexture(MEDIA .. "icon-add.png")
-            addTaskBtn:SetHighlightTexture(MEDIA .. "icon-add.png")
-            addTaskBtn:SetPushedTexture(MEDIA .. "icon-add.png")
-            addTaskBtn:GetHighlightTexture():SetAlpha(0.5)
             addTaskBtn:SetScript("OnClick", function()
                 local text = taskInputBox:GetText()
                 if text and text ~= "" and selectedNote and ns.NotesTodos then
@@ -784,21 +698,11 @@ function ns.UI.CreateNotesTab(parent)
                         end
                     end
                     if header.favoriteBtn then
-                        if note.favorite then
-                            header.favoriteBtn:GetNormalTexture():SetDesaturated(false)
-                            header.favoriteBtn:GetNormalTexture():SetAlpha(1.0)
-                            header.favoriteBtn:SetChecked(true)
-                        else
-                            header.favoriteBtn:GetNormalTexture():SetDesaturated(true)
-                            header.favoriteBtn:GetNormalTexture():SetAlpha(0.3)
-                            header.favoriteBtn:SetChecked(false)
-                        end
+                        header.favoriteBtn:SetActiveVisual(note.favorite)
                     end
                     if header.pinBtn then
                         local pinEnabled = note.pinEnabled and ns.notePins and ns.notePins[selectedNote]
-                        header.pinBtn:GetNormalTexture():SetDesaturated(not pinEnabled)
-                        header.pinBtn:GetNormalTexture():SetAlpha(pinEnabled and 1.0 or 0.3)
-                        header.pinBtn:SetChecked(pinEnabled and true or false)
+                        header.pinBtn:SetActiveVisual(pinEnabled)
                     end
                 end
 
@@ -817,21 +721,11 @@ function ns.UI.CreateNotesTab(parent)
         if not header then return end
 
         if header.favoriteBtn then
-            if note.favorite then
-                header.favoriteBtn:GetNormalTexture():SetDesaturated(false)
-                header.favoriteBtn:GetNormalTexture():SetAlpha(1.0)
-                header.favoriteBtn:SetChecked(true)
-            else
-                header.favoriteBtn:GetNormalTexture():SetDesaturated(true)
-                header.favoriteBtn:GetNormalTexture():SetAlpha(0.3)
-                header.favoriteBtn:SetChecked(false)
-            end
+            header.favoriteBtn:SetActiveVisual(note.favorite)
         end
         if header.pinBtn then
             local pinEnabled = note.pinEnabled and ns.notePins and ns.notePins[selectedNote]
-            header.pinBtn:GetNormalTexture():SetDesaturated(not pinEnabled)
-            header.pinBtn:GetNormalTexture():SetAlpha(pinEnabled and 1.0 or 0.3)
-            header.pinBtn:SetChecked(pinEnabled and true or false)
+            header.pinBtn:SetActiveVisual(pinEnabled)
         end
         if header.autoPinCheckbox then
             local noteType = note.noteType or "standard"
@@ -958,19 +852,15 @@ function ns.UI.CreateNotesTab(parent)
                 ns.NotesHyperlinks:EnhanceEditBox(todoEditBox)
             end
 
-            local deleteTodoBtn = CreateFrame("Button", nil, todoFrame)
-            deleteTodoBtn:SetSize(16, 16)
-            deleteTodoBtn:SetPoint("RIGHT", todoFrame, "RIGHT", -5, 0)
-            deleteTodoBtn:SetNormalTexture(MEDIA .. "icon-minus.png")
-            deleteTodoBtn:SetPushedTexture(MEDIA .. "icon-minus.png")
-            deleteTodoBtn:SetHighlightTexture(MEDIA .. "icon-minus.png")
-            deleteTodoBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteTodoBtn:SetScript("OnClick", function()
-                if ns.NotesTodos then
+            local deleteTodoBtn = OneWoW_GUI:CreateIconButton(todoFrame, {
+                iconTexture = MEDIA .. "icon-minus.png",
+                size = 16,
+                onClick = function()
                     ns.NotesTodos:RemoveTodo(selectedNote, todo.id)
                     parent.RefreshTodoList()
-                end
-            end)
+                end,
+            })
+            deleteTodoBtn:SetPoint("RIGHT", todoFrame, "RIGHT", -5, 0)
 
             yOffset = yOffset - 30
         end

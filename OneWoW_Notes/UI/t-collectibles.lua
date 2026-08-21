@@ -317,26 +317,17 @@ function ns.UI.CreateCollectiblesTab(parent)
         parent.RefreshCollectiblesList()
     end
 
-    local manageCategoriesBtn = CreateFrame("Button", nil, controlPanel)
-    manageCategoriesBtn:SetSize(20, 20)
-    manageCategoriesBtn:SetPoint("LEFT", catDD, "RIGHT", 4, 0)
-    manageCategoriesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetNormalTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-    manageCategoriesBtn:GetHighlightTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    manageCategoriesBtn:GetHighlightTexture():SetAlpha(0.5)
-    manageCategoriesBtn:SetScript("OnClick", function()
-        if ns.UI and ns.UI.ShowCategoryManager then
+    local manageCategoriesBtn = OneWoW_GUI:CreateIconButton(controlPanel, {
+        iconTexture = MEDIA .. "icon-gears.png",
+        size = 20,
+        texCoord = { 0.1, 0.9, 0.1, 0.9 },
+        tooltipTitle = L["CATMGR_TITLE"],
+        tooltipText = L["UI_MANAGE_CATEGORIES_DESC"],
+        onClick = function()
             ns.UI.ShowCategoryManager("collectibles")
-        end
-    end)
-    manageCategoriesBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["CATMGR_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end,
+    })
+    manageCategoriesBtn:SetPoint("LEFT", catDD, "RIGHT", 4, 0)
 
     local typeDD = ns.UI.CreateThemedDropdown(controlPanel, TYPE, 120, 25)
     typeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
@@ -818,13 +809,9 @@ function ns.UI.CreateCollectiblesTab(parent)
             setProgressText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             editorHeader.setProgressText = setProgressText
 
-            local deleteBtn = CreateFrame("Button", nil, editorHeader)
-            deleteBtn:SetSize(22, 22)
-            deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
+            local deleteBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-trash.png",
+            })
             deleteBtn:SetScript("OnClick", DeleteSelected)
             deleteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

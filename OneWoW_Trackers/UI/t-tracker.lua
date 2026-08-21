@@ -465,7 +465,7 @@ function ns.UI.CreateTrackerTab(parent)
     end
 
     local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
-    local ICON_BTN = 20
+    local ICON_BTN = OneWoW_GUI.Constants.GUI.ICON_BUTTON_SIZE
     local sectionReorderFrames = {}
     local stepReorderFrames = {}
     local sectionReorder, stepReorder
@@ -486,15 +486,6 @@ function ns.UI.CreateTrackerTab(parent)
         else
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
-    end
-
-    local function AttachIconTooltip(btn, title)
-        btn:HookScript("OnEnter", function(myself)
-            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-            GameTooltip:SetText(title, 1, 1, 1)
-            GameTooltip:Show()
-        end)
-        btn:HookScript("OnLeave", GameTooltip_Hide)
     end
 
     local function AfterReorder()
@@ -685,73 +676,97 @@ function ns.UI.CreateTrackerTab(parent)
 
         local btnY = -54
         local btnX = 10
+        local iconGap = 4
+        local prevAction
 
-        local editBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = EDIT, height = 22 })
-        editBtn:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", btnX, btnY)
-        editBtn:SetScript("OnClick", function()
-            if ns.TrackerEditor then
+        local function PlaceListAction(btn)
+            if prevAction then
+                btn:SetPoint("LEFT", prevAction, "RIGHT", iconGap, 0)
+            else
+                btn:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", btnX, btnY)
+            end
+            prevAction = btn
+            return btn
+        end
+
+        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+            iconTexture = MEDIA .. "icon-gears.png",
+            size = ICON_BTN,
+            tooltipTitle = EDIT,
+            onClick = function()
                 ns.TrackerEditor:ShowListEditor(list.id, function()
                     parent.RefreshList()
                     parent.ShowDetail(list.id)
                 end)
-            end
-        end)
+            end,
+        }))
 
-        local exportBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EXPORT"], height = 22 })
-        exportBtn:SetPoint("LEFT", editBtn, "RIGHT", 4, 0)
-        exportBtn:SetScript("OnClick", function()
-            if ns.TrackerEditor then
+        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+            iconTexture = MEDIA .. "icon-flag.png",
+            size = ICON_BTN,
+            tooltipTitle = L["TRACKER_EXPORT"],
+            onClick = function()
                 ns.TrackerEditor:ShowExportDialog(list.id)
-            end
-        end)
+            end,
+        }))
 
-        local dupeBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["DUPLICATE"], height = 22 })
-        dupeBtn:SetPoint("LEFT", exportBtn, "RIGHT", 4, 0)
-        dupeBtn:SetScript("OnClick", function()
-            local copy = TD:DuplicateList(list.id)
-            if copy then
-                selectedListID = copy.id
-                parent.RefreshList()
-                parent.ShowDetail(copy.id)
-            end
-        end)
+        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+            atlas = "communities-icon-addgroupplus",
+            size = ICON_BTN,
+            tint = true,
+            tooltipTitle = L["DUPLICATE"],
+            onClick = function()
+                local copy = TD:DuplicateList(list.id)
+                if copy then
+                    selectedListID = copy.id
+                    parent.RefreshList()
+                    parent.ShowDetail(copy.id)
+                end
+            end,
+        }))
 
-        local resetBtn
         if list.listType ~= "farmvalue" then
-            resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = RESET, height = 22 })
-            resetBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
-            resetBtn:SetScript("OnClick", function()
-                TD:ResetProgress(list.id)
-                TE:FullScan()
-                parent.RefreshList()
-                parent.ShowDetail(list.id)
-            end)
+            PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+                atlas = "talents-button-undo",
+                size = ICON_BTN,
+                tooltipTitle = RESET,
+                onClick = function()
+                    TD:ResetProgress(list.id)
+                    TE:FullScan()
+                    parent.RefreshList()
+                    parent.ShowDetail(list.id)
+                end,
+            }))
         end
 
-        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = DELETE, height = 22 })
-        deleteBtn:SetPoint("LEFT", resetBtn or dupeBtn, "RIGHT", 4, 0)
-        deleteBtn:SetScript("OnClick", function()
-            if list._bundledID then
-                TP:OnBundledDeleted(list._bundledID)
-            end
-            TE:DestroyPinnedWindow(list.id)
-            TD:RemoveList(list.id)
-            selectedListID = nil
-            parent.RefreshList()
-        end)
+        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+            iconTexture = MEDIA .. "icon-trash.png",
+            size = ICON_BTN,
+            tooltipTitle = DELETE,
+            onClick = function()
+                if list._bundledID then
+                    TP:OnBundledDeleted(list._bundledID)
+                end
+                TE:DestroyPinnedWindow(list.id)
+                TD:RemoveList(list.id)
+                selectedListID = nil
+                parent.RefreshList()
+            end,
+        }))
 
         if list.listType ~= "farmvalue" then
-            local addSectionBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_ADD_SECTION"], height = 22 })
-            addSectionBtn:SetPoint("LEFT", deleteBtn, "RIGHT", 4, 0)
-            addSectionBtn:SetScript("OnClick", function()
-                if ns.TrackerEditor then
+            PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+                iconTexture = MEDIA .. "icon-add.png",
+                size = ICON_BTN,
+                tooltipTitle = L["TRACKER_ADD_SECTION"],
+                onClick = function()
                     ns.TrackerEditor:ShowSectionEditor(list.id, nil, function()
                         TE:RebuildIndices()
                         parent.RefreshList()
                         parent.ShowDetail(list.id)
                     end)
-                end
-            end)
+                end,
+            }))
         end
 
         yOffset = yOffset - 90
@@ -810,53 +825,46 @@ function ns.UI.CreateTrackerTab(parent)
 
             local secDone, secTotal = TD:GetSectionCompletion(list.id, sec.key)
 
-            local addStepBtn = OneWoW_GUI:CreateTextureIconButton(secHeader, {
+            local addStepBtn = OneWoW_GUI:CreateIconButton(secHeader, {
                 iconTexture = MEDIA .. "icon-add.png",
-                width = ICON_BTN,
-                height = ICON_BTN,
-            })
-            addStepBtn:SetPoint("RIGHT", secHeader, "RIGHT", -4, 0)
-            AttachIconTooltip(addStepBtn, L["TRACKER_ADD_STEP"])
-            addStepBtn:SetScript("OnClick", function()
-                if ns.TrackerEditor then
+                size = ICON_BTN,
+                tooltipTitle = L["TRACKER_ADD_STEP"],
+                onClick = function()
                     ns.TrackerEditor:ShowStepEditor(list.id, sec.key, nil, function()
                         TE:RebuildIndices()
                         parent.RefreshList()
                         parent.ShowDetail(list.id)
                     end)
-                end
-            end)
-
-            local secEditBtn = OneWoW_GUI:CreateTextureIconButton(secHeader, {
-                iconTexture = MEDIA .. "icon-gears.png",
-                width = ICON_BTN,
-                height = ICON_BTN,
+                end,
             })
-            secEditBtn:SetPoint("RIGHT", addStepBtn, "LEFT", -2, 0)
-            AttachIconTooltip(secEditBtn, L["TRACKER_EDIT_SECTION"])
-            secEditBtn:SetScript("OnClick", function()
-                if ns.TrackerEditor then
+            addStepBtn:SetPoint("RIGHT", secHeader, "RIGHT", -4, 0)
+
+            local secEditBtn = OneWoW_GUI:CreateIconButton(secHeader, {
+                iconTexture = MEDIA .. "icon-gears.png",
+                size = ICON_BTN,
+                tooltipTitle = L["TRACKER_EDIT_SECTION"],
+                onClick = function()
                     ns.TrackerEditor:ShowSectionEditor(list.id, sec.key, function()
                         TE:RebuildIndices()
                         parent.RefreshList()
                         parent.ShowDetail(list.id)
                     end)
-                end
-            end)
+                end,
+            })
+            secEditBtn:SetPoint("RIGHT", addStepBtn, "LEFT", -2, 0)
 
-            local secDeleteBtn = OneWoW_GUI:CreateTextureIconButton(secHeader, {
+            local secDeleteBtn = OneWoW_GUI:CreateIconButton(secHeader, {
                 iconTexture = MEDIA .. "icon-trash.png",
-                width = ICON_BTN,
-                height = ICON_BTN,
+                size = ICON_BTN,
+                tooltipTitle = DELETE,
+                onClick = function()
+                    TD:RemoveSection(list.id, sec.key)
+                    TE:RebuildIndices()
+                    parent.RefreshList()
+                    parent.ShowDetail(list.id)
+                end,
             })
             secDeleteBtn:SetPoint("RIGHT", secEditBtn, "LEFT", -2, 0)
-            AttachIconTooltip(secDeleteBtn, DELETE)
-            secDeleteBtn:SetScript("OnClick", function()
-                TD:RemoveSection(list.id, sec.key)
-                TE:RebuildIndices()
-                parent.RefreshList()
-                parent.ShowDetail(list.id)
-            end)
 
             local secCount = OneWoW_GUI:CreateFS(secHeader, 10)
             secCount:SetPoint("RIGHT", secDeleteBtn, "LEFT", -6, 0)
@@ -919,23 +927,20 @@ function ns.UI.CreateTrackerTab(parent)
                 stepRow._trackerStepIndex = stepIdx
                 stepRow._trackerComplete = isComplete
 
-                local stepEditBtn = OneWoW_GUI:CreateTextureIconButton(stepRow, {
+                local stepEditBtn = OneWoW_GUI:CreateIconButton(stepRow, {
                     iconTexture = MEDIA .. "icon-gears.png",
-                    width = ICON_BTN,
-                    height = ICON_BTN,
-                })
-                stepEditBtn:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
-                AttachIconTooltip(stepEditBtn, L["TRACKER_EDIT_STEP"])
-                stepEditBtn:SetScript("OnClick", function()
-                    if ns.TrackerEditor then
+                    size = ICON_BTN,
+                    tooltipTitle = L["TRACKER_EDIT_STEP"],
+                    onClick = function()
                         ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
                             TE:RebuildIndices()
                             parent.RefreshList()
                             parent.ShowDetail(list.id)
                             TE:RefreshAllPinnedWindows()
                         end)
-                    end
-                end)
+                    end,
+                })
+                stepEditBtn:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
 
                 local checkSize = 16
                 local checkBtn

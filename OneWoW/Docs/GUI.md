@@ -663,6 +663,23 @@ Call `btn:SetFitText("New Text")` to update text and auto-resize.
 Access label via `btn.text`.
 `danger = true` uses `BTN_DANGER_NORMAL` / `BTN_DANGER_HOVER` / `BTN_DANGER_BORDER*`. If both `danger` and `toggleable` are set, `danger` wins and `toggleable` is ignored.
 
+### Icon Button (chrome-less)
+```lua
+local btn = OneWoW_GUI:CreateIconButton(parent, {
+    iconTexture = MEDIA .. "icon-gears.png", -- xor atlas
+    -- atlas = "talents-button-undo",
+    size = 20,              -- optional, default ICON_BUTTON_SIZE
+    texCoord = {0.1, 0.9, 0.1, 0.9}, -- optional crop
+    tint = true,            -- optional; ACCENT_PRIMARY vertex color (atlases beside gold MEDIA)
+    tooltipTitle = EDIT,
+    tooltipText = L.HINT,   -- optional second line
+    onClick = function() end,
+    -- check = true, checked = false, onToggle = function(isActive) end
+})
+```
+No `CreateButton` plate. Use for row/header actions (Notes, Trackers). Check mode adds `btn:SetActiveVisual(bool)` (desaturate + alpha when off).
+`CreateAtlasIconButton` / `CreateTextureIconButton` keep plated chrome for title-bar clusters.
+
 ### Text Link (backdrop-less clickable label)
 ```lua
 local link = OneWoW_GUI:CreateTextLink(parent, {
@@ -1684,7 +1701,7 @@ Constants.BACKDROP_INNER_NO_INSETS  -- white8x8 bg + 1px edge, no insets
 WINDOW_WIDTH = 1075     MIN_WIDTH = 1075      MAX_WIDTH = 2000
 WINDOW_HEIGHT = 900     MIN_HEIGHT = 700      MAX_HEIGHT = 1200
 PADDING = 12            BUTTON_HEIGHT = 28    BUTTON_WIDTH = 100
-SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24
+SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24      ICON_BUTTON_SIZE = 20
 ROW1_HEIGHT = 35        ROW2_HEIGHT = 30        ROW2_FAVORITE_HEIGHT = 22
 LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
 TOGGLE_BUTTON_WIDTH = 50  TOGGLE_BUTTON_HEIGHT = 18  TOGGLE_BUTTON_PADDING_X = 14

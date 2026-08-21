@@ -76,6 +76,8 @@ function OneWoW_GUI:CreateButton(parent, options)
     return btn
 end
 
+-- Plated icon button (CreateButton chrome). Prefer CreateIconButton for
+-- row/header actions; keep this for title-bar clusters that sit on a bar.
 function OneWoW_GUI:CreateAtlasIconButton(parent, options)
     options = options or {}
     local atlas = options.atlas
@@ -96,6 +98,8 @@ function OneWoW_GUI:CreateAtlasIconButton(parent, options)
     return btn
 end
 
+-- Plated icon button (CreateButton chrome). Prefer CreateIconButton for
+-- row/header actions; keep this for title-bar clusters that sit on a bar.
 function OneWoW_GUI:CreateTextureIconButton(parent, options)
     options = options or {}
     local iconTexture = options.iconTexture
@@ -113,6 +117,158 @@ function OneWoW_GUI:CreateTextureIconButton(parent, options)
     icon:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -inset, inset)
     icon:SetTexture(iconTexture)
     btn.icon = icon
+    return btn
+end
+
+--- Chrome-less icon button (Notes row/header style). Texture or atlas, no
+--- CreateButton plate. Check mode matches Notes header pin/favorite visuals.
+---@param parent Frame
+---@param options table
+---  iconTexture = string file path (xor atlas)
+---  atlas = string
+---  size / width / height  default Constants.GUI.ICON_BUTTON_SIZE
+---  texCoord = {l, r, t, b}
+---  tint = boolean  vertex-color ACCENT_PRIMARY (atlases next to gold MEDIA)
+---  tooltipTitle, tooltipText
+---  onClick
+---  check = boolean  CheckButton + SetActiveVisual
+---  checked = boolean  initial check visual
+---  onToggle = function(isActive)  check mode owns the click
+---@return Button|CheckButton
+function OneWoW_GUI:CreateIconButton(parent, options)
+    options = options or {}
+    local iconTexture = options.iconTexture
+    local atlas = options.atlas
+    assert(iconTexture or atlas, "OneWoW_GUI:CreateIconButton requires iconTexture or atlas")
+
+    local size = options.size or Constants.GUI.ICON_BUTTON_SIZE
+    local width = options.width or size
+    local height = options.height or size
+    local highlightAlpha = options.highlightAlpha or 0.5
+    local texCoord = options.texCoord
+    local tint = options.tint == true
+
+    local function applyFace(tex)
+        if atlas then
+            tex:SetAtlas(atlas)
+        else
+            tex:SetTexture(iconTexture)
+        end
+        if texCoord then
+            tex:SetTexCoord(texCoord[1], texCoord[2], texCoord[3], texCoord[4])
+        end
+        if tint then
+            tex:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        end
+    end
+
+    local function applyButtonFaces(faceBtn)
+        if atlas then
+            faceBtn:SetNormalAtlas(atlas)
+            faceBtn:SetPushedAtlas(atlas)
+            faceBtn:SetHighlightAtlas(atlas)
+        else
+            faceBtn:SetNormalTexture(iconTexture)
+            faceBtn:SetPushedTexture(iconTexture)
+            faceBtn:SetHighlightTexture(iconTexture)
+        end
+        local normal = faceBtn:GetNormalTexture()
+        local pushed = faceBtn:GetPushedTexture()
+        local highlight = faceBtn:GetHighlightTexture()
+        if texCoord then
+            normal:SetTexCoord(texCoord[1], texCoord[2], texCoord[3], texCoord[4])
+            pushed:SetTexCoord(texCoord[1], texCoord[2], texCoord[3], texCoord[4])
+            highlight:SetTexCoord(texCoord[1], texCoord[2], texCoord[3], texCoord[4])
+        end
+        if tint then
+            local r, g, b = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
+            normal:SetVertexColor(r, g, b)
+            pushed:SetVertexColor(r, g, b)
+            highlight:SetVertexColor(r, g, b)
+        end
+        highlight:SetAlpha(highlightAlpha)
+        faceBtn.icon = normal
+    end
+
+    local btn
+    if options.check then
+        btn = CreateFrame("CheckButton", options.name, parent)
+        btn:SetSize(width, height)
+        btn:EnableMouse(true)
+        btn:RegisterForClicks("LeftButtonUp")
+
+        local normalTex = btn:CreateTexture(nil, "BACKGROUND")
+        normalTex:SetAllPoints()
+        applyFace(normalTex)
+        btn:SetNormalTexture(normalTex)
+
+        local checkedTex = btn:CreateTexture(nil, "BACKGROUND")
+        checkedTex:SetAllPoints()
+        applyFace(checkedTex)
+        btn:SetCheckedTexture(checkedTex)
+
+        local highlightTex = btn:CreateTexture(nil, "HIGHLIGHT")
+        highlightTex:SetAllPoints()
+        applyFace(highlightTex)
+        highlightTex:SetAlpha(highlightAlpha)
+        btn:SetHighlightTexture(highlightTex)
+        btn.icon = normalTex
+
+        function btn:SetActiveVisual(active)
+            local on = active and true or false
+            self._active = on
+            local tex = self:GetNormalTexture()
+            if on then
+                tex:SetDesaturated(false)
+                tex:SetAlpha(1)
+                self:SetChecked(true)
+            else
+                tex:SetDesaturated(true)
+                tex:SetAlpha(0.3)
+                self:SetChecked(false)
+            end
+        end
+
+        btn:SetActiveVisual(options.checked)
+
+        if options.onToggle then
+            btn:SetScript("OnClick", function(myself)
+                local newState = not myself._active
+                myself:SetActiveVisual(newState)
+                options.onToggle(newState)
+            end)
+        elseif options.onClick then
+            btn:SetScript("OnClick", options.onClick)
+        end
+    else
+        btn = CreateFrame("Button", options.name, parent)
+        btn:SetSize(width, height)
+        btn:EnableMouse(true)
+        btn:RegisterForClicks("LeftButtonUp")
+        applyButtonFaces(btn)
+        if options.onClick then
+            btn:SetScript("OnClick", options.onClick)
+        end
+    end
+
+    local tTitle = options.tooltipTitle
+    local tText = options.tooltipText
+    if tTitle or tText then
+        btn:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            if tTitle then
+                GameTooltip:SetText(tTitle, 1, 1, 1)
+            end
+            if tText then
+                GameTooltip:AddLine(tText, 0.8, 0.8, 0.8, true)
+            end
+            GameTooltip:Show()
+        end)
+        btn:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    end
+
     return btn
 end
 
