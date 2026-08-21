@@ -45,7 +45,7 @@ Do not invent parallel track types. The engine already evaluates:
 | Hide completed (list + pinned) | `hideCompleted` / `pinnedHideCompleted` |
 | Interval timer step | `custom_timer` |
 | Instance / map / difficulty identity | `OneWoW_CatalogData_Journal_API` (`GetInstanceByMapID`, live EJ merge); Generated `JournalMapDifficulties` / `JournalInstanceMeta` |
-| Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins. Trackers **does not** use it |
+| Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins, Tracker hub detail (sections + steps; drop a step on a header). `TD:MoveStepToSection` migrates the progress blob |
 
 **Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. `eventRequired` is **fail-closed**: an empty calendar (`GetNumDayEvents == 0`) hides the step. Lockouts are not consulted. There is no “set instance difficulty” step.
 
@@ -57,20 +57,21 @@ Do not invent parallel track types. The engine already evaluates:
 
 Three layers, not one screen: **data** (`TrackerData` — lists → sections → steps), **engine** (`TrackerEngine` — evaluate, pins, map), **UI** (hub tab author / browse, editor dialogs, pinned overlay, farm value). `/1wt` opens the hub tab. `_API` today is show/hide + weekly-reset region.
 
-**Chrome uses `OneWoW_GUI`. Rows and reorder do not.**
+**Chrome, left list, and detail reorder use `OneWoW_GUI`. Section/step rows stay custom.**
 
 | Uses the toolkit | Rolls its own |
 | --- | --- |
-| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Left-rail list rows and detail section/step rows: raw `CreateFrame("Button", …, "BackdropTemplate")`, not `CreateCard` / `CreateCardStack` |
-| Theme / language callbacks on the lifecycle root | Homemade drag: ghost frame + `OnUpdate` hit-test + drop line → `TD:ReorderSection` / `ReorderStep`. Suite pattern is `CreateReorderDrag` |
-| Pinned overlay: `CreateFrame` + `CreateFS` + pooled rows (reasonable for a float) | Farm value: one `UIPanelScrollFrameTemplate` instead of `CreateScrollFrame` |
-| | Every `ShowDetail` destroys and rebuilds the whole tree (no virtualizer) |
+| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateIconButton`, `CreateDivider`, `CreateLayoutFrame`, `CreateReorderDrag`, `CreateListRowBasic` (left rail compose), `CreateVirtualizer` (left rail, 56px), `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Detail section/step rows: raw `CreateFrame("Button", …, "BackdropTemplate")` (collapse, hover icons, checkboxes, `CreateReorderDrag` need a complete frame list). Do not extend `CreateListRowBasic` for those this slice. |
+| Theme / language callbacks on the lifecycle root | Detail-tree virtualizer: blocked until `CreateReorderDrag` can address by data index (windowed pool would lie to `fromIdx`/`toIdx`). Progress/scan binds in place; `ShowDetail` is structure-only (select, collapse, add/delete, reorder, hide-completed). |
+| Pinned overlay: `CreateFrame` + `CreateFS` + pooled rows (reasonable for a float) | |
 
-**Leftover up/down (preceded drag):** section headers still have `^` / `v` `CreateFitTextButton`s calling `TD:MoveSection(..., "up"|"down")`. Steps dropped visible arrows but keep **Move Up / Move Down** in the right-click `MenuUtil` menu (`TD:MoveStep`). Two reorder systems, both live. `MoveSection` / `MoveStep` stay as data helpers; they should not be chrome.
+**Shipped hub chrome:** sticky pin + title, list-action strip + Hide completed under the title, author on left cards, account-wide / progress / hover hint in the scroll, divider above the section tree. Section/step add-edit-delete icons reveal on row hover (collapse plus/minus always visible); counts stay on the right, icons to their left. Drag is the only reorder chrome (two `CreateReorderDrag` controllers; section headers are drop targets for steps, not Attached to the step controller). Step right-click is Edit / mark complete / Delete. `TD:MoveSection` / `MoveStep` / `MoveStepToSection` stay as data.
 
-**Off-policy chrome on those headers:** ASCII glyphs as icons (`^`, `v`, `X`, `+`) and hardcoded English `"Edit"` (use `EDIT` / `L[]` and textures, not font glyphs).
+**Shipped left rail:** `CreateListRowBasic` (56px) plus type icon, meta, progress, favorite; adopted scroll on `CreateVirtualizer`. `CreateCard` / `CreateCardStack` stay settings accordions, not list tiles (dense compose; closed).
 
-The pin overlay is the play surface and is in better shape than the hub editor. Do not rebuild pinned as part of this pass.
+**Shipped editor locales:** wizard, quick-start, step categories, field labels, and hub leftovers (`Untitled`, waypoint print, default section `Tasks`) go through Trackers locale keys. Reused `SAVE` / `CANCEL` / `CLOSE` and existing `TRACKER_*` titles. Stored category folder `"General"` stays data.
+
+The pin overlay is the play surface and was out of scope for this pass. Do not rebuild pinned as part of remaining §0.
 
 ---
 
@@ -78,7 +79,7 @@ The pin overlay is the play surface and is in better shape than the hub editor. 
 
 Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on the current authoring tab.
 
-**Slice 0 — hub tab GUI-first (§0).** Chrome already suite-shaped; finish the rows. Drop section `^`/`v` (and step-menu move once drag is trusted), switch detail reorder to `CreateReorderDrag`, replace BackdropTemplate snowflakes with cards / shared rows, fix glyphs and `"Edit"`. `UI/Framework.lua` is gone. Not a new product — the surface every later idea sits on.
+**Slice 0 — hub tab GUI-first (§0).** Partial. Drag, icon chrome, Move Up/Down removal, detail declutter, editor/hub locales, left-rail `CreateListRowBasic` + virtualizer, and in-place detail progress bind are in. Still open: pinned overlay restyle, farm-value row widgets, dwell-expand during drag, extending `CreateListRowBasic` / `CreateReorderDrag` (detail-tree virtualizer blocked on a data-index API), localizing stored `"General"` categories. `UI/Framework.lua` is gone. Not a new product — the surface every later idea sits on.
 
 **Slice 0b — calendar fail-open (§4).** Shipped: event-gated steps stay visible until `CALENDAR_UPDATE_EVENT_LIST`.
 
@@ -98,9 +99,10 @@ Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windo
 
 Finish the authoring tab so it matches bags / hub pins. Engine and pinned overlay stay.
 
-- **Reuse:** `CreateReorderDrag`, `CreateCard` / `CreateCardStack` (or the same dense-row pattern other hub lists use), `CreateDropdown` / `CreateDialog` directly, `EDIT` / `L[]`, textures instead of `^` `v` `X` `+`.
-- **Build:** one reorder path (drag). Keep `MoveSection` / `MoveStep` as data if drag calls them, but remove section header arrows and the step-menu Move Up/Down once drag is trusted. Stop full-rebuild if a later pass needs it (virtualizer is optional; correctness of reorder + chrome is the slice).
-- **Do not** restyle the pinned overlay or invent a second Trackers product in this pass.
+- **Shipped:** `CreateReorderDrag` on section headers and steps (including drop onto another section). List/section/step actions are `CreateIconButton` (`EDIT` / `DELETE` / `RESET` / `L[]`, textures/atlases). No header arrows, no step-menu Move Up/Down. `MoveSection` / `MoveStep` / `MoveStepToSection` remain data-only. Detail chrome restack (sticky pin/title + action strip; hover-reveal row actions; counts on the right). Left rail: `CreateListRowBasic` compose + `CreateVirtualizer` 56px. Editor/hub English replaced with locale keys. Progress/scan binds the open detail in place (`ShowDetail` is structure-only).
+- **Still open:** detail section/step BackdropTemplate (blocked on `CreateReorderDrag` data-index API before a tree virtualizer). Pinned overlay restyle, farm-value row widgets, dwell-expand during drag, localizing stored `"General"`.
+- **Closed:** `CreateCard` vs dense-row for the left rail (dense compose on `CreateListRowBasic`; do not extend the shared helper this slice).
+- **Do not** restyle the pinned overlay, add dwell-expand during drag, or invent a second Trackers product in this pass.
 
 ### 1. Collectible-key handoff
 
@@ -309,7 +311,7 @@ Helper’s Gilded Stash has **no live API**; they infer progress from a Delve Lo
 
 ## Open questions
 
-- Hub list rows (§0): `CreateCard` vs a shared dense-row (left rail is 56px with icon + progress — cards may be heavy)?
+- Detail-tree virtualizer (§0): blocked on `CreateReorderDrag` addressing by data index (complete frame list is required for cross-section drop + header targets). Left rail dense compose is closed.
 - Handoff: auto-spawn a plan on `farming` intent, or only on an explicit “Track this” action?
 - One list per key vs one “Collectibles” list with sections per key?
 - Shared temporal-availability helper in core (`OneWoW.Collectibles` or a sibling service) vs Trackers-local lockout/calendar checks that Notes also wants to read?

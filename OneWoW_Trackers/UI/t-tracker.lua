@@ -38,8 +38,10 @@ function ns.UI.CreateTrackerTab(parent)
     local filterCategory = "All"
     local searchFilter = ""
     local hideCompleted = false
-    local listRows = {}
+    local visibleLists = {}
+    local listAPI
     local detailRows = {}
+    local detailProgressBar
     local ClearDetail
 
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
@@ -300,48 +302,92 @@ function ns.UI.CreateTrackerTab(parent)
     emptyLabel:SetText(L["TRACKER_SELECT"])
     emptyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local function CreateListRow(listData, yOffset)
-        local PAD = 8
-        local row = CreateFrame("Button", nil, listScrollChild, "BackdropTemplate")
-        row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
-        row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
-        row:SetHeight(56)
-        row:SetBackdrop(BACKDROP_SIMPLE)
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local LIST_ROW_HEIGHT = 56
+    local LIST_ROW_PAD = 8
+
+    local function CreateListRow(content)
+        local row = OneWoW_GUI:CreateListRowBasic(content, {
+            height = LIST_ROW_HEIGHT,
+            favoriteToggle = {
+                size = 18,
+                isFavorite = false,
+                tooltipTitle = L["TRACKER_FAV"],
+                tooltipText = L["TRACKER_FAV_TT"],
+                onChange = function(isFav)
+                    local id = row._listID
+                    if not id then return end
+                    TD:UpdateList(id, { favorite = isFav })
+                    parent.RefreshList()
+                end,
+            },
+        })
 
         local typeIcon = row:CreateTexture(nil, "ARTWORK")
         typeIcon:SetSize(24, 24)
-        typeIcon:SetPoint("TOPLEFT", row, "TOPLEFT", PAD, -PAD)
-        typeIcon:SetTexture(LIST_TYPE_ICONS[listData.listType] or LIST_TYPE_ICONS.todo)
+        typeIcon:SetPoint("TOPLEFT", row, "TOPLEFT", LIST_ROW_PAD, -LIST_ROW_PAD)
+        row._typeIcon = typeIcon
 
-        local listFavBtn = OneWoW_GUI:CreateFavoriteToggleButton(row, {
-            size     = 18,
-            favorite = listData.favorite == true,
-            tooltipTitle = L["TRACKER_FAV"],
-            tooltipText  = L["TRACKER_FAV_TT"],
-            onClick = function(_, isFav)
-                TD:UpdateList(listData.id, { favorite = isFav })
-                parent.RefreshList()
-                parent.ShowDetail(listData.id)
-            end,
-        })
-        listFavBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -PAD, -PAD)
-        listFavBtn:SetFrameLevel((row:GetFrameLevel() or 0) + 15)
-
-        local titleLabel = OneWoW_GUI:CreateFS(row, 12)
-        titleLabel:SetPoint("TOPLEFT", typeIcon, "TOPRIGHT", PAD, 0)
-        titleLabel:SetPoint("RIGHT", listFavBtn, "LEFT", -PAD, 0)
-        titleLabel:SetJustifyH("LEFT")
-        titleLabel:SetWordWrap(false)
-        titleLabel:SetText(listData.title or "Untitled")
-        titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        local favAnchor = row.favoriteBtn
+        row.label:ClearAllPoints()
+        row.label:SetPoint("TOPLEFT", typeIcon, "TOPRIGHT", LIST_ROW_PAD, 0)
+        if favAnchor then
+            row.label:SetPoint("RIGHT", favAnchor, "LEFT", -LIST_ROW_PAD, 0)
+            favAnchor:SetFrameLevel((row:GetFrameLevel() or 0) + 15)
+        else
+            row.label:SetPoint("RIGHT", row, "RIGHT", -LIST_ROW_PAD, 0)
+        end
+        row.label:SetJustifyH("LEFT")
+        row.label:SetJustifyV("TOP")
+        row.label:SetWordWrap(false)
 
         local metaLabel = OneWoW_GUI:CreateFS(row, 10)
-        metaLabel:SetPoint("TOPLEFT", titleLabel, "BOTTOMLEFT", 0, -2)
-        metaLabel:SetPoint("RIGHT", listFavBtn, "LEFT", -PAD, 0)
+        metaLabel:SetPoint("TOPLEFT", row.label, "BOTTOMLEFT", 0, -2)
+        if favAnchor then
+            metaLabel:SetPoint("RIGHT", favAnchor, "LEFT", -LIST_ROW_PAD, 0)
+        else
+            metaLabel:SetPoint("RIGHT", row, "RIGHT", -LIST_ROW_PAD, 0)
+        end
         metaLabel:SetJustifyH("LEFT")
         metaLabel:SetWordWrap(false)
+        metaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        row._meta = metaLabel
+
+        local progressLabel = OneWoW_GUI:CreateFS(row, 10)
+        progressLabel:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -LIST_ROW_PAD, LIST_ROW_PAD)
+        progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row._progressLabel = progressLabel
+
+        local progressBar = OneWoW_GUI:CreateProgressBar(row, {
+            height = 3,
+            min = 0,
+            max = 1,
+            value = 0,
+        })
+        progressBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", LIST_ROW_PAD, LIST_ROW_PAD)
+        progressBar:SetPoint("RIGHT", progressLabel, "LEFT", -LIST_ROW_PAD, 0)
+        progressBar._text:Hide()
+        row._progressBar = progressBar
+
+        row:HookScript("OnEnter", function(myself)
+            if not myself._titleTrunc and not myself._metaTrunc then return end
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(myself._titlePlain or L["TRACKER_UNTITLED"], 1, 1, 1)
+            if myself._metaTrunc and myself._metaPlain then
+                GameTooltip:AddLine(myself._metaPlain, 0.8, 0.8, 0.8, true)
+            end
+            GameTooltip:Show()
+        end)
+        row:HookScript("OnLeave", GameTooltip_Hide)
+
+        return row
+    end
+
+    local function BindListRow(row, _, listData, rowState)
+        row._listID = listData.id
+        row._titlePlain = listData.title or L["TRACKER_UNTITLED"]
+        row._typeIcon:SetTexture(LIST_TYPE_ICONS[listData.listType] or LIST_TYPE_ICONS.todo)
+        row.label:SetText(row._titlePlain)
+
         local typeColor = LIST_TYPE_COLORS[listData.listType] or { 0.7, 0.7, 0.7 }
         local typeName = TE:GetListTypeDisplayName(listData.listType)
         local category = listData.category or ""
@@ -350,74 +396,58 @@ function ns.UI.CreateTrackerTab(parent)
         if author and author ~= "" then
             metaRest = category .. " | " .. author
         end
-        local metaPlain = typeName .. " | " .. metaRest
-        metaLabel:SetText(format("|cFF%02x%02x%02x%s|r | %s",
+        row._metaPlain = typeName .. " | " .. metaRest
+        row._meta:SetText(format("|cFF%02x%02x%02x%s|r | %s",
             typeColor[1] * 255, typeColor[2] * 255, typeColor[3] * 255,
             typeName, metaRest))
-        metaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        if row.favoriteBtn then
+            row.favoriteBtn:SetFavorite(listData.favorite == true)
+        end
 
         local done, total = TD:GetListCompletion(listData.id)
         if total > 0 then
-            local progressLabel = OneWoW_GUI:CreateFS(row, 10)
-            progressLabel:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -PAD, PAD)
-            progressLabel:SetText(format("%d/%d", done, total))
-            progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-            local progressBar = OneWoW_GUI:CreateProgressBar(row, {
-                height = 3,
-                min    = 0,
-                max    = total,
-                value  = done,
-            })
-            progressBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", PAD, PAD)
-            progressBar:SetPoint("RIGHT", progressLabel, "LEFT", -PAD, 0)
-            progressBar._text:Hide()
+            row._progressLabel:SetText(format("%d/%d", done, total))
+            row._progressLabel:Show()
+            row._progressBar:Show()
+            row._progressBar:UpdateProgress(done, total)
+            row._progressBar._text:Hide()
+        else
+            row._progressLabel:Hide()
+            row._progressBar:Hide()
         end
 
-        local isSelected = (listData.id == selectedListID)
-        if isSelected then
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        end
-
-        row:SetScript("OnClick", function()
-            selectedListID = listData.id
-            parent.RefreshList()
-            parent.ShowDetail(listData.id)
-        end)
-
-        row:SetScript("OnEnter", function(myself)
-            if listData.id ~= selectedListID then
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-            if titleLabel:IsTruncated() or metaLabel:IsTruncated() then
-                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-                GameTooltip:SetText(listData.title or "Untitled", 1, 1, 1)
-                if metaLabel:IsTruncated() then
-                    GameTooltip:AddLine(metaPlain, 0.8, 0.8, 0.8, true)
-                end
-                GameTooltip:Show()
-            end
-        end)
-
-        row:SetScript("OnLeave", function(myself)
-            if listData.id ~= selectedListID then
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-            GameTooltip:Hide()
-        end)
-
-        return row
+        row:SetActive(rowState and rowState.selected)
+        row._titleTrunc = row.label:IsTruncated()
+        row._metaTrunc = row._meta:IsTruncated()
     end
 
+    listAPI = OneWoW_GUI:CreateVirtualizer(listPanel, {
+        name = "OneWoWTrackersList",
+        rowHeight = LIST_ROW_HEIGHT,
+        numVisibleRows = 16,
+        rowInset = 4,
+        scrollFrame = listScrollFrame,
+        content = listScrollChild,
+        getCount = function()
+            return #visibleLists
+        end,
+        getEntry = function(index)
+            return visibleLists[index]
+        end,
+        onSelect = function(_, entry)
+            if not entry or selectedListID == entry.id then return end
+            selectedListID = entry.id
+            parent.ShowDetail(entry.id)
+        end,
+        createRow = CreateListRow,
+        bindRow = BindListRow,
+        enableKeyboardNav = true,
+        focusCompetitor = searchBox,
+    })
+
     function parent.RefreshList()
-        for _, row in ipairs(listRows) do
-            row:Hide()
-        end
-        wipe(listRows)
+        wipe(visibleLists)
 
         local lists = TD:GetSortedLists(
             filterType ~= "all" and filterType or nil,
@@ -426,7 +456,6 @@ function ns.UI.CreateTrackerTab(parent)
         )
 
         if hideCompleted then
-            local visible = {}
             for _, listData in ipairs(lists) do
                 local skip = false
                 if listData.listType ~= "farmvalue" then
@@ -434,22 +463,16 @@ function ns.UI.CreateTrackerTab(parent)
                     skip = total > 0 and done >= total
                 end
                 if not skip then
-                    tinsert(visible, listData)
+                    tinsert(visibleLists, listData)
                 end
             end
-            lists = visible
+        else
+            for _, listData in ipairs(lists) do
+                tinsert(visibleLists, listData)
+            end
         end
 
-        local yOffset = 0
-        for _, listData in ipairs(lists) do
-            local row = CreateListRow(listData, yOffset)
-            tinsert(listRows, row)
-            yOffset = yOffset - 60
-        end
-
-        listScrollChild:SetHeight(math.max(1, math.abs(yOffset)))
-
-        if #lists == 0 then
+        if #visibleLists == 0 then
             if not listPanel.emptyText then
                 listPanel.emptyText = OneWoW_GUI:CreateFS(listPanel, 12)
                 listPanel.emptyText:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
@@ -462,23 +485,31 @@ function ns.UI.CreateTrackerTab(parent)
             selectedListID = nil
             TE:SetObservedList(nil)
             if ClearDetail then ClearDetail() end
+            listAPI.Refresh()
+            return
+        end
+
+        if listPanel.emptyText then
+            listPanel.emptyText:Hide()
+        end
+
+        local selIdx
+        for i, listData in ipairs(visibleLists) do
+            if listData.id == selectedListID then
+                selIdx = i
+                break
+            end
+        end
+        if not selIdx then
+            selectedListID = visibleLists[1].id
+            listAPI.SetSelectedIndex(1)
+            if parent.ShowDetail then
+                parent.ShowDetail(selectedListID)
+            end
+        elseif listAPI.GetSelectedIndex() ~= selIdx then
+            listAPI.SetSelectedIndex(selIdx)
         else
-            if listPanel.emptyText then
-                listPanel.emptyText:Hide()
-            end
-            local visible = false
-            for _, listData in ipairs(lists) do
-                if listData.id == selectedListID then
-                    visible = true
-                    break
-                end
-            end
-            if not visible then
-                selectedListID = lists[1].id
-                if parent.ShowDetail then
-                    parent.ShowDetail(selectedListID)
-                end
-            end
+            listAPI.Refresh()
         end
     end
 
@@ -634,6 +665,7 @@ function ns.UI.CreateTrackerTab(parent)
             btn:Hide()
         end
         wipe(actionBarButtons)
+        detailProgressBar = nil
         emptyLabel:Show()
         detailTitle:Hide()
         pinBtn:Hide()
@@ -662,7 +694,7 @@ function ns.UI.CreateTrackerTab(parent)
         end
 
         emptyLabel:Hide()
-        detailTitle:SetText(list.title or "Untitled")
+        detailTitle:SetText(list.title or L["TRACKER_UNTITLED"])
         detailTitle:Show()
         RefreshPinIcon(list.pinned)
         pinBtn:Show()
@@ -822,6 +854,7 @@ function ns.UI.CreateTrackerTab(parent)
             progressBar:SetPoint("TOPLEFT", progFrame, "TOPLEFT", 10, -4)
             progressBar:SetPoint("RIGHT", progFrame, "RIGHT", -10, 0)
             progressBar._text:SetText(total > 0 and format("%d / %d", done, total) or "")
+            detailProgressBar = progressBar
 
             yOffset = yOffset - 26
         end
@@ -891,7 +924,7 @@ function ns.UI.CreateTrackerTab(parent)
 
             local secLabel = OneWoW_GUI:CreateFS(secHeader, 12)
             secLabel:SetPoint("LEFT", collapseIcon, "RIGHT", 4, 0)
-            secLabel:SetText(sec.label or "Section")
+            secLabel:SetText(sec.label or L["TRACKER_SECTION_FALLBACK"])
             secLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local secDone, secTotal = TD:GetSectionCompletion(list.id, sec.key)
@@ -912,6 +945,7 @@ function ns.UI.CreateTrackerTab(parent)
             secCount:SetPoint("RIGHT", secHeader, "RIGHT", -8, 0)
             secCount:SetText(secTotal > 0 and format("%d/%d", secDone, secTotal) or "")
             secCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            secHeader._secCount = secCount
             addStepBtn:SetPoint("RIGHT", secCount, "LEFT", -4, 0)
 
             local secEditBtn = OneWoW_GUI:CreateIconButton(secHeader, {
@@ -1060,7 +1094,7 @@ function ns.UI.CreateTrackerTab(parent)
                         checkBtn:SetScript("OnClick", function()
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
-                            parent.ShowDetail(list.id)
+                            parent.RefreshDetailProgress()
                             TE:RefreshAllPinnedWindows()
                         end)
                     else
@@ -1073,7 +1107,12 @@ function ns.UI.CreateTrackerTab(parent)
                 stepLabel:SetPoint("RIGHT", stepEditBtn, "LEFT", -6, 0)
                 stepLabel:SetJustifyH("LEFT")
                 stepLabel:SetWordWrap(false)
-                stepLabel:SetText(step.label or "Step")
+                stepLabel:SetText(step.label or L["TRACKER_STEP_FALLBACK"])
+                stepRow._checkBtn = checkBtn
+                stepRow._stepLabel = stepLabel
+                stepRow._stepProgress = stepProgress
+                stepRow._isOptional = step.optional and true or false
+                stepRow._objChecks = {}
 
                 if step.optional then
                     stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -1115,9 +1154,10 @@ function ns.UI.CreateTrackerTab(parent)
 
                         if obj.type == "manual" then
                             objCheck:SetScript("OnClick", function()
-                                TD:SetObjectiveComplete(list.id, sec.key, step.key, obj.key, not objComplete)
+                                local nowComplete = TD:GetObjectiveProgress(list.id, sec.key, step.key, obj.key)
+                                TD:SetObjectiveComplete(list.id, sec.key, step.key, obj.key, not nowComplete)
                                 parent.RefreshList()
-                                parent.ShowDetail(list.id)
+                                parent.RefreshDetailProgress()
                                 TE:RefreshAllPinnedWindows()
                             end)
                         else
@@ -1136,6 +1176,7 @@ function ns.UI.CreateTrackerTab(parent)
                         else
                             objLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                         end
+                        tinsert(stepRow._objChecks, { check = objCheck, label = objLabel, objKey = obj.key })
 
                         local objH = math.max(18, objLabel:GetStringHeight() + 4)
                         objY = objY - objH
@@ -1206,16 +1247,16 @@ function ns.UI.CreateTrackerTab(parent)
                             local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
                             C_Map.SetUserWaypoint(mapPoint)
                             C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                            print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"], step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                            print(format("%s %s", L["ADDON_CHAT_PREFIX"], format(L["TRACKER_WAYPOINT_SET"], step.label or L["TRACKER_STEP_FALLBACK"], tonumber(step.coordX), tonumber(step.coordY))))
                         elseif not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
-                            parent.ShowDetail(list.id)
+                            parent.RefreshDetailProgress()
                             TE:RefreshAllPinnedWindows()
                         end
                     elseif button == "RightButton" then
                         MenuUtil.CreateContextMenu(stepRow, function(_, rootDescription)
-                            rootDescription:CreateTitle(step.label or "Step")
+                            rootDescription:CreateTitle(step.label or L["TRACKER_STEP_FALLBACK"])
                             rootDescription:CreateButton(EDIT, function()
                                 ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
                                     TE:RebuildIndices()
@@ -1226,10 +1267,10 @@ function ns.UI.CreateTrackerTab(parent)
                             end)
                             if not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                                 rootDescription:CreateDivider()
-                                rootDescription:CreateButton(isComplete and (L["TRACKER_MARK_INCOMPLETE"]) or (L["TRACKER_MARK_COMPLETE"]), function()
+                                rootDescription:CreateButton(stepRow._trackerComplete and (L["TRACKER_MARK_INCOMPLETE"]) or (L["TRACKER_MARK_COMPLETE"]), function()
                                     TD:ToggleStepComplete(list.id, sec.key, step.key)
                                     parent.RefreshList()
-                                    parent.ShowDetail(list.id)
+                                    parent.RefreshDetailProgress()
                                     TE:RefreshAllPinnedWindows()
                                 end)
                             end
@@ -1259,6 +1300,109 @@ function ns.UI.CreateTrackerTab(parent)
         detailScrollChild:SetHeight(math.max(1, math.abs(yOffset) + 20))
         lastDetailLayoutW = detailScrollFrame:GetWidth() or lastDetailLayoutW
         layingOutDetail = false
+    end
+
+    local function ApplyStepRowProgress(row, list)
+        local secKey = row._trackerSectionKey
+        local stepKey = row._trackerStepKey
+        local step = TD:GetStep(list.id, secKey, stepKey)
+        if not step then return false end
+        local sp = TD:GetStepProgress(list.id, secKey, stepKey)
+        local rosterCompleters = step.rosterMode and TD:GetRosterCompleters(list.id, stepKey) or nil
+        local isComplete
+        if step.rosterMode then
+            isComplete = TD:IsRosterCompleter(list.id, stepKey, TD:GetCurrentCharKey())
+        else
+            isComplete = sp.completed or false
+        end
+        local depsMet = TD:AreStepDependenciesMet(list.id, step)
+        row._trackerComplete = isComplete
+
+        if isComplete then
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        elseif not depsMet then
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        else
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        end
+
+        if row._checkBtn and row._checkBtn.SetChecked then
+            row._checkBtn:SetChecked(isComplete)
+        end
+
+        local stepLabel = row._stepLabel
+        if stepLabel then
+            if row._isOptional then
+                stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            elseif isComplete then
+                stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            elseif not depsMet then
+                stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            else
+                stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end
+
+        if row._stepProgress then
+            row._stepProgress:SetText(ns.TrackerEvaluators.FormatStepProgress(
+                step, sp, rosterCompleters and #rosterCompleters or nil))
+        end
+
+        for _, entry in ipairs(row._objChecks or {}) do
+            local objComplete = TD:GetObjectiveProgress(list.id, secKey, stepKey, entry.objKey)
+            if entry.check.SetChecked then
+                entry.check:SetChecked(objComplete)
+            end
+            if objComplete then
+                entry.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                entry.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            end
+        end
+        return true
+    end
+
+    function parent.RefreshDetailProgress()
+        if not selectedListID then return end
+        local list = TD:GetList(selectedListID)
+        if not list then return end
+        if list.listType == "farmvalue" or list.pinnedHideCompleted then
+            parent.ShowDetail(selectedListID)
+            return
+        end
+        for _, sec in ipairs(list.sections or {}) do
+            for _, step in ipairs(sec.steps or {}) do
+                if step.rosterMode then
+                    parent.ShowDetail(selectedListID)
+                    return
+                end
+            end
+        end
+        if not list.pinned then
+            TE:EvaluateList(list.id)
+        end
+        if detailProgressBar then
+            local done, total = TD:GetListCompletion(list.id)
+            detailProgressBar:UpdateProgress(done, math.max(total, 1))
+            detailProgressBar._text:SetText(total > 0 and format("%d / %d", done, total) or "")
+        end
+        for _, header in ipairs(sectionReorderFrames) do
+            if header._trackerKind == "header" and header._secCount then
+                local secDone, secTotal = TD:GetSectionCompletion(list.id, header._trackerSectionKey)
+                header._secCount:SetText(secTotal > 0 and format("%d/%d", secDone, secTotal) or "")
+            end
+        end
+        for _, row in ipairs(stepReorderFrames) do
+            if row._trackerKind == "step" then
+                if not ApplyStepRowProgress(row, list) then
+                    parent.ShowDetail(selectedListID)
+                    return
+                end
+            end
+        end
     end
 
     detailScrollFrame:HookScript("OnSizeChanged", function(myself, w)
@@ -1305,15 +1449,16 @@ function ns.UI.CreateTrackerTab(parent)
     end)
 
     TE:RegisterCallback("OnScanComplete", function()
+        parent.RefreshList()
         if selectedListID then
-            parent.ShowDetail(selectedListID)
+            parent.RefreshDetailProgress()
         end
     end)
 
     TE:RegisterCallback("OnProgressChanged", function()
         parent.RefreshList()
         if selectedListID then
-            parent.ShowDetail(selectedListID)
+            parent.RefreshDetailProgress()
         end
     end)
 

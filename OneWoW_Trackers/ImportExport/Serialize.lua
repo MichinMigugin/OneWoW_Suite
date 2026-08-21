@@ -230,7 +230,7 @@ function TD:NormalizeAllLists()
                 wasBroken = true
             end
             if type(list.title) ~= "string" or list.title == "" then
-                list.title = "Untitled List"
+                list.title = ns.L["TRACKER_UNTITLED_LIST"]
                 wasBroken = true
             end
             list.category = TD:NormalizeCategory(list.category)

@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -14,8 +14,8 @@ local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 local DEFAULT_REPEAT_HOURS = 24
-local LIST_FORM_HEIGHT = 340
-local LIST_FORM_HEIGHT_REPEAT = 390
+local LIST_FORM_HEIGHT = 376
+local LIST_FORM_HEIGHT_REPEAT = 426
 
 local function MakeLabel(parent, text, x, y)
     local fs = OneWoW_GUI:CreateFS(parent, 10)
@@ -26,7 +26,7 @@ local function MakeLabel(parent, text, x, y)
 end
 
 local function FillMsg(key)
-    print(ns.L["ADDON_CHAT_PREFIX"] .. " " .. (OneWoW.Locale:GetOptional(ADDON_NAME, key) or ""))
+    print(L["ADDON_CHAT_PREFIX"] .. " " .. L[key])
 end
 
 local function GetTargetCreatureID()
@@ -47,7 +47,7 @@ end
 local function UpdateTitleFromTarget(nameBox)
     local name = UnitName("target")
     if not name or OneWoW.Restriction.IsSecret(name) then FillMsg("TRACKER_FILL_NO_TARGET"); return end
-    nameBox:SetText(format(ns.L["TRACKER_TALK_TO_FORMAT"], name))
+    nameBox:SetText(format(L["TRACKER_TALK_TO_FORMAT"], name))
 end
 
 local function FillCoordsFromPosition(card)
@@ -232,8 +232,8 @@ end
 local QUICK_START = {
     {
         key = "weekly",
-        title = "Weekly Checklist",
-        desc = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets on your region's weekly reset day.",
+        titleKey = "TRACKER_QS_WEEKLY_TITLE",
+        descKey = "TRACKER_QS_WEEKLY_DESC",
         icon = "Interface\\Icons\\Achievement_General_100kQuests",
         listType = "weekly",
         category = "General",
@@ -241,8 +241,8 @@ local QUICK_START = {
     },
     {
         key = "daily",
-        title = "Daily Tasks",
-        desc = "Daily chores that reset every day. World quests, daily hubs, profession cooldowns.",
+        titleKey = "TRACKER_QS_DAILY_TITLE",
+        descKey = "TRACKER_QS_DAILY_DESC",
         icon = "Interface\\Icons\\Spell_Holy_BorrowedTime",
         listType = "daily",
         category = "General",
@@ -250,8 +250,8 @@ local QUICK_START = {
     },
     {
         key = "todo",
-        title = "To-Do List",
-        desc = "A simple checklist. Check things off as you go. Never resets.",
+        titleKey = "TRACKER_QS_TODO_TITLE",
+        descKey = "TRACKER_QS_TODO_DESC",
         icon = "Interface\\Icons\\INV_Misc_Note_01",
         listType = "todo",
         category = "General",
@@ -259,8 +259,8 @@ local QUICK_START = {
     },
     {
         key = "repeating",
-        title = "Repeating",
-        desc = "Tasks that clear after a custom number of hours. Set the interval when you create the list.",
+        titleKey = "TRACKER_LIST_REPEATING",
+        descKey = "TRACKER_QS_REPEATING_DESC",
         icon = "Interface\\Icons\\INV_Misc_PocketWatch_01",
         listType = "repeating",
         category = "General",
@@ -268,8 +268,8 @@ local QUICK_START = {
     },
     {
         key = "farmvalue",
-        title = "Farm value (pin while farming)",
-        desc = "Watch listed items or all tradeable bag loot with stack values from OneWoW (AH / optional TSM). Pin the window while you farm.",
+        titleKey = "TRACKER_QS_FARMVALUE_TITLE",
+        descKey = "TRACKER_QS_FARMVALUE_DESC",
         icon = "Interface\\Icons\\INV_Misc_Coin_01",
         listType = "farmvalue",
         category = "Farming",
@@ -277,8 +277,8 @@ local QUICK_START = {
     },
     {
         key = "vault",
-        title = "Great Vault Tracker",
-        desc = "Track your raid, dungeon, and world content progress for the weekly vault.",
+        titleKey = "TRACKER_QS_VAULT_TITLE",
+        descKey = "TRACKER_QS_VAULT_DESC",
         atlas = "greatVault-whole-normal",
         listType = "weekly",
         category = "Gearing",
@@ -286,8 +286,8 @@ local QUICK_START = {
     },
     {
         key = "professions",
-        title = "Profession Tracker",
-        desc = "Track skill, concentration, knowledge, and weekly tasks for your professions.",
+        titleKey = "TRACKER_QS_PROF_TITLE",
+        descKey = "TRACKER_QS_PROF_DESC",
         icon = "Interface\\Icons\\Trade_BlackSmithing",
         listType = "weekly",
         category = "Profession",
@@ -295,8 +295,8 @@ local QUICK_START = {
     },
     {
         key = "renown",
-        title = "Renown Tracker",
-        desc = "Track your renown levels with all Midnight factions.",
+        titleKey = "TRACKER_QS_RENOWN_TITLE",
+        descKey = "TRACKER_QS_RENOWN_DESC",
         icon = "Interface\\Icons\\Achievement_Reputation_08",
         listType = "weekly",
         category = "Reputation",
@@ -304,8 +304,8 @@ local QUICK_START = {
     },
     {
         key = "guide",
-        title = "Custom Guide",
-        desc = "Build a step-by-step guide with auto-tracking objectives. Quests, locations, NPCs, items, and more.",
+        titleKey = "TRACKER_QS_GUIDE_TITLE",
+        descKey = "TRACKER_QS_GUIDE_DESC",
         icon = "Interface\\Icons\\INV_Misc_Book_09",
         listType = "guide",
         category = "General",
@@ -313,8 +313,8 @@ local QUICK_START = {
     },
     {
         key = "blank",
-        title = "Blank List",
-        desc = "Start from scratch. Pick your own type and add sections and steps manually.",
+        titleKey = "TRACKER_QS_BLANK_TITLE",
+        descKey = "TRACKER_QS_BLANK_DESC",
         icon = "Interface\\Icons\\INV_Scroll_03",
         listType = "todo",
         category = "General",
@@ -325,174 +325,174 @@ local QUICK_START = {
 local STEP_CATEGORIES = {
     {
         key = "checkbox",
-        title = "Checkbox",
-        desc = "A simple task you check off manually.",
+        titleKey = "TRACKER_SC_CHECKBOX_TITLE",
+        descKey = "TRACKER_SC_CHECKBOX_DESC",
         trackType = "manual",
         fields = {},
     },
     {
         key = "quest",
-        title = "Complete a Quest",
-        desc = "Auto-completes when you finish a quest. Enter the Quest ID (find it on Wowhead in the URL).",
+        titleKey = "TRACKER_SC_QUEST_TITLE",
+        descKey = "TRACKER_SC_QUEST_DESC",
         trackType = "quest",
-        fields = { { key = "questID", label = "Quest ID", hint = "e.g. 86387", width = 160 } },
+        fields = { { key = "questID", labelKey = "TRACKER_FL_QUEST_ID", hintKey = "TRACKER_FH_QUEST_ID", width = 160 } },
     },
     {
         key = "quest_pool",
-        title = "Complete Quest(s) from a Pool",
-        desc = "Auto-completes when you finish N quests from a list of possible IDs. Great for rotating weeklies where one of several quests is active.",
+        titleKey = "TRACKER_SC_QUEST_POOL_TITLE",
+        descKey = "TRACKER_SC_QUEST_POOL_DESC",
         trackType = "quest_pool",
         fields = {
-            { key = "questIDs", label = "Quest IDs (comma-separated)", hint = "e.g. 93889, 91966", width = 320, isList = true, maxLetters = 400 },
-            { key = "pick",     label = "How many to complete?",       hint = "e.g. 1",             width = 80,  default = "1" },
+            { key = "questIDs", labelKey = "TRACKER_FL_QUEST_IDS", hintKey = "TRACKER_FH_QUEST_IDS", width = 320, isList = true, maxLetters = 400 },
+            { key = "pick",     labelKey = "TRACKER_FL_PICK",      hintKey = "TRACKER_FH_PICK",      width = 80,  default = "1" },
         },
     },
     {
         key = "quest_pool_account",
-        title = "Complete Quest(s) from a Pool (Account)",
-        desc = "Like Quest Pool, but counts quests completed on any character on your account.",
+        titleKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_TITLE",
+        descKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_DESC",
         trackType = "quest_pool_account",
         fields = {
-            { key = "questIDs", label = "Quest IDs (comma-separated)", hint = "e.g. 93889, 91966", width = 320, isList = true, maxLetters = 400 },
-            { key = "pick",     label = "How many to complete?",       hint = "e.g. 1",             width = 80,  default = "1" },
+            { key = "questIDs", labelKey = "TRACKER_FL_QUEST_IDS", hintKey = "TRACKER_FH_QUEST_IDS", width = 320, isList = true, maxLetters = 400 },
+            { key = "pick",     labelKey = "TRACKER_FL_PICK",      hintKey = "TRACKER_FH_PICK",      width = 80,  default = "1" },
         },
     },
     {
         key = "item",
-        title = "Collect Items",
-        desc = "Tracks how many of an item you have in your bags. Great for farming.",
+        titleKey = "TRACKER_SC_ITEM_TITLE",
+        descKey = "TRACKER_SC_ITEM_DESC",
         trackType = "item",
         fields = {
-            { key = "itemID", label = "Item ID", hint = "e.g. 211515", width = 160 },
-            { key = "count", label = "How Many?", hint = "e.g. 10", width = 80 },
+            { key = "itemID", labelKey = "TRACKER_FL_ITEM_ID", hintKey = "TRACKER_FH_ITEM_ID", width = 160 },
+            { key = "count",  labelKey = "TRACKER_FL_COUNT",   hintKey = "TRACKER_FH_COUNT",   width = 80 },
         },
     },
     {
         key = "currency",
-        title = "Earn Currency",
-        desc = "Tracks a currency amount. Valor, Resonance Crystals, etc.",
+        titleKey = "TRACKER_SC_CURRENCY_TITLE",
+        descKey = "TRACKER_SC_CURRENCY_DESC",
         trackType = "currency",
         fields = {
-            { key = "currencyID", label = "Currency ID", hint = "e.g. 3220", width = 160 },
-            { key = "amount", label = "Target Amount", hint = "e.g. 500", width = 100 },
+            { key = "currencyID", labelKey = "TRACKER_FL_CURRENCY_ID", hintKey = "TRACKER_FH_CURRENCY_ID", width = 160 },
+            { key = "amount",     labelKey = "TRACKER_FL_AMOUNT",      hintKey = "TRACKER_FH_AMOUNT",      width = 100 },
         },
     },
     {
         key = "achievement",
-        title = "Earn Achievement",
-        desc = "Auto-completes when you earn a specific achievement.",
+        titleKey = "TRACKER_SC_ACHIEVEMENT_TITLE",
+        descKey = "TRACKER_SC_ACHIEVEMENT_DESC",
         trackType = "achievement",
-        fields = { { key = "achievementID", label = "Achievement ID", hint = "e.g. 19559", width = 160 } },
+        fields = { { key = "achievementID", labelKey = "TRACKER_FL_ACHIEVEMENT_ID", hintKey = "TRACKER_FH_ACHIEVEMENT_ID", width = 160 } },
     },
     {
         key = "coordinates",
-        title = "Visit a Location",
-        desc = "Auto-completes when you get close to specific coordinates. Great for collection routes.",
+        titleKey = "TRACKER_SC_COORD_TITLE",
+        descKey = "TRACKER_SC_COORD_DESC",
         trackType = "coordinates",
         fields = {
-            { key = "mapID", label = "Map ID", hint = "e.g. 2369", width = 100 },
-            { key = "x", label = "X", hint = "0-100", width = 60 },
-            { key = "y", label = "Y", hint = "0-100", width = 60 },
-            { key = "radius", label = "Range", hint = "15", width = 50, default = "15" },
+            { key = "mapID",  labelKey = "TRACKER_FL_MAP_ID", hintKey = "TRACKER_FH_MAP_ID", width = 100 },
+            { key = "x",      labelKey = "TRACKER_FL_X",      hintKey = "TRACKER_FH_XY",     width = 60 },
+            { key = "y",      labelKey = "TRACKER_FL_Y",      hintKey = "TRACKER_FH_XY",     width = 60 },
+            { key = "radius", labelKey = "TRACKER_FL_RANGE",  hintKey = "TRACKER_FH_RANGE",  width = 50, default = "15" },
         },
         fillKey = "TRACKER_FILL_FROM_POSITION",
         onFill = function(card) FillCoordsFromPosition(card) end,
     },
     {
         key = "npc",
-        title = "Talk to an NPC",
-        desc = "Auto-completes when you open a dialog with a specific NPC.",
+        titleKey = "TRACKER_SC_NPC_TITLE",
+        descKey = "TRACKER_SC_NPC_DESC",
         trackType = "npc_interact",
-        fields = { { key = "npcID", label = "NPC ID", hint = "e.g. 224561", width = 160 } },
+        fields = { { key = "npcID", labelKey = "TRACKER_FL_NPC_ID", hintKey = "TRACKER_FH_NPC_ID", width = 160 } },
         fillKey = "TRACKER_FILL_FROM_TARGET",
         onFill = function(card) FillCreatureFromTarget(card, "npcID") end,
     },
     {
         key = "enter_instance",
-        title = "Enter a Dungeon/Raid",
-        desc = "Auto-completes when you enter a specific dungeon or raid. Use the button while inside to fill the instance ID.",
+        titleKey = "TRACKER_SC_INSTANCE_TITLE",
+        descKey = "TRACKER_SC_INSTANCE_DESC",
         trackType = "enter_instance",
-        fields = { { key = "instanceID", label = "Instance ID", hint = "e.g. 2769", width = 160 } },
+        fields = { { key = "instanceID", labelKey = "TRACKER_FL_INSTANCE_ID", hintKey = "TRACKER_FH_INSTANCE_ID", width = 160 } },
         fillKey = "TRACKER_FILL_FROM_INSTANCE",
         onFill = function(card) FillInstanceFromCurrent(card) end,
     },
     {
         key = "kill_creature",
-        title = "Kill a Rare or Boss",
-        desc = "Auto-completes when your group kills a specific creature. Target the creature and use the button to fill its ID.",
+        titleKey = "TRACKER_SC_KILL_TITLE",
+        descKey = "TRACKER_SC_KILL_DESC",
         trackType = "kill_creature",
-        fields = { { key = "creatureID", label = "Creature ID", hint = "e.g. 224562", width = 160 } },
+        fields = { { key = "creatureID", labelKey = "TRACKER_FL_CREATURE_ID", hintKey = "TRACKER_FH_CREATURE_ID", width = 160 } },
         fillKey = "TRACKER_FILL_FROM_TARGET",
         onFill = function(card) FillCreatureFromTarget(card, "creatureID") end,
     },
     {
         key = "mount",
-        title = "Collect a Mount",
-        desc = "Auto-completes when you own a specific mount.",
+        titleKey = "TRACKER_SC_MOUNT_TITLE",
+        descKey = "TRACKER_SC_MOUNT_DESC",
         trackType = "mount",
-        fields = { { key = "mountID", label = "Mount ID", hint = "e.g. 2240", width = 160 } },
+        fields = { { key = "mountID", labelKey = "TRACKER_FL_MOUNT_ID", hintKey = "TRACKER_FH_MOUNT_ID", width = 160 } },
     },
     {
         key = "pet",
-        title = "Collect a Battle Pet",
-        desc = "Auto-completes when you own a specific pet species.",
+        titleKey = "TRACKER_SC_PET_TITLE",
+        descKey = "TRACKER_SC_PET_DESC",
         trackType = "pet",
-        fields = { { key = "speciesID", label = "Species ID", hint = "e.g. 3541", width = 160 } },
+        fields = { { key = "speciesID", labelKey = "TRACKER_FL_SPECIES_ID", hintKey = "TRACKER_FH_SPECIES_ID", width = 160 } },
     },
     {
         key = "toy",
-        title = "Collect a Toy",
-        desc = "Auto-completes when you own a specific toy.",
+        titleKey = "TRACKER_SC_TOY_TITLE",
+        descKey = "TRACKER_SC_TOY_DESC",
         trackType = "toy",
-        fields = { { key = "itemID", label = "Toy Item ID", hint = "e.g. 224562", width = 160 } },
+        fields = { { key = "itemID", labelKey = "TRACKER_FL_TOY_ITEM_ID", hintKey = "TRACKER_FH_TOY_ITEM_ID", width = 160 } },
     },
     {
         key = "transmog",
-        title = "Collect Transmog",
-        desc = "Auto-completes when you learn a specific appearance.",
+        titleKey = "TRACKER_SC_TRANSMOG_TITLE",
+        descKey = "TRACKER_SC_TRANSMOG_DESC",
         trackType = "transmog",
-        fields = { { key = "itemModifiedAppearanceID", label = "Appearance ID", hint = "from Wowhead", width = 160 } },
+        fields = { { key = "itemModifiedAppearanceID", labelKey = "TRACKER_FL_APPEARANCE_ID", hintKey = "TRACKER_FH_APPEARANCE_ID", width = 160 } },
     },
     {
         key = "reputation",
-        title = "Reach Reputation",
-        desc = "Tracks your standing with a faction.",
+        titleKey = "TRACKER_SC_REP_TITLE",
+        descKey = "TRACKER_SC_REP_DESC",
         trackType = "reputation",
         fields = {
-            { key = "factionID", label = "Faction ID", hint = "e.g. 2710", width = 160 },
-            { key = "standing", label = "Standing (1-8)", hint = "e.g. 8", width = 60 },
+            { key = "factionID", labelKey = "TRACKER_FL_FACTION_ID", hintKey = "TRACKER_FH_FACTION_ID", width = 160 },
+            { key = "standing",  labelKey = "TRACKER_FL_STANDING",    hintKey = "TRACKER_FH_STANDING",    width = 60 },
         },
     },
     {
         key = "renown",
-        title = "Reach Renown Level",
-        desc = "Tracks renown level with a major faction.",
+        titleKey = "TRACKER_SC_RENOWN_TITLE",
+        descKey = "TRACKER_SC_RENOWN_DESC",
         trackType = "renown",
         fields = {
-            { key = "factionID", label = "Faction ID", hint = "e.g. 2710", width = 160 },
-            { key = "level", label = "Renown Level", hint = "e.g. 20", width = 60 },
+            { key = "factionID", labelKey = "TRACKER_FL_FACTION_ID",     hintKey = "TRACKER_FH_FACTION_ID",     width = 160 },
+            { key = "level",     labelKey = "TRACKER_FL_RENOWN_LEVEL",   hintKey = "TRACKER_FH_RENOWN_LEVEL",   width = 60 },
         },
     },
     {
         key = "level",
-        title = "Reach Player Level",
-        desc = "Auto-completes when you reach a specific character level.",
+        titleKey = "TRACKER_SC_LEVEL_TITLE",
+        descKey = "TRACKER_SC_LEVEL_DESC",
         trackType = "level",
-        fields = { { key = "level", label = "Level", hint = "e.g. 80", width = 60 } },
+        fields = { { key = "level", labelKey = "TRACKER_FL_LEVEL", hintKey = "TRACKER_FH_LEVEL", width = 60 } },
     },
     {
         key = "ilvl",
-        title = "Reach Item Level",
-        desc = "Auto-completes when your average equipped item level reaches the target.",
+        titleKey = "TRACKER_SC_ILVL_TITLE",
+        descKey = "TRACKER_SC_ILVL_DESC",
         trackType = "ilvl",
-        fields = { { key = "ilvl", label = "Item Level", hint = "e.g. 639", width = 80 } },
+        fields = { { key = "ilvl", labelKey = "TRACKER_FL_ILVL", hintKey = "TRACKER_FH_ILVL", width = 80 } },
     },
     {
         key = "spell_known",
-        title = "Learn a Spell",
-        desc = "Auto-completes when you know a specific spell or ability.",
+        titleKey = "TRACKER_SC_SPELL_TITLE",
+        descKey = "TRACKER_SC_SPELL_DESC",
         trackType = "spell_known",
-        fields = { { key = "spellID", label = "Spell ID", hint = "e.g. 1459", width = 160 } },
+        fields = { { key = "spellID", labelKey = "TRACKER_FL_SPELL_ID", hintKey = "TRACKER_FH_SPELL_ID", width = 160 } },
     },
 }
 
@@ -504,7 +504,7 @@ function TE_UI:ShowNewListDialog(callback)
 
     local dialog = CreateDialog({
         name = "TrackerNewListWizard",
-        title = "Create New Tracker",
+        title = L["TRACKER_NEW_LIST"],
         width = 700,
         height = 600,
         destroyOnClose = true,
@@ -517,12 +517,12 @@ function TE_UI:ShowNewListDialog(callback)
 
     local headerLabel = OneWoW_GUI:CreateFS(content, 12)
     headerLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
-    headerLabel:SetText("What do you want to track?")
+    headerLabel:SetText(L["TRACKER_WIZARD_HEADER"])
     headerLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     local descLabel = OneWoW_GUI:CreateFS(content, 10)
     descLabel:SetPoint("TOPLEFT", headerLabel, "BOTTOMLEFT", 0, -4)
-    descLabel:SetText("Pick a template to get started quickly, or create a blank list.")
+    descLabel:SetText(L["TRACKER_WIZARD_DESC"])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(content, {})
@@ -554,7 +554,7 @@ function TE_UI:ShowNewListDialog(callback)
 
         local titleFS = OneWoW_GUI:CreateFS(card, 12)
         titleFS:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -4)
-        titleFS:SetText(qs.title)
+        titleFS:SetText(L[qs.titleKey])
         titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local descFS = OneWoW_GUI:CreateFS(card, 10)
@@ -562,7 +562,7 @@ function TE_UI:ShowNewListDialog(callback)
         descFS:SetPoint("RIGHT", card, "RIGHT", -12, 0)
         descFS:SetJustifyH("LEFT")
         descFS:SetWordWrap(true)
-        descFS:SetText(qs.desc)
+        descFS:SetText(L[qs.descKey])
         descFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         card:SetScript("OnEnter", function(myself)
@@ -591,11 +591,11 @@ function TE_UI:ShowNewListDialog(callback)
                 end
             else
                 local list = TD:CreateList({
-                    title = qs.title,
+                    title = L[qs.titleKey],
                     listType = qs.listType,
                     category = qs.category,
                 })
-                TD:AddSection(list.id, { label = "Tasks" })
+                TD:AddSection(list.id, { label = L["TRACKER_DEFAULT_SECTION"] })
                 dialog:Hide(); dialog:SetParent(nil)
                 if callback then callback(list) end
             end
@@ -620,12 +620,12 @@ function TE_UI:ShowNewListDialog(callback)
 
     local impTitle = OneWoW_GUI:CreateFS(importCard, 12)
     impTitle:SetPoint("TOPLEFT", impIcon, "TOPRIGHT", 10, -4)
-    impTitle:SetText("Import from Text")
+    impTitle:SetText(L["TRACKER_QS_IMPORT_TITLE"])
     impTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local impDesc = OneWoW_GUI:CreateFS(importCard, 10)
     impDesc:SetPoint("TOPLEFT", impTitle, "BOTTOMLEFT", 0, -2)
-    impDesc:SetText("Paste an exported list or guide markup shared by another player.")
+    impDesc:SetText(L["TRACKER_QS_IMPORT_DESC"])
     impDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     importCard:SetScript("OnEnter", function(myself)
@@ -654,16 +654,16 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
 
     local dialog = CreateDialog({
         name = "TrackerCustomListForm",
-        title = "Create Custom List",
+        title = L["TRACKER_CUSTOM_LIST_TITLE"],
         width = 480,
         height = LIST_FORM_HEIGHT,
         destroyOnClose = true,
         buttons = {
             {
-                text = "Create",
+                text = L["TRACKER_CREATE"],
                 onClick = function(frame)
                     local title = strtrim(frame._titleBox:GetText() or "")
-                    if title == "" then title = "My List" end
+                    if title == "" then title = L["TRACKER_TITLE_PLACEHOLDER"] end
                     local listType = frame._typeDD:GetValue() or defaultType or "todo"
                     local opts = {
                         title = title,
@@ -676,7 +676,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
                         opts.resetInterval = RepeatSecondsFromHoursText(frame._hoursBox:GetText())
                     end
                     local list = TD:CreateList(opts)
-                    TD:AddSection(list.id, { label = "Tasks" })
+                    TD:AddSection(list.id, { label = L["TRACKER_DEFAULT_SECTION"] })
                     frame:Hide(); frame:SetParent(nil)
                     if callback then callback(list) end
                 end,
@@ -691,14 +691,14 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     local content = dialog.content
     local yOfs = -10
 
-    MakeLabel(content, "Title:", 10, yOfs)
+    MakeLabel(content, L["TRACKER_TITLE_LABEL"], 10, yOfs)
     yOfs = yOfs - 16
-    local titleBox = OneWoW_GUI:CreateEditBox(content, { width = 440, height = 26, placeholderText = "My List..." })
+    local titleBox = OneWoW_GUI:CreateEditBox(content, { width = 440, height = 26, placeholderText = L["TRACKER_TITLE_PLACEHOLDER"] })
     titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
     dialog._titleBox = titleBox
     yOfs = yOfs - 36
 
-    MakeLabel(content, "Description (optional):", 10, yOfs)
+    MakeLabel(content, L["TRACKER_DESCRIPTION_OPTIONAL"], 10, yOfs)
     yOfs = yOfs - 16
     local descContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
     descContainer:ClearAllPoints()
@@ -710,9 +710,9 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     dialog._descBox = descBox
     yOfs = yOfs - 60
 
-    MakeLabel(content, "Type:", 10, yOfs)
+    local typeLabel = MakeLabel(content, L["TRACKER_LIST_TYPE_LABEL"], 10, yOfs)
     local typeDD = CreateDropdown(content, 180, 26)
-    typeDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
+    typeDD:SetPoint("LEFT", typeLabel, "RIGHT", 8, 0)
     local typeOpts = {}
     for _, lt in ipairs(TD:GetListTypes()) do
         tinsert(typeOpts, { text = TE:GetListTypeDisplayName(lt), value = lt })
@@ -720,10 +720,11 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     typeDD:SetOptions(typeOpts)
     typeDD:SetSelected(defaultType or "todo")
     dialog._typeDD = typeDD
+    yOfs = yOfs - 36
 
-    MakeLabel(content, "Category:", 260, yOfs)
-    local catDD = CreateDropdown(content, 140, 26)
-    catDD:SetPoint("TOPLEFT", content, "TOPLEFT", 330, yOfs)
+    local catLabel = MakeLabel(content, L["TRACKER_CATEGORY_LABEL"], 10, yOfs)
+    local catDD = CreateDropdown(content, 180, 26)
+    catDD:SetPoint("LEFT", catLabel, "RIGHT", 8, 0)
     local catOpts = {}
     for _, cat in ipairs(TD:GetCategories()) do
         tinsert(catOpts, { text = cat, value = cat })
@@ -754,13 +755,13 @@ function TE_UI:ShowProfessionPicker(callback)
 
     local dialog = CreateDialog({
         name = "TrackerProfPicker",
-        title = "Pick Your Professions",
+        title = L["TRACKER_PROF_PICKER_TITLE"],
         width = 400,
         height = 460,
         destroyOnClose = true,
         buttons = {
             {
-                text = "Create Tracker",
+                text = L["TRACKER_CREATE"],
                 onClick = function(frame)
                     local profList = {}
                     for name in pairs(frame._selectedProfs or {}) do
@@ -787,7 +788,7 @@ function TE_UI:ShowProfessionPicker(callback)
 
     local hintLabel = OneWoW_GUI:CreateFS(content, 10)
     hintLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
-    hintLabel:SetText("Select the professions you want to track. Each will get its own section with skill, concentration, knowledge, and weekly tasks.")
+    hintLabel:SetText(L["TRACKER_PROF_PICKER_HINT"])
     hintLabel:SetPoint("RIGHT", content, "RIGHT", -10, 0)
     hintLabel:SetJustifyH("LEFT")
     hintLabel:SetWordWrap(true)
@@ -822,7 +823,7 @@ function TE_UI:ShowListEditor(listID, callback)
 
     local dialog = CreateDialog({
         name = "TrackerEditListDialog",
-        title = "Edit List",
+        title = L["TRACKER_EDIT_LIST"],
         width = 480,
         height = LIST_FORM_HEIGHT,
         destroyOnClose = true,
@@ -832,7 +833,7 @@ function TE_UI:ShowListEditor(listID, callback)
                 onClick = function(frame)
                     local listType = frame._typeDD:GetValue() or "todo"
                     local changes = {
-                        title = strtrim(frame._titleBox:GetText() or "Untitled"),
+                        title = strtrim(frame._titleBox:GetText() or L["TRACKER_UNTITLED"]),
                         description = strtrim(frame._descBox:GetText() or ""),
                         listType = listType,
                         category = frame._catDD:GetValue() or "General",
@@ -856,7 +857,7 @@ function TE_UI:ShowListEditor(listID, callback)
     local content = dialog.content
     local yOfs = -10
 
-    MakeLabel(content, "Title:", 10, yOfs)
+    MakeLabel(content, L["TRACKER_TITLE_LABEL"], 10, yOfs)
     yOfs = yOfs - 16
     local titleBox = OneWoW_GUI:CreateEditBox(content, { width = 440, height = 26 })
     titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
@@ -864,7 +865,7 @@ function TE_UI:ShowListEditor(listID, callback)
     dialog._titleBox = titleBox
     yOfs = yOfs - 36
 
-    MakeLabel(content, "Description:", 10, yOfs)
+    MakeLabel(content, L["TRACKER_DESCRIPTION_LABEL"], 10, yOfs)
     yOfs = yOfs - 16
     local descContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
     descContainer:ClearAllPoints()
@@ -877,9 +878,9 @@ function TE_UI:ShowListEditor(listID, callback)
     dialog._descBox = descBox
     yOfs = yOfs - 60
 
-    MakeLabel(content, "Type:", 10, yOfs)
+    local typeLabel = MakeLabel(content, L["TRACKER_LIST_TYPE_LABEL"], 10, yOfs)
     local typeDD = CreateDropdown(content, 180, 26)
-    typeDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
+    typeDD:SetPoint("LEFT", typeLabel, "RIGHT", 8, 0)
     local typeOpts = {}
     for _, lt in ipairs(TD:GetListTypes()) do
         tinsert(typeOpts, { text = TE:GetListTypeDisplayName(lt), value = lt })
@@ -887,10 +888,11 @@ function TE_UI:ShowListEditor(listID, callback)
     typeDD:SetOptions(typeOpts)
     typeDD:SetSelected(list.listType or "todo")
     dialog._typeDD = typeDD
+    yOfs = yOfs - 36
 
-    MakeLabel(content, "Category:", 260, yOfs)
-    local catDD = CreateDropdown(content, 140, 26)
-    catDD:SetPoint("TOPLEFT", content, "TOPLEFT", 330, yOfs)
+    local catLabel = MakeLabel(content, L["TRACKER_CATEGORY_LABEL"], 10, yOfs)
+    local catDD = CreateDropdown(content, 180, 26)
+    catDD:SetPoint("LEFT", catLabel, "RIGHT", 8, 0)
     local catOpts = {}
     for _, cat in ipairs(TD:GetCategories()) do
         tinsert(catOpts, { text = cat, value = cat })
@@ -925,7 +927,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
 
     local dialog = CreateDialog({
         name = "TrackerSectionDialog",
-        title = isEdit and "Edit Section" or "Add Section",
+        title = isEdit and L["TRACKER_EDIT_SECTION"] or L["TRACKER_ADD_SECTION"],
         width = 400,
         height = 200,
         destroyOnClose = true,
@@ -934,7 +936,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
                 text = SAVE,
                 onClick = function(frame)
                     local name = strtrim(frame._nameBox:GetText() or "")
-                    if name == "" then name = "Section" end
+                    if name == "" then name = L["TRACKER_SECTION_FALLBACK"] end
                     local resetVal = frame._resetDD:GetValue()
                     local resetOverride = (resetVal and resetVal ~= "none") and resetVal or nil
 
@@ -957,15 +959,15 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     local content = dialog.content
     local yOfs = -10
 
-    MakeLabel(content, "Section Name:", 10, yOfs)
+    MakeLabel(content, L["TRACKER_SECTION_NAME"], 10, yOfs)
     yOfs = yOfs - 16
-    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 360, height = 26, placeholderText = "e.g. Weekly Quests" })
+    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 360, height = 26, placeholderText = L["TRACKER_SECTION_NAME_PLACEHOLDER"] })
     nameBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
     if existing then nameBox:SetText(existing.label or "") end
     dialog._nameBox = nameBox
     yOfs = yOfs - 36
 
-    MakeLabel(content, "Reset:", 10, yOfs)
+    MakeLabel(content, L["TRACKER_RESET_LABEL"], 10, yOfs)
     local resetDD = CreateDropdown(content, 220, 26)
     resetDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
     resetDD:SetOptions({
@@ -990,7 +992,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
     local dialog = CreateDialog({
         name = "TrackerStepWizard",
-        title = isEdit and "Edit Step" or "Add Step",
+        title = isEdit and L["TRACKER_EDIT_STEP"] or L["TRACKER_ADD_STEP"],
         width = 650,
         height = 720,
         destroyOnClose = true,
@@ -1005,7 +1007,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                         return
                     end
                     local stepName = strtrim(frame._nameBox:GetText() or "")
-                    if stepName == "" then stepName = existing and existing.label or "New Step" end
+                    if stepName == "" then stepName = existing and existing.label or L["TRACKER_NEW_STEP"] end
                     local resetVal3 = frame._resetDD:GetValue()
                     local changes = {
                         label = stepName,
@@ -1034,10 +1036,10 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
     local nameLabel = OneWoW_GUI:CreateFS(content, 10)
     nameLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
-    nameLabel:SetText("Step Name:")
+    nameLabel:SetText(L["TRACKER_STEP_LABEL"])
     nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 610, height = 26, placeholderText = "e.g. Kill 10 Spiders, Visit the Tavern, Complete quest..." })
+    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 610, height = 26, placeholderText = L["TRACKER_STEP_NAME_PLACEHOLDER"] })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -2)
     if existing then nameBox:SetText(existing.label or "") end
     dialog._nameBox = nameBox
@@ -1098,7 +1100,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
     local typeHeader = OneWoW_GUI:CreateFS(content, 12)
     typeHeader:SetPoint("TOPLEFT", notesContainer, "BOTTOMLEFT", 0, -10)
-    typeHeader:SetText("How should this step be tracked?")
+    typeHeader:SetText(L["TRACKER_STEP_TRACK_HEADER"])
     typeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(content, {})
@@ -1152,7 +1154,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
         local titleFS = OneWoW_GUI:CreateFS(card, 12)
         titleFS:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -6)
-        titleFS:SetText(cat.title)
+        titleFS:SetText(L[cat.titleKey])
         if isActive then
             titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
@@ -1164,7 +1166,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         descFS:SetPoint("RIGHT", card, "RIGHT", -10, 0)
         descFS:SetJustifyH("LEFT")
         descFS:SetWordWrap(true)
-        descFS:SetText(cat.desc)
+        descFS:SetText(L[cat.descKey])
         descFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local descHeight = descFS:GetStringHeight() or 14
@@ -1182,20 +1184,20 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             fieldRow:SetHeight(30)
             card._fieldRow = fieldRow
 
-            local saveFieldBtn = OneWoW_GUI:CreateFitTextButton(card, { text = isEdit and "Save" or "Add Step", height = 22 })
+            local saveFieldBtn = OneWoW_GUI:CreateFitTextButton(card, { text = isEdit and SAVE or L["TRACKER_ADD_STEP"], height = 22 })
             card._saveFieldBtn = saveFieldBtn
 
             local fx = 0
             for _, field in ipairs(cat.fields) do
                 local flbl = OneWoW_GUI:CreateFS(fieldRow, 10)
                 flbl:SetPoint("TOPLEFT", fieldRow, "TOPLEFT", fx, 0)
-                flbl:SetText(field.label .. ":")
+                flbl:SetText(L[field.labelKey] .. ":")
                 flbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
                 local fbox = OneWoW_GUI:CreateEditBox(fieldRow, {
                     width = field.width or 120,
                     height = 22,
-                    placeholderText = field.hint or "",
+                    placeholderText = L[field.hintKey],
                     maxLetters = field.maxLetters or 12,
                 })
                 fbox:SetPoint("TOPLEFT", flbl, "BOTTOMLEFT", 0, -1)
@@ -1228,7 +1230,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             local fillBtn
             if cat.onFill then
-                fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = OneWoW.Locale:GetOptional(ADDON_NAME, cat.fillKey) or "Fill", height = 22 })
+                fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L[cat.fillKey], height = 22 })
                 fillBtn:SetPoint("LEFT", saveFieldBtn, "RIGHT", 8, 0)
                 fillBtn:SetScript("OnClick", function() cat.onFill(card) end)
                 card._fillBtn = fillBtn
@@ -1257,7 +1259,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             card._doSave = function()
                 local stepName = strtrim(nameBox:GetText() or "")
-                if stepName == "" then stepName = cat.title end
+                if stepName == "" then stepName = L[cat.titleKey] end
 
                 local trackParams = {}
                 for _, field in ipairs(cat.fields) do
@@ -1346,7 +1348,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         card:SetScript("OnClick", function(myself)
             if #cat.fields == 0 then
                 local stepName = strtrim(nameBox:GetText() or "")
-                if stepName == "" then stepName = cat.title end
+                if stepName == "" then stepName = L[cat.titleKey] end
 
                 local resetVal2 = dialog._resetDD:GetValue()
                 local changes = {
@@ -1418,7 +1420,7 @@ function TE_UI:ShowExportDialog(listID)
 
     local dialog = CreateDialog({
         name = "TrackerExportDialog",
-        title = "Export List",
+        title = L["TRACKER_EXPORT_TITLE"],
         width = 600,
         height = 350,
         destroyOnClose = true,
@@ -1431,7 +1433,7 @@ function TE_UI:ShowExportDialog(listID)
 
     local hintLabel = OneWoW_GUI:CreateFS(content, 10)
     hintLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
-    hintLabel:SetText("Copy the text below and share it with others. They can import it using the Import option.")
+    hintLabel:SetText(L["TRACKER_EXPORT_HINT"])
     hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local container = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
@@ -1452,13 +1454,13 @@ function TE_UI:ShowImportDialog(callback)
 
     local dialog = CreateDialog({
         name = "TrackerImportDialog",
-        title = "Import List",
+        title = L["TRACKER_IMPORT_TITLE"],
         width = 600,
         height = 400,
         destroyOnClose = true,
         buttons = {
             {
-                text = "Import",
+                text = L["TRACKER_IMPORT"],
                 onClick = function(frame)
                     local text = strtrim(frame._importBox:GetText() or "")
                     if text == "" then return end
@@ -1475,7 +1477,7 @@ function TE_UI:ShowImportDialog(callback)
                         frame:Hide(); frame:SetParent(nil)
                         if callback then callback(result) end
                     else
-                        print("|cFFFF6666Import failed. Check that the text is a valid export string or guide markup.|r")
+                        print("|cFFFF6666" .. L["TRACKER_IMPORT_FAILED"] .. "|r")
                     end
                 end,
             },
@@ -1493,7 +1495,7 @@ function TE_UI:ShowImportDialog(callback)
     hintLabel:SetPoint("RIGHT", content, "RIGHT", -10, 0)
     hintLabel:SetJustifyH("LEFT")
     hintLabel:SetWordWrap(true)
-    hintLabel:SetText("Paste an exported list string or guide markup text below. Supports both the export format (starts with OWT1:) and the markup format (# Title, ## Section, ### Step).")
+    hintLabel:SetText(L["TRACKER_IMPORT_HINT"])
     hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local container = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })

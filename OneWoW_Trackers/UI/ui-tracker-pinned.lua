@@ -274,7 +274,7 @@ function TP:Create(listID)
 
             secHeader._accent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             secHeader._collapseIcon:SetTexture(sec.collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP")
-            secHeader._label:SetText(sec.label or "Section")
+            secHeader._label:SetText(sec.label or L["TRACKER_SECTION_FALLBACK"])
             secHeader._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             if secTotal > 0 then
@@ -319,7 +319,7 @@ function TP:Create(listID)
                 stepRow._label:ClearAllPoints()
                 stepRow._label:SetPoint("LEFT", stepRow._dot, "RIGHT", 6, 0)
                 stepRow._label:SetPoint("RIGHT", stepRow, "RIGHT", -50, 0)
-                stepRow._label:SetText(step.label or "Step")
+                stepRow._label:SetText(step.label or L["TRACKER_STEP_FALLBACK"])
 
                 if step.optional then
                     stepRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -344,7 +344,7 @@ function TP:Create(listID)
                         local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
                         C_Map.SetUserWaypoint(mapPoint)
                         C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                        print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"], step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                        print(format("%s %s", L["ADDON_CHAT_PREFIX"], format(L["TRACKER_WAYPOINT_SET"], step.label or L["TRACKER_STEP_FALLBACK"], tonumber(step.coordX), tonumber(step.coordY))))
                     end)
                 elseif not step.rosterMode and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                     stepRow:RegisterForClicks("AnyDown", "AnyUp")

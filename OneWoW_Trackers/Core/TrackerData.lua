@@ -299,7 +299,7 @@ function TD:CreateList(opts)
 
     local list = {
         id            = GenerateID("tl"),
-        title         = opts.title or "Untitled List",
+        title         = opts.title or ns.L["TRACKER_UNTITLED_LIST"],
         description   = opts.description or "",
         author        = opts.author or (UnitName("player") or "Unknown"),
         version       = 1,
