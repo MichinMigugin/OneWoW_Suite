@@ -48,6 +48,12 @@ collection, or when Has uncollected filters the current list.
 `GetInstanceByMapID` hydrates only the preferred card for that map. It must not
 build loot for every dungeon and raid.
 
+**Has uncollected** is the one filter that must hydrate many cards, so it runs as a
+`OneWoW.ChunkedJob` and publishes matches as it finds them. Hydrating ~217 cards
+synchronously froze the client — the same stall lazy hydrate exists to avoid, just
+reached through a filter instead of through login. Any future filter that needs
+collection state has to be chunked the same way.
+
 List cards paint without hydrating. Taxonomy tags (`hasTMog`, and so on) fill in
 after that card hydrates, but the **item count must not change on open**: a
 skeleton card's `totalItems` is `CountGeneratedLoot` (unique `JournalLoot` itemIDs)
@@ -209,3 +215,11 @@ for the difficulty scan. Cards with `instanceID == 0` and delves are skipped.
 `EJ_LOOT_DATA_RECIEVED` (Blizzard’s spelling) refreshes the open card only when
 `SetLiveMergeTarget` is set; it does not rebuild the world cache.
 Hover tooltips still resolve a scaled link via `GetScaledLootLink`.
+
+On a cold session the first merge can beat the server's loot data, so the event
+retries — but only while `HasUnresolvedBossNames` is true and at most
+`MAX_MERGE_RETRIES` (3) times. Both bounds matter: the check is scoped to rows
+inside real encounters (`encounterID > 0`) because those are the only names EJ can
+supply, and without the counter, ATT extras and General / Achievement / Quest rows —
+which EJ will never name — kept the retry permanently armed and re-merged the card
+every 0.25s for the rest of the session.
