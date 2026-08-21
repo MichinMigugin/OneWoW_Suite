@@ -33,3 +33,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload nightly .releases/OneWoW-Suite-Nightly.zip --clobber
+      - name: Refresh nightly notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(python -c "import sys; sys.path.insert(0, 'bin'); from onewow_release_lib import require_uniform_version; print(require_uniform_version())")
+          TIP="${GITHUB_SHA:0:7}"
+          STAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+          {
+            echo "Bot-managed rolling zip for **OneWoW Suite — Nightly**."
+            echo
+            echo "- TOC version: \`${VERSION}\`"
+            echo "- Tip: \`${TIP}\`"
+            echo "- Updated: ${STAMP}"
+            echo
+            echo "Source: current \`main\` tip (not a CurseForge release)."
+          } > "${RUNNER_TEMP}/nightly-notes.md"
+          gh release edit nightly --notes-file "${RUNNER_TEMP}/nightly-notes.md"
