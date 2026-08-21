@@ -81,14 +81,18 @@ local function ResetItemTypeFilter()
 end
 
 local function CountBossEncounters(instData)
-    local n = 0
-    for _, enc in ipairs(instData.encounters or {}) do
-        -- Real bosses only; skip General (0), Achievement (-2), Quest (-3).
-        if enc.encounterID and enc.encounterID > 0 then
-            n = n + 1
+    local encounters = instData.encounters
+    if encounters and #encounters > 0 then
+        local n = 0
+        for _, enc in ipairs(encounters) do
+            -- Real bosses only; skip General (0), Achievement (-2), Quest (-3).
+            if enc.encounterID and enc.encounterID > 0 then
+                n = n + 1
+            end
         end
+        return n
     end
-    return n
+    return instData.bossCount or 0
 end
 
 local function FormatBossCount(n)
@@ -1631,6 +1635,13 @@ local function ShowInstanceDetail(panels, instData)
 
     local dataAddon = GetDataAddon()
     if dataAddon then
+        dataAddon.EnsureEncounters(instData)
+        if instData.instanceType ~= "delve" and instData.instanceID and instData.instanceID > 0 then
+            dataAddon.SetLiveMergeTarget(instData)
+            dataAddon.MergeInstance(instData)
+        else
+            dataAddon.SetLiveMergeTarget(nil)
+        end
         dataAddon.MergeLiveATTExtras(instData)
     end
 
@@ -1736,6 +1747,7 @@ function RefreshJournalList(panels)
     if hasUncollectedOnly then
         local filtered = {}
         for _, inst in ipairs(sorted) do
+            addon.EnsureEncounters(inst)
             if InstanceHasUncollected(inst, addon) then
                 tinsert(filtered, inst)
             end
@@ -1822,7 +1834,13 @@ function RefreshJournalList(panels)
 
     if journalListAPI then
         if keepIndex then
-            journalListAPI.SetSelectedIndex(keepIndex)
+            -- Restoring the same row must not re-fire onSelect. That re-enters
+            -- ShowInstanceDetail → MergeInstance → this refresh (stack overflow).
+            if journalListAPI.GetSelectedIndex() == keepIndex then
+                journalListAPI.Refresh()
+            else
+                journalListAPI.SetSelectedIndex(keepIndex)
+            end
         else
             journalListAPI.SetSelectedIndex(nil)
             journalListAPI.Refresh()
@@ -2259,6 +2277,10 @@ function ns.UI.CreateJournalTab(parent)
         mainWindow._oneWoWJournalBountifulReset = true
         mainWindow:HookScript("OnHide", function()
             local p = panels_ref or ns.UI.journalPanels
+            local addon = GetDataAddon()
+            if addon then
+                addon.SetLiveMergeTarget(nil)
+            end
             ResetBountifulFilter(p)
             if p then
                 InvalidateJournalFilterCache()
@@ -2288,21 +2310,31 @@ function ns.UI.CreateJournalTab(parent)
         panels.detailScrollChild:SetHeight(100)
 
         if addon.RegisterScanCallback then
-            addon.RegisterScanCallback(function()
-                InvalidateJournalFilterCache()
+            addon.RegisterScanCallback(function(reason)
                 local p = ns.UI.journalPanels
-                if p then
-                    RefreshJournalList(p)
-                    if selectedInstance then
-                        local keepKey = JournalCacheKey(selectedInstance)
-                        for _, inst in ipairs(listResults) do
-                            if JournalCacheKey(inst) == keepKey then
-                                selectedInstance = inst
-                                break
-                            end
-                        end
-                        ShowInstanceDetail(p, selectedInstance)
+                if not p then return end
+                -- Per-card live merge: refresh the open card and list chrome only.
+                -- RefreshJournalList re-selects and would re-enter MergeInstance.
+                if reason == "ej_merge" then
+                    if journalListAPI then
+                        journalListAPI.Refresh()
                     end
+                    if selectedInstance then
+                        RefreshDetailView(false)
+                    end
+                    return
+                end
+                InvalidateJournalFilterCache()
+                RefreshJournalList(p)
+                if selectedInstance then
+                    local keepKey = JournalCacheKey(selectedInstance)
+                    for _, inst in ipairs(listResults) do
+                        if JournalCacheKey(inst) == keepKey then
+                            selectedInstance = inst
+                            break
+                        end
+                    end
+                    RefreshDetailView(false)
                 end
             end)
         end

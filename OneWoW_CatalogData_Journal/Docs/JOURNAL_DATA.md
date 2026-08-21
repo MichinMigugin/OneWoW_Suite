@@ -33,6 +33,19 @@ expansion-scoped. A live overlay runs only if AllTheThings is already loaded
 
 Favorites and list selection use the same key.
 
+## Lazy hydrate
+
+The in-memory card index is cheap: membership, delves, synthetic World, Generated
+loot counts and boss counts. Encounter rows (`C_Item`, ATT extras) load in
+`EnsureEncounters` for **one card** when you open details, toast, or ESC
+collection, or when Has uncollected filters the current list.
+
+`GetInstanceByMapID` hydrates only the preferred card for that map. It must not
+build loot for every dungeon and raid.
+
+List cards use Generated item/boss counts so they paint without hydrating. Taxonomy
+tags (`hasTMog`, and so on) fill in after that card hydrates.
+
 ## World
 
 MoP–Midnight outdoor hubs in EJ are typed `world` (not raid). IDs live in

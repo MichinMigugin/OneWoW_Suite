@@ -66,6 +66,13 @@ function OneWoW_CatalogData_Journal_API.RefreshLiveJournalLoot()
     ns.JournalData:BuildJournalCache()
 end
 
+--- Hydrate loot for one journal card. Idempotent. Skeleton cards stay cheap until this runs.
+---@param inst table
+---@return table inst
+function OneWoW_CatalogData_Journal_API.EnsureEncounters(inst)
+    return ns.JournalData:EnsureEncounters(inst)
+end
+
 --- Scan one journal card against live EJ (names and scaled links only).
 ---@param inst table
 function OneWoW_CatalogData_Journal_API.MergeInstance(inst)
