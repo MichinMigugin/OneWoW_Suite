@@ -5,9 +5,9 @@ Usage:
     python bin/run_devs.py locale_verify.py OneWoW/Locales
 
 Workspace is the parent of this clone (nested) or a sibling named
-OneWoW_Workspace (then OneWoW_Devs). Override with ONEWOW_WORKSPACE or
-ONEWOW_DEVS. If Workspace is missing, exit 0 so public forks
-without the private toolchain can still commit.
+OneWoW_Workspace. Override with ONEWOW_WORKSPACE or ONEWOW_DEVS.
+If Workspace is missing, exit 0 so public forks without the private
+toolchain can still commit.
 """
 from __future__ import annotations
 
