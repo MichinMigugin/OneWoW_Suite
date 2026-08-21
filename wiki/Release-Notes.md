@@ -10,6 +10,8 @@
 ### Trackers
 - Pin a list from the pin icon next to its title.
 - Farm value lists keep that pin icon next to the title.
+- Finished tracker steps use a darker row fill so the done text stays readable.
+- Step descriptions wrap to the panel width instead of truncating until the window is resized.
 - Farm value details send pricing to QoL Tooltips Value, use dropdowns for session and list mode, and add watchlist items with the usual dropzone.
 - Farm value lists put Delete next to Duplicate, with no gap for unused Reset or Add Section.
 - Tracker list cards put the name and type up top, with progress along the bottom, so long titles no longer overlap.
