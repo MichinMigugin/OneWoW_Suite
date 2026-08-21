@@ -117,15 +117,14 @@ function ns.UI.CreateTrackerTab(parent)
             local items = {
                 { text = L["TRACKER_ALL_CATEGORIES"], value = "All" },
             }
-            local cats = TD:GetCategories()
-            for _, cat in ipairs(cats) do
-                tinsert(items, { text = cat, value = cat })
+            for _, opt in ipairs(TD:GetCategoryOptions()) do
+                tinsert(items, { text = opt.text, value = opt.value })
             end
             return items
         end,
         onSelect = function(value)
             filterCategory = value
-            catText:SetText(value == "All" and (L["TRACKER_ALL_CATEGORIES"]) or value)
+            catText:SetText(value == "All" and (L["TRACKER_ALL_CATEGORIES"]) or TD:GetCategoryDisplayName(value))
             parent.RefreshList()
         end,
         getActiveValue = function() return filterCategory end,
@@ -390,7 +389,7 @@ function ns.UI.CreateTrackerTab(parent)
 
         local typeColor = LIST_TYPE_COLORS[listData.listType] or { 0.7, 0.7, 0.7 }
         local typeName = TE:GetListTypeDisplayName(listData.listType)
-        local category = listData.category or ""
+        local category = TD:GetCategoryDisplayName(listData.category)
         local author = listData.author
         local metaRest = category
         if author and author ~= "" then

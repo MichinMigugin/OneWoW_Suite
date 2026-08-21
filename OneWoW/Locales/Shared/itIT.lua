@@ -139,6 +139,10 @@ ns.Locale:RegisterShared("itIT", {
     ["SESSION"] = "Sessione",
     ["SLOT"] = "Slot",
     ["SUMMARY"] = "Riepilogo",
+    ["COLLECTION"] = "Raccolta",
+    ["DUNGEON"] = "Spedizione",
+    ["FARMING"] = "Farm",
+    ["PROFESSION"] = "Professione",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
     -- in during a future consolidation pass. Each is one English word whose

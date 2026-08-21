@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["LOCKOUTS_NO_DUNGEON"] = "No hay bloqueos de mazmorra",
     ["LOCKOUTS_DIFFICULTY"] = "Dificultad",
     ["LOCKOUTS_UNLOCKS_IN"] = "Se desbloquea en",
-    ["DUNGEON"] = "Mazmorra",
     ["RESETS_IN"] = "Se reinicia en",
 
     ["TT_CHAR_GUID"] = "GUID:",

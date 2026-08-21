@@ -140,6 +140,10 @@ ns.Locale:RegisterShared("esMX", {
     ["SESSION"] = "Sesión",
     ["SLOT"] = "Ranura",
     ["SUMMARY"] = "Resumen",
+    ["COLLECTION"] = "Colección",
+    ["DUNGEON"] = "Mazmorra",
+    ["FARMING"] = "Farmeo",
+    ["PROFESSION"] = "Profesión",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
     -- in during a future consolidation pass. Each is one English word whose

@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["LOCKOUTS_NO_DUNGEON"] = "Keine Dungeonsperren",
     ["LOCKOUTS_DIFFICULTY"] = "Schwierigkeit",
     ["LOCKOUTS_UNLOCKS_IN"] = "Entsperrt in",
-    ["DUNGEON"] = "Dungeon",
     ["RESETS_IN"] = "Zurückgesetzt in",
 
     ["TT_CHAR_GUID"] = "GUID:",

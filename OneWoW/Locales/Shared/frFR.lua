@@ -139,6 +139,10 @@ ns.Locale:RegisterShared("frFR", {
     ["SESSION"] = "Session",
     ["SLOT"] = "Emplacement",
     ["SUMMARY"] = "Résumé",
+    ["COLLECTION"] = "Collection",
+    ["DUNGEON"] = "Donjon",
+    ["FARMING"] = "Farm",
+    ["PROFESSION"] = "Métier",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
     -- in during a future consolidation pass. Each is one English word whose

@@ -53,6 +53,15 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_SELECT"]                  = "Select a list to view its details.",
     ["TRACKER_EMPTY"]                   = "No lists yet. Click New to create one.",
 
+    -- Category folders. The stored value stays canonical English; these are
+    -- display only. The rest of the picker comes from Blizzard globals
+    -- (General / PvP / Raid / Reputation), shared bare-word terms, and the
+    -- Exploration track-type key.
+    ["TRACKER_CAT_EVENT"]               = "Event",
+    ["TRACKER_CAT_GEARING"]             = "Gearing",
+    ["TRACKER_CAT_GOLD_MAKING"]         = "Gold Making",
+    ["TRACKER_CAT_LEVELING"]            = "Leveling",
+
     ["TRACKER_NEW_LIST"]                = "New List",
     ["TRACKER_EDIT_LIST"]               = "Edit List",
     ["TRACKER_TITLE_LABEL"]             = "Title:",

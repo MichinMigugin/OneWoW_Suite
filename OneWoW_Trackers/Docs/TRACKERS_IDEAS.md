@@ -89,8 +89,8 @@ Three layers, not one screen: **data** (`TrackerData` — lists → sections →
 | Uses the toolkit | Rolls its own |
 | --- | --- |
 | Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateIconButton`, `CreateDivider`, `CreateLayoutFrame`, `CreateReorderDrag`, `CreateListRowBasic` (left rail compose), `CreateVirtualizer` (left rail, 56px), `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Detail section/step rows (`t-tracker.lua` 906, 1022): raw `CreateFrame("Button", …, "BackdropTemplate")`. **Declined, not blocked** — they need collapse chrome, a hover icon strip, checkboxes, and a complete frame list for the drag controller. |
-| Theme / language callbacks on the lifecycle root | Editor picker / import cards (`ui-tracker-editor.lua` 537, 608, 1144) — **§0 remaining**. Farm-value item rows (`ui-tracker-farmvalue.lua` 375) — **§0 remaining**. |
-| Pinned overlay shell: `CreateFrame` + `CreateTitleBar` + `CreateFS` | Pinned overlay rows: pooled raw frames (section `BackdropTemplate` at 32, steps plain Buttons). Reasonable for a float; **not part of §0**. |
+| Theme / language callbacks on the lifecycle root. Editor quick-start + import cards on `CreateListRowBasic`; farm detail editor on `CreateFrame` + `CreateItemListEditor` | Expanding step-category card (`ui-tracker-editor.lua` 1144): accordion with active state, always-visible description, embedded field row. **Declined** — see §0. |
+| Pinned overlay shell: `CreateFrame` + `CreateTitleBar` + `CreateFS` | Pinned overlay rows: pooled raw frames (section `BackdropTemplate` at 32, steps plain Buttons) plus its farm rows (`ui-tracker-farmvalue.lua` 375, reached from `RenderPinned`). Reasonable for a float; **not part of §0**. |
 
 **No detail-tree virtualizer, and therefore no `CreateReorderDrag` data-index API.** Both
 declined — see §0. `ShowDetail` is structure-only (select, collapse, add/delete, reorder,
@@ -101,7 +101,7 @@ no step rows, so row counts stay well under what windowing would earn.
 
 **Shipped left rail:** `CreateListRowBasic` (56px) plus type icon, meta, progress, favorite; adopted scroll on `CreateVirtualizer`. `CreateCard` / `CreateCardStack` stay settings accordions, not list tiles (dense compose; closed).
 
-**Shipped editor locales:** wizard, quick-start, step categories, field labels, and hub leftovers (`Untitled`, waypoint print, default section `Tasks`) go through Trackers locale keys. Reused `SAVE` / `CANCEL` / `CLOSE` and existing `TRACKER_*` titles. Stored category folder `"General"` stays data.
+**Shipped editor locales:** wizard, quick-start, step categories, field labels, and hub leftovers (`Untitled`, waypoint print, default section `Tasks`) go through Trackers locale keys. Reused `SAVE` / `CANCEL` / `CLOSE` and existing `TRACKER_*` titles. Category folders render through `TD:GetCategoryDisplayName` (Blizzard globals where the client ships the term, shared bare-words, four Trackers keys); the stored `list.category` stays canonical English data.
 
 The pin overlay is the **play** surface; the hub tab is the **authoring** surface. §0 covers the
 authoring surface only.
@@ -116,16 +116,15 @@ its own. Trackers' own slices, for orientation:
 
 | Slice | State |
 | --- | --- |
-| **0** — hub tab GUI-first (§0) | Partial; the surface every later idea sits on |
+| **0** — hub tab GUI-first (§0) | **Shipped**; the surface every later idea sits on |
 | **0b** — calendar fail-open (§4) | **Shipped** |
-| **1** — collectible-key handoff (§1) | Next, after the tab is a place you'd want to land |
+| **1** — collectible-key handoff (§1) | Next |
 | **2** — lockout skip for the logged-in character (§3) | Blocked on the Endgame lockout `_API` (roadmap P-3) |
 
-Slice 0 remaining, in full: farm-value item rows, editor picker / import cards, and localizing
-the stored `"General"` category. Everything else once listed under §0 is now either declined
-(detail-tree virtualizer, the `CreateReorderDrag` data-index API it needed, detail rows staying
-custom) or out of scope (pinned overlay restyle, dwell-expand during drag). See §0 for the
-reasoning. Not a new product.
+Slice 0 has no remaining items. Everything once listed under §0 is now either shipped or
+recorded as declined (detail-tree virtualizer, the `CreateReorderDrag` data-index API it needed,
+detail rows and the step-category card staying custom) or out of scope (pinned overlay restyle
+and its farm rows, dwell-expand during drag). See §0 for the reasoning. Not a new product.
 
 Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or
 instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on
@@ -150,13 +149,22 @@ compose + `CreateVirtualizer` 56px. Editor/hub English replaced with locale keys
 Progress/scan binds the open detail in place (`ShowDetail` is structure-only).
 `UI/Framework.lua` is gone.
 
-**Remaining — the whole list:**
+**Remaining:** none. §0 is shipped.
 
-- Farm-value item rows (`ui-tracker-farmvalue.lua` ~375) — last raw row surface in the tab
-- Editor picker / import cards (`ui-tracker-editor.lua` 537, 608, 1144)
-- Localize the stored `"General"` category folder
+The last three items closed together: the editor quick-start and import cards moved to
+`CreateListRowBasic` compose (gaining the 1px `BORDER_SUBTLE` edge the old borderless
+`BACKDROP_SIMPLE` never drew), and all 15 category folders now render localized through
+`TD:GetCategoryDisplayName` / `GetCategoryOptions` while the stored `list.category` stays
+canonical English, so filtering, import normalization, and `RemapStoredCategories` keep
+comparing one vocabulary.
 
 **Declined — decided, do not re-litigate:**
+
+- **Expanding step-category card stays custom** (`ui-tracker-editor.lua` 1144). An inline
+  accordion carrying a selected/active state, an always-visible description, and an embedded
+  field row plus Save/Fill buttons. `CreateCard` has no active state and hides its content when
+  collapsed; `CreateSelectableCard` is checkbox-backed. Not worth expanding shared GUI for one
+  consumer.
 
 - **Detail-tree virtualizer.** Lists do not get big enough to earn it. `ShowDetail` is
   structure-only (rebuild on select / collapse / add / delete / reorder / hide-completed, not
@@ -180,6 +188,11 @@ Progress/scan binds the open detail in place (`ShowDetail` is structure-only).
 - **Pinned overlay restyle.** `ui-tracker-pinned.lua` rows are pooled raw frames (section rows
   `BackdropTemplate` at 32; steps plain Buttons) under a toolkit shell. The overlay is the play
   surface, not the authoring surface — its own pass if it ever happens.
+- **Farm-value item rows.** `AcquireFarmRow` (`ui-tracker-farmvalue.lua` ~375) is reached only
+  from `TFV:RenderPinned`, called by the pinned overlay — so it belongs to the row above, not to
+  the tab. The tab's own farm surface is `TFV:RenderDetailEditor`, already built on
+  `CreateFrame` + `CreateItemListEditor`. An earlier revision of this doc listed it as §0 work
+  by mistake.
 - **Dwell-expand during drag.** Hovering a collapsed section header mid-drag to auto-expand it.
   Today a step dropped on a header lands at position 1, which is all a collapsed section can
   offer since its step rows are never built. A drag-UX enhancement, not GUI-first work.

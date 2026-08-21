@@ -496,6 +496,46 @@ local STEP_CATEGORIES = {
     },
 }
 
+local WIZARD_CARD_H = 60
+local WIZARD_CARD_PAD = 12
+local WIZARD_CARD_ICON = 36
+
+--- Icon + title + wrapped description card used by the new-list wizard.
+--- One click action per card; hover chrome comes from CreateListRowBasic.
+local function CreateWizardCard(parent, opts)
+    local card = OneWoW_GUI:CreateListRowBasic(parent, {
+        height = WIZARD_CARD_H,
+        label = opts.title,
+        onClick = opts.onClick,
+    })
+
+    local icon = card:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(WIZARD_CARD_ICON, WIZARD_CARD_ICON)
+    icon:SetPoint("LEFT", card, "LEFT", WIZARD_CARD_PAD, 0)
+    -- atlas takes precedence over a texture path; both stretch to the icon slot.
+    if opts.atlas then
+        icon:SetAtlas(opts.atlas)
+    else
+        icon:SetTexture(opts.icon)
+    end
+
+    card.label:ClearAllPoints()
+    card.label:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -4)
+    card.label:SetPoint("RIGHT", card, "RIGHT", -WIZARD_CARD_PAD, 0)
+    card.label:SetJustifyH("LEFT")
+    card.label:SetWordWrap(false)
+
+    local desc = OneWoW_GUI:CreateFS(card, 10)
+    desc:SetPoint("TOPLEFT", card.label, "BOTTOMLEFT", 0, -2)
+    desc:SetPoint("RIGHT", card, "RIGHT", -WIZARD_CARD_PAD, 0)
+    desc:SetJustifyH("LEFT")
+    desc:SetWordWrap(true)
+    desc:SetText(opts.desc)
+    desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    return card
+end
+
 function TE_UI:ShowNewListDialog(callback)
     local TD = ns.TrackerData
     local TE = ns.TrackerEngine
@@ -530,118 +570,59 @@ function TE_UI:ShowNewListDialog(callback)
     scrollFrame:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -6, 4)
 
     local yOfs = 0
-    local CARD_HEIGHT = 60
     local CARD_GAP = 4
 
     for _, qs in ipairs(QUICK_START) do
-        local card = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-        card:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOfs)
-        card:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOfs)
-        card:SetHeight(CARD_HEIGHT)
-        card:SetBackdrop(BACKDROP_SIMPLE)
-        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        local icon = card:CreateTexture(nil, "ARTWORK")
-        icon:SetSize(36, 36)
-        icon:SetPoint("LEFT", card, "LEFT", 12, 0)
-        -- atlas takes precedence over a texture path; both stretch to the 36x36 slot.
-        if qs.atlas then
-            icon:SetAtlas(qs.atlas)
-        else
-            icon:SetTexture(qs.icon)
-        end
-
-        local titleFS = OneWoW_GUI:CreateFS(card, 12)
-        titleFS:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -4)
-        titleFS:SetText(L[qs.titleKey])
-        titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-        local descFS = OneWoW_GUI:CreateFS(card, 10)
-        descFS:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -2)
-        descFS:SetPoint("RIGHT", card, "RIGHT", -12, 0)
-        descFS:SetJustifyH("LEFT")
-        descFS:SetWordWrap(true)
-        descFS:SetText(L[qs.descKey])
-        descFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        card:SetScript("OnEnter", function(myself)
-            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        end)
-        card:SetScript("OnLeave", function(myself)
-            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end)
-
-        card:SetScript("OnClick", function()
-            if qs.showProfPicker then
-                dialog:Hide(); dialog:SetParent(nil)
-                TE_UI:ShowProfessionPicker(callback)
-            elseif qs.showCustomForm then
-                dialog:Hide(); dialog:SetParent(nil)
-                TE_UI:ShowCustomListForm(qs.listType, qs.category, callback)
-            elseif qs.preset and TP then
-                local list = TP:CreateListFromPreset(qs.preset)
-                if list then
+        local card = CreateWizardCard(scrollChild, {
+            title = L[qs.titleKey],
+            desc = L[qs.descKey],
+            icon = qs.icon,
+            atlas = qs.atlas,
+            onClick = function()
+                if qs.showProfPicker then
+                    dialog:Hide(); dialog:SetParent(nil)
+                    TE_UI:ShowProfessionPicker(callback)
+                elseif qs.showCustomForm then
+                    dialog:Hide(); dialog:SetParent(nil)
+                    TE_UI:ShowCustomListForm(qs.listType, qs.category, callback)
+                elseif qs.preset and TP then
+                    local list = TP:CreateListFromPreset(qs.preset)
+                    if list then
+                        dialog:Hide(); dialog:SetParent(nil)
+                        if callback then callback(list) end
+                    end
+                else
+                    local list = TD:CreateList({
+                        title = L[qs.titleKey],
+                        listType = qs.listType,
+                        category = qs.category,
+                    })
+                    TD:AddSection(list.id, { label = L["TRACKER_DEFAULT_SECTION"] })
                     dialog:Hide(); dialog:SetParent(nil)
                     if callback then callback(list) end
                 end
-            else
-                local list = TD:CreateList({
-                    title = L[qs.titleKey],
-                    listType = qs.listType,
-                    category = qs.category,
-                })
-                TD:AddSection(list.id, { label = L["TRACKER_DEFAULT_SECTION"] })
-                dialog:Hide(); dialog:SetParent(nil)
-                if callback then callback(list) end
-            end
-        end)
+            end,
+        })
+        card:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOfs)
+        card:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOfs)
 
-        yOfs = yOfs - CARD_HEIGHT - CARD_GAP
+        yOfs = yOfs - WIZARD_CARD_H - CARD_GAP
     end
 
     yOfs = yOfs - 12
-    local importCard = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+    local importCard = CreateWizardCard(scrollChild, {
+        title = L["TRACKER_QS_IMPORT_TITLE"],
+        desc = L["TRACKER_QS_IMPORT_DESC"],
+        icon = "Interface\\Icons\\INV_Letter_15",
+        onClick = function()
+            dialog:Hide(); dialog:SetParent(nil)
+            TE_UI:ShowImportDialog(callback)
+        end,
+    })
     importCard:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOfs)
     importCard:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOfs)
-    importCard:SetHeight(CARD_HEIGHT)
-    importCard:SetBackdrop(BACKDROP_SIMPLE)
-    importCard:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    importCard:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local impIcon = importCard:CreateTexture(nil, "ARTWORK")
-    impIcon:SetSize(36, 36)
-    impIcon:SetPoint("LEFT", importCard, "LEFT", 12, 0)
-    impIcon:SetTexture("Interface\\Icons\\INV_Letter_15")
-
-    local impTitle = OneWoW_GUI:CreateFS(importCard, 12)
-    impTitle:SetPoint("TOPLEFT", impIcon, "TOPRIGHT", 10, -4)
-    impTitle:SetText(L["TRACKER_QS_IMPORT_TITLE"])
-    impTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local impDesc = OneWoW_GUI:CreateFS(importCard, 10)
-    impDesc:SetPoint("TOPLEFT", impTitle, "BOTTOMLEFT", 0, -2)
-    impDesc:SetText(L["TRACKER_QS_IMPORT_DESC"])
-    impDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    importCard:SetScript("OnEnter", function(myself)
-        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        impTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    end)
-    importCard:SetScript("OnLeave", function(myself)
-        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        impTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end)
-    importCard:SetScript("OnClick", function()
-        dialog:Hide(); dialog:SetParent(nil)
-        TE_UI:ShowImportDialog(callback)
-    end)
-
-    yOfs = yOfs - CARD_HEIGHT - CARD_GAP
+    yOfs = yOfs - WIZARD_CARD_H - CARD_GAP
     scrollChild:SetHeight(math.abs(yOfs) + 20)
 
     dialog:Show()
@@ -725,11 +706,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     local catLabel = MakeLabel(content, L["TRACKER_CATEGORY_LABEL"], 10, yOfs)
     local catDD = CreateDropdown(content, 180, 26)
     catDD:SetPoint("LEFT", catLabel, "RIGHT", 8, 0)
-    local catOpts = {}
-    for _, cat in ipairs(TD:GetCategories()) do
-        tinsert(catOpts, { text = cat, value = cat })
-    end
-    catDD:SetOptions(catOpts)
+    catDD:SetOptions(TD:GetCategoryOptions())
     catDD:SetSelected(defaultCategory or "General")
     dialog._catDD = catDD
     yOfs = yOfs - 36
@@ -893,11 +870,7 @@ function TE_UI:ShowListEditor(listID, callback)
     local catLabel = MakeLabel(content, L["TRACKER_CATEGORY_LABEL"], 10, yOfs)
     local catDD = CreateDropdown(content, 180, 26)
     catDD:SetPoint("LEFT", catLabel, "RIGHT", 8, 0)
-    local catOpts = {}
-    for _, cat in ipairs(TD:GetCategories()) do
-        tinsert(catOpts, { text = cat, value = cat })
-    end
-    catDD:SetOptions(catOpts)
+    catDD:SetOptions(TD:GetCategoryOptions())
     catDD:SetSelected(list.category or "General")
     dialog._catDD = catDD
     yOfs = yOfs - 36

@@ -139,6 +139,10 @@ ns.Locale:RegisterShared("deDE", {
     ["SESSION"] = "Sitzung",
     ["SLOT"] = "Platz",
     ["SUMMARY"] = "Zusammenfassung",
+    ["COLLECTION"] = "Sammlung",
+    ["DUNGEON"] = "Dungeon",
+    ["FARMING"] = "Farmen",
+    ["PROFESSION"] = "Beruf",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
     -- in during a future consolidation pass. Each is one English word whose

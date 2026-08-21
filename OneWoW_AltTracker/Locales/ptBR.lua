@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["LOCKOUTS_NO_DUNGEON"] = "Nenhum bloqueio de masmorra",
     ["LOCKOUTS_DIFFICULTY"] = "Dificuldade",
     ["LOCKOUTS_UNLOCKS_IN"] = "Desbloqueia em",
-    ["DUNGEON"] = "Masmorra",
     ["RESETS_IN"] = "Reinicia em",
 
     ["TT_CHAR_GUID"] = "GUID:",

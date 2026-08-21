@@ -54,6 +54,11 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRACKER_SELECT"]                 = "Выберите список, чтобы увидеть подробности.",
     ["TRACKER_EMPTY"]                  = "Списков пока нет. Нажмите Создать, чтобы добавить.",
 
+    ["TRACKER_CAT_EVENT"]              = "Событие",
+    ["TRACKER_CAT_GEARING"]            = "Экипировка",
+    ["TRACKER_CAT_GOLD_MAKING"]        = "Заработок золота",
+    ["TRACKER_CAT_LEVELING"]           = "Прокачка",
+
     ["TRACKER_NEW_LIST"]               = "Новый список",
     ["TRACKER_EDIT_LIST"]              = "Изменить список",
     ["TRACKER_TITLE_LABEL"]            = "Название:",

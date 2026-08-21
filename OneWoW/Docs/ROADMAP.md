@@ -117,7 +117,7 @@ Items marked **parallel** have no dependency on the item above them.
 
 | # | Work | Leg | Depends on |
 | --- | --- | --- | --- |
-| 0 | Hub tab GUI-first pass (remaining §0 items) | Trackers | — |
+| 0 | Hub tab GUI-first pass (§0) | Trackers | — · **shipped** |
 | 0b | Calendar fail-open | Trackers | — · **shipped** |
 | 1 | Easy Wins sort of the want list (§5) | Notes | — · **parallel** |
 | 2 | Curated key → hidden-quest map (P-1) | Collectibles data | — · **parallel** |
@@ -132,8 +132,8 @@ Items marked **parallel** have no dependency on the item above them.
 | 11 | Roster Ask presets: "which alts still have loot up" | AltTracker2 | 2, 3, 10 |
 | 12 | AltTracker2 Phase 3 (Ops matrices) | AltTracker2 | 10 |
 
-Items 1, 2 and 3 are the ones to start in parallel with the Trackers §0 tab work: none of
-them touches the authoring tab, and each unblocks something downstream.
+With 0 shipped, items 1, 2 and 3 are the ones to start in parallel: none of them touches the
+authoring tab, and each unblocks something downstream.
 
 **Not yet** (hang off contracts we do not have): RS/SD rare subscribe, encounter steps,
 Trading Post checklist, detach-section, account rollup, chore-preset refresh, in-instance

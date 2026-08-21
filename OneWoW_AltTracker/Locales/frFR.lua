@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["LOCKOUTS_NO_DUNGEON"] = "Aucun verrou de donjon",
     ["LOCKOUTS_DIFFICULTY"] = "Difficulté",
     ["LOCKOUTS_UNLOCKS_IN"] = "Déverrouille dans",
-    ["DUNGEON"] = "Donjon",
     ["RESETS_IN"] = "Réinitialise dans",
 
     ["TT_CHAR_GUID"] = "GUID :",

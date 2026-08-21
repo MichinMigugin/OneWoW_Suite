@@ -54,6 +54,11 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TRACKER_SELECT"]                 = "Seleziona una lista per vederne i dettagli.",
     ["TRACKER_EMPTY"]                  = "Ancora nessuna lista. Clicca Nuovo per crearne una.",
 
+    ["TRACKER_CAT_EVENT"]              = "Evento",
+    ["TRACKER_CAT_GEARING"]            = "Equipaggiamento",
+    ["TRACKER_CAT_GOLD_MAKING"]        = "Guadagno oro",
+    ["TRACKER_CAT_LEVELING"]           = "Livellamento",
+
     ["TRACKER_NEW_LIST"]               = "Nuova lista",
     ["TRACKER_EDIT_LIST"]              = "Modifica lista",
     ["TRACKER_TITLE_LABEL"]            = "Titolo:",

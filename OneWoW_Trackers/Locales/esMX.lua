@@ -54,6 +54,11 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_SELECT"]                 = "Selecciona una lista para ver sus detalles.",
     ["TRACKER_EMPTY"]                  = "Aún no hay listas. Haz clic en Nuevo para crear una.",
 
+    ["TRACKER_CAT_EVENT"]              = "Evento",
+    ["TRACKER_CAT_GEARING"]            = "Equipamiento",
+    ["TRACKER_CAT_GOLD_MAKING"]        = "Ganar oro",
+    ["TRACKER_CAT_LEVELING"]           = "Subir de nivel",
+
     ["TRACKER_NEW_LIST"]               = "Nueva lista",
     ["TRACKER_EDIT_LIST"]              = "Editar lista",
     ["TRACKER_TITLE_LABEL"]            = "Título:",

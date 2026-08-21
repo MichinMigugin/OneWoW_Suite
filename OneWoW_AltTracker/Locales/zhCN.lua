@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["LOCKOUTS_NO_DUNGEON"] = "没有地下城锁定",
     ["LOCKOUTS_DIFFICULTY"] = "难度",
     ["LOCKOUTS_UNLOCKS_IN"] = "解锁倒计时",
-    ["DUNGEON"] = "地下城",
     ["RESETS_IN"] = "重置倒计时",
 
     ["TT_CHAR_GUID"] = "GUID：",

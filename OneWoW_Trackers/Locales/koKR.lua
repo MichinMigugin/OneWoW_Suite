@@ -54,6 +54,11 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_SELECT"]                 = "세부 정보를 보려면 목록을 선택하세요.",
     ["TRACKER_EMPTY"]                  = "아직 목록이 없습니다. 만들기를 눌러 만드세요.",
 
+    ["TRACKER_CAT_EVENT"]              = "이벤트",
+    ["TRACKER_CAT_GEARING"]            = "장비",
+    ["TRACKER_CAT_GOLD_MAKING"]        = "골드 벌기",
+    ["TRACKER_CAT_LEVELING"]           = "레벨업",
+
     ["TRACKER_NEW_LIST"]               = "새 목록",
     ["TRACKER_EDIT_LIST"]              = "목록 편집",
     ["TRACKER_TITLE_LABEL"]            = "제목:",

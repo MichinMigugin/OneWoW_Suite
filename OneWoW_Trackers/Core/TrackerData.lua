@@ -112,7 +112,6 @@ local TRACK_TYPE_SET = {}
 for _, v in ipairs(TRACK_TYPES) do TRACK_TYPE_SET[v] = true end
 
 function TD:GetListTypes() return LIST_TYPES end
-function TD:GetCategories() return CATEGORIES end
 function TD:GetTrackTypes() return TRACK_TYPES end
 function TD:IsValidListType(t) return LIST_TYPE_SET[t] or false end
 function TD:IsValidTrackType(t) return TRACK_TYPE_SET[t] or false end
@@ -135,6 +134,52 @@ function TD:RemapStoredCategories()
             list.category = self:NormalizeCategory(list.category)
         end
     end
+end
+
+--- Localized label for a stored category. Stored values stay canonical English
+--- so filtering, import, and remap keep comparing one vocabulary; only the
+--- display text is translated. Unknown custom strings pass through unchanged.
+---@param cat string|nil
+---@return string
+function TD:GetCategoryDisplayName(cat)
+    local L = ns.L
+    local names = {
+        ["General"]     = GENERAL,
+        ["Achievement"] = L["ACHIEVEMENT"],
+        ["Campaign"]    = L["CAMPAIGN"],
+        ["Collection"]  = L["COLLECTION"],
+        ["Dungeon"]     = L["DUNGEON"],
+        ["Event"]       = L["TRACKER_CAT_EVENT"],
+        ["Exploration"] = L["TRACKER_TYPE_EXPLORATION"],
+        ["Farming"]     = L["FARMING"],
+        ["Gearing"]     = L["TRACKER_CAT_GEARING"],
+        ["Gold Making"] = L["TRACKER_CAT_GOLD_MAKING"],
+        ["Leveling"]    = L["TRACKER_CAT_LEVELING"],
+        ["Profession"]  = L["PROFESSION"],
+        -- CALENDAR_TYPE_PVP, not PVP: the koKR PVP global is "record" (the
+        -- character-stats sense), not the content category.
+        ["PvP"]         = CALENDAR_TYPE_PVP,
+        ["Raid"]        = RAID,
+        ["Reputation"]  = REPUTATION,
+    }
+    return names[cat] or cat or ""
+end
+
+--- Picker options for the category filter and the editor dropdowns.
+--- `value` is the canonical English string that gets stored and filtered on;
+--- `text` is localized. General leads, the rest sort by localized name so the
+--- picker reads alphabetically in every language.
+---@return table[]
+function TD:GetCategoryOptions()
+    local opts = {}
+    for _, cat in ipairs(CATEGORIES) do
+        if cat ~= "General" then
+            tinsert(opts, { value = cat, text = self:GetCategoryDisplayName(cat) })
+        end
+    end
+    sort(opts, function(a, b) return a.text < b.text end)
+    tinsert(opts, 1, { value = "General", text = self:GetCategoryDisplayName("General") })
+    return opts
 end
 
 --- Unique list id (`tl-...`).

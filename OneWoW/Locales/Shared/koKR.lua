@@ -139,6 +139,10 @@ ns.Locale:RegisterShared("koKR", {
     ["SESSION"] = "세션",
     ["SLOT"] = "슬롯",
     ["SUMMARY"] = "요약",
+    ["COLLECTION"] = "수집품",
+    ["DUNGEON"] = "던전",
+    ["FARMING"] = "파밍",
+    ["PROFESSION"] = "전문 기술",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
     -- in during a future consolidation pass. Each is one English word whose

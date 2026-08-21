@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["LOCKOUTS_NO_DUNGEON"] = "沒有地城鎖定",
     ["LOCKOUTS_DIFFICULTY"] = "難度",
     ["LOCKOUTS_UNLOCKS_IN"] = "解鎖倒數",
-    ["DUNGEON"] = "地城",
     ["RESETS_IN"] = "重置倒數",
 
     ["TT_CHAR_GUID"] = "GUID：",

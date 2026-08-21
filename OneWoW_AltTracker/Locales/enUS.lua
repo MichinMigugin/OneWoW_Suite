@@ -632,7 +632,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["LOCKOUTS_NO_DUNGEON"] = "No dungeon lockouts",
     ["LOCKOUTS_DIFFICULTY"] = "Difficulty",
     ["LOCKOUTS_UNLOCKS_IN"] = "Unlocks in",
-    ["DUNGEON"] = "Dungeon",
     ["RESETS_IN"] = "Resets in",
 
     ["TT_CHAR_GUID"] = "GUID:",

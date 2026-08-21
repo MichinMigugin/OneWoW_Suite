@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["LOCKOUTS_NO_DUNGEON"] = "Нет блокировок подземелий",
     ["LOCKOUTS_DIFFICULTY"] = "Сложность",
     ["LOCKOUTS_UNLOCKS_IN"] = "Разблокируется через",
-    ["DUNGEON"] = "Подземелье",
     ["RESETS_IN"] = "Сбрасывается через",
 
     ["TT_CHAR_GUID"] = "GUID:",

@@ -139,6 +139,10 @@ ns.Locale:RegisterShared("zhTW", {
     ["SESSION"] = "工作階段",
     ["SLOT"] = "欄位",
     ["SUMMARY"] = "概要",
+    ["COLLECTION"] = "收藏",
+    ["DUNGEON"] = "地城",
+    ["FARMING"] = "刷取",
+    ["PROFESSION"] = "專業技能",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
     -- in during a future consolidation pass. Each is one English word whose

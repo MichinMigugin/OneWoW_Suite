@@ -54,6 +54,11 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_SELECT"]                 = "選擇一個清單以檢視其詳情。",
     ["TRACKER_EMPTY"]                  = "尚無清單。點擊「新建」建立一個。",
 
+    ["TRACKER_CAT_EVENT"]              = "事件",
+    ["TRACKER_CAT_GEARING"]            = "裝備提升",
+    ["TRACKER_CAT_GOLD_MAKING"]        = "賺金",
+    ["TRACKER_CAT_LEVELING"]           = "升級",
+
     ["TRACKER_NEW_LIST"]               = "新增清單",
     ["TRACKER_EDIT_LIST"]              = "編輯清單",
     ["TRACKER_TITLE_LABEL"]            = "標題：",

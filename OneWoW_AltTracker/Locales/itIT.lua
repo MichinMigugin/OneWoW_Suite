@@ -660,7 +660,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["LOCKOUTS_NO_DUNGEON"] = "Nessun blocco di spedizione",
     ["LOCKOUTS_DIFFICULTY"] = "Difficoltà",
     ["LOCKOUTS_UNLOCKS_IN"] = "Si sblocca tra",
-    ["DUNGEON"] = "Spedizione",
     ["RESETS_IN"] = "Si reimposta tra",
 
     ["TT_CHAR_GUID"] = "GUID:",

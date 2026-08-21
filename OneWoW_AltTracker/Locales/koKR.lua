@@ -659,7 +659,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["LOCKOUTS_NO_DUNGEON"] = "던전 잠금 없음",
     ["LOCKOUTS_DIFFICULTY"] = "난이도",
     ["LOCKOUTS_UNLOCKS_IN"] = "해제까지",
-    ["DUNGEON"] = "던전",
     ["RESETS_IN"] = "초기화까지",
 
     ["TT_CHAR_GUID"] = "GUID:",
