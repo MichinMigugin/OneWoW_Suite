@@ -192,6 +192,7 @@ function ns.UI.CreateTrackerTab(parent)
 
     local detailTitle = OneWoW_GUI:CreateFS(detailPanel, 12)
     detailTitle:SetJustifyH("LEFT")
+    detailTitle:SetWordWrap(false)
     detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     detailTitle:Hide()
 
@@ -225,8 +226,6 @@ function ns.UI.CreateTrackerTab(parent)
     end)
     pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    detailTitle:SetPoint("LEFT", pinBtn, "RIGHT", 6, 0)
-
     local hideStepsCheck = OneWoW_GUI:CreateCheckbox(detailPanel, {
         label = L["TRACKER_PIN_HIDE_COMPLETED"],
         labelSide = "left",
@@ -250,17 +249,25 @@ function ns.UI.CreateTrackerTab(parent)
     hideStepsCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
     hideStepsCheck.label:SetScript("OnEnter", HideStepsTooltip)
     hideStepsCheck.label:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    detailTitle:SetPoint("RIGHT", hideStepsCheck.label, "LEFT", -8, 0)
 
     local detailScrollFrame, detailScrollChild = OneWoW_GUI:CreateScrollFrame(detailPanel, {})
     local function LayoutDetailScroll()
         detailScrollFrame:ClearAllPoints()
-        if hideStepsCheck:IsShown() then
+        -- Farm value hides Hide completed but still uses the pin/title strip.
+        if pinBtn:IsShown() then
             detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -34)
         else
             detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -6)
         end
         detailScrollFrame:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -6, 4)
+        pinBtn:SetFrameLevel((detailScrollFrame:GetFrameLevel() or 0) + 5)
+        detailTitle:ClearAllPoints()
+        detailTitle:SetPoint("LEFT", pinBtn, "RIGHT", 6, 0)
+        if hideStepsCheck:IsShown() then
+            detailTitle:SetPoint("RIGHT", hideStepsCheck.label, "LEFT", -8, 0)
+        else
+            detailTitle:SetPoint("RIGHT", detailPanel, "RIGHT", -8, 0)
+        end
     end
     LayoutDetailScroll()
 
