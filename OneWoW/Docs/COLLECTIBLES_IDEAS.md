@@ -4,11 +4,16 @@
 > "what serious collectors expect" direction so it does not pollute the shipped
 > [`COLLECTIBLES.md`](COLLECTIBLES.md). Promote items into that doc as they land.
 >
+> **Cross-leg sequencing lives in [`ROADMAP.md`](ROADMAP.md)** — what to build next across all
+> three legs, shared prerequisites, and the decisions log. This file owns collectibles-specific
+> direction only.
+>
 > **See also:**
 > - [`COLLECTIBLES.md`](COLLECTIBLES.md) (shipped design)
+> - [`ROADMAP.md`](ROADMAP.md) (cross-leg sequencing)
 > - [`ARCHITECTURE.md`](ARCHITECTURE.md) §6/§7 (core services + LOD/cross-unit model)
 > - [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) (executable plans)
-> - [`AltTracker2/Docs/IDEAS.md`](../../OneWoW_AltTracker2/Docs/IDEAS.md) (roster Ask / lockouts)
+> - [`ALTTRACKER2_IDEAS.md`](ALTTRACKER2_IDEAS.md) (roster Ask / lockouts)
 
 ## The through-line
 
@@ -85,12 +90,14 @@ loot eligibility**: killing the same rare twice in a day yields no special loot.
   `C_QuestLog.IsQuestFlaggedCompleted(hiddenQuestID)` — already wrapped by
   `…Collections_API.IsQuestCompleted`. Trackers already has `rare_quest` for the
   same flag. No combat-log parsing.
-- **Per-alt (reuse w/ caveat):** each alt's completed-quest set is stored
-  (`GetCharacterData(charKey).quests.completed`). **Caveat:** the existing
-  `IsQuestCompleted` is *live, current-character only*; other alts answer from a
-  **last-seen snapshot** (accurate as of that alt's last data collection). Document
-  the freshness limit; add a small "is quest X in alt Y's stored completed set"
-  helper. Roster Ask ("which alts still have loot up?") is AltTracker2.
+- **Per-alt (already shipped — consume it):**
+  `OneWoW_CatalogData_Quests_API.GetCompletedCharacters(questID)` answers this today, and
+  Catalog's Quests tab already renders it. `CompletionTracker` keeps its own
+  `db.completion[charKey]`, seeded from `GetAllCompletedQuestIDs()` on login and updated on
+  every turn-in, falling back to the AltTracker snapshot only for characters it has never
+  seen. **Do not** add a second helper or a second quest-completion store; the "is quest X in
+  alt Y's completed set" work is done. The roster Ask *presentation* ("which alts still have
+  loot up?") is AltTracker2, but the answer is available now.
 - **Build:** a curated **collectible-key → hidden-quest-ID** map (datamined, small,
   updatable; degrade gracefully when a key has no mapping). Same maintenance shape
   as the drop-rate data we deliberately do **not** own.
@@ -192,7 +199,7 @@ show all collectibles always; assign an entry to one **or many** alts.
 - Assignment is "who does the acquiring," so it becomes moot on collection — lines
   up with the existing auto-recycle flow.
 - **Not peer sharing:** Collectionist Roster (guild/BNet bitmaps of missing items)
-  is a different social layer. AltTracker2 already declined cross-account sharing.
+  is a different social layer. Cross-account sharing is a declared AltTracker2 non-goal.
 
 ## 7. Requirement modeling (rep / renown / currency), per-alt
 
@@ -205,8 +212,9 @@ Broader: the char that saw it may not qualify, but **another alt might**.
   (don't hardcode a list). Collectionist hardcodes `cost` / `renown` on curated
   rows — we generalize the live capture instead of a second cost encyclopedia.
 - **Build:** a first-class requirement model on the record + a resolver that
-  answers "which of my alts can obtain this," reusing the currency/rep stores.
-  AltTracker2 Ask is the roster-shaped consumer.
+  answers "which of my alts can obtain this," reusing the currency/rep stores. The resolver
+  is a **store-layer** question and does not wait for AltTracker2; AT2 Ask is only the
+  roster-shaped *presentation* of it.
 
 ## 8. Temporal-availability service (generalize lockouts)
 
@@ -318,19 +326,24 @@ Blizzard's list. Illusions (FuocoNote) have **no** key type today. Only pursue
 if "sets/illusions the wardrobe does not list" is a collector expectation we
 want to meet.
 
+**Half-declared key types — decide in the same pass.** Two forms are already in the grammar
+with no resolution behind them: `campsite:` is in `TYPES` but returns nil from
+`ResolveDisplay` / `GetCollectionState`, and `appearance:ima:` appears in the grammar comment
+with no branch either. Half-declared is worse than absent, because a caller can build a key
+that silently resolves to nothing. Settle these alongside the `illusion:` in-or-out question.
+
 ---
 
 ## Suggested priority
 
-Highest leverage is views over data we already collect, **in the order that unblocks the three legs:**
+**Ordering now lives in [`ROADMAP.md`](ROADMAP.md).** It sequences all three legs together and
+names the shared prerequisites — notably that the curated key → hidden-quest map (roadmap P-1)
+gates three separate ideas across two docs, and that cross-alt quest completion (P-2) already
+ships, which moves #2 from "waiting on a roster UI" to "buildable now."
 
-0. Trackers hub tab GUI-first pass, then calendar fail-open (engine, can parallel)
-   ([`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) Where to start / §0).
-1. Notes `farming` → Trackers handoff (#1) — thin `_API`, list id = collectible key; explicit “Track this” for v1. Land after the tab pass.
-2. Remaining-attempt / lockout-aware availability on a **wanted** key (#2 + #8) — same Endgame lockouts Trackers slice 2 consumes; logged-in char first.
-3. Easy Wins sort of the existing want list (#5) from `vendorOffers` + affordability (Notes-only; can run parallel to 0–2).
-4. Unobtainable overlay + achievement→reward map so Progress / "almost complete" do not lie (#3–#4).
-5. Wowhead builder (#9).
+Collectibles-side items, for orientation: handoff (#1) · daily loot-lock (#2 + #8) · Easy Wins
+(#5, Notes-only and parallelizable) · unobtainable overlay + achievement→reward map (#3–#4) ·
+Wowhead builder (#9).
 
 ---
 
@@ -357,10 +370,13 @@ Highest leverage is views over data we already collect, **in the order that unbl
   mine from ATT/Wowhead, or is there a currently-maintained lib worth a
   dependency? (Prefer a small vendored, mineable table over a heavy live
   dependency.)
-- Confirm which alt-multiselect component is the shared one (AltScopeSection vs. the
-  gear-overlay picker) and consolidate on it.
-- Per-alt daily-lock freshness: is a "last seen" snapshot acceptable UX, or do we
-  want a login-time refresh nudge?
+- ~~Confirm which alt-multiselect component is the shared one (AltScopeSection vs. the
+  gear-overlay picker).~~ **Answered:** `ns.UI.BuildAltScopeSection` is the shared one; the
+  gear overlay already reuses it rather than shipping a competing picker.
+- ~~Per-alt daily-lock freshness: is a "last seen" snapshot acceptable UX?~~ **Largely
+  answered:** `CompletionTracker` maintains its own per-character completion map, refreshed on
+  login and on every turn-in, so most alts are fresher than an AltTracker collection snapshot.
+  Only never-seen characters fall back to "last seen."
 - Instance-first remaining loot: Catalog Journal is the EJ UI; Trackers strip
   consumes Journal IDs; remaining work is the curated key→instance map, not
   which addon browses bosses.

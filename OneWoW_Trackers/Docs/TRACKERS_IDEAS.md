@@ -4,11 +4,16 @@
 > direction so collectibles and AltTracker2 ideas stay in their own docs. Promote
 > items into [`ARCHITECTURE.md`](ARCHITECTURE.md) as they land.
 >
+> **Cross-leg sequencing lives in [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md)** — what to
+> build next across all three legs, shared prerequisites, and the decisions log. This file
+> owns Trackers-specific direction only.
+>
 > **See also:**
 > - [`ARCHITECTURE.md`](ARCHITECTURE.md) (shipped Trackers design)
+> - [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) (cross-leg sequencing)
 > - [`COLLECTIBLES.md`](../../OneWoW/Docs/COLLECTIBLES.md) (LOD: identity vs plans)
 > - [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) (want list, keys, temporal)
-> - [`AltTracker2/Docs/IDEAS.md`](../../OneWoW_AltTracker2/Docs/IDEAS.md) (roster Ask / lockouts)
+> - [`ALTTRACKER2_IDEAS.md`](../../OneWoW/Docs/ALTTRACKER2_IDEAS.md) (roster Ask / lockouts)
 > - [`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md) (Catalog Journal + DB2 membership)
 
 ## The three legs
@@ -34,20 +39,42 @@ Do not invent parallel track types. The engine already evaluates:
 | Need | Already exists |
 | --- | --- |
 | Collection truth for mount / pet / toy / appearance | `TrackerEngine` → `OneWoW.Collectibles.GetCollectionState` + `BuildKey` |
-| Hidden daily/weekly rare lock | `rare_quest` (`C_QuestLog.IsQuestFlaggedCompleted`) |
+| Hidden daily/weekly rare lock | `rare_quest` — **display name only**, see caveat below |
 | Account-wide quest flag | `quest_account` |
 | “N of these quests” | `quest_pool` / `quest_pool_account` |
 | Kill / loot / talk / enter instance | `kill_creature`, `loot_item`, `npc_interact`, `enter_instance` |
 | Map pin on a step | `mapID` + `coordX`/`coordY` + `TrackerMap` |
-| Step gating | `requiresSteps`, `professionRequired`, `eventRequired` (calendar `eventID`) |
+| Step gating | `professionRequired`, `eventRequired` (calendar `eventID`) hide; `requiresSteps` only **dims**, see caveat |
 | Per-alt “who has done this step” | `rosterMode` (current char stamped into an account roster) |
+| Cross-alt quest completion | `OneWoW_CatalogData_Quests_API.GetCompletedCharacters` / `GetActiveCharacters` — public, with UI in Catalog |
 | Collectible-shaped preset | Dusting for Moths (`TrackerPresets` — `quest_account` + coords + renown gates) |
-| Hide completed (list + pinned) | `hideCompleted` / `pinnedHideCompleted` |
-| Interval timer step | `custom_timer` |
+| Hide completed | `pinnedHideCompleted` (persisted, per list) — the hub filter is a different thing, see caveat |
+| Interval timer step | `custom_timer` (reset is currently broken — see below) |
 | Instance / map / difficulty identity | `OneWoW_CatalogData_Journal_API` (`GetInstanceByMapID`, live EJ merge); Generated `JournalMapDifficulties` / `JournalInstanceMeta` |
 | Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins, Tracker hub detail (sections + steps; drop a step on a header). `TD:MoveStepToSection` migrates the progress blob |
 
-**Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. `eventRequired` is **fail-closed**: an empty calendar (`GetNumDayEvents == 0`) hides the step. Lockouts are not consulted. There is no “set instance difficulty” step.
+**Caveats on the rows above** — verified against the code, do not re-derive from the older text:
+
+- **`rare_quest` is a literal alias of `quest`.** Same evaluator body, same
+  `C_QuestLog.IsQuestFlaggedCompleted`, no distinct reset semantics. It is a label, not a
+  daily-lock capability. The real capability needs the curated key → hidden-quest map
+  ([`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-1) plus a daily-reset list.
+- **`requiresSteps` only dims a hub row.** It does not hide the step, block completion, feed
+  `IsStepVisible`, appear in the step editor, or parse in Markup — serialize/import only.
+  §2's ordered prereqs and §6's prune both assume more than this.
+- **`hideCompleted` and `pinnedHideCompleted` are not a pair.** `pinnedHideCompleted` is a
+  persisted per-list field honored by the pin and hub detail. The hub-side "Hide completed"
+  is a session filter over the left rail that hides fully complete *lists*.
+- **Only 20 of 38 track types are in the step editor's picker.** Absent: `rare_quest`,
+  `quest_account`, `loot_item`, `custom_timer`, `campaign`, `quest_progress`, `quest_active`,
+  `quest_world`, `location`, `exploration`, all `vault_*`, all `prof_*`. Dusting for Moths
+  uses `quest_account` and therefore cannot be reproduced by a player in the UI — it ships as
+  an import string. See [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-4.
+- **`custom_timer` interval reset is broken.** `Core/Resets.lua` reads `sp.lastComplete`;
+  every writer sets `sp.lastCompleted`. The read is always nil, so a completed timer step
+  clears on the next reconcile. §11 builds on this type.
+
+**Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. Lockouts are not consulted. There is no “set instance difficulty” step. (`eventRequired` fail-open **shipped** — see §4.)
 
 **Gaps vs the rest of the suite UI:** the engine and pin overlay are usable; the hub **Tracker** tab is a mid-modernization authoring surface (see Hub tab UI below). Notes handoff lands in that tab.
 
@@ -77,19 +104,25 @@ The pin overlay is the play surface and was out of scope for this pass. Do not r
 
 ## Where to start
 
-Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on the current authoring tab.
+**Ordering now lives in [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md).** It sequences all three
+legs together and names the shared prerequisites, which is not something this doc can see on
+its own. Trackers' own slices, for orientation:
 
-**Slice 0 — hub tab GUI-first (§0).** Partial. Drag, icon chrome, Move Up/Down removal, detail declutter, editor/hub locales, left-rail `CreateListRowBasic` + virtualizer, and in-place detail progress bind are in. Still open: pinned overlay restyle, farm-value row widgets, dwell-expand during drag, extending `CreateListRowBasic` / `CreateReorderDrag` (detail-tree virtualizer blocked on a data-index API), localizing stored `"General"` categories. `UI/Framework.lua` is gone. Not a new product — the surface every later idea sits on.
+| Slice | State |
+| --- | --- |
+| **0** — hub tab GUI-first (§0) | Partial; the surface every later idea sits on |
+| **0b** — calendar fail-open (§4) | **Shipped** |
+| **1** — collectible-key handoff (§1) | Next, after the tab is a place you'd want to land |
+| **2** — lockout skip for the logged-in character (§3) | Blocked on the Endgame lockout `_API` (roadmap P-3) |
 
-**Slice 0b — calendar fail-open (§4).** Shipped: event-gated steps stay visible until `CALENDAR_UPDATE_EVENT_LIST`.
+Slice 0 remaining: pinned overlay restyle, farm-value row widgets, dwell-expand during drag,
+extending `CreateListRowBasic` / `CreateReorderDrag` (detail-tree virtualizer blocked on a
+data-index API), localizing stored `"General"` categories. `UI/Framework.lua` is gone. Not a
+new product.
 
-**Slice 1 — collectible-key handoff (§1).** After the tab is a place you’d want to land. `EnsureCollectiblePlan(key)` / `ShowCollectiblePlan(key)` on `OneWoW_Trackers_API`, `BringUp("OneWoW_Trackers")` from Notes. v1 = list id is the key plus one collection step. **Decide first:** explicit “Track this” vs auto-spawn on `farming` (explicit is the safer v1).
-
-**Slice 2 — lockout skip for the logged-in character (§3).** Consume Endgame lockouts `_API`. Other alts stay Ask on AltTracker2.
-
-**Notes-only parallel (does not need Trackers):** Easy Wins sort of the want list from `vendorOffers` + affordability.
-
-**Not yet:** RS/SD subscribe, encounter steps (Journal `_API` is ready; kill-credit is not), Trading Post checklist, detach-section, account rollup, chore-preset refresh, AT2 Ops matrix.
+Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or
+instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on
+the current authoring tab.
 
 ---
 
@@ -133,7 +166,7 @@ Do **not** own Collectionist’s Midnight encyclopedia. A plan’s steps are eit
 FuocoNote / ICH / BountyHelper / MRP all answer “is this still lootable this reset?” from `GetSavedInstance*` (and shared 10/25 diffs). We already store lockouts in AltTracker_Endgame.
 
 - **Build:** when a step names `enter_instance` / `kill_creature` (or a future encounter id), evaluate lockout and **skip or dim** — do not invent an attempt ledger. “Tried this week” is lockout + `rare_quest`, not a custom counter.
-- **Roster read:** other alts’ lockouts / completed-quest snapshots are AltTracker data (freshness = last seen). Ask-the-roster UX belongs on AltTracker2; Trackers can consume `_API` for the logged-in char first.
+- **Roster read:** the *data* is available today and is **not** blocked by AltTracker2 — lockouts come from Endgame (via the `_API` in roadmap P-3) and cross-alt quest completion from `OneWoW_CatalogData_Quests_API.GetCompletedCharacters`. Only the Ask-the-roster *UI* waits for AltTracker2. Trackers evaluates the logged-in char first either way.
 - Collectibles-side framing: [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) §2 / §8.
 
 ### 4. Calendar fail-open
@@ -256,7 +289,7 @@ MidnightHelper `ResetRoutine`: post-reset pickup order (vault → hub → traine
 
 Helper `AccountWeeklyChecklist`: “N alts still need SA / Trove.” WeeklyRewards is the full char×column spreadsheet.
 
-- **Build:** one summary row on a weekly list (`rosterMode` already stamps who did a step). Click-through to AltTracker2 Ask is enough. Do **not** rebuild WeeklyRewards as Trackers UI.
+- **Build:** one summary row on a weekly list (`rosterMode` already stamps who did a step). Click-through to AltTracker2 Ask is enough — note that is a **UI deferral**, so the strip itself should not wait on AT2. Do **not** rebuild WeeklyRewards as Trackers UI.
 
 ### 16. Trading Post month checklist
 
@@ -304,21 +337,21 @@ Helper’s Gilded Stash has **no live API**; they infer progress from a Delve Lo
 - **TomTom as a RequiredDep.** Blizzard waypoint + `TrackerMap` already exist. If we ever subscribe, use a loaded-watcher — do not TOC-OptionalDep it to pull it in with Trackers.
 - **Rare spawn scanning.** Subscribe to RareScanner / SilverDragon alerts (§9); do not register `VIGNETTE_*` ourselves to discover rares.
 - **AH buy flows** (Collectionator). Farm value pricing stays the only AH touch.
-- **Guild / BNet missing-item bitmaps** (Collectionist Roster). AltTracker2 already declined cross-account sharing.
+- **Guild / BNet missing-item bitmaps** (Collectionist Roster). Cross-account sharing is a declared AltTracker2 non-goal.
 - **Rebuilding Blizzard Collections** as a Trackers UI.
 
 ---
 
 ## Open questions
 
+Cross-leg questions (temporal helper, instance→collectible map, one-list-per-key) are tracked
+in [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) so they get one answer, not three.
+
 - Detail-tree virtualizer (§0): blocked on `CreateReorderDrag` addressing by data index (complete frame list is required for cross-section drop + header targets). Left rail dense compose is closed.
-- Handoff: auto-spawn a plan on `farming` intent, or only on an explicit “Track this” action?
-- One list per key vs one “Collectibles” list with sections per key?
-- Shared temporal-availability helper in core (`OneWoW.Collectibles` or a sibling service) vs Trackers-local lockout/calendar checks that Notes also wants to read?
+- ~~Handoff: auto-spawn a plan on `farming` intent, or only on an explicit “Track this”?~~ **Answered:** explicit “Track this” for v1.
+- ~~Rare capture: share vendor `off|prompt|auto` UI chrome but a separate SV key?~~ **Answered:** separate SV key, same vocabulary.
+- **Rare alerts (§9): do the two settings compose?** Pin mode defaults `off` but capture mode defaults `prompt`. If capture is independent, installing SilverDragon produces StaticPopups the player never opted into — the exact vendor-auto failure §9 argues against. Recommended: gate capture on pin mode being non-`off`.
 - `SetDifficulty` step vs a button on `enter_instance` steps only?
-- Instance→collectible map: curated keys on Collectibles, listing/IDs from Journal — Trackers only stores step ids?
-- Rare alerts (§9): default pin mode Off / Alert / Auto-pin?
-- Rare capture: share vendor `off|prompt|auto` UI chrome but a **separate** SV key (recommended) vs one global capture mode?
 - Rare alerts: NPCs only, or also SilverDragon `AnnounceLoot` / RareScanner containers?
 - Weekly presets: consume Routine/ChoreTracker/WeeklyRewards Midnight IDs as data, or keep hand-maintained `TrackerPresets` only?
 - Detach-section (§13) vs pin-the-whole-list — worth a second window type?
