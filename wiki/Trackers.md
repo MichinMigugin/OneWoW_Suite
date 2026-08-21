@@ -41,7 +41,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 * Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub.
 * Drag a section header or a step to reorder. Drop a step on another section to move it there.
-* List actions (Edit, Export, Duplicate, Reset, Delete, Add Section) are icons. Hover for the name.
+* Hover a section or step for add, edit, and delete. List actions sit under the title.
 * Farm value is strongest with Auction House or TSM pricing turned on under QoL > Tooltips > Value.
 
 ## Related

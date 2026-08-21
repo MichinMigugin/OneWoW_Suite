@@ -6,9 +6,10 @@
 ---
 
 # Trackers
-- Pin a list from the pin icon next to its title.
-- Drag a section header or a step to reorder, including dropping a step onto another section.
-- List, section, and step actions are icons (hover for the name).
+- Pin a list from the pin icon next to its title. List actions and Hide completed sit on the row under the title.
+- Drag a section header or a step to reorder, including dropping a step onto another section. Right-click no longer has Move Up or Move Down.
+- Hover a section or step for add, edit, and delete. Counts stay on the right; a divider sits above the section list.
+- Tracker cards show type, category, and author.
 - Farm value lists keep that pin icon next to the title.
 - Finished tracker steps use a darker row fill so the done text stays readable.
 - Step descriptions wrap to the panel width instead of truncating until the window is resized.

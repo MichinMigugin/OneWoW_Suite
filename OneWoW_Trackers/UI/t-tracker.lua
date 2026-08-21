@@ -225,7 +225,11 @@ function ns.UI.CreateTrackerTab(parent)
     end)
     pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local hideStepsCheck = OneWoW_GUI:CreateCheckbox(detailPanel, {
+    local actionBar = OneWoW_GUI:CreateLayoutFrame(detailPanel, { height = 28 })
+    actionBar:Hide()
+    local actionBarButtons = {}
+
+    local hideStepsCheck = OneWoW_GUI:CreateCheckbox(actionBar, {
         label = L["TRACKER_PIN_HIDE_COMPLETED"],
         labelSide = "left",
         onClick = function(myself)
@@ -236,7 +240,7 @@ function ns.UI.CreateTrackerTab(parent)
             TE:RefreshAllPinnedWindows()
         end,
     })
-    hideStepsCheck:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -8, -4)
+    hideStepsCheck:SetPoint("RIGHT", actionBar, "RIGHT", -2, 0)
     hideStepsCheck:Hide()
     local function HideStepsTooltip(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
@@ -252,21 +256,25 @@ function ns.UI.CreateTrackerTab(parent)
     local detailScrollFrame, detailScrollChild = OneWoW_GUI:CreateScrollFrame(detailPanel, {})
     local function LayoutDetailScroll()
         detailScrollFrame:ClearAllPoints()
-        -- Farm value hides Hide completed but still uses the pin/title strip.
+        -- Pin/title row plus the action strip below it (~62px). Farm value
+        -- still uses both rows; it only hides Hide completed on the strip.
         if pinBtn:IsShown() then
-            detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -34)
+            detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -62)
+            actionBar:Show()
         else
             detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -6)
+            actionBar:Hide()
         end
         detailScrollFrame:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -6, 4)
-        pinBtn:SetFrameLevel((detailScrollFrame:GetFrameLevel() or 0) + 5)
+        local aboveScroll = (detailScrollFrame:GetFrameLevel() or 0) + 5
+        pinBtn:SetFrameLevel(aboveScroll)
+        actionBar:SetFrameLevel(aboveScroll)
+        actionBar:ClearAllPoints()
+        actionBar:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -32)
+        actionBar:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -6, -32)
         detailTitle:ClearAllPoints()
         detailTitle:SetPoint("LEFT", pinBtn, "RIGHT", 6, 0)
-        if hideStepsCheck:IsShown() then
-            detailTitle:SetPoint("RIGHT", hideStepsCheck.label, "LEFT", -8, 0)
-        else
-            detailTitle:SetPoint("RIGHT", detailPanel, "RIGHT", -8, 0)
-        end
+        detailTitle:SetPoint("RIGHT", detailPanel, "RIGHT", -8, 0)
     end
     LayoutDetailScroll()
 
@@ -336,9 +344,16 @@ function ns.UI.CreateTrackerTab(parent)
         metaLabel:SetWordWrap(false)
         local typeColor = LIST_TYPE_COLORS[listData.listType] or { 0.7, 0.7, 0.7 }
         local typeName = TE:GetListTypeDisplayName(listData.listType)
+        local category = listData.category or ""
+        local author = listData.author
+        local metaRest = category
+        if author and author ~= "" then
+            metaRest = category .. " | " .. author
+        end
+        local metaPlain = typeName .. " | " .. metaRest
         metaLabel:SetText(format("|cFF%02x%02x%02x%s|r | %s",
             typeColor[1] * 255, typeColor[2] * 255, typeColor[3] * 255,
-            typeName, listData.category or ""))
+            typeName, metaRest))
         metaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local done, total = TD:GetListCompletion(listData.id)
@@ -377,9 +392,12 @@ function ns.UI.CreateTrackerTab(parent)
                 myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
-            if titleLabel:IsTruncated() then
+            if titleLabel:IsTruncated() or metaLabel:IsTruncated() then
                 GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
                 GameTooltip:SetText(listData.title or "Untitled", 1, 1, 1)
+                if metaLabel:IsTruncated() then
+                    GameTooltip:AddLine(metaPlain, 0.8, 0.8, 0.8, true)
+                end
                 GameTooltip:Show()
             end
         end)
@@ -581,6 +599,28 @@ function ns.UI.CreateTrackerTab(parent)
         })
     end
 
+    local function ReorderIsActive()
+        return (sectionReorder and sectionReorder:IsActive())
+            or (stepReorder and stepReorder:IsActive())
+    end
+
+    local function SetRowActionsShown(row, shown)
+        if ReorderIsActive() then return end
+        local btns = row._trackerActionBtns
+        if not btns then return end
+        for i = 1, #btns do
+            btns[i]:SetShown(shown)
+        end
+    end
+
+    local function ScheduleHideRowActions(row)
+        C_Timer.After(0, function()
+            if not row:IsShown() then return end
+            if row:IsMouseOver() then return end
+            SetRowActionsShown(row, false)
+        end)
+    end
+
     ClearDetail = function()
         if sectionReorder then sectionReorder:Cancel() end
         if stepReorder then stepReorder:Cancel() end
@@ -590,10 +630,15 @@ function ns.UI.CreateTrackerTab(parent)
             if row.Hide then row:Hide() end
         end
         wipe(detailRows)
+        for _, btn in ipairs(actionBarButtons) do
+            btn:Hide()
+        end
+        wipe(actionBarButtons)
         emptyLabel:Show()
         detailTitle:Hide()
         pinBtn:Hide()
         hideStepsCheck:Hide()
+        actionBar:Hide()
         LayoutDetailScroll()
     end
 
@@ -627,69 +672,20 @@ function ns.UI.CreateTrackerTab(parent)
         end
         LayoutDetailScroll()
 
-        local yOffset = 0
-
-        local headerFrame = OneWoW_GUI:CreateFrame(detailScrollChild, {
-            height   = 80,
-            backdrop = BACKDROP_SIMPLE,
-            bgColor  = "BG_SECONDARY",
-            borderColor = "BORDER_SUBTLE",
-        })
-        headerFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
-        headerFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
-        tinsert(detailRows, headerFrame)
-
-        local authorText = OneWoW_GUI:CreateFS(headerFrame, 10)
-        authorText:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 10, -8)
-        local typeColor = LIST_TYPE_COLORS[list.listType] or { 0.7, 0.7, 0.7 }
-        local metaParts = format("|cFF%02x%02x%02x%s|r  |  %s  |  %s",
-            typeColor[1] * 255, typeColor[2] * 255, typeColor[3] * 255,
-            TE:GetListTypeDisplayName(list.listType),
-            list.category or "General",
-            (list.author or "")
-        )
-        if list.accountWide then
-            metaParts = metaParts .. "  |  " .. OneWoW_GUI:WrapThemeColor(L["TRACKER_ACCOUNT_WIDE"], "ACCENT_PRIMARY")
-        end
-        authorText:SetText(metaParts)
-        authorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        local done, total = TD:GetListCompletion(list.id)
-        local progressBar = OneWoW_GUI:CreateProgressBar(headerFrame, {
-            height = 14,
-            min = 0,
-            max = math.max(total, 1),
-            value = done,
-        })
-        progressBar:SetPoint("TOPLEFT", authorText, "BOTTOMLEFT", 0, -6)
-        progressBar:SetPoint("RIGHT", headerFrame, "RIGHT", -10, 0)
-
-        local progressText = OneWoW_GUI:CreateFS(headerFrame, 10)
-        progressText:SetPoint("CENTER", progressBar, "CENTER", 0, 0)
-        progressText:SetText(total > 0 and format("%d / %d", done, total) or "")
-        progressText:SetTextColor(1, 1, 1)
-
-        if list.listType == "farmvalue" then
-            progressBar:Hide()
-            progressText:Hide()
-        end
-
-        local btnY = -54
-        local btnX = 10
         local iconGap = 4
         local prevAction
-
         local function PlaceListAction(btn)
             if prevAction then
                 btn:SetPoint("LEFT", prevAction, "RIGHT", iconGap, 0)
             else
-                btn:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", btnX, btnY)
+                btn:SetPoint("LEFT", actionBar, "LEFT", 2, 0)
             end
             prevAction = btn
+            tinsert(actionBarButtons, btn)
             return btn
         end
 
-        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+        PlaceListAction(OneWoW_GUI:CreateIconButton(actionBar, {
             iconTexture = MEDIA .. "icon-gears.png",
             size = ICON_BTN,
             tooltipTitle = EDIT,
@@ -701,7 +697,7 @@ function ns.UI.CreateTrackerTab(parent)
             end,
         }))
 
-        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+        PlaceListAction(OneWoW_GUI:CreateIconButton(actionBar, {
             iconTexture = MEDIA .. "icon-flag.png",
             size = ICON_BTN,
             tooltipTitle = L["TRACKER_EXPORT"],
@@ -710,7 +706,7 @@ function ns.UI.CreateTrackerTab(parent)
             end,
         }))
 
-        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+        PlaceListAction(OneWoW_GUI:CreateIconButton(actionBar, {
             atlas = "communities-icon-addgroupplus",
             size = ICON_BTN,
             tint = true,
@@ -726,7 +722,7 @@ function ns.UI.CreateTrackerTab(parent)
         }))
 
         if list.listType ~= "farmvalue" then
-            PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+            PlaceListAction(OneWoW_GUI:CreateIconButton(actionBar, {
                 atlas = "talents-button-undo",
                 size = ICON_BTN,
                 tooltipTitle = RESET,
@@ -739,7 +735,7 @@ function ns.UI.CreateTrackerTab(parent)
             }))
         end
 
-        PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+        PlaceListAction(OneWoW_GUI:CreateIconButton(actionBar, {
             iconTexture = MEDIA .. "icon-trash.png",
             size = ICON_BTN,
             tooltipTitle = DELETE,
@@ -755,7 +751,7 @@ function ns.UI.CreateTrackerTab(parent)
         }))
 
         if list.listType ~= "farmvalue" then
-            PlaceListAction(OneWoW_GUI:CreateIconButton(headerFrame, {
+            PlaceListAction(OneWoW_GUI:CreateIconButton(actionBar, {
                 iconTexture = MEDIA .. "icon-add.png",
                 size = ICON_BTN,
                 tooltipTitle = L["TRACKER_ADD_SECTION"],
@@ -769,7 +765,7 @@ function ns.UI.CreateTrackerTab(parent)
             }))
         end
 
-        yOffset = yOffset - 90
+        local yOffset = 0
 
         if list.description and list.description ~= "" then
             local descFrame = CreateFrame("Frame", nil, detailScrollChild)
@@ -788,6 +784,81 @@ function ns.UI.CreateTrackerTab(parent)
             local descH = descText:GetStringHeight() + 12
             descFrame:SetHeight(descH)
             yOffset = yOffset - descH
+        end
+
+        if list.accountWide then
+            local awFrame = CreateFrame("Frame", nil, detailScrollChild)
+            awFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
+            awFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
+            tinsert(detailRows, awFrame)
+
+            local awText = OneWoW_GUI:CreateFS(awFrame, 10)
+            awText:SetPoint("TOPLEFT", awFrame, "TOPLEFT", 10, -2)
+            awText:SetPoint("RIGHT", awFrame, "RIGHT", -10, 0)
+            awText:SetJustifyH("LEFT")
+            awText:SetWordWrap(true)
+            awText:SetText(L["TRACKER_ACCOUNT_WIDE"])
+            awText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+            local awH = math.max(16, awText:GetStringHeight() + 6)
+            awFrame:SetHeight(awH)
+            yOffset = yOffset - awH
+        end
+
+        if list.listType ~= "farmvalue" then
+            local done, total = TD:GetListCompletion(list.id)
+            local progFrame = CreateFrame("Frame", nil, detailScrollChild)
+            progFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
+            progFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
+            progFrame:SetHeight(22)
+            tinsert(detailRows, progFrame)
+
+            local progressBar = OneWoW_GUI:CreateProgressBar(progFrame, {
+                height = 14,
+                min = 0,
+                max = math.max(total, 1),
+                value = done,
+            })
+            progressBar:SetPoint("TOPLEFT", progFrame, "TOPLEFT", 10, -4)
+            progressBar:SetPoint("RIGHT", progFrame, "RIGHT", -10, 0)
+            progressBar._text:SetText(total > 0 and format("%d / %d", done, total) or "")
+
+            yOffset = yOffset - 26
+        end
+
+        local hasVisibleSections = false
+        if list.listType ~= "farmvalue" then
+            for _, sec in ipairs(list.sections or {}) do
+                if TE:IsSectionVisible(sec) and (not list.pinnedHideCompleted or TE:HasIncompleteVisibleStep(list.id, sec)) then
+                    hasVisibleSections = true
+                    break
+                end
+            end
+        end
+        if hasVisibleSections then
+            local hintFrame = CreateFrame("Frame", nil, detailScrollChild)
+            hintFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
+            hintFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
+            tinsert(detailRows, hintFrame)
+
+            local hintText = OneWoW_GUI:CreateFS(hintFrame, 10)
+            hintText:SetPoint("TOPLEFT", hintFrame, "TOPLEFT", 10, -2)
+            hintText:SetWidth(math.max(50, DetailContentWidth() - 28))
+            hintText:SetJustifyH("LEFT")
+            hintText:SetWordWrap(true)
+            hintText:SetText(L["TRACKER_HOVER_ACTIONS"])
+            hintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+            local hintH = hintText:GetStringHeight() + 8
+            hintFrame:SetHeight(hintH)
+            yOffset = yOffset - hintH
+
+            local ruleFrame = OneWoW_GUI:CreateLayoutFrame(detailScrollChild, { height = 1 })
+            ruleFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
+            ruleFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
+            tinsert(detailRows, ruleFrame)
+            OneWoW_GUI:CreateDivider(ruleFrame, { yOffset = 0 })
+            yOffset = yOffset - 10
         end
 
         if list.listType == "farmvalue" and ns.TrackerFarmValue then
@@ -837,7 +908,11 @@ function ns.UI.CreateTrackerTab(parent)
                     end)
                 end,
             })
-            addStepBtn:SetPoint("RIGHT", secHeader, "RIGHT", -4, 0)
+            local secCount = OneWoW_GUI:CreateFS(secHeader, 10)
+            secCount:SetPoint("RIGHT", secHeader, "RIGHT", -8, 0)
+            secCount:SetText(secTotal > 0 and format("%d/%d", secDone, secTotal) or "")
+            secCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            addStepBtn:SetPoint("RIGHT", secCount, "LEFT", -4, 0)
 
             local secEditBtn = OneWoW_GUI:CreateIconButton(secHeader, {
                 iconTexture = MEDIA .. "icon-gears.png",
@@ -865,12 +940,12 @@ function ns.UI.CreateTrackerTab(parent)
                 end,
             })
             secDeleteBtn:SetPoint("RIGHT", secEditBtn, "LEFT", -2, 0)
+            addStepBtn:Hide()
+            secEditBtn:Hide()
+            secDeleteBtn:Hide()
+            secHeader._trackerActionBtns = { addStepBtn, secEditBtn, secDeleteBtn }
 
-            local secCount = OneWoW_GUI:CreateFS(secHeader, 10)
-            secCount:SetPoint("RIGHT", secDeleteBtn, "LEFT", -6, 0)
-            secCount:SetText(secTotal > 0 and format("%d/%d", secDone, secTotal) or "")
-            secCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            secLabel:SetPoint("RIGHT", secCount, "LEFT", -6, 0)
+            secLabel:SetPoint("RIGHT", secDeleteBtn, "LEFT", -6, 0)
             secLabel:SetJustifyH("LEFT")
             secLabel:SetWordWrap(false)
 
@@ -880,6 +955,12 @@ function ns.UI.CreateTrackerTab(parent)
                 if sectionReorder:ShouldSuppressClick() then return end
                 sec.collapsed = not sec.collapsed
                 parent.ShowDetail(list.id)
+            end)
+            secHeader:SetScript("OnEnter", function(self)
+                SetRowActionsShown(self, true)
+            end)
+            secHeader:SetScript("OnLeave", function(self)
+                ScheduleHideRowActions(self)
             end)
 
             secHeader._trackerKind = "header"
@@ -940,7 +1021,13 @@ function ns.UI.CreateTrackerTab(parent)
                         end)
                     end,
                 })
-                stepEditBtn:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
+                local stepProgress = OneWoW_GUI:CreateFS(stepRow, 10)
+                stepProgress:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -7)
+                stepProgress:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+                stepEditBtn:SetPoint("RIGHT", stepProgress, "LEFT", -4, 0)
+                stepEditBtn:Hide()
+                stepRow._trackerActionBtns = { stepEditBtn }
 
                 local checkSize = 16
                 local checkBtn
@@ -983,7 +1070,7 @@ function ns.UI.CreateTrackerTab(parent)
 
                 local stepLabel = OneWoW_GUI:CreateFS(stepRow, 12)
                 stepLabel:SetPoint("LEFT", checkBtn, "RIGHT", 6, 0)
-                stepLabel:SetPoint("RIGHT", stepEditBtn, "LEFT", -40, 0)
+                stepLabel:SetPoint("RIGHT", stepEditBtn, "LEFT", -6, 0)
                 stepLabel:SetJustifyH("LEFT")
                 stepLabel:SetWordWrap(false)
                 stepLabel:SetText(step.label or "Step")
@@ -1000,11 +1087,7 @@ function ns.UI.CreateTrackerTab(parent)
 
                 local progressStr = ns.TrackerEvaluators.FormatStepProgress(
                     step, sp, rosterCompleters and #rosterCompleters or nil)
-
-                local stepProgress = OneWoW_GUI:CreateFS(stepRow, 10)
-                stepProgress:SetPoint("RIGHT", stepEditBtn, "LEFT", -4, 0)
                 stepProgress:SetText(progressStr)
-                stepProgress:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 local rowHeight = 30
 
@@ -1101,11 +1184,15 @@ function ns.UI.CreateTrackerTab(parent)
                 stepRow:SetHeight(math.max(30, rowHeight))
 
                 stepRow:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    SetRowActionsShown(self, true)
+                    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
                     TE:BuildStepTooltip(GameTooltip, list.id, sec.key, step)
                     GameTooltip:Show()
                 end)
-                stepRow:SetScript("OnLeave", GameTooltip_Hide)
+                stepRow:SetScript("OnLeave", function(self)
+                    ScheduleHideRowActions(self)
+                    GameTooltip_Hide()
+                end)
 
                 stepRow:RegisterForClicks("AnyUp")
                 stepRow:SetScript("OnClick", function(_, button)
@@ -1130,25 +1217,12 @@ function ns.UI.CreateTrackerTab(parent)
                         MenuUtil.CreateContextMenu(stepRow, function(_, rootDescription)
                             rootDescription:CreateTitle(step.label or "Step")
                             rootDescription:CreateButton(EDIT, function()
-                                if ns.TrackerEditor then
-                                    ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
-                                        TE:RebuildIndices()
-                                        parent.RefreshList()
-                                        parent.ShowDetail(list.id)
-                                        TE:RefreshAllPinnedWindows()
-                                    end)
-                                end
-                            end)
-                            rootDescription:CreateDivider()
-                            rootDescription:CreateButton(L["TRACKER_MOVE_UP"], function()
-                                TD:MoveStep(list.id, sec.key, step.key, "up")
-                                parent.RefreshList()
-                                parent.ShowDetail(list.id)
-                            end)
-                            rootDescription:CreateButton(L["TRACKER_MOVE_DOWN"], function()
-                                TD:MoveStep(list.id, sec.key, step.key, "down")
-                                parent.RefreshList()
-                                parent.ShowDetail(list.id)
+                                ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
+                                    TE:RebuildIndices()
+                                    parent.RefreshList()
+                                    parent.ShowDetail(list.id)
+                                    TE:RefreshAllPinnedWindows()
+                                end)
                             end)
                             if not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                                 rootDescription:CreateDivider()
