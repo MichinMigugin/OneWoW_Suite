@@ -22,6 +22,20 @@ local achievementsExpanded = true
 local panels_ref = nil
 local RefreshJournalList
 local RefreshDetailView
+local nameFillRefreshPending = false
+
+local function ScheduleNameFillRefresh()
+    if nameFillRefreshPending then
+        return
+    end
+    nameFillRefreshPending = true
+    C_Timer.After(0, function()
+        nameFillRefreshPending = false
+        if selectedInstance then
+            RefreshDetailView(true)
+        end
+    end)
+end
 
 -- Multi-select Item Type filter: keys from ITEM_TYPE_DEFS map to item.special values.
 -- Empty table = "Show All" (no filter applied).
@@ -246,21 +260,44 @@ local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame, include
     if not addon or not item or not item.itemID then
         return
     end
-    local unknown = L["JOURNAL_UNKNOWN_ITEM"]
-    if item.name and item.name ~= "" and item.name ~= unknown then
+    -- nameResolved comes from the data store: the placeholder string lives in the
+    -- Journal store's locale scope, so Catalog cannot compare against it.
+    if item.nameResolved then
         return
     end
     local token = {}
     row._journalFillToken = token
     local function paint(result)
-        if row._journalFillToken ~= token or not result then
+        if not result then
             return
         end
         if result.name then
             item.name = result.name
+            item.nameResolved = true
             if item.itemData then
                 item.itemData.name = result.name
             end
+        end
+        if result.icon then
+            item.icon = result.icon
+        end
+        if result.quality ~= nil then
+            item.quality = result.quality
+            if item.itemData then
+                item.itemData.quality = result.quality
+            end
+        end
+        if result.link and item.itemData then
+            item.itemData.link = result.link
+        end
+        local canPaint = row._journalFillToken == token and row:IsShown()
+        if not canPaint then
+            if result.name then
+                ScheduleNameFillRefresh()
+            end
+            return
+        end
+        if result.name then
             local displayName = item.name
             if includeGuideMark and item.fromLiveEJ then
                 displayName = displayName .. " |cff888888(" .. GUIDE .. ")|r"
@@ -268,26 +305,16 @@ local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame, include
             nameFS:SetText(displayName)
         end
         if result.icon then
-            item.icon = result.icon
             iconTex:SetTexture(result.icon)
         end
         if result.quality ~= nil then
-            item.quality = result.quality
-            if item.itemData then
-                item.itemData.quality = result.quality
-            end
             local qr, qg, qb = OneWoW_GUI:GetItemQualityColor(result.quality)
             iconFrame:SetBackdropBorderColor(qr, qg, qb)
             nameFS:SetTextColor(qr, qg, qb)
         end
-        if result.link and item.itemData then
-            item.itemData.link = result.link
-        end
     end
     local cached = addon.LoadItemData(item.itemID, function(_, result)
-        if row:IsShown() then
-            paint(result)
-        end
+        paint(result)
     end)
     if cached then
         paint(cached)

@@ -53,6 +53,14 @@ raid card). ToyBox / Mount / Pet journal probes run only for leftover
 Miscellaneous or Consumable rows on that card, not for armor and weapons.
 Visible detail rows that still lack a name load through the store item loader.
 
+Because hydrate is Instant-only, a loot row may carry the localized
+`JOURNAL_UNKNOWN_ITEM` placeholder. Every row therefore also carries
+`nameResolved` (boolean): false means "still the placeholder, go fetch it". The
+live EJ merge and the item loader set it true when they fill a real name.
+Consumers must branch on `nameResolved`, never compare against the placeholder
+string — that key lives in this store's locale scope, so another addon
+re-localizing it gets the key name back instead of the translation.
+
 ## World
 
 MoP–Midnight outdoor hubs in EJ are typed `world` (not raid). IDs live in

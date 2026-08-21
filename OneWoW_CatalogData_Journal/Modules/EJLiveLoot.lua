@@ -205,17 +205,51 @@ local function applyLootFilterForScan()
     EJ_SetLootFilterCompat(classID, specID)
 end
 
+local function NameFromLootInfo(info)
+    if not info then
+        return nil
+    end
+    if info.name and info.name ~= "" then
+        return info.name
+    end
+    local link = info.link
+    if type(link) == "string" then
+        local fromLink = link:match("%[(.-)%]")
+        if fromLink and fromLink ~= "" then
+            return fromLink
+        end
+    end
+    if info.itemID then
+        return C_Item.GetItemNameByID(info.itemID)
+    end
+    return nil
+end
+
 local function scanLootIndices()
     local items = {}
-    local index = 1
-    while true do
+    local n = EJ_GetNumLootCompat()
+    for index = 1, n do
         local info = EJ_GetLootInfoByIndexCompat(index)
-        if not info or not info.name then break end
-        local itemID = info.itemID
-        if itemID and itemID > 0 then
-            items[itemID] = items[itemID] or { itemID = itemID, name = info.name, icon = info.icon, link = info.link }
+        if info then
+            local itemID = info.itemID
+            if itemID and itemID > 0 then
+                local row = items[itemID]
+                if not row then
+                    row = { itemID = itemID, name = NameFromLootInfo(info), icon = info.icon, link = info.link }
+                    items[itemID] = row
+                else
+                    if not row.name or row.name == "" then
+                        row.name = NameFromLootInfo(info)
+                    end
+                    if info.icon then
+                        row.icon = info.icon
+                    end
+                    if info.link then
+                        row.link = info.link
+                    end
+                end
+            end
         end
-        index = index + 1
     end
     return items
 end
@@ -376,8 +410,9 @@ local function mergeEJRowsIntoEncounter(enc, ejMap)
                     row.linkByDiff[diffID] = link
                 end
             end
-            if (not row.name or row.name == "" or row.name == (ns.L and ns.L["JOURNAL_UNKNOWN_ITEM"])) and ejRow.name then
+            if ejRow.name and not row.nameResolved then
                 row.name = ejRow.name
+                row.nameResolved = true
                 if row.itemData then
                     row.itemData.name = ejRow.name
                 end
@@ -462,6 +497,10 @@ function EJLive:MergeInstance(inst)
     if not inst.instanceID or inst.instanceID <= 0 then return end
     if not inst.encounters then return end
 
+    -- Hover tooltips already load this; merge must too or the first open has no
+    -- loot names until the player clicks away and back.
+    OneWoW:EnsureLoaded("Blizzard_EncounterJournal")
+
     mergeBusy = true
     EJLive.mergeAbort = false
     processOneInstance({
@@ -487,19 +526,38 @@ function EJLive:OnJournalCacheCleared()
     wipe(scaledLinkCache)
 end
 
+---@param inst table|nil
+---@return boolean
+local function HasUnresolvedNames(inst)
+    if not inst or not inst.encounters then
+        return false
+    end
+    for i = 1, #inst.encounters do
+        local items = inst.encounters[i].items
+        for j = 1, #items do
+            if not items[j].nameResolved then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 -- Blizzard's event name is misspelled. Refresh the open card only; never rebuild
--- the world cache (that restart loop was a multi-second login hitch).
+-- the world cache (that restart loop was a multi-second login hitch). A merge
+-- itself drives EJ selections that fire this event again, so re-scan only while
+-- the open card still has unnamed rows — otherwise the retry never settles.
 EventRegistry:RegisterFrameEventAndCallback("EJ_LOOT_DATA_RECIEVED", function()
     if mergeBusy or EJLive.scanningOnDemand then return end
-    if not mergeTarget then return end
+    if not mergeTarget or not HasUnresolvedNames(mergeTarget) then return end
     if EJLive.debounceTimer and EJLive.debounceTimer.Cancel then
         EJLive.debounceTimer:Cancel()
     end
-    EJLive.debounceTimer = C_Timer.NewTimer(1.5, function()
+    EJLive.debounceTimer = C_Timer.NewTimer(0.25, function()
         EJLive.debounceTimer = nil
         if mergeBusy or EJLive.scanningOnDemand then return end
         local target = mergeTarget
-        if target then
+        if target and HasUnresolvedNames(target) then
             EJLive:MergeInstance(target)
         end
     end)
