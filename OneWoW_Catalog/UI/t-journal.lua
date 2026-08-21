@@ -233,6 +233,67 @@ local function GetDataAddon()
     return OneWoW_CatalogData_Journal_API
 end
 
+--- Fill name / icon / quality for a visible loot row. Hydrate stays Instant-only;
+--- RequestLoadItemDataByID runs here, for this row, via the store item loader.
+---@param item table
+---@param row Frame
+---@param nameFS FontString
+---@param iconTex Texture
+---@param iconFrame Frame
+---@param includeGuideMark boolean|nil
+local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame, includeGuideMark)
+    local addon = GetDataAddon()
+    if not addon or not item or not item.itemID then
+        return
+    end
+    local unknown = L["JOURNAL_UNKNOWN_ITEM"]
+    if item.name and item.name ~= "" and item.name ~= unknown then
+        return
+    end
+    local token = {}
+    row._journalFillToken = token
+    local function paint(result)
+        if row._journalFillToken ~= token or not result then
+            return
+        end
+        if result.name then
+            item.name = result.name
+            if item.itemData then
+                item.itemData.name = result.name
+            end
+            local displayName = item.name
+            if includeGuideMark and item.fromLiveEJ then
+                displayName = displayName .. " |cff888888(" .. GUIDE .. ")|r"
+            end
+            nameFS:SetText(displayName)
+        end
+        if result.icon then
+            item.icon = result.icon
+            iconTex:SetTexture(result.icon)
+        end
+        if result.quality ~= nil then
+            item.quality = result.quality
+            if item.itemData then
+                item.itemData.quality = result.quality
+            end
+            local qr, qg, qb = OneWoW_GUI:GetItemQualityColor(result.quality)
+            iconFrame:SetBackdropBorderColor(qr, qg, qb)
+            nameFS:SetTextColor(qr, qg, qb)
+        end
+        if result.link and item.itemData then
+            item.itemData.link = result.link
+        end
+    end
+    local cached = addon.LoadItemData(item.itemID, function(_, result)
+        if row:IsShown() then
+            paint(result)
+        end
+    end)
+    if cached then
+        paint(cached)
+    end
+end
+
 -- Tooltips use the difficulty-scaled Encounter Journal link (captured per
 -- difficulty by EJLiveLoot) so the displayed item level matches the Adventure
 -- Guide. Rank maps a difficulty id to its relative ilvl tier; used to pick the
@@ -1008,6 +1069,8 @@ local function BuildQuestItemRow(parent, item, yOffset)
     itemName:SetText(item.name)
     itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
 
+    FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame, false)
+
     itemRow:EnableMouse(true)
     itemRow:SetScript("OnEnter", function(myself)
         myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
@@ -1542,6 +1605,8 @@ RefreshDetailView = function(isSecondRefresh)
                 end
                 itemName:SetText(displayName)
                 itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
+
+                FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame, true)
 
                 local diffText = OneWoW_GUI:CreateFS(itemRow, 10)
                 diffText:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)

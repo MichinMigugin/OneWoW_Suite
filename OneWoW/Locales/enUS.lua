@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto Mount",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto Mount pauses in combat and other aura-restricted situations, detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal loot now matches the Adventure Guide. Extra AllTheThings items sit in their own Also from ATT section. Instance Type includes World. Delves stay on The War Within and Midnight, with Show Bountiful. Logging in, opening Journal, and reloading in a dungeon or Delve no longer stall on Journal.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal loot now matches the Adventure Guide. Extra AllTheThings items sit in their own Also from ATT section. Instance Type includes World. Delves stay on The War Within and Midnight, with Show Bountiful. Logging in, opening Journal, opening a card, and reloading in a dungeon or Delve no longer stall on Journal.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Bags settings → General can replace Bags, Bank (personal and warband together), and Guild Bank independently. Search #disenchantable (#de) for items you can disenchant, and #midnights1 / #midnights2 for Midnight Season 1 and Season 2 gear.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Icon Browser",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL Features includes Icon Browser. Search and filter icons when you pick a macro, bank tab, guild bank tab, equipment set, or transmog outfit icon.",

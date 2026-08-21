@@ -84,12 +84,35 @@ function JournalData:DetermineItemSpecial(idata)
         return "Pet"
     end
 
-    if idata.isToy then
+    if idata.isToy or idata.toyID then
         return "Toy"
     end
 
     if idata.isTransmog then
         return "TMog"
+    end
+
+    local classID = idata.classID
+    local subclassID = idata.subclassID
+    if classID == Enum.ItemClass.Recipe then
+        return "Recipe"
+    end
+    if classID == Enum.ItemClass.Questitem then
+        return "Quest"
+    end
+    if classID == Enum.ItemClass.Housing then
+        return "Housing"
+    end
+    if classID == Enum.ItemClass.Battlepet then
+        return "Pet"
+    end
+    if classID == Enum.ItemClass.Miscellaneous then
+        if subclassID == Enum.ItemMiscellaneousSubclass.Mount then
+            return "Mount"
+        end
+        if subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
+            return "Pet"
+        end
     end
 
     local itemType    = idata.itemType    or ""
@@ -115,21 +138,57 @@ function JournalData:DetermineItemSpecial(idata)
         return "Pet"
     end
 
-    if itemType == "Miscellaneous" or itemType == "Consumable" then
-        local itemID = idata.itemID
-        if itemID then
-            local _, _, _, isToy = C_ToyBox.GetToyInfo(itemID)
-            if isToy then return "Toy" end
+    return nil
+end
 
-            local mountID = C_MountJournal.GetMountFromItem(itemID)
-            if mountID then return "Mount" end
-
-            local _, _, _, _, _, _, _, _, _, _, _, _, speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
-            if speciesID and speciesID > 0 then return "Pet" end
-        end
+--- Toy / mount / pet journal probes for leftover Misc or Consumable rows.
+--- Not called for every loot item: Enum class/subclass already covers most.
+---@param idata table
+---@return string|nil special
+local function ProbeCollectibleSpecial(idata)
+    local itemID = idata and idata.itemID
+    if not itemID then
+        return nil
+    end
+    local classID = idata.classID
+    local itemType = idata.itemType or ""
+    local isMisc = classID == Enum.ItemClass.Miscellaneous or itemType == "Miscellaneous"
+    local isConsumable = classID == Enum.ItemClass.Consumable or itemType == "Consumable"
+    if not isMisc and not isConsumable then
+        return nil
     end
 
+    local _, _, _, isToy = C_ToyBox.GetToyInfo(itemID)
+    if isToy then
+        idata.isToy = true
+        return "Toy"
+    end
+
+    local mountID = C_MountJournal.GetMountFromItem(itemID)
+    if mountID then
+        idata.mountID = mountID
+        return "Mount"
+    end
+
+    local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+    if speciesID and speciesID > 0 then
+        idata.speciesID = speciesID
+        return "Pet"
+    end
     return nil
+end
+
+---@param encounters table
+local function ProbeLeftoverSpecials(encounters)
+    for i = 1, #encounters do
+        local items = encounters[i].items
+        for j = 1, #items do
+            local item = items[j]
+            if not item.special then
+                item.special = ProbeCollectibleSpecial(item.itemData or {})
+            end
+        end
+    end
 end
 
 -- Prefer the player's faction source quest, else the first listed source.
@@ -240,26 +299,22 @@ end
 ---@param itemID number
 ---@return table
 local function ItemDataFromClient(itemID)
-    local name, link, quality, _, _, itemType, itemSubType, _, itemEquipLoc, icon = C_Item.GetItemInfo(itemID)
-    if not icon then
-        local _, instantType, instantSub, instantLoc, instantIcon = C_Item.GetItemInfoInstant(itemID)
-        itemType = itemType or instantType
-        itemSubType = itemSubType or instantSub
-        itemEquipLoc = itemEquipLoc or instantLoc
-        icon = instantIcon
-    end
-    if not name then
-        C_Item.RequestLoadItemDataByID(itemID)
-    end
+    -- Instant + name/quality by ID. Never GetItemInfo / RequestLoadItemDataByID
+    -- here: that storm was the hitch when opening a raid card.
+    local _, itemType, itemSubType, itemEquipLoc, icon, classID, subclassID =
+        C_Item.GetItemInfoInstant(itemID)
+    local name = C_Item.GetItemNameByID(itemID)
+    local quality = C_Item.GetItemQualityByID(itemID)
     return {
         itemID      = itemID,
         name        = name,
         icon        = icon or 134400,
-        quality     = quality or 1,
+        quality     = quality == nil and 1 or quality,
         itemType    = itemType or "",
         itemSubType = itemSubType or "",
+        classID     = classID,
+        subclassID  = subclassID,
         isTransmog  = itemEquipLoc and itemEquipLoc ~= "" and itemEquipLoc ~= "INVTYPE_NON_EQUIP_IGNORE" or false,
-        link        = link,
         source      = "ej",
     }
 end
@@ -483,13 +538,17 @@ function JournalData:BuildExtrasEncounter(extras)
     local items = {}
     for _, entry in ipairs(extras) do
         local idata = entry.itemData
+        local special = self:DetermineItemSpecial(idata or {})
+        if not special then
+            special = ProbeCollectibleSpecial(idata or {})
+        end
         tinsert(items, {
             itemID       = entry.itemID,
             itemData     = idata,
             name         = (idata and idata.name) or L["JOURNAL_UNKNOWN_ITEM"],
             icon         = (idata and idata.icon) or 134400,
             quality      = (idata and idata.quality) or 1,
-            special      = self:DetermineItemSpecial(idata or {}),
+            special      = special,
             difficulties = entry.difficulties or {},
             source       = entry.source or "att",
             questSources = idata and idata.questSources,
@@ -916,6 +975,7 @@ function JournalData:EnsureEncounters(inst)
     end
     sort(encounters, SortEncounters)
 
+    ProbeLeftoverSpecials(encounters)
     AttachHydratedEncounters(inst, encounters)
     return inst
 end

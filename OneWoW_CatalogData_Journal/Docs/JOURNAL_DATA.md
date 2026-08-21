@@ -46,6 +46,13 @@ build loot for every dungeon and raid.
 List cards use Generated item/boss counts so they paint without hydrating. Taxonomy
 tags (`hasTMog`, and so on) fill in after that card hydrates.
 
+Hydrate itself is Instant-only: `C_Item.GetItemInfoInstant` plus
+`GetItemNameByID` / `GetItemQualityByID`. It must not call `GetItemInfo` or
+`RequestLoadItemDataByID` for every loot row (that was the hitch on a large
+raid card). ToyBox / Mount / Pet journal probes run only for leftover
+Miscellaneous or Consumable rows on that card, not for armor and weapons.
+Visible detail rows that still lack a name load through the store item loader.
+
 ## World
 
 MoP–Midnight outdoor hubs in EJ are typed `world` (not raid). IDs live in
