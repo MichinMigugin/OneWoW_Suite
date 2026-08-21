@@ -143,6 +143,11 @@ end
 
 --- Toy / mount / pet journal probes for leftover Misc or Consumable rows.
 --- Not called for every loot item: Enum class/subclass already covers most.
+---
+--- Runs per card rather than per visible row because its result feeds ApplyTotals,
+--- which turns item.special into the card's hasToys / hasMounts / hasPets tags and
+--- the collectible filters. Deferring to row paint would leave those wrong until
+--- the player scrolled every row.
 ---@param idata table
 ---@return string|nil special
 local function ProbeCollectibleSpecial(idata)
@@ -664,6 +669,88 @@ local function CountGeneratedBosses(instanceID)
     return encs and #encs or 0
 end
 
+local extrasCountByKey = nil
+
+--- Unique non-achievement extras itemIDs per card key.
+---
+--- OneWoWExtras_* is pre-diffed against JournalLoot, so no extras itemID is also
+--- an Adventure Guide drop on the same instance. Adding these counts to
+--- CountGeneratedLoot therefore reproduces exactly what ApplyTotals will compute
+--- once the card hydrates, from static data only - no C_Item, one pass over
+--- ~8.5k rows per session.
+local function BuildExtrasCounts()
+    extrasCountByKey = {}
+    local itemsByKey = {}
+
+    for _, exp in ipairs(expansionList) do
+        local rows = _G["OneWoWExtras_" .. exp.name]
+        if rows then
+            local worldKey = JournalData.CacheKey(exp.expansionID, 0, "world")
+            for i = 1, #rows do
+                local row = rows[i]
+                local itemID = row.itemID
+                -- ApplyTotals excludes achievement-gated loot from the total.
+                if itemID and not row.achievementID then
+                    local instID = row.instanceID
+                    local key = (row.world == true or not instID or instID == 0)
+                        and worldKey
+                        or JournalData.CacheKey(exp.expansionID, instID)
+                    local set = itemsByKey[key]
+                    if not set then
+                        set = {}
+                        itemsByKey[key] = set
+                    end
+                    set[itemID] = true
+                end
+            end
+        end
+    end
+
+    local function SetSize(set)
+        local n = 0
+        for _ in pairs(set) do
+            n = n + 1
+        end
+        return n
+    end
+
+    for key, set in pairs(itemsByKey) do
+        extrasCountByKey[key] = SetSize(set)
+    end
+
+    -- A world hub card also shows its expansion's world pile, and
+    -- MergeExtrasLists dedupes by itemID, so those keys need a union not a sum.
+    if ns.JournalWorldHubs then
+        for _, exp in ipairs(expansionList) do
+            local worldSet = itemsByKey[JournalData.CacheKey(exp.expansionID, 0, "world")]
+            if worldSet then
+                for instanceID in pairs(ns.JournalWorldHubs) do
+                    local key = JournalData.CacheKey(exp.expansionID, instanceID)
+                    local merged = {}
+                    for itemID in pairs(itemsByKey[key] or {}) do
+                        merged[itemID] = true
+                    end
+                    for itemID in pairs(worldSet) do
+                        merged[itemID] = true
+                    end
+                    extrasCountByKey[key] = SetSize(merged)
+                end
+            end
+        end
+    end
+end
+
+---@param expansionID number
+---@param instanceID number
+---@param instanceType string|nil
+---@return number
+local function CountExtrasLoot(expansionID, instanceID, instanceType)
+    if not extrasCountByKey then
+        BuildExtrasCounts()
+    end
+    return extrasCountByKey[JournalData.CacheKey(expansionID, instanceID, instanceType)] or 0
+end
+
 ---@param expansionID number
 ---@param instanceID number
 ---@param orderIndex number|nil
@@ -721,17 +808,21 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         achievements       = AchievementsFor(mapID, instanceType),
     }
     -- Skeleton cards skip ApplyTotals / C_Item. Hydrate via EnsureEncounters.
+    -- totalItems must already match what ApplyTotals will compute, or the count
+    -- visibly changes when the player opens the card.
     if instanceType == "delve" then
         entry.encountersHydrated = true
         entry.totalItems = 0
         entry.bossCount = 0
     elseif instanceType == "world" and (not instanceID or instanceID == 0) then
+        -- Synthetic world cards carry extras only; live ATT may add more on open.
         entry.encountersHydrated = false
-        entry.totalItems = 0
+        entry.totalItems = CountExtrasLoot(expansionID, instanceID, instanceType)
         entry.bossCount = 0
     else
         entry.encountersHydrated = false
         entry.totalItems = CountGeneratedLoot(instanceID)
+            + CountExtrasLoot(expansionID, instanceID, instanceType)
         entry.bossCount = CountGeneratedBosses(instanceID)
     end
     return entry
@@ -890,6 +981,10 @@ function JournalData:EnsureExtrasForExpansion(expansionID)
         return set and set[itemID] == true
     end
 
+    -- OneWoWExtras_* is pre-diffed against JournalLoot by bin/journal_extras.py,
+    -- so this walks ~700 rows per expansion instead of every legacy item and its
+    -- locations. IsEJItem still runs: the Adventure Guide moves loot between
+    -- patches, and a row that became an EJ drop must not double-list.
     local extrasGlobal = _G["OneWoWExtras_" .. exp.name]
     if extrasGlobal then
         for _, row in ipairs(extrasGlobal) do
@@ -907,32 +1002,6 @@ function JournalData:EnsureExtrasForExpansion(expansionID)
         end
     end
 
-    local itemsGlobal = _G["OneWoWItems_" .. exp.name]
-    if itemsGlobal then
-        for itemID, itemData in pairs(itemsGlobal) do
-            if itemData.locations then
-                for _, loc in ipairs(itemData.locations) do
-                    local instID = loc.instanceID
-                    local isWorld = loc.world == true or (not instID or instID == 0)
-                    if not isWorld and IsEJItem(instID, itemID) then
-                        -- skip Adventure Guide duplicates
-                    elseif isWorld then
-                        AddExtraEntry(
-                            extrasByKey,
-                            self.CacheKey(expansionID, 0, "world"),
-                            itemID, itemData, loc
-                        )
-                    elseif instID then
-                        AddExtraEntry(
-                            extrasByKey,
-                            self.CacheKey(expansionID, instID),
-                            itemID, itemData, loc
-                        )
-                    end
-                end
-            end
-        end
-    end
     self.extrasReady[expansionID] = true
 end
 
@@ -943,8 +1012,13 @@ local function AttachHydratedEncounters(inst, encounters)
     inst.bossCount = nil
 end
 
---- Hydrate loot for one card. Idempotent. Dual-listed remakes hydrate separately
---- (extras stay expansion-scoped).
+--- Hydrate loot for one card. Idempotent.
+---
+--- Dual-listed remakes hydrate separately on purpose. Extras are expansion-scoped,
+--- so only the Adventure Guide half could ever be shared, and sharing it would mean
+--- two cards holding the same mutable encounter and item rows. Only 5 of 212
+--- instances are dual-listed (353 JournalLoot rows total), and the duplicate cost
+--- lands only if the player opens both cards, so the coupling is not worth it.
 ---@param inst table
 ---@return table inst
 function JournalData:EnsureEncounters(inst)
@@ -1071,6 +1145,122 @@ function JournalData:GetInstanceByMapID(mapID)
     local inst = all[#all]
     self:EnsureEncounters(inst)
     return inst
+end
+
+--- Flat itemID -> localized name for every journal drop.
+---
+--- Generated `JournalItemNames` covers Adventure Guide loot; extras rows carry
+--- their own name and are folded in on first use. Consumers text-match against
+--- this instead of `C_Item.GetItemNameByID`, which returns nil for any item the
+--- client has not cached and would silently drop most loot from a name search.
+---@return table<number, string>
+function JournalData:GetItemNameIndex()
+    local names = ns.JournalItemNames
+    if self.itemNamesMerged then
+        return names
+    end
+    for _, exp in ipairs(expansionList) do
+        local rows = _G["OneWoWExtras_" .. exp.name]
+        if rows then
+            for i = 1, #rows do
+                local row = rows[i]
+                if row.itemID and row.name and not names[row.itemID] then
+                    names[row.itemID] = row.name
+                end
+            end
+        end
+    end
+    self.itemNamesMerged = true
+    return names
+end
+
+--- itemID -> every place it drops. Built once, on first query only: nothing in
+--- the Journal's own UI needs it, so a player who never opens Item Search or
+--- hovers an item with the tracker tooltip never pays for it.
+function JournalData:EnsureDropIndex()
+    if self.dropIndex then
+        return
+    end
+    local index = {}
+    local encounterNames = {}
+
+    local function Add(itemID, instanceID, encounterID, difficulties)
+        local rows = index[itemID]
+        if not rows then
+            rows = {}
+            index[itemID] = rows
+        end
+        tinsert(rows, {
+            instanceID   = instanceID,
+            encounterID  = encounterID or 0,
+            difficulties = difficulties,
+        })
+    end
+
+    for _, encs in pairs(ns.JournalEncounters) do
+        for i = 1, #encs do
+            local enc = encs[i]
+            encounterNames[enc.id] = enc.name
+        end
+    end
+
+    for instanceID, rows in pairs(ns.JournalLoot) do
+        for i = 1, #rows do
+            local row = rows[i]
+            if row.itemID then
+                Add(row.itemID, instanceID, row.encounterID, DiffRowsFromIDs(row.diffs))
+            end
+        end
+    end
+
+    for _, exp in ipairs(expansionList) do
+        local rows = _G["OneWoWExtras_" .. exp.name]
+        if rows then
+            for i = 1, #rows do
+                local row = rows[i]
+                -- World extras have no instance card to name, so they are not a
+                -- "drops from" location for tooltip or detail purposes.
+                if row.itemID and row.instanceID and row.instanceID ~= 0 then
+                    Add(row.itemID, row.instanceID, row.encounterID, row.difficulties)
+                end
+            end
+        end
+    end
+
+    self.dropIndex = index
+    self.encounterNames = encounterNames
+end
+
+--- Instance / encounter names for every place an item drops. Deduped per
+--- instance+encounter pair, in index order.
+---@param itemID number
+---@return table drops array of { instanceName, encounterName, difficulties }
+function JournalData:GetItemDropLocations(itemID)
+    local out = {}
+    if not itemID then
+        return out
+    end
+    self:EnsureDropIndex()
+    local rows = self.dropIndex[itemID]
+    if not rows then
+        return out
+    end
+    local seen = {}
+    for i = 1, #rows do
+        local row = rows[i]
+        local key = row.instanceID .. ":" .. row.encounterID
+        if not seen[key] then
+            seen[key] = true
+            local meta = ns.JournalInstanceMeta[row.instanceID]
+            tinsert(out, {
+                instanceID    = row.instanceID,
+                instanceName  = meta and meta.name,
+                encounterName = row.encounterID ~= 0 and self.encounterNames[row.encounterID] or nil,
+                difficulties  = row.difficulties,
+            })
+        end
+    end
+    return out
 end
 
 JournalData.bountifulMapIDs = {}

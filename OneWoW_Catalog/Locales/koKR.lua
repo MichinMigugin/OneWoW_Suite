@@ -83,7 +83,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "미수집 있음",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "풍요로운 구렁만",
-    ["JOURNAL_LOADING_LOOT"] = "전리품 불러오는 중…",
 
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
     ["JOURNAL_ITEMS_COUNT"] = "아이템 %d개",

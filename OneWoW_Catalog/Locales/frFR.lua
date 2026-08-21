@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "A des non collectés",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Gouffres abondants",
-    ["JOURNAL_LOADING_LOOT"] = "Chargement du butin…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Butin général",
     ["JOURNAL_ITEMS_COUNT"] = "%d objets",

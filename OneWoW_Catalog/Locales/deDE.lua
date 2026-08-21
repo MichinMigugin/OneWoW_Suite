@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Hat Ungesammeltes",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Nur großzügige",
-    ["JOURNAL_LOADING_LOOT"] = "Beute wird geladen…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Allgemeine Beute",
     ["JOURNAL_ITEMS_COUNT"] = "%d Gegenstände",

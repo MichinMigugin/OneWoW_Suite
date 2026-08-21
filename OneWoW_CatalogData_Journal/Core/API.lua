@@ -130,11 +130,19 @@ function OneWoW_CatalogData_Journal_API.GetInstancesByMapID(mapID)
     return ns.JournalData:GetInstancesByMapID(mapID)
 end
 
---- Whether a world-wide live EJ merge is running. Always true: login does not
---- scrape every instance. Per-card merge does not count as incomplete.
----@return boolean
-function OneWoW_CatalogData_Journal_API.IsLiveMergeComplete()
-    return true
+--- Flat itemID -> localized name for every journal drop (Adventure Guide plus
+--- extras). Offline: does not depend on the client's item cache. Callers walk it
+--- directly so they keep their own yield cadence.
+---@return table<number, string>
+function OneWoW_CatalogData_Journal_API.GetItemNameIndex()
+    return ns.JournalData:GetItemNameIndex()
+end
+
+--- Instance / encounter names for every place an item drops.
+---@param itemID number
+---@return table drops array of { instanceID, instanceName, encounterName, difficulties }
+function OneWoW_CatalogData_Journal_API.GetItemDropLocations(itemID)
+    return ns.JournalData:GetItemDropLocations(itemID)
 end
 
 --- Append unseen ATT extras onto a card if AllTheThings is already loaded.

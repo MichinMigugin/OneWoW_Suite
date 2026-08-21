@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Ha non raccolti",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Solo fruttuose",
-    ["JOURNAL_LOADING_LOOT"] = "Caricamento bottino…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Bottino generale",
     ["JOURNAL_ITEMS_COUNT"] = "%d oggetti",

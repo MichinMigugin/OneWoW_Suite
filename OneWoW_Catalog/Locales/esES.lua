@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Tiene sin coleccionar",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Solo pródigas",
-    ["JOURNAL_LOADING_LOOT"] = "Cargando botín…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Botín general",
     ["JOURNAL_ITEMS_COUNT"] = "%d objetos",

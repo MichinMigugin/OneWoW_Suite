@@ -34,6 +34,9 @@
 - Opening the Journal tab no longer rebuilds every dungeon and raid. Reloading in a dungeon or Delve stays responsive. Opening a dungeon or raid card no longer hitches while every item loads.
 - Loot names and quality colors show the first time you open a card, instead of turning up after you click away and back.
 - Has uncollected no longer freezes the game while it checks every card. Matching cards appear as they are found.
+- Journal data is about 23 MB smaller, so it loads faster and uses far less memory. Item Search drops, item detail drop lists, and the item tooltip's instance lines are unchanged.
+- Opening the first card in an expansion is quicker. The Journal no longer sifts the whole expansion to find extra AllTheThings drops.
+- The item count on a card no longer changes when you open it, and World cards show their real item count instead of 0.
 - Loot on a card now matches the Adventure Guide. Extra AllTheThings drops (trash, quest items, outdoor rares) sit in their own Also from ATT section, not mixed into boss loot.
 - Instance Type includes World. Classic through Cataclysm get a World card; later expansions use the Adventure Guide outdoor hubs.
 - Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.

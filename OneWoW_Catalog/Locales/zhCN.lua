@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "有未收集",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "仅显示丰裕",
-    ["JOURNAL_LOADING_LOOT"] = "正在加载掉落…",
 
     ["JOURNAL_GENERAL_LOOT"] = "通用战利品",
     ["JOURNAL_ITEMS_COUNT"] = "%d 件物品",

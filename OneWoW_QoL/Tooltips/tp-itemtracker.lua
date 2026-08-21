@@ -2,12 +2,6 @@ local _, ns = ...
 
 local OneWoW = OneWoW
 
-local JOURNAL_EXPANSIONS = {
-    "Classic", "BurningCrusade", "WrathoftheLichKing", "Cataclysm",
-    "MistsofPandaria", "WarlordsofDraenor", "Legion", "BattleforAzeroth",
-    "Shadowlands", "Dragonflight", "TheWarWithin", "Midnight",
-}
-
 local function GetItemIndex()
     local api = OneWoW_AltTracker_Storage_API
     return api and api.GetItemIndex() or nil
@@ -21,32 +15,15 @@ local function GetVendorData(itemID)
     return {}
 end
 
+-- The Journal store owns the drop index and dedupes per instance+encounter, so
+-- this only has to supply the tooltip's display fallback.
 local function GetInstanceData(itemID)
     local results = {}
-    local seen = {}
-    for _, expName in ipairs(JOURNAL_EXPANSIONS) do
-        local items = _G["OneWoWItems_" .. expName]
-        if items and items[itemID] then
-            local idata = items[itemID]
-            if idata.locations then
-                local encounters = _G["OneWoWEncounters_" .. expName]
-                local instances  = _G["OneWoWInstances_"  .. expName]
-                for _, loc in ipairs(idata.locations) do
-                    local instID = loc.instanceID
-                    local encID  = loc.encounterID or 0
-                    local key    = instID .. ":" .. encID
-                    if not seen[key] then
-                        seen[key] = true
-                        local instName = instances and instances[instID] and instances[instID].name or "?"
-                        local encName
-                        if encID ~= 0 then
-                            encName = encounters and encounters[encID] and encounters[encID].name or nil
-                        end
-                        table.insert(results, { instanceName = instName, encounterName = encName })
-                    end
-                end
-            end
-        end
+    for _, drop in ipairs(OneWoW_CatalogData_Journal_API.GetItemDropLocations(itemID)) do
+        table.insert(results, {
+            instanceName  = drop.instanceName or "?",
+            encounterName = drop.encounterName,
+        })
     end
     return results
 end
@@ -349,7 +326,7 @@ local function ItemTrackerProvider(_, context)
         end
     end
 
-    if showInstances and OneWoW_CatalogData_Journal then
+    if showInstances and OneWoW_CatalogData_Journal_API then
         local instEntries = GetInstanceData(context.itemID)
         if instEntries and #instEntries > 0 then
             table.insert(lines, {

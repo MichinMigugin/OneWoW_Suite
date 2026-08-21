@@ -20,8 +20,5 @@ OneWoW:BootStore(ns, {
         if ns.JournalData then
             ns.JournalData:Initialize()
         end
-        if ns.JournalScanner then
-            ns.JournalScanner:Initialize()
-        end
     end,
 })

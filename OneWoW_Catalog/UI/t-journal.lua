@@ -738,11 +738,9 @@ local function BindInstanceListRow(row, _, instData, state)
     local countParts = {}
     if instData.instanceType == "delve" then
         -- Delves have no EJ loot table.
-    elseif encCount == 0 and #(instData.encounters or {}) == 0
-            and (not GetDataAddon() or not GetDataAddon().IsLiveMergeComplete
-            or not GetDataAddon().IsLiveMergeComplete()) then
-        tinsert(countParts, L["JOURNAL_LOADING_LOOT"])
     else
+        -- Skeleton cards already carry the hydrated totals (Generated loot plus
+        -- static extras), so there is never a "still loading" count to show.
         tinsert(countParts, FormatBossCount(encCount))
         tinsert(countParts, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
     end
@@ -1447,14 +1445,15 @@ RefreshDetailView = function(isSecondRefresh)
 
     if #(instData.encounters or {}) == 0 then
         if instData.instanceType ~= "delve" then
-            local loadingLine = OneWoW_GUI:CreateFS(parent, 12)
-            loadingLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-            loadingLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-            loadingLine:SetJustifyH("LEFT")
-            local mergeDone = addon and addon.IsLiveMergeComplete()
-            loadingLine:SetText(mergeDone and L["JOURNAL_EMPTY"] or L["JOURNAL_LOADING_LOOT"])
-            loadingLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            table.insert(detailElements, loadingLine)
+            -- The card is hydrated by the time the detail pane builds, so an
+            -- empty encounter list means empty, not pending.
+            local emptyLine = OneWoW_GUI:CreateFS(parent, 12)
+            emptyLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+            emptyLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+            emptyLine:SetJustifyH("LEFT")
+            emptyLine:SetText(L["JOURNAL_EMPTY"])
+            emptyLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            table.insert(detailElements, emptyLine)
             yOffset = yOffset - 24
         end
         parent:SetHeight(math.abs(yOffset) + 20)

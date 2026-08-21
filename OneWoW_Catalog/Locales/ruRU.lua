@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Есть несобранное",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Только многообещающие",
-    ["JOURNAL_LOADING_LOOT"] = "Загрузка добычи…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Общая добыча",
     ["JOURNAL_ITEMS_COUNT"] = "%d предметов",

@@ -7,12 +7,6 @@ local C_Item, C_TradeSkillUI = C_Item, C_TradeSkillUI
 ns.ItemSearch = {}
 local ItemSearch = ns.ItemSearch
 
-local EXPANSION_NAMES = {
-    "Classic", "BurningCrusade", "WrathoftheLichKing", "Cataclysm",
-    "MistsofPandaria", "WarlordsofDraenor", "Legion", "BattleforAzeroth",
-    "Shadowlands", "Dragonflight", "TheWarWithin", "Midnight",
-}
-
 local TRADESKILL_PROFS = {
     "Alchemy", "Blacksmithing", "Cooking", "Enchanting", "Engineering",
     "Fishing", "Herbalism", "HousingDyes", "Inscription", "Jewelcrafting",
@@ -256,16 +250,15 @@ local function BuildQueryResults(self, searchTerm, sourceFilter, results, should
     end
 
     if doJournal then
-        for _, expName in ipairs(EXPANSION_NAMES) do
-            local items = _G["OneWoWItems_" .. expName]
-            if items then
-                for itemID, idata in pairs(items) do
-                    if idata.name and idata.name:lower():find(term, 1, true) then
-                        addOrAnnotate(itemID, idata.name, idata.icon, idata.quality, "isJournal")
-                    end
-                    YieldIfNeeded(yieldCheck)
-                end
+        -- The Journal store owns this index; it is offline (generated names plus
+        -- extras names) so a text search still matches loot the client has never
+        -- cached. Icon comes from Instant; the list row loader fills quality.
+        for itemID, name in pairs(OneWoW_CatalogData_Journal_API.GetItemNameIndex()) do
+            if name:lower():find(term, 1, true) then
+                local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                addOrAnnotate(itemID, name, icon, nil, "isJournal")
             end
+            YieldIfNeeded(yieldCheck)
         end
     end
 
@@ -456,29 +449,13 @@ function ItemSearch:GetDetail(itemID)
         recipeKnownBy = isRecipe and GetRecipeKnownByFromAltTracker(itemID) or nil,
     }
 
-    for _, expName in ipairs(EXPANSION_NAMES) do
-        local items      = _G["OneWoWItems_"      .. expName]
-        local instances  = _G["OneWoWInstances_"  .. expName]
-        local encounters = _G["OneWoWEncounters_" .. expName]
-
-        if items and items[itemID] and instances and encounters then
-            local idata = items[itemID]
-            if idata.locations then
-                for _, loc in ipairs(idata.locations) do
-                    local instInfo = loc.instanceID and instances[loc.instanceID]
-                    local instName = instInfo and instInfo.name or ""
-                    local encName
-                    if loc.encounterID and loc.encounterID ~= 0 then
-                        local encInfo = encounters[loc.encounterID]
-                        encName = encInfo and encInfo.name
-                    end
-                    tinsert(detail.drops, {
-                        instanceName  = instName,
-                        encounterName = encName,
-                        difficulties  = loc.difficulties,
-                    })
-                end
-            end
+    if OneWoW_CatalogData_Journal_API then
+        for _, drop in ipairs(OneWoW_CatalogData_Journal_API.GetItemDropLocations(itemID)) do
+            tinsert(detail.drops, {
+                instanceName  = drop.instanceName or "",
+                encounterName = drop.encounterName,
+                difficulties  = drop.difficulties,
+            })
         end
     end
 

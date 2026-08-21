@@ -83,7 +83,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Has uncollected",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Show Bountiful",
-    ["JOURNAL_LOADING_LOOT"] = "Loading loot…",
 
     ["JOURNAL_GENERAL_LOOT"] = "General Loot",
     ["JOURNAL_ITEMS_COUNT"] = "%d items",

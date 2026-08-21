@@ -84,7 +84,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Tem não coletados",
     ["JOURNAL_SHOW_BOUNTIFUL"] = "Só abundantes",
-    ["JOURNAL_LOADING_LOOT"] = "Carregando saque…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Despojo geral",
     ["JOURNAL_ITEMS_COUNT"] = "%d itens",
