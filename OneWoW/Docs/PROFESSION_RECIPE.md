@@ -26,7 +26,7 @@ The service is the single owner of these events, registered through the core
 
 No other file in the suite may register these for recipe scanning. Events are
 registered on 0→1 subscribers and torn down on 1→0. Enforced by the
-`core-event-funnel` pre-commit hook (`OneWoW_Devs/bin/check_no_core_event_bypass.py`),
+`core-event-funnel` pre-commit hook (`OneWoW_Workspace/bin/check_no_core_event_bypass.py`),
 whose `EVENT_OWNER` registry pins all four events to `ProfessionRecipe.lua`.
 
 ## Channels

@@ -298,9 +298,9 @@ of a slash command (including subcommands or alias sets) must update
 
 ### Recommended automation (not yet installed)
 
-Would live in **OneWoW_Devs** `bin/` if added.
+Would live in **OneWoW_Workspace** `bin/` if added.
 
-1. **Generator script** — `OneWoW_Devs/bin/gen_suite_commands.py`
+1. **Generator script** — `OneWoW_Workspace/bin/gen_suite_commands.py`
    - Scan `OneWoW*/**/*.lua` (exclude `Libs/`) for:
      - `SLASH_<KEY>N = "/alias"`
      - `_G["SLASH_<KEY>N"] = "/alias"`
@@ -309,7 +309,7 @@ Would live in **OneWoW_Devs** `bin/` if added.
    - Subcommand docs stay hand-maintained in annotated blocks (or extracted from
      nearby `usage:` print strings where present)
 
-2. **Pre-commit check** — `OneWoW_Devs/bin/check_suite_commands.py` wired in
+2. **Pre-commit check** — `OneWoW_Workspace/bin/check_suite_commands.py` wired in
    Suite `.pre-commit-config.yaml` via `run_devs.py`
    - Fail if registered aliases are missing from `suitecommands.md`, or if the
      markdown lists an alias that no longer exists in code

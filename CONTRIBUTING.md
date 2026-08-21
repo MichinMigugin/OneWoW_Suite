@@ -5,15 +5,18 @@ Thanks for your interest in contributing! The OneWoW Suite is a multi-addon Worl
 ## Dev environment
 
 Public product code lives in this repo. Locale tools, pre-commit checkers,
-Cursor skills, and setup scripts live in the private sibling repo **OneWoW_Devs**.
-Clone both next to each other and add both folders to the Cursor workspace.
+Cursor skills, and setup scripts live in the private parent repo **OneWoW_Workspace**.
+This Suite clone is nested at `OneWoW_Workspace/OneWoW_Suite`. Open the
+**OneWoW_Workspace** Cursor workspace only — do not add Suite as a second
+workspace root.
 
-- **In Cursor (with OneWoW_Devs open):** ask *“Set up my OneWoW development
+- **In Cursor (with OneWoW_Workspace open):** ask *“Set up my OneWoW development
   environment”* or *“Fix Split Repo”*.
-- **Manual:** from `OneWoW_Devs`, run `python bin/setup_dev_env.py`.
+- **Manual:** from `OneWoW_Workspace`, run `python bin/setup_dev_env.py`.
 
 Line-ending hooks run from this repo. Lua and locale gates run through
-`bin/run_devs.py` when OneWoW_Devs is cloned next to Suite.
+`bin/run_devs.py` when OneWoW_Workspace is the parent of this clone
+(`ONEWOW_DEVS` still works as a fallback).
 
 ## Before You Start
 
@@ -45,8 +48,8 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 
 1. Add or edit keys in **`enUS.lua` first** for the target scope
 2. Add the **same key to all 11 locale files** in that scope
-3. Do not hand-edit `esMX` — from OneWoW_Devs run `python bin/gen_esmx.py` after `esES` changes
-4. **Verify before submitting** (from OneWoW_Devs, paths relative to Suite):
+3. Do not hand-edit `esMX` — from OneWoW_Workspace run `python bin/gen_esmx.py` after `esES` changes
+4. **Verify before submitting** (from OneWoW_Workspace, paths relative to Suite):
    - `python bin/locale_keydiff.py --scope <Scope>`
    - `python bin/locale_verify.py <path/to/Locales>` (must exit 0; also the `locale-parity` pre-commit hook)
    - `python bin/check_locale_encoding.py <path/to/Locales>` (must exit 0; also the `locale-encoding` pre-commit hook)

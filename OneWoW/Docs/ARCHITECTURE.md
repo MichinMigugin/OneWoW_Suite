@@ -1371,7 +1371,7 @@ guild bank is open).
 | `OneWoW/UI/MainWindow.lua` | Hub window; L1/L2 nav, favorite pins, placeholders, `FeatureStateChanged` |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
-| `OneWoW_Devs/bin/check_*.py` | Pre-commit checkers (Suite hooks call them via `bin/run_devs.py`) |
+| `OneWoW_Workspace/bin/check_*.py` | Pre-commit checkers (Suite hooks call them via `bin/run_devs.py`) |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
 | `bin/check_manifest_catalog_alignment.py` | Pre-commit: ModuleManifest ↔ FirstRun.CATALOG ownership/consumer invariants (§4.1) |

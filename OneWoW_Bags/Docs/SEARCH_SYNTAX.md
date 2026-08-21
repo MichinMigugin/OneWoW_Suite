@@ -769,7 +769,7 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
 > **`#currentseason` maintenance:** update `CURRENT_SEASON_BONUS_IDS` in `PredicateEngine.lua` each season when Blizzard adds new crafted/voidforged bonus IDs. At the start of a **new expansion**, also add that expansion's first global M+ season ID to `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` (`DisplaySeason.Season` for ordinal 1; Midnight = 17). Debug tooltip/season matching in-game with `/petooltip`.
 >
-> **Named Midnight seasons:** list IDs are generated (`python bin/season_bonus_list_ids.py generate` from OneWoW_Devs). Adding Midnight S3 is a new group block in that mapping plus `#midnights3`, not a change to `#midnights1` / `#midnights2`.
+> **Named Midnight seasons:** list IDs are generated (`python bin/season_bonus_list_ids.py generate` from OneWoW_Workspace). Adding Midnight S3 is a new group block in that mapping plus `#midnights3`, not a change to `#midnights1` / `#midnights2`.
 
 **Related properties:** `upgradelevel` and `upgrademax` are numeric comparisons from
 `C_Item.GetItemUpgradeInfo` (current and max upgrade tier). `maxlevel` is the

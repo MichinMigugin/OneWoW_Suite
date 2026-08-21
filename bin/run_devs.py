@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Run a script from OneWoW_Devs/bin (Suite pre-commit bridge).
+"""Run a script from OneWoW_Workspace/bin (Suite pre-commit bridge).
 
 Usage:
     python bin/run_devs.py locale_verify.py OneWoW/Locales
 
-Devs is the parent of this clone (nested) or a sibling named OneWoW_Devs.
-Override with ONEWOW_DEVS. If Devs is missing, exit 0 so public forks
+Workspace is the parent of this clone (nested) or a sibling named
+OneWoW_Workspace (then OneWoW_Devs). Override with ONEWOW_WORKSPACE or
+ONEWOW_DEVS. If Workspace is missing, exit 0 so public forks
 without the private toolchain can still commit.
 """
 from __future__ import annotations
@@ -23,16 +24,21 @@ def _looks_like_devs(path: Path) -> bool:
 
 
 def find_devs() -> Path | None:
-    env = os.environ.get("ONEWOW_DEVS")
-    if env:
-        path = Path(env).expanduser().resolve()
-        return path if _looks_like_devs(path) else None
+    for key in ("ONEWOW_WORKSPACE", "ONEWOW_DEVS"):
+        env = os.environ.get(key)
+        if env:
+            path = Path(env).expanduser().resolve()
+            if _looks_like_devs(path):
+                return path
     parent = SUITE_ROOT.parent
-    if _looks_like_devs(parent):
+    if (parent / "bin").is_dir() and (
+        (parent / ".cursor").is_dir() or (parent / "bin" / "locale_verify.py").is_file()
+    ):
         return parent
-    sibling = parent / "OneWoW_Devs"
-    if _looks_like_devs(sibling):
-        return sibling
+    for name in ("OneWoW_Workspace", "OneWoW_Devs"):
+        sibling = parent / name
+        if _looks_like_devs(sibling):
+            return sibling
     return None
 
 
@@ -43,7 +49,7 @@ def main(argv: list[str]) -> int:
     script, rest = argv[1], argv[2:]
     devs = find_devs()
     if devs is None:
-        print(f"OneWoW_Devs not found; skipping {script}")
+        print(f"OneWoW_Workspace not found; skipping {script}")
         return 0
     target = devs / "bin" / script
     if not target.is_file():
