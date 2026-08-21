@@ -376,6 +376,10 @@ end
 local dungeonNormalCache = {}
 local mergeBusy = false
 local mergeTarget = nil
+-- A merge drives EJ selections that fire EJ_LOOT_DATA_RECIEVED again, so the retry
+-- needs a hard ceiling as well as a progress condition.
+local MAX_MERGE_RETRIES = 3
+local mergeRetries = 0
 EJLive.mergeAbort = false
 
 local function findEncounter(inst, encounterID)
@@ -487,6 +491,7 @@ end
 ---@param inst table|nil
 function EJLive:SetMergeTarget(inst)
     mergeTarget = inst
+    mergeRetries = 0
 end
 
 --- Scan one card against live EJ. Names and item links only; does not add items.
@@ -518,6 +523,7 @@ function EJLive:OnJournalCacheCleared()
     self.mergeAbort = true
     mergeBusy = false
     mergeTarget = nil
+    mergeRetries = 0
     if self.debounceTimer and self.debounceTimer.Cancel then
         self.debounceTimer:Cancel()
     end
@@ -526,39 +532,49 @@ function EJLive:OnJournalCacheCleared()
     wipe(scaledLinkCache)
 end
 
+--- Boss rows still missing a name. Only boss encounters count: processOneInstance
+--- walks EJ_GetEncounterInfoByIndex, so General (0), Achievement (-2), Quest (-3)
+--- and ATT extras (-4) rows are not EJ-nameable and must not keep the retry alive.
 ---@param inst table|nil
 ---@return boolean
-local function HasUnresolvedNames(inst)
+local function HasUnresolvedBossNames(inst)
     if not inst or not inst.encounters then
         return false
     end
     for i = 1, #inst.encounters do
-        local items = inst.encounters[i].items
-        for j = 1, #items do
-            if not items[j].nameResolved then
-                return true
+        local enc = inst.encounters[i]
+        if enc.encounterID and enc.encounterID > 0 then
+            local items = enc.items
+            for j = 1, #items do
+                if not items[j].nameResolved then
+                    return true
+                end
             end
         end
     end
     return false
 end
 
+---@return boolean
+local function ShouldRetryMerge()
+    if mergeBusy or EJLive.scanningOnDemand then return false end
+    if mergeRetries >= MAX_MERGE_RETRIES then return false end
+    return HasUnresolvedBossNames(mergeTarget)
+end
+
 -- Blizzard's event name is misspelled. Refresh the open card only; never rebuild
--- the world cache (that restart loop was a multi-second login hitch). A merge
--- itself drives EJ selections that fire this event again, so re-scan only while
--- the open card still has unnamed rows — otherwise the retry never settles.
+-- the world cache (that restart loop was a multi-second login hitch). On a cold
+-- session the first merge can run before the server has sent loot data, so retry
+-- while boss rows are still unnamed and give up after MAX_MERGE_RETRIES.
 EventRegistry:RegisterFrameEventAndCallback("EJ_LOOT_DATA_RECIEVED", function()
-    if mergeBusy or EJLive.scanningOnDemand then return end
-    if not mergeTarget or not HasUnresolvedNames(mergeTarget) then return end
+    if not ShouldRetryMerge() then return end
     if EJLive.debounceTimer and EJLive.debounceTimer.Cancel then
         EJLive.debounceTimer:Cancel()
     end
     EJLive.debounceTimer = C_Timer.NewTimer(0.25, function()
         EJLive.debounceTimer = nil
-        if mergeBusy or EJLive.scanningOnDemand then return end
-        local target = mergeTarget
-        if target and HasUnresolvedNames(target) then
-            EJLive:MergeInstance(target)
-        end
+        if not ShouldRetryMerge() then return end
+        mergeRetries = mergeRetries + 1
+        EJLive:MergeInstance(mergeTarget)
     end)
 end)

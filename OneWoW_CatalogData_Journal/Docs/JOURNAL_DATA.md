@@ -51,15 +51,24 @@ Hydrate itself is Instant-only: `C_Item.GetItemInfoInstant` plus
 `RequestLoadItemDataByID` for every loot row (that was the hitch on a large
 raid card). ToyBox / Mount / Pet journal probes run only for leftover
 Miscellaneous or Consumable rows on that card, not for armor and weapons.
-Visible detail rows that still lack a name load through the store item loader.
 
-Because hydrate is Instant-only, a loot row may carry the localized
-`JOURNAL_UNKNOWN_ITEM` placeholder. Every row therefore also carries
-`nameResolved` (boolean): false means "still the placeholder, go fetch it". The
-live EJ merge and the item loader set it true when they fill a real name.
-Consumers must branch on `nameResolved`, never compare against the placeholder
-string — that key lives in this store's locale scope, so another addon
-re-localizing it gets the key name back instead of the translation.
+Because hydrate is Instant-only, an uncached item resolves neither its name nor its
+quality: the row gets the localized `JOURNAL_UNKNOWN_ITEM` placeholder and quality
+`1`. Both are display fallbacks, and both are corrected the same way — the **store
+item cache is the source of truth for "resolved"**. A visible detail row asks
+`GetCachedItem(itemID)`; a hit settles name, icon and quality in one pass, a miss
+goes through `LoadItemData` (this is the one place `RequestLoadItemDataByID` may
+run, and only for rows actually on screen). Never gate that fill on the name alone:
+name and quality are separate facts, and the live EJ merge fills names without
+touching quality.
+
+Rows also carry `nameResolved` (boolean), which answers exactly one question: does
+this row still need a name from live EJ? `mergeEJRowsIntoEncounter` reads it before
+overwriting, and `HasUnresolvedBossNames` uses it to decide whether the
+`EJ_LOOT_DATA_RECIEVED` retry is still worth running. Consumers must never compare
+against the placeholder string instead — that key lives in this store's locale
+scope, so another addon re-localizing it gets the key name back, not the
+translation.
 
 ## World
 
