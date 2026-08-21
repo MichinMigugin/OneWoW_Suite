@@ -25,7 +25,7 @@ function OneWoW_CatalogData_Journal_API.GetAvailableExpansions(typeFilter)
     return ns.JournalData:GetAvailableExpansions(typeFilter)
 end
 
---- Refresh live bountiful delve doors for this week.
+--- Refresh live bountiful delve doors for this week. Does not build the journal loot cache.
 function OneWoW_CatalogData_Journal_API.RefreshBountiful()
     ns.JournalData:RefreshBountiful()
 end
@@ -60,10 +60,22 @@ function OneWoW_CatalogData_Journal_API.ClearCache()
     ns.JournalData:ClearCache()
 end
 
---- Rebuilds live encounter-journal loot after clearing the cache.
+--- Rebuilds the static journal cache. Does not scrape live EJ for every instance.
 function OneWoW_CatalogData_Journal_API.RefreshLiveJournalLoot()
     ns.JournalData:ClearCache()
     ns.JournalData:BuildJournalCache()
+end
+
+--- Scan one journal card against live EJ (names and scaled links only).
+---@param inst table
+function OneWoW_CatalogData_Journal_API.MergeInstance(inst)
+    ns.EJLiveLoot:MergeInstance(inst)
+end
+
+--- Card to refresh when EJ loot data arrives. Pass nil to ignore those events.
+---@param inst table|nil
+function OneWoW_CatalogData_Journal_API.SetLiveMergeTarget(inst)
+    ns.EJLiveLoot:SetMergeTarget(inst)
 end
 
 --- Register a listener invoked after journal scan data updates.
@@ -111,10 +123,11 @@ function OneWoW_CatalogData_Journal_API.GetInstancesByMapID(mapID)
     return ns.JournalData:GetInstancesByMapID(mapID)
 end
 
---- Whether live EJ loot merge has finished for the current cache.
+--- Whether a world-wide live EJ merge is running. Always true: login does not
+--- scrape every instance. Per-card merge does not count as incomplete.
 ---@return boolean
 function OneWoW_CatalogData_Journal_API.IsLiveMergeComplete()
-    return ns.EJLiveLoot and ns.EJLiveLoot.ejMergeComplete == true
+    return true
 end
 
 --- Append unseen ATT extras onto a card if AllTheThings is already loaded.

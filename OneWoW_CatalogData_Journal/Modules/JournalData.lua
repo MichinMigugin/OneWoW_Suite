@@ -823,12 +823,8 @@ function JournalData:BuildJournalCache()
             end
         end
     end
-
-    collectgarbage("collect")
-
-    if ns.EJLiveLoot and ns.EJLiveLoot.ScheduleAfterStaticBuild then
-        ns.EJLiveLoot:ScheduleAfterStaticBuild()
-    end
+    -- Live EJ merge is per-card (EJLiveLoot:MergeInstance). Do not scrape every
+    -- instance here; that was the remaining login hitch after bountiful left PEW.
 end
 
 function JournalData:SortEncountersInPlace(inst)
@@ -963,27 +959,38 @@ local function WalkDelveMaps(self, startID, seenMaps, poiToMap, nameToMap)
 end
 
 --- Live bountiful doors this week. atlasName or generated bountifulPoiID.
+-- Reads DelveMembership / DelveEntrances only. Must not call BuildJournalCache:
+-- PEW runs this for every login, and hydrating every journal card there stalls movement.
 function JournalData:RefreshBountiful()
     wipe(self.bountifulMapIDs)
-    self:BuildJournalCache()
 
     local nameToMap = {}
     local poiToMap = {}
-    for _, inst in pairs(self.journalCache) do
-        if inst.instanceType == "delve" and inst.mapID then
-            nameToMap[inst.name] = inst.mapID
-            for _, row in ipairs(inst.entrances or {}) do
-                if row.bountifulPoiID then
-                    poiToMap[row.bountifulPoiID] = inst.mapID
+    local membership = ns.DelveMembership
+    if membership then
+        for _, cards in pairs(membership) do
+            for mapID, info in pairs(cards) do
+                if info and info.name then
+                    nameToMap[info.name] = mapID
                 end
             end
         end
     end
 
     local seenMaps = {}
-    for _, inst in pairs(self.journalCache) do
-        if inst.instanceType == "delve" then
-            for _, row in ipairs(inst.entrances or {}) do
+    local entrances = ns.DelveEntrances
+    if entrances then
+        for mapID, rows in pairs(entrances) do
+            for i = 1, #rows do
+                local row = rows[i]
+                if row.bountifulPoiID then
+                    poiToMap[row.bountifulPoiID] = mapID
+                end
+            end
+        end
+        for _, rows in pairs(entrances) do
+            for i = 1, #rows do
+                local row = rows[i]
                 if row.mapID and row.mapID ~= 0 then
                     local uiMapID = C_Map.GetMapPosFromWorldPos(row.mapID, CreateVector2D(row.x, row.y))
                     WalkDelveMaps(self, uiMapID, seenMaps, poiToMap, nameToMap)

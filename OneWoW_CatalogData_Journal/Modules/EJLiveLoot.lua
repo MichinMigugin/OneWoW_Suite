@@ -1,4 +1,5 @@
--- Merges live Encounter Journal loot into the static journal cache (same pattern as common EJ tools).
+-- Merges live Encounter Journal loot into one journal card (names and scaled links).
+-- Per-instance only. Login and cache build must not scrape the whole encyclopedia.
 local _, ns = ...
 
 local JournalData = ns.JournalData
@@ -289,7 +290,7 @@ end
 -- from the difficulty-scaled loot link, so we select the same instance/encounter/
 -- difficulty context and read the matching item's link live. Results are cached;
 -- the scanningOnDemand flag stops the EJ_LOOT_DATA_RECIEVED handler from treating
--- our own selection churn as a reason to rebuild the cache.
+-- our own selection churn as a reason to re-merge the open card.
 local scaledLinkCache = {}
 EJLive.scanningOnDemand = false
 
@@ -338,27 +339,10 @@ function EJLive:GetScaledLootLink(instanceID, encounterID, diffID, itemID)
     return result
 end
 
-local mergeQueue = {}
-local mergeRunning = false
 local dungeonNormalCache = {}
+local mergeBusy = false
+local mergeTarget = nil
 EJLive.mergeAbort = false
-
-local function enqueueMergeJobs()
-    wipe(mergeQueue)
-    if not JournalData.journalCache then return end
-    for _, inst in pairs(JournalData.journalCache) do
-        if inst.instanceType ~= "delve" and inst.instanceID and inst.instanceID > 0 then
-            mergeQueue[#mergeQueue + 1] = {
-                instanceID = inst.instanceID,
-                expansionID = inst.expansionID,
-                inst = inst,
-            }
-        end
-    end
-    table.sort(mergeQueue, function(a, b)
-        return (a.inst.name or "") < (b.inst.name or "")
-    end)
-end
 
 local function findEncounter(inst, encounterID)
     for _, enc in ipairs(inst.encounters) do
@@ -464,40 +448,37 @@ local function processOneInstance(job)
     end
 end
 
-function EJLive.ProcessQueueTick()
-    if EJLive.mergeAbort then
-        EJLive.mergeAbort = false
-        wipe(mergeQueue)
-        mergeRunning = false
-        return
-    end
-    if #mergeQueue == 0 then
-        mergeRunning = false
-        EJLive.ejMergeComplete = true
-        ns:FireScanCallbacks("ej_merge")
-        return
-    end
-    local job = table.remove(mergeQueue, 1)
-    processOneInstance(job)
-    C_Timer.After(0, EJLive.ProcessQueueTick)
+--- Card whose live EJ links should refresh when loot data arrives. Nil = ignore the event.
+---@param inst table|nil
+function EJLive:SetMergeTarget(inst)
+    mergeTarget = inst
 end
 
-function EJLive:BeginMerge()
-    if mergeRunning then return end
-    JournalData:BuildJournalCache()
-    if not JournalData.journalCache then return end
-    enqueueMergeJobs()
-    if #mergeQueue == 0 then return end
-    mergeRunning = true
-    EJLive.ejMergeComplete = false
-    C_Timer.After(0.05, EJLive.ProcessQueueTick)
+--- Scan one card against live EJ. Names and item links only; does not add items.
+---@param inst table
+function EJLive:MergeInstance(inst)
+    if mergeBusy then return end
+    if not inst or inst.instanceType == "delve" then return end
+    if not inst.instanceID or inst.instanceID <= 0 then return end
+    if not inst.encounters then return end
+
+    mergeBusy = true
+    EJLive.mergeAbort = false
+    processOneInstance({
+        instanceID = inst.instanceID,
+        expansionID = inst.expansionID,
+        inst = inst,
+    })
+    mergeBusy = false
+    if not EJLive.mergeAbort then
+        ns:FireScanCallbacks("ej_merge")
+    end
 end
 
 function EJLive:OnJournalCacheCleared()
     self.mergeAbort = true
-    wipe(mergeQueue)
-    mergeRunning = false
-    EJLive.ejMergeComplete = false
+    mergeBusy = false
+    mergeTarget = nil
     if self.debounceTimer and self.debounceTimer.Cancel then
         self.debounceTimer:Cancel()
     end
@@ -506,24 +487,20 @@ function EJLive:OnJournalCacheCleared()
     wipe(scaledLinkCache)
 end
 
-function EJLive:ScheduleAfterStaticBuild()
-    C_Timer.After(0.5, function()
-        if JournalData.journalCache then
-            EJLive:BeginMerge()
-        end
-    end)
-end
-
+-- Blizzard's event name is misspelled. Refresh the open card only; never rebuild
+-- the world cache (that restart loop was a multi-second login hitch).
 EventRegistry:RegisterFrameEventAndCallback("EJ_LOOT_DATA_RECIEVED", function()
-    if mergeRunning or EJLive.scanningOnDemand then return end
-    if not JournalData.journalCache then return end
+    if mergeBusy or EJLive.scanningOnDemand then return end
+    if not mergeTarget then return end
     if EJLive.debounceTimer and EJLive.debounceTimer.Cancel then
         EJLive.debounceTimer:Cancel()
     end
     EJLive.debounceTimer = C_Timer.NewTimer(1.5, function()
         EJLive.debounceTimer = nil
-        if mergeRunning then return end
-        JournalData:ClearCache()
-        JournalData:BuildJournalCache()
+        if mergeBusy or EJLive.scanningOnDemand then return end
+        local target = mergeTarget
+        if target then
+            EJLive:MergeInstance(target)
+        end
     end)
 end)

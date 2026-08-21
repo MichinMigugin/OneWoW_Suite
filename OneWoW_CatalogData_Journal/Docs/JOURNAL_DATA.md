@@ -48,6 +48,8 @@ Delves are not Encounter Journal instances. Cards come from `DelveMembership`
 `instanceType = "delve"`. Pins use `DelveEntrances`. Achievements use
 `DelveAchievements` (Stories/Discoveries + expansion Glory + matching lair solos).
 There is no EJ loot table; the items section stays empty.
+Weekly bountiful doors (`RefreshBountiful`) read `DelveMembership` names and
+`DelveEntrances` pins/POIs only — never the journal loot cache.
 
 ## Generated files
 
@@ -82,8 +84,12 @@ Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
 ## Live EJ merge
 
-`EJLiveLoot` selects the card’s EJ tier (`EJ_SelectTier`), then scans
+Live merge is **per card** (`MergeInstance`), never a login walk of every
+instance. `EJLiveLoot` selects the card’s EJ tier (`EJ_SelectTier`), then scans
 difficulties from MapDifficulties / `EJ_IsValidInstanceDifficulty` (includes
 legacy 10/25 and dungeon Timewalking). It updates names and item links only.
 It does not invent encounters or add items. World hubs use `JournalWorldHubs`
-for the difficulty scan. Cards with `instanceID == 0` are skipped.
+for the difficulty scan. Cards with `instanceID == 0` and delves are skipped.
+`EJ_LOOT_DATA_RECIEVED` (Blizzard’s spelling) refreshes the open card only when
+`SetLiveMergeTarget` is set; it does not rebuild the world cache.
+Hover tooltips still resolve a scaled link via `GetScaledLootLink`.
