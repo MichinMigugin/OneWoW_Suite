@@ -40,6 +40,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 ## Tips
 
 * Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub.
+* Drag a section header or a step to reorder. Drop a step on another section to move it there.
 * Farm value is strongest with Auction House or TSM pricing turned on under QoL > Tooltips > Value.
 
 ## Related

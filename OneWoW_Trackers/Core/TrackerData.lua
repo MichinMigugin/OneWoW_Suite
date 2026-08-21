@@ -613,6 +613,54 @@ function TD:ReorderStep(listID, sectionKey, stepKey, targetIndex)
     return false
 end
 
+--- Move a step within or across sections, migrating progress with it.
+--- destIndex is the insert slot in dest as it exists before the source is removed (1 .. n+1).
+---@param listID string
+---@param fromSectionKey string
+---@param stepKey string
+---@param destSectionKey string
+---@param destIndex number
+---@return boolean
+function TD:MoveStepToSection(listID, fromSectionKey, stepKey, destSectionKey, destIndex)
+    local step, fromIdx = self:GetStep(listID, fromSectionKey, stepKey)
+    if not step or not fromIdx then return false end
+    local destSec = self:GetSection(listID, destSectionKey)
+    if not destSec then return false end
+    destSec.steps = destSec.steps or {}
+
+    destIndex = tonumber(destIndex) or 1
+    if destIndex < 1 then destIndex = 1 end
+
+    if fromSectionKey == destSectionKey then
+        if destIndex > fromIdx then destIndex = destIndex - 1 end
+        if destIndex > #destSec.steps then destIndex = #destSec.steps end
+        if destIndex < 1 then destIndex = 1 end
+        return self:ReorderStep(listID, fromSectionKey, stepKey, destIndex)
+    end
+
+    local destLen = #destSec.steps
+    if destIndex > destLen + 1 then destIndex = destLen + 1 end
+
+    local srcSec = self:GetSection(listID, fromSectionKey)
+    tremove(srcSec.steps, fromIdx)
+    tinsert(destSec.steps, destIndex, step)
+
+    local prog = self:GetProgress(listID)
+    prog.sections = prog.sections or {}
+    local srcBucket = prog.sections[fromSectionKey]
+    local blob = srcBucket and srcBucket.steps and srcBucket.steps[stepKey]
+    if blob then
+        srcBucket.steps[stepKey] = nil
+        prog.sections[destSectionKey] = prog.sections[destSectionKey] or { steps = {} }
+        prog.sections[destSectionKey].steps = prog.sections[destSectionKey].steps or {}
+        prog.sections[destSectionKey].steps[stepKey] = blob
+    end
+
+    local list = self:GetList(listID)
+    if list then list.modified = time() end
+    return true
+end
+
 function TD:AddObjective(listID, sectionKey, stepKey, opts)
     local step = self:GetStep(listID, sectionKey, stepKey)
     if not step then return nil end
