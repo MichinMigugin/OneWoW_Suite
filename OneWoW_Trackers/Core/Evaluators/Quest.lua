@@ -69,17 +69,11 @@ E.Register("quest_progress", function(op)
 end)
 
 E.Register("quest_active", function(op)
-    local qid = tonumber(op.questID)
-    if qid then
-        return C_QuestLog.IsOnQuest(qid) and 1 or 0, 1
-    end
+    return EvalQuestFlag(op, C_QuestLog.IsOnQuest)
 end)
 
 E.Register("quest_world", function(op)
-    local qid = tonumber(op.questID)
-    if not qid then return end
-    if C_QuestLog.IsQuestFlaggedCompleted(qid) then return 1, 1 end
-    return 0, 1
+    return EvalQuestFlag(op, C_QuestLog.IsQuestFlaggedCompleted)
 end)
 
 E.Register("campaign", function(op)

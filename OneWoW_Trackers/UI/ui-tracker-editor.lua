@@ -4,6 +4,7 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 local Location = OneWoW.Location
 local Schema = ns.TrackerTypeSchema
+local TP = ns.TrackerPresets
 
 ns.TrackerEditor = {}
 local TE_UI = ns.TrackerEditor
@@ -178,6 +179,133 @@ local function FieldSlotHeight(field)
     return FIELD_ROW_H
 end
 
+local LIST_FIELD_QUEST_IDS = {
+    key = "questIDs",
+    labelKey = "TRACKER_FL_QUEST_IDS",
+    hintKey = "TRACKER_FH_QUEST_IDS",
+    width = 320,
+    isList = true,
+    maxLetters = 400,
+    widgetType = "editbox",
+}
+
+local LIST_FIELD_SPELL_IDS = {
+    key = "spellIDs",
+    labelKey = "TRACKER_FL_SPELL_ID",
+    hintKey = "TRACKER_FH_SPELL_ID",
+    width = 320,
+    isList = true,
+    maxLetters = 400,
+    widgetType = "editbox",
+}
+
+local FIELD_CATCHUP_CURRENCY = {
+    key = "currencyID",
+    labelKey = "TRACKER_FL_CURRENCY_ID",
+    hintKey = "TRACKER_FH_CURRENCY_ID",
+    width = 160,
+    widgetType = "entityId",
+    entityKind = "currency",
+}
+
+local QUEST_SCOPE_TYPES = {
+    "quest", "quest_account", "quest_world", "quest_active", "rare_quest",
+}
+
+local function CategoryMatches(cat, trackType)
+    if cat.trackType == trackType then return true end
+    if cat.matchesTypes then
+        for _, t in ipairs(cat.matchesTypes) do
+            if t == trackType then return true end
+        end
+    end
+    return false
+end
+
+local function CardHasEditor(cat, fields)
+    return #fields > 0 or cat.extra ~= nil
+end
+
+local function PlaceFieldSlot(layout, fieldRow, field, widget)
+    local w = field.width or 120
+    local slotH = FieldSlotHeight(field)
+    if layout.fx > 0 and layout.fx + w > FIELD_ROW_INNER then
+        layout.fx = 0
+        layout.fy = layout.fy - layout.rowH
+        layout.rowH = slotH
+    elseif slotH > layout.rowH then
+        layout.rowH = slotH
+    end
+
+    local flbl = OneWoW_GUI:CreateFS(fieldRow, 10)
+    flbl:SetPoint("TOPLEFT", fieldRow, "TOPLEFT", layout.fx, layout.fy)
+    flbl:SetText(L[field.labelKey] .. ":")
+    flbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    widget:SetPoint("TOPLEFT", flbl, "BOTTOMLEFT", 0, -1)
+    layout.fx = layout.fx + w + FIELD_ROW_GAP
+end
+
+local function FieldLayoutHeight(layout)
+    return -layout.fy + layout.rowH
+end
+
+local function ProfessionDisplayName(prof)
+    local name = C_TradeSkillUI.GetTradeSkillDisplayName(prof.baseSkillLineID)
+    if name and name ~= "" then return name end
+    return prof.name
+end
+
+local function ProfessionBySkillLine(skillLineID)
+    for _, prof in ipairs(TP:GetProfessionPresets()) do
+        if prof.baseSkillLineID == skillLineID then return prof end
+    end
+end
+
+local function MatchProfessionFromStep(trackType, params)
+    params = params or {}
+    for _, prof in ipairs(TP:GetProfessionPresets()) do
+        if trackType == "prof_skill" and tonumber(params.baseSkillLineID) == prof.baseSkillLineID then
+            return prof
+        elseif trackType == "prof_concentration" and tonumber(params.currencyID) == prof.currencyConc then
+            return prof
+        elseif trackType == "prof_knowledge" and tonumber(params.skillLineVariantID) == prof.skillVariant then
+            return prof
+        end
+    end
+    return TP:GetProfessionPresets()[1]
+end
+
+local function ProfessionTaskOptions(prof)
+    local opts = {
+        { text = L["TRACKER_TYPE_PROF_SKILL"], value = "prof_skill" },
+    }
+    if prof and prof.currencyConc then
+        tinsert(opts, { text = L["TRACKER_TYPE_PROF_CONC"], value = "prof_concentration" })
+    end
+    if prof and prof.skillVariant then
+        tinsert(opts, { text = L["TRACKER_TYPE_PROF_KNOW"], value = "prof_knowledge" })
+    end
+    tinsert(opts, { text = L["TRACKER_TYPE_PROF_FIRST"], value = "prof_firstcraft" })
+    tinsert(opts, { text = L["TRACKER_TYPE_PROF_CATCHUP"], value = "prof_catchup" })
+    return opts
+end
+
+local function TaskAllowedForProfession(task, prof)
+    if task == "prof_concentration" then return prof and prof.currencyConc ~= nil end
+    if task == "prof_knowledge" then return prof and prof.skillVariant ~= nil end
+    return task ~= nil
+end
+
+local function PlaceLabeledDropdown(layout, fieldRow, labelKey, width, dropdown)
+    PlaceFieldSlot(layout, fieldRow, {
+        key = "_dd",
+        labelKey = labelKey,
+        width = width,
+        widgetType = "dropdown",
+    }, dropdown)
+end
+
 --- Editbox, dropdown, or entity ID field from a schema descriptor.
 --- Unregistered entity kinds degrade to a plain numeric box.
 local function CreateFieldWidget(parent, field, existingVal, isNew)
@@ -250,6 +378,125 @@ local function ReadFieldWidget(widget, field)
     return tonumber(val) or val
 end
 
+local function AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
+    if cat.extra == "quest" then
+        local scopeDD = CreateDropdown(fieldRow, 200, 22)
+        local scopeOpts = {}
+        for _, t in ipairs(QUEST_SCOPE_TYPES) do
+            tinsert(scopeOpts, { text = ns.TrackerEngine:GetTrackTypeDisplayName(t), value = t })
+        end
+        scopeDD:SetOptions(scopeOpts)
+        local selected = (existing and CategoryMatches(cat, existing.trackType)) and existing.trackType or "quest"
+        scopeDD:SetSelected(selected)
+        card._scopeDD = scopeDD
+        PlaceLabeledDropdown(layout, fieldRow, "TRACKER_FL_QUEST_SCOPE", 200, scopeDD)
+
+        local idsVal
+        if existing and existing.trackParams and CategoryMatches(cat, existing.trackType) then
+            idsVal = existing.trackParams.questIDs
+        end
+        local idsWidget = CreateFieldWidget(fieldRow, LIST_FIELD_QUEST_IDS, idsVal, isNew)
+        card._field_questIDs = idsWidget
+        PlaceFieldSlot(layout, fieldRow, LIST_FIELD_QUEST_IDS, idsWidget)
+        return
+    end
+
+    if cat.extra == "vault" then
+        local vaultDD = CreateDropdown(fieldRow, 220, 22)
+        vaultDD:SetOptions({
+            { text = L["TRACKER_TYPE_VAULT_RAID"], value = "vault_raid" },
+            { text = L["TRACKER_TYPE_VAULT_DUNGEON"], value = "vault_dungeon" },
+            { text = L["TRACKER_TYPE_VAULT_WORLD"], value = "vault_world" },
+        })
+        vaultDD:SetSelected((existing and CategoryMatches(cat, existing.trackType)) and existing.trackType or "vault_raid")
+        card._vaultDD = vaultDD
+        PlaceLabeledDropdown(layout, fieldRow, "SLOT", 220, vaultDD)
+        return
+    end
+
+    if cat.extra == "profession" then
+        local params = existing and existing.trackParams or {}
+        local prof = MatchProfessionFromStep(existing and existing.trackType, params)
+        local profDD = CreateDropdown(fieldRow, 200, 22)
+        local profOpts = {}
+        for _, p in ipairs(TP:GetProfessionPresets()) do
+            tinsert(profOpts, { text = ProfessionDisplayName(p), value = p.baseSkillLineID })
+        end
+        profDD:SetOptions(profOpts)
+        profDD:SetSelected(prof and prof.baseSkillLineID)
+        card._profDD = profDD
+        PlaceLabeledDropdown(layout, fieldRow, "PROFESSION", 200, profDD)
+
+        local taskDD = CreateDropdown(fieldRow, 200, 22)
+        taskDD:SetOptions(ProfessionTaskOptions(prof))
+        local task = (existing and CategoryMatches(cat, existing.trackType)) and existing.trackType or "prof_skill"
+        if not TaskAllowedForProfession(task, prof) then task = "prof_skill" end
+        taskDD:SetSelected(task)
+        card._taskDD = taskDD
+        PlaceLabeledDropdown(layout, fieldRow, "TRACKER_FL_PROF_TASK", 200, taskDD)
+
+        local spellVal = params.spellIDs or params.spellID
+        local spellWidget = CreateFieldWidget(fieldRow, LIST_FIELD_SPELL_IDS, spellVal, isNew)
+        card._field_spellIDs = spellWidget
+        PlaceFieldSlot(layout, fieldRow, LIST_FIELD_SPELL_IDS, spellWidget)
+
+        local currVal = (existing and existing.trackType == "prof_catchup") and params.currencyID or nil
+        local currWidget = CreateFieldWidget(fieldRow, FIELD_CATCHUP_CURRENCY, currVal, isNew)
+        card._field_catchupCurrency = currWidget
+        PlaceFieldSlot(layout, fieldRow, FIELD_CATCHUP_CURRENCY, currWidget)
+
+        profDD.onSelect = function(skillLineID)
+            local nextProf = ProfessionBySkillLine(skillLineID)
+            local currentTask = taskDD:GetValue()
+            taskDD:SetOptions(ProfessionTaskOptions(nextProf))
+            if not TaskAllowedForProfession(currentTask, nextProf) then
+                currentTask = "prof_skill"
+            end
+            taskDD:SetSelected(currentTask)
+        end
+    end
+end
+
+local function ReadQuestCard(card)
+    local trackType = card._scopeDD and card._scopeDD:GetValue() or "quest"
+    local questIDs = ReadFieldWidget(card._field_questIDs, LIST_FIELD_QUEST_IDS)
+    local questID = ReadFieldWidget(card._field_questID, { widgetType = "entityId" })
+    if questIDs and #questIDs > 0 then
+        return trackType, { questIDs = questIDs }
+    end
+    if questID then
+        return trackType, { questID = questID }
+    end
+    return nil, nil
+end
+
+local function ReadProfessionCard(card)
+    local skillLineID = card._profDD and card._profDD:GetValue()
+    local task = card._taskDD and card._taskDD:GetValue() or "prof_skill"
+    local prof = ProfessionBySkillLine(skillLineID)
+    if not prof or not TaskAllowedForProfession(task, prof) then return nil, nil end
+    if task == "prof_skill" then
+        return task, { baseSkillLineID = prof.baseSkillLineID }
+    elseif task == "prof_concentration" then
+        return task, { currencyID = prof.currencyConc }
+    elseif task == "prof_knowledge" then
+        return task, { skillLineVariantID = prof.skillVariant }
+    elseif task == "prof_firstcraft" then
+        local spellIDs = ReadFieldWidget(card._field_spellIDs, LIST_FIELD_SPELL_IDS)
+        if not spellIDs or #spellIDs == 0 then return nil, nil end
+        return task, { spellIDs = spellIDs }
+    elseif task == "prof_catchup" then
+        local currencyID = ReadFieldWidget(card._field_catchupCurrency, FIELD_CATCHUP_CURRENCY)
+        if not currencyID then return nil, nil end
+        return task, { currencyID = currencyID }
+    end
+    return nil, nil
+end
+
+local function ReadVaultCard(card)
+    return card._vaultDD and card._vaultDD:GetValue() or "vault_raid", {}
+end
+
 --- Explicit max box wins; otherwise derive from type params (item count, pool pick, ...).
 local function ReadStepCount(dialog, trackType, trackParams)
     if dialog._noMaxCheck:GetChecked() then
@@ -284,9 +531,28 @@ local function ApplySharedStepFields(dialog, changes)
     changes.rosterMode = dialog._rosterCheck:GetChecked() and true or false
     changes.resetOverride = (resetVal and resetVal ~= "none") and resetVal or false
     changes.userNote = strtrim(dialog._notesBox:GetText() or "")
+    changes.description = strtrim(dialog._descBox:GetText() or "")
+    local mapID = tonumber(strtrim(dialog._wpMap:GetSearchText() or ""))
+    local x = tonumber(strtrim(dialog._wpX:GetSearchText() or ""))
+    local y = tonumber(strtrim(dialog._wpY:GetSearchText() or ""))
+    changes.mapID = mapID or false
+    changes.coordX = x or false
+    changes.coordY = y or false
+    local radius = tonumber(strtrim(dialog._wpRadius:GetText() or ""))
+    changes.waypointRadius = radius or 15
     local max, noMax = ReadStepCount(dialog, changes.trackType, changes.trackParams)
     changes.max = max
     changes.noMax = noMax
+end
+
+local function FillSharedWaypoint(dialog)
+    local mapID, x, y = Location.GetPlayerLocation()
+    if not mapID or not x then FillMsg("TRACKER_FILL_NO_POSITION"); return end
+    dialog._wpMap:SetText(tostring(mapID))
+    dialog._wpX:SetText(format("%.1f", x))
+    dialog._wpX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dialog._wpY:SetText(format("%.1f", y))
+    dialog._wpY:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 end
 
 local function HoursFromInterval(seconds)
@@ -446,14 +712,30 @@ local QUICK_START = {
 }
 
 -- Presentation-only. Param widgets come from Schema.GetFields(trackType).
+-- extra + matchesTypes: one card covers a family (quest scopes, vault slots, professions).
 local STEP_CATEGORIES = {
     { key = "checkbox",            titleKey = "TRACKER_SC_CHECKBOX_TITLE",            descKey = "TRACKER_SC_CHECKBOX_DESC",            trackType = "manual" },
-    { key = "quest",               titleKey = "TRACKER_SC_QUEST_TITLE",               descKey = "TRACKER_SC_QUEST_DESC",               trackType = "quest" },
+    {
+        key = "quest",
+        titleKey = "TRACKER_SC_QUEST_TITLE",
+        descKey = "TRACKER_SC_QUEST_DESC",
+        trackType = "quest",
+        extra = "quest",
+        matchesTypes = QUEST_SCOPE_TYPES,
+    },
     { key = "quest_pool",          titleKey = "TRACKER_SC_QUEST_POOL_TITLE",          descKey = "TRACKER_SC_QUEST_POOL_DESC",          trackType = "quest_pool" },
     { key = "quest_pool_account",  titleKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_TITLE",  descKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_DESC",  trackType = "quest_pool_account" },
     { key = "item",                titleKey = "TRACKER_SC_ITEM_TITLE",                descKey = "TRACKER_SC_ITEM_DESC",                trackType = "item" },
     { key = "currency",            titleKey = "TRACKER_SC_CURRENCY_TITLE",            descKey = "TRACKER_SC_CURRENCY_DESC",            trackType = "currency" },
     { key = "achievement",         titleKey = "TRACKER_SC_ACHIEVEMENT_TITLE",         descKey = "TRACKER_SC_ACHIEVEMENT_DESC",         trackType = "achievement" },
+    {
+        key = "vault",
+        titleText = DELVES_GREAT_VAULT_LABEL,
+        descKey = "TRACKER_SC_VAULT_DESC",
+        trackType = "vault_raid",
+        extra = "vault",
+        matchesTypes = { "vault_raid", "vault_dungeon", "vault_world" },
+    },
     {
         key = "coordinates",
         titleKey = "TRACKER_SC_COORD_TITLE",
@@ -495,11 +777,19 @@ local STEP_CATEGORIES = {
     { key = "level",       titleKey = "TRACKER_SC_LEVEL_TITLE",    descKey = "TRACKER_SC_LEVEL_DESC",    trackType = "level" },
     { key = "ilvl",        titleKey = "TRACKER_SC_ILVL_TITLE",     descKey = "TRACKER_SC_ILVL_DESC",     trackType = "ilvl" },
     { key = "spell_known", titleKey = "TRACKER_SC_SPELL_TITLE",    descKey = "TRACKER_SC_SPELL_DESC",    trackType = "spell_known" },
+    {
+        key = "profession",
+        titleText = L["PROFESSION"],
+        descKey = "TRACKER_SC_PROF_DESC",
+        trackType = "prof_skill",
+        extra = "profession",
+        matchesTypes = { "prof_skill", "prof_concentration", "prof_knowledge", "prof_firstcraft", "prof_catchup" },
+    },
 }
 
 local function HasTypeCard(trackType)
     for _, cat in ipairs(STEP_CATEGORIES) do
-        if cat.trackType == trackType then return true end
+        if CategoryMatches(cat, trackType) then return true end
     end
     return false
 end
@@ -547,7 +837,6 @@ end
 function TE_UI:ShowNewListDialog(callback)
     local TD = ns.TrackerData
     local TE = ns.TrackerEngine
-    local TP = ns.TrackerPresets
     if not TD or not TE then return end
 
     local dialog = CreateDialog({
@@ -735,9 +1024,6 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
 end
 
 function TE_UI:ShowProfessionPicker(callback)
-    local TP = ns.TrackerPresets
-    if not TP then return end
-
     local dialog = CreateDialog({
         name = "TrackerProfPicker",
         title = L["TRACKER_PROF_PICKER_TITLE"],
@@ -975,7 +1261,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         name = "TrackerStepWizard",
         title = isEdit and L["TRACKER_EDIT_STEP"] or L["TRACKER_ADD_STEP"],
         width = 650,
-        height = 780,
+        height = 860,
         destroyOnClose = true,
         buttons = {
             {
@@ -1119,8 +1405,77 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     if existing and existing.userNote and existing.userNote ~= "" then notesBox:SetText(existing.userNote) end
     dialog._notesBox = notesBox
 
+    local descLabel = OneWoW_GUI:CreateFS(content, 10)
+    descLabel:SetPoint("TOPLEFT", notesContainer, "BOTTOMLEFT", 0, -8)
+    descLabel:SetText(L["TRACKER_STEP_DESC"])
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local descContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
+    descContainer:ClearAllPoints()
+    descContainer:SetPoint("TOPLEFT", descLabel, "BOTTOMLEFT", 0, -2)
+    descContainer:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    descContainer:SetHeight(50)
+    local descScroll, descBox = OneWoW_GUI:CreateScrollEditBox(descContainer, { name = "TrackerStepDesc", maxLetters = 500 })
+    descScroll:SetAllPoints(descContainer)
+    if existing and existing.description and existing.description ~= "" then descBox:SetText(existing.description) end
+    dialog._descBox = descBox
+
+    local wpLabel = OneWoW_GUI:CreateFS(content, 10)
+    wpLabel:SetPoint("TOPLEFT", descContainer, "BOTTOMLEFT", 0, -8)
+    wpLabel:SetText(L["TRACKER_STEP_WAYPOINT"])
+    wpLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local wpMapField = {
+        key = "mapID",
+        labelKey = "TRACKER_FL_MAP_ID",
+        hintKey = "TRACKER_FH_MAP_ID",
+        width = 100,
+        widgetType = "entityId",
+        entityKind = "map",
+    }
+    local wpMap = CreateFieldWidget(content, wpMapField, existing and existing.mapID, false)
+    wpMap:SetPoint("TOPLEFT", wpLabel, "BOTTOMLEFT", 0, -2)
+    dialog._wpMap = wpMap
+
+    local wpX = OneWoW_GUI:CreateEditBox(content, {
+        width = 60, height = 22, placeholderText = L["TRACKER_FH_XY"], maxLetters = 6, showClear = false,
+    })
+    wpX:SetPoint("TOPLEFT", wpMap, "TOPRIGHT", 20, 0)
+    dialog._wpX = wpX
+
+    local wpY = OneWoW_GUI:CreateEditBox(content, {
+        width = 60, height = 22, placeholderText = L["TRACKER_FH_XY"], maxLetters = 6, showClear = false,
+    })
+    wpY:SetPoint("TOPLEFT", wpX, "TOPRIGHT", 8, 0)
+    dialog._wpY = wpY
+
+    local wpRadius = OneWoW_GUI:CreateEditBox(content, {
+        width = 50, height = 22, placeholderText = L["TRACKER_FL_RANGE"], maxLetters = 4, showClear = false,
+    })
+    wpRadius:SetPoint("TOPLEFT", wpY, "TOPRIGHT", 8, 0)
+    dialog._wpRadius = wpRadius
+
+    if existing then
+        if existing.coordX then
+            wpX:SetText(tostring(existing.coordX))
+            wpX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+        if existing.coordY then
+            wpY:SetText(tostring(existing.coordY))
+            wpY:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+        if existing.waypointRadius and existing.waypointRadius ~= 15 then
+            wpRadius:SetText(tostring(existing.waypointRadius))
+            wpRadius:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+
+    local wpFill = OneWoW_GUI:CreateFitTextButton(content, { text = L["TRACKER_FILL_FROM_POSITION"], height = 22 })
+    wpFill:SetPoint("LEFT", wpRadius, "RIGHT", 8, 0)
+    wpFill:SetScript("OnClick", function() FillSharedWaypoint(dialog) end)
+
     local typeHeader = OneWoW_GUI:CreateFS(content, 12)
-    typeHeader:SetPoint("TOPLEFT", notesContainer, "BOTTOMLEFT", 0, -10)
+    typeHeader:SetPoint("TOPLEFT", wpMap, "BOTTOMLEFT", 0, -10)
     typeHeader:SetText(L["TRACKER_STEP_TRACK_HEADER"])
     typeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
@@ -1153,7 +1508,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
     local function CollapseAllExcept(keepCard)
         for _, c in ipairs(allCards) do
-            if c ~= keepCard and c._expanded and c._cat and #(Schema.GetFields(c._cat.trackType)) > 0 then
+            if c ~= keepCard and c._expanded and c._cat and CardHasEditor(c._cat, Schema.GetFields(c._cat.trackType)) then
                 c._expanded = false
                 if c._fieldRow then c._fieldRow:Hide() end
                 if c._saveFieldBtn then c._saveFieldBtn:Hide() end
@@ -1169,8 +1524,11 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     end
 
     for _, cat in ipairs(STEP_CATEGORIES) do
-        local isActive = existing and existing.trackType == cat.trackType
+        local isActive = existing and CategoryMatches(cat, existing.trackType)
         local fields = Schema.GetFields(cat.trackType)
+        if cat.extra == "profession" or cat.extra == "vault" then
+            fields = {}
+        end
 
         local card = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
         card:SetBackdrop(BACKDROP_SIMPLE)
@@ -1185,7 +1543,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
         local titleFS = OneWoW_GUI:CreateFS(card, 12)
         titleFS:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -6)
-        titleFS:SetText(L[cat.titleKey])
+        titleFS:SetText(cat.titleText or L[cat.titleKey])
         if isActive then
             titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
@@ -1207,7 +1565,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         card._descHeight = descHeight
         card._titleFS = titleFS
 
-        if #fields > 0 then
+        if CardHasEditor(cat, fields) then
             local fieldY = -(cardHeight)
             local fieldRow = CreateFrame("Frame", nil, card)
             fieldRow:SetPoint("TOPLEFT", card, "TOPLEFT", 10, fieldY)
@@ -1218,36 +1576,20 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             local saveFieldBtn = OneWoW_GUI:CreateFitTextButton(card, { text = isEdit and SAVE or L["TRACKER_ADD_STEP"], height = 22 })
             card._saveFieldBtn = saveFieldBtn
 
-            local fx, fy = 0, 0
-            local rowH = FIELD_ROW_H
+            local layout = { fx = 0, fy = 0, rowH = FIELD_ROW_H }
             local isNew = not existing
             for _, field in ipairs(fields) do
-                local w = field.width or 120
-                local slotH = FieldSlotHeight(field)
-                if fx > 0 and fx + w > FIELD_ROW_INNER then
-                    fx = 0
-                    fy = fy - rowH
-                    rowH = slotH
-                else
-                    if slotH > rowH then rowH = slotH end
-                end
-
-                local flbl = OneWoW_GUI:CreateFS(fieldRow, 10)
-                flbl:SetPoint("TOPLEFT", fieldRow, "TOPLEFT", fx, fy)
-                flbl:SetText(L[field.labelKey] .. ":")
-                flbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
                 local existingVal
-                if existing and existing.trackParams and existing.trackType == cat.trackType then
+                if existing and existing.trackParams and CategoryMatches(cat, existing.trackType) then
                     existingVal = existing.trackParams[field.key]
                 end
                 local widget = CreateFieldWidget(fieldRow, field, existingVal, isNew)
-                widget:SetPoint("TOPLEFT", flbl, "BOTTOMLEFT", 0, -1)
                 widget._fieldKey = field.key
                 card["_field_" .. field.key] = widget
-                fx = fx + w + FIELD_ROW_GAP
+                PlaceFieldSlot(layout, fieldRow, field, widget)
             end
-            fieldRow:SetHeight(-fy + rowH)
+            AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
+            fieldRow:SetHeight(FieldLayoutHeight(layout))
 
             saveFieldBtn:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, -4)
             local expandedHeight = cardHeight + fieldRow:GetHeight() + SAVE_ROW_H
@@ -1257,7 +1599,12 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             if cat.onFill then
                 fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L[cat.fillKey], height = 22 })
                 fillBtn:SetPoint("LEFT", saveFieldBtn, "RIGHT", 8, 0)
-                fillBtn:SetScript("OnClick", function() cat.onFill(card) end)
+                fillBtn:SetScript("OnClick", function()
+                    cat.onFill(card)
+                    if cat.trackType == "coordinates" then
+                        FillSharedWaypoint(dialog)
+                    end
+                end)
                 card._fillBtn = fillBtn
             end
 
@@ -1284,24 +1631,35 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             card._doSave = function()
                 local stepName = strtrim(nameBox:GetText() or "")
-                if stepName == "" then stepName = L[cat.titleKey] end
+                if stepName == "" then stepName = cat.titleText or L[cat.titleKey] end
 
+                local trackType = cat.trackType
                 local trackParams = {}
-                local hasRequired = true
-                for _, field in ipairs(fields) do
-                    local w = card["_field_" .. field.key]
-                    local val = ReadFieldWidget(w, field)
-                    if val ~= nil then
-                        trackParams[field.key] = val
-                    elseif not field.default then
-                        hasRequired = false
+                if cat.extra == "vault" then
+                    trackType, trackParams = ReadVaultCard(card)
+                elseif cat.extra == "profession" then
+                    trackType, trackParams = ReadProfessionCard(card)
+                    if not trackParams then return end
+                elseif cat.extra == "quest" then
+                    trackType, trackParams = ReadQuestCard(card)
+                    if not trackParams then return end
+                else
+                    local hasRequired = true
+                    for _, field in ipairs(fields) do
+                        local w = card["_field_" .. field.key]
+                        local val = ReadFieldWidget(w, field)
+                        if val ~= nil then
+                            trackParams[field.key] = val
+                        elseif not field.default then
+                            hasRequired = false
+                        end
                     end
+                    if not hasRequired then return end
                 end
-                if not hasRequired then return end
 
                 local changes = {
                     label = stepName,
-                    trackType = cat.trackType,
+                    trackType = trackType,
                     trackParams = trackParams,
                 }
                 ApplySharedStepFields(dialog, changes)
@@ -1330,9 +1688,9 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         card._expanded = isActive
 
         card:SetScript("OnClick", function(myself)
-            if #fields == 0 then
+            if not CardHasEditor(cat, fields) then
                 local stepName = strtrim(nameBox:GetText() or "")
-                if stepName == "" then stepName = L[cat.titleKey] end
+                if stepName == "" then stepName = cat.titleText or L[cat.titleKey] end
 
                 local changes = {
                     label = stepName,
