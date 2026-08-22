@@ -22,6 +22,7 @@ local achievementsExpanded = true
 local panels_ref = nil
 local RefreshJournalList
 local RefreshDetailView
+local ShowInstanceDetail
 local nameFillRefreshPending = false
 
 local function ScheduleNameFillRefresh()
@@ -116,17 +117,59 @@ local function FormatBossCount(n)
     return string.format(L["JOURNAL_CARD_ENCOUNTERS"], n)
 end
 
+local function CountRareEncounters(instData)
+    local encounters = instData.encounters
+    if instData.encountersHydrated and encounters then
+        local n = 0
+        for _, enc in ipairs(encounters) do
+            if enc.worldRare then
+                n = n + 1
+            end
+        end
+        return n
+    end
+    return instData.rareCount or 0
+end
+
+local function FormatRareCount(n)
+    if n == 1 then
+        return string.format(L["JOURNAL_CARD_RARE_ONE"], n)
+    end
+    return string.format(L["JOURNAL_CARD_RARES"], n)
+end
+
 local function FormatAchievementCount(n)
     return string.format("%d %s", n or 0, ACHIEVEMENTS)
 end
 
+local function FormatCardCountParts(instData)
+    local countParts = {}
+    if instData.instanceType == "delve" then
+        -- Delves have no EJ loot table.
+    elseif instData.instanceType == "zone" then
+        tinsert(countParts, FormatRareCount(CountRareEncounters(instData)))
+        local encCount = CountBossEncounters(instData)
+        if encCount > 0 then
+            tinsert(countParts, FormatBossCount(encCount))
+        end
+        tinsert(countParts, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+    else
+        tinsert(countParts, FormatBossCount(CountBossEncounters(instData)))
+        if instData.instanceType == "world" then
+            tinsert(countParts, FormatRareCount(CountRareEncounters(instData)))
+        end
+        tinsert(countParts, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+    end
+    tinsert(countParts, FormatAchievementCount(#(instData.achievements or {})))
+    return countParts
+end
+
 local function FormatDetailStatusLine(instData)
     local statusBits = { instData.name }
-    if instData.instanceType ~= "delve" then
-        tinsert(statusBits, FormatBossCount(CountBossEncounters(instData)))
-        tinsert(statusBits, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+    local counts = FormatCardCountParts(instData)
+    for i = 1, #counts do
+        tinsert(statusBits, counts[i])
     end
-    tinsert(statusBits, FormatAchievementCount(#(instData.achievements or {})))
     return table.concat(statusBits, " - ")
 end
 
@@ -247,6 +290,104 @@ local function GetDataAddon()
     return OneWoW_CatalogData_Journal_API
 end
 
+local COL_SOURCE_RIGHT = -248
+local SOURCE_ICON_SIZE = 14
+local ATT_SOURCE_TEXTURE = "Interface\\AddOns\\AllTheThings\\assets\\logo_32x32"
+local EXTENDED_SOURCE_TEXTURE = 237446
+
+---@param row table
+---@return string kind "ej"|"att"|"extended"|"onewow"
+local function SourceKind(row)
+    if row.source == "att-live" then
+        return "att"
+    end
+    if row.source == "ej" then
+        return "ej"
+    end
+    if row.source == "extended" then
+        return "extended"
+    end
+    return "onewow"
+end
+
+---@param kind string
+---@return string
+local function SourceTooltipText(kind)
+    if kind == "att" then
+        return L["JOURNAL_SOURCE_ATT_LIVE_TT"]
+    end
+    if kind == "ej" then
+        return ADVENTURE_JOURNAL
+    end
+    if kind == "extended" then
+        return L["JOURNAL_SOURCE_EXTENDED_TT"]
+    end
+    return L["JOURNAL_SOURCE_ONEWOW_TT"]
+end
+
+---@param parent Frame
+---@param row table
+---@param anchor Frame|nil
+---@return Frame
+local function AddSourceIcon(parent, row, anchor)
+    local kind = SourceKind(row)
+    local icon = CreateFrame("Frame", nil, parent)
+    icon:SetSize(SOURCE_ICON_SIZE, SOURCE_ICON_SIZE)
+    if anchor then
+        icon:SetPoint("RIGHT", anchor, "LEFT", -10, 0)
+    else
+        icon:SetPoint("RIGHT", parent, "RIGHT", COL_SOURCE_RIGHT, 0)
+    end
+    local tex = icon:CreateTexture(nil, "ARTWORK")
+    tex:SetAllPoints()
+    if kind == "ej" then
+        tex:SetAtlas("token-choice-wow")
+    elseif kind == "att" then
+        tex:SetTexture(ATT_SOURCE_TEXTURE)
+    elseif kind == "extended" then
+        tex:SetTexture(EXTENDED_SOURCE_TEXTURE)
+    else
+        tex:SetTexture(OneWoW_GUI.Constants.ICON_TEXTURES.neutral)
+    end
+    icon:EnableMouse(true)
+    icon:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(SourceTooltipText(kind))
+        GameTooltip:Show()
+    end)
+    icon:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    table.insert(detailElements, icon)
+    return icon
+end
+
+local rareNameRefreshPending = {}
+
+---@param encounter table
+local function ScheduleRareNameRefresh(encounter)
+    local npcID = encounter.npcID
+    if not npcID or encounter.nameResolved or rareNameRefreshPending[npcID] then
+        return
+    end
+    local addon = GetDataAddon()
+    if not addon then
+        return
+    end
+    rareNameRefreshPending[npcID] = true
+    C_Timer.After(0.4, function()
+        rareNameRefreshPending[npcID] = nil
+        local name = addon.ResolveNPCName(npcID)
+        if name then
+            encounter.name = name
+            encounter.nameResolved = true
+            if selectedInstance then
+                RefreshDetailView(true)
+            end
+        end
+    end)
+end
+
 --- Fill name / icon / quality for a visible loot row. Hydrate stays Instant-only,
 --- so a row can arrive with the placeholder name *and* the fallback quality (both
 --- come from the same uncached-item condition). The store item cache is the source
@@ -290,11 +431,7 @@ local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame, include
         if not paintWidgets then
             return
         end
-        local displayName = item.name
-        if includeGuideMark and item.fromLiveEJ then
-            displayName = displayName .. " |cff888888(" .. GUIDE .. ")|r"
-        end
-        nameFS:SetText(displayName)
+        nameFS:SetText(item.name)
         iconTex:SetTexture(item.icon)
         local qr, qg, qb = OneWoW_GUI:GetItemQualityColor(item.quality)
         iconFrame:SetBackdropBorderColor(qr, qg, qb)
@@ -557,6 +694,12 @@ local function FormatInstanceInfoLine(instData, iconSize)
         typeStr = string.format("|A:Dungeon:%d:%d|a %s", iconSize, iconSize, L["JOURNAL_CARD_DUNGEON"])
     elseif instData.instanceType == "world" then
         typeStr = string.format("|A:worldquest-icon:%d:%d|a %s", iconSize, iconSize, WORLD)
+    elseif instData.instanceType == "zone" then
+        if instData.isCity then
+            typeStr = string.format("|A:poi-town:%d:%d|a %s", iconSize, iconSize, L["JOURNAL_CARD_CITY"])
+        else
+            typeStr = string.format("|A:Waypoint-MapPin-Untracked:%d:%d|a %s", iconSize, iconSize, ZONE)
+        end
     elseif instData.instanceType == "delve" then
         local addon = GetDataAddon()
         local atlas = (addon and addon.IsDelveBountiful(instData.mapID))
@@ -599,7 +742,7 @@ local function CreateInstanceListRow(parent, _)
 
     local nameText = OneWoW_GUI:CreateFS(card, 12)
     nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -6)
-    nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -58, -6)
+    nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -76, -6)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -657,6 +800,25 @@ local function CreateInstanceListRow(parent, _)
         return card.instData
     end)
     card.pinBtn = pinBtn
+
+    local extIcon = CreateFrame("Frame", nil, card)
+    extIcon:SetSize(14, 14)
+    extIcon:SetPoint("RIGHT", pinBtn, "LEFT", -4, 0)
+    extIcon:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
+    local extTex = extIcon:CreateTexture(nil, "ARTWORK")
+    extTex:SetAllPoints()
+    extTex:SetTexture(EXTENDED_SOURCE_TEXTURE)
+    extIcon:EnableMouse(true)
+    extIcon:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["JOURNAL_SOURCE_EXTENDED_TT"])
+        GameTooltip:Show()
+    end)
+    extIcon:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    extIcon:Hide()
+    card.extendedIcon = extIcon
 
     local infoText = OneWoW_GUI:CreateFS(card, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
@@ -734,18 +896,14 @@ local function BindInstanceListRow(row, _, instData, state)
 
     row.infoText:SetText(FormatInstanceInfoLine(instData, 12))
 
-    local encCount = CountBossEncounters(instData)
-    local countParts = {}
-    if instData.instanceType == "delve" then
-        -- Delves have no EJ loot table.
+    -- Skeleton cards already carry the hydrated totals (Generated loot plus
+    -- static extras), so there is never a "still loading" count to show.
+    row.countText:SetText(table.concat(FormatCardCountParts(instData), "  |  "))
+    if instData.source == "extended" then
+        row.extendedIcon:Show()
     else
-        -- Skeleton cards already carry the hydrated totals (Generated loot plus
-        -- static extras), so there is never a "still loading" count to show.
-        tinsert(countParts, FormatBossCount(encCount))
-        tinsert(countParts, string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+        row.extendedIcon:Hide()
     end
-    tinsert(countParts, FormatAchievementCount(#(instData.achievements or {})))
-    row.countText:SetText(table.concat(countParts, "  |  "))
 
     local availW = (row:GetWidth() > 0 and row:GetWidth() or 260) - CARD_TAG_PAD_X * 2
     local xPos = CARD_TAG_PAD_X
@@ -1089,9 +1247,11 @@ local function BuildQuestItemRow(parent, item, yOffset)
         nameRightAnchor = infoText
     end
 
+    local sourceIcon = AddSourceIcon(itemRow, item, nameRightAnchor)
+
     local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
     itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
-    itemName:SetPoint("RIGHT", nameRightAnchor, "LEFT", -10, 0)
+    itemName:SetPoint("RIGHT", sourceIcon, "LEFT", -10, 0)
     itemName:SetJustifyH("LEFT")
     itemName:SetWordWrap(false)
     itemName:SetText(item.name)
@@ -1192,6 +1352,46 @@ local function SetDifficultyDropdownInteractive(dropdown, textFS, enabled)
         dropdown:Disable()
         textFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
+end
+
+---@param parent Frame
+---@param instData table
+---@param zoneMapID number|nil
+---@return Button|nil
+local function AddZoneJumpButton(parent, instData, zoneMapID)
+    local addon = GetDataAddon()
+    if not addon or instData.instanceType == "zone" or not zoneMapID then
+        return nil
+    end
+    local dest = addon.GetZoneInstance(instData.expansionID, zoneMapID)
+    if not dest then
+        return nil
+    end
+    local btn = CreateFrame("Button", nil, parent)
+    btn:SetSize(16, 16)
+    btn:SetFrameLevel((parent:GetFrameLevel() or 0) + 2)
+    local tex = btn:CreateTexture(nil, "ARTWORK")
+    tex:SetAllPoints()
+    tex:SetAtlas("Waypoint-MapPin-Tracked")
+    btn:SetScript("OnClick", function()
+        local p = panels_ref
+        if not p then
+            return
+        end
+        ShowInstanceDetail(p, dest)
+        if journalListAPI then
+            journalListAPI.Refresh()
+        end
+    end)
+    btn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["JOURNAL_OPEN_ZONE_TT"])
+        GameTooltip:Show()
+    end)
+    btn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    return btn
 end
 
 local function OpenAchievementUI(achievementID)
@@ -1346,7 +1546,13 @@ local function BuildAchievementsTable(parent, instData, yOffset)
             diffFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             local nameFS = OneWoW_GUI:CreateFS(itemRow, 12)
-            nameFS:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
+            local jumpBtn = AddZoneJumpButton(itemRow, instData, row.zoneMapID)
+            if jumpBtn then
+                jumpBtn:SetPoint("LEFT", iconFrame, "RIGHT", 4, 0)
+                nameFS:SetPoint("LEFT", jumpBtn, "RIGHT", 6, 0)
+            else
+                nameFS:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
+            end
             nameFS:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT - 8, 0)
             nameFS:SetJustifyH("LEFT")
             nameFS:SetWordWrap(false)
@@ -1422,7 +1628,7 @@ RefreshDetailView = function(isSecondRefresh)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
     local infoParts = {}
-    if instData.instanceType ~= "delve" then
+    if instData.instanceType ~= "delve" and instData.instanceType ~= "zone" then
         tinsert(infoParts, L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID)
     end
     if instData.mapID then
@@ -1485,7 +1691,7 @@ RefreshDetailView = function(isSecondRefresh)
     -- all encounters are already open, plus otherwise, mirroring the per-encounter icons.
     local allExpanded = true
     for _, encounter in ipairs(instData.encounters) do
-        if expandedEncounters[encounter.encounterID] ~= true then
+        if not encounter.sectionHeader and expandedEncounters[encounter.encounterID] ~= true then
             allExpanded = false
             break
         end
@@ -1502,7 +1708,9 @@ RefreshDetailView = function(isSecondRefresh)
     expandAllBtn:SetScript("OnClick", function()
         local expand = not allExpanded
         for _, encounter in ipairs(instData.encounters) do
-            expandedEncounters[encounter.encounterID] = expand or nil
+            if not encounter.sectionHeader then
+                expandedEncounters[encounter.encounterID] = expand or nil
+            end
         end
         RefreshDetailView(false)
     end)
@@ -1511,6 +1719,12 @@ RefreshDetailView = function(isSecondRefresh)
     hdrItem:SetPoint("LEFT", expandAllBtn, "RIGHT", 4, 0)
     hdrItem:SetText(L["ITEM"])
     hdrItem:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local hdrSource = OneWoW_GUI:CreateFS(colHdrFrame, 10)
+    hdrSource:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_SOURCE_RIGHT, 0)
+    hdrSource:SetText(SOURCES)
+    hdrSource:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    hdrSource:SetJustifyH("RIGHT")
 
     local hdrDiff = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrDiff:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_DIFF_RIGHT, 0)
@@ -1533,6 +1747,21 @@ RefreshDetailView = function(isSecondRefresh)
     yOffset = yOffset - 24
 
     for _, encounter in ipairs(instData.encounters) do
+        if encounter.sectionHeader then
+            local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+            section:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
+            section:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
+            section:SetHeight(22)
+            section:SetBackdrop(BACKDROP_SIMPLE)
+            section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            table.insert(detailElements, section)
+            local sectionName = OneWoW_GUI:CreateFS(section, 12)
+            sectionName:SetPoint("LEFT", section, "LEFT", 10, 0)
+            sectionName:SetText(encounter.name)
+            sectionName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            yOffset = yOffset - 26
+        else
         local isExpanded = expandedEncounters[encounter.encounterID] == true
 
         local filteredItems = {}
@@ -1540,6 +1769,10 @@ RefreshDetailView = function(isSecondRefresh)
             if ItemMatchesFilters(item, addon) then
                 table.insert(filteredItems, item)
             end
+        end
+
+        if encounter.worldRare then
+            ScheduleRareNameRefresh(encounter)
         end
 
         local encBtn = CreateFrame("Button", nil, parent, "BackdropTemplate")
@@ -1560,6 +1793,8 @@ RefreshDetailView = function(isSecondRefresh)
         encName:SetPoint("LEFT", expandIcon, "RIGHT", 6, 0)
         encName:SetText(encounter.name)
         encName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        encName:SetJustifyH("LEFT")
+        encName:SetWordWrap(false)
 
         local itemCountStr = string.format(L["JOURNAL_ITEMS_COUNT"], #filteredItems)
         if #filteredItems ~= #encounter.items then
@@ -1569,6 +1804,15 @@ RefreshDetailView = function(isSecondRefresh)
         encCount:SetPoint("RIGHT", encBtn, "RIGHT", -8, 0)
         encCount:SetText(itemCountStr)
         encCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        local encSource = AddSourceIcon(encBtn, encounter)
+        local jumpBtn = AddZoneJumpButton(encBtn, instData, encounter.zoneMapID)
+        if jumpBtn then
+            jumpBtn:SetPoint("RIGHT", encSource, "LEFT", -8, 0)
+            encName:SetPoint("RIGHT", jumpBtn, "LEFT", -8, 0)
+        else
+            encName:SetPoint("RIGHT", encSource, "LEFT", -8, 0)
+        end
 
         local capturedEncID = encounter.encounterID
         encBtn:SetScript("OnClick", function()
@@ -1625,17 +1869,15 @@ RefreshDetailView = function(isSecondRefresh)
 
                 local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
                 itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
-                itemName:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT - 10, 0)
+                itemName:SetPoint("RIGHT", itemRow, "RIGHT", COL_SOURCE_RIGHT - SOURCE_ICON_SIZE - 8, 0)
                 itemName:SetJustifyH("LEFT")
                 itemName:SetWordWrap(false)
-                local displayName = item.name
-                if item.fromLiveEJ then
-                    displayName = displayName .. " |cff888888(" .. GUIDE .. ")|r"
-                end
-                itemName:SetText(displayName)
+                itemName:SetText(item.name)
                 itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
 
-                FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame, true)
+                AddSourceIcon(itemRow, item)
+
+                FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame, false)
 
                 local diffText = OneWoW_GUI:CreateFS(itemRow, 10)
                 diffText:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)
@@ -1702,6 +1944,7 @@ RefreshDetailView = function(isSecondRefresh)
         end
 
         yOffset = yOffset - 4
+        end
     end
 
     parent:SetHeight(math.abs(yOffset) + 20)
@@ -1720,7 +1963,7 @@ RefreshDetailView = function(isSecondRefresh)
     end
 end
 
-local function ShowInstanceDetail(panels, instData)
+function ShowInstanceDetail(panels, instData)
     if not instData then return end
     selectedInstance = instData
     expandedEncounters = {}
@@ -1730,7 +1973,8 @@ local function ShowInstanceDetail(panels, instData)
     local dataAddon = GetDataAddon()
     if dataAddon then
         dataAddon.EnsureEncounters(instData)
-        if instData.instanceType ~= "delve" and instData.instanceID and instData.instanceID > 0 then
+        if instData.instanceType ~= "delve" and instData.instanceType ~= "zone"
+            and instData.instanceID and instData.instanceID > 0 then
             dataAddon.SetLiveMergeTarget(instData)
             dataAddon.MergeInstance(instData)
         else
@@ -1780,7 +2024,8 @@ local function ShowInstanceDetail(panels, instData)
         BindJournalPinButton(panels.detailPinBtn, instData)
     end
     if panels.ejBtn then
-        if instData.instanceType ~= "delve" and instData.instanceID and instData.instanceID > 0 then
+        if instData.instanceType ~= "delve" and instData.instanceType ~= "zone"
+            and instData.instanceID and instData.instanceID > 0 then
             panels.ejBtn:Show()
         else
             panels.ejBtn:Hide()
@@ -2089,11 +2334,14 @@ local function InitializeDropdowns(panels)
             party = DUNGEONS,
             raid  = RAIDS,
             world = WORLD,
+            zone  = L["JOURNAL_FILTER_ZONES"],
+            city  = L["JOURNAL_FILTER_CITIES"],
             delve = DELVES_LABEL,
         }
         panels.typeText:SetText(typeLabelFor[instanceTypeFilter] or L["JOURNAL_FILTER_SHOW_ALL"])
         OneWoW_GUI:AttachFilterMenu(panels.typeDropdown, {
             searchable = false,
+            menuHeight = 280,
             getActiveValue = function() return instanceTypeFilter end,
             buildItems = function()
                 return {
@@ -2101,6 +2349,8 @@ local function InitializeDropdowns(panels)
                     { value = "party", text = DUNGEONS },
                     { value = "raid",  text = RAIDS },
                     { value = "world", text = WORLD },
+                    { value = "zone",  text = L["JOURNAL_FILTER_ZONES"] },
+                    { value = "city",  text = L["JOURNAL_FILTER_CITIES"] },
                     { value = "delve", text = DELVES_LABEL },
                 }
             end,
@@ -2314,6 +2564,42 @@ function ns.UI.CreateJournalTab(parent)
         end,
     })
     chkBox:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -54)
+
+    if C_AddOns.IsAddOnLoaded("AllTheThings") then
+        local attBadge = CreateFrame("Frame", nil, rightHeader)
+        attBadge:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -8, -8)
+        attBadge:SetSize(220, 36)
+
+        local attIcon = attBadge:CreateTexture(nil, "ARTWORK")
+        attIcon:SetSize(18, 18)
+        attIcon:SetPoint("TOPRIGHT", attBadge, "TOPRIGHT", 0, 0)
+        attIcon:SetTexture(ATT_SOURCE_TEXTURE)
+
+        local attTitle = OneWoW_GUI:CreateFS(attBadge, 10)
+        attTitle:SetPoint("TOPRIGHT", attIcon, "TOPLEFT", -6, 1)
+        attTitle:SetText(L["JOURNAL_ATT_DETECTED"])
+        attTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        attTitle:SetJustifyH("RIGHT")
+
+        local attBody = OneWoW_GUI:CreateFS(attBadge, 9)
+        attBody:SetPoint("TOPRIGHT", attTitle, "BOTTOMRIGHT", 0, -2)
+        attBody:SetWidth(196)
+        attBody:SetJustifyH("RIGHT")
+        attBody:SetWordWrap(true)
+        attBody:SetText(L["JOURNAL_ATT_DETECTED_TT"])
+        attBody:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        attBadge:EnableMouse(true)
+        attBadge:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+            GameTooltip:SetText(L["JOURNAL_ATT_DETECTED"])
+            GameTooltip:AddLine(L["JOURNAL_ATT_DETECTED_TT"], 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        attBadge:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    end
 
     -- Clear button resets all filters
     clearBtn:SetScript("OnClick", function()

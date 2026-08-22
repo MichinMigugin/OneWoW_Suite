@@ -11,7 +11,9 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["JOURNAL_STATUS_NA"] = "N/A",
 
     ["JOURNAL_GENERAL_LOOT"] = "Botín general",
-    ["JOURNAL_ALSO_FROM_ATT"] = "También de ATT",
+    ["JOURNAL_WORLD_BOSSES"]  = "Jefes de mundo",
+    ["JOURNAL_WORLD_RARES"]   = "Raros de mundo",
+    ["JOURNAL_NPC_UNNAMED"]   = "PNJ #%d",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Logro",
     ["JOURNAL_QUEST_LOOT"] = "Relacionado con misión / Botín de misión",
     ["JOURNAL_UNKNOWN_ITEM"] = "Objeto desconocido",

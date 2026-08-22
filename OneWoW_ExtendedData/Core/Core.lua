@@ -8,5 +8,8 @@ OneWoW:BootStore(ns, {
         OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Quests", function()
             ns.FlushQuestData()
         end)
+        OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Journal", function()
+            ns.FlushZoneMembership()
+        end)
     end,
 })

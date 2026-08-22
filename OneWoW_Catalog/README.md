@@ -8,13 +8,15 @@
 
 ### Journal Tab - Instances, Raids, Delves & World
 Browse dungeons, raids, Delves, and World hubs from every expansion:
-- **All Expansions Covered** - Classic through Midnight (Delves: The War Within and Midnight; World cards for Classic through Cataclysm, outdoor hubs after that)
-- Loot matches the Adventure Guide; extra AllTheThings drops sit under Also from ATT
+- **All Expansions Covered** - Classic through Midnight (Delves: The War Within and Midnight; World cards for Classic through Cataclysm, outdoor hubs after that; Zone and City cards)
+- Loot matches the Adventure Guide; World cards list World Bosses and World Rares with their own loot and a rares count; extra drops with a known boss or rare sit on that encounter; the rest stay under General Loot; a drop from several rares is listed on each rare
+- Source icons on encounters and loot: Adventure Guide, shipped OneWoW data, Extended Data, or live AllTheThings. When AllTheThings is loaded, the filter bar shows ATT Detected
 - See all instances and encounters at a glance
 - Pin on a card or the details toolbar opens the world map at that instance's entrance (gold pins are Wowhead locations until official doors ship)
-- Instance Type includes World and Delves, with a Show Bountiful checkbox for this week's bountiful doors
+- Instance Type includes World, Zones, Cities, and Delves, with a Show Bountiful checkbox for this week's bountiful doors
+- A pin on a World-hub rare, boss, or achievement opens that zone or city when we know the map. Cities and current zones ship with Journal; older outdoor zones need Extended Data
 - Delve cards use official entrance background art
-- Achievements sit above loot on the details side (collapsible, same header as Items). Cards show bosses, items, and the achievement count. Status is a check / Warband mark / X
+- Achievements sit above loot on the details side (collapsible, same header as Items). Cards show bosses, rares (World), items, and the achievement count. World cards include that expansion's exploration achievements. Status is a check / Warband mark / X
 - Adventure Guide button on dungeon and raid details. Delves keep a disabled Difficulty dropdown so the map pin lines up
 - Detailed encounter information (if data addon is installed)
 - Look up loot tables and boss mechanics

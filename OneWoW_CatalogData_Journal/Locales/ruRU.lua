@@ -11,7 +11,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_STATUS_NA"] = "Н/Д",
 
     ["JOURNAL_GENERAL_LOOT"] = "Общая добыча",
-    ["JOURNAL_ALSO_FROM_ATT"] = "Также из ATT",
+    ["JOURNAL_WORLD_BOSSES"]  = "Мировые боссы",
+    ["JOURNAL_WORLD_RARES"]   = "Мировые редкие",
+    ["JOURNAL_NPC_UNNAMED"]   = "NPC #%d",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Достижение",
     ["JOURNAL_QUEST_LOOT"] = "Связано с заданием / Добыча задания",
     ["JOURNAL_UNKNOWN_ITEM"] = "Неизвестный предмет",

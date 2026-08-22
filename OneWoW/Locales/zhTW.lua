@@ -166,7 +166,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自動坐騎",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自動坐騎會在戰鬥及其他光環受限情況下暫停，無需掃描保密增益即可偵測潛行，並在光環資料受限時不再出錯。玩家坐騎的滑鼠提示使用同樣的保護。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 掉落現已與冒險指南一致。AllTheThings 額外物品會單獨顯示在來自 ATT 的額外內容區塊。副本類型包含世界。探究仍在地心之戰與至暗之夜，並保留豐碩篩選。登入、開啟 Journal、開啟卡片，以及在地城或探究中重載，都不再被 Journal 卡住。",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 掉落與冒險指南一致。世界卡片分別列出世界首領與世界稀有及其掉落，並包含該資料片的探索與冒險者成就。副本類型也列出區域與主城。世界總覽仍是完整清單；稀有、首領或成就上的圖釘在知道區域時會開啟該地的卡片。主城與目前資料片區域隨 Journal 提供；較舊的戶外區域需要擴充資料。卡片顯示首領、稀有、物品與成就數量。多個稀有都會掉落的物品會分別列在每個稀有下。已對應首領或稀有的額外掉落會歸到該條目，其餘仍在普通戰利品。來源圖示標出冒險指南、OneWoW 資料或即時 AllTheThings。已載入 AllTheThings 時，Journal 會顯示已偵測到 ATT。探究仍在地心之戰與至暗之夜，並保留豐碩篩選。開啟 Journal 與卡片不再卡住。",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包設定 → 一般中，可以分別取代背包、銀行（個人與戰隊一起）和公會銀行。用 #disenchantable (#de) 尋找可分解物品，用 #midnights1 / #midnights2 尋找至暗之夜賽季1與賽季2裝備。",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 圖示瀏覽器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能現已包含圖示瀏覽器。選擇巨集、銀行分頁、公會銀行分頁、裝備設定或塑形套裝圖示時可搜尋並篩選。",

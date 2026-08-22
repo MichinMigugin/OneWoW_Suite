@@ -10,7 +10,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_STATUS_NA"]            = "N/A",
 
     ["JOURNAL_GENERAL_LOOT"]  = "General Loot",
-    ["JOURNAL_ALSO_FROM_ATT"] = "Also from ATT",
+    ["JOURNAL_WORLD_BOSSES"]  = "World Bosses",
+    ["JOURNAL_WORLD_RARES"]   = "World Rares",
+    ["JOURNAL_NPC_UNNAMED"]   = "NPC #%d",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Achievement",
     ["JOURNAL_QUEST_LOOT"]    = "Quest Related / Quest Drop",
     ["JOURNAL_UNKNOWN_ITEM"]  = "Unknown Item",

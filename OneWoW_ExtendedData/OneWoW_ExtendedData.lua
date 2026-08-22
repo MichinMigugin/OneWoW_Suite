@@ -1,3 +1,4 @@
 -- OneWoW_ExtendedData main file.
 -- Optional extra catalog data. This unit exposes no public globals; leftover
--- quests register through OneWoW_CatalogData_Quests_API when Quests is ready.
+-- quests register through OneWoW_CatalogData_Quests_API when Quests is ready,
+-- and older Journal zone cards through OneWoW_CatalogData_Journal_API.

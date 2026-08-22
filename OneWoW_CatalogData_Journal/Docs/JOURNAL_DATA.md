@@ -8,9 +8,11 @@ extracts under OneWoW_Workspace `.wow_db2`.
 1. **Adventure Guide (Blizzard)** — cards, bosses, and loot from Generated DB2
    (`JournalTierMembership`, `JournalEncounters`, `JournalLoot`). This is the
    main table. Live EJ only refreshes links and names; it does not add items.
-2. **Also from ATT** — trash, quest items, and outdoor rares the Guide never
-   listed. Shown in a separate section (`encounterID = -4`). Never mixed into
-   boss rows. Never unioned across expansions.
+2. **Extras** — trash, quest items, and outdoor rares the
+   Guide never listed. Matching `encounterID` joins (or creates) that boss
+   row. World cards also split leftover `npcID` rows into per-rare loot under
+   World Rares. Unplaced extras stay in General Loot (`encounterID = 0`).
+   Never unioned across expansions.
 
 ATT on-disk extras (`OneWoWExtras_*`) stay expansion-scoped. A live overlay runs
 only if AllTheThings is already loaded (never `LoadAddOn` / `EnsureLoaded` ATT).
@@ -34,6 +36,7 @@ anyway. Nothing may read those globals or add them back to the TOC.
 
 - Dungeon / raid / world hub: `expansionID .. ":" .. instanceID`
 - Delves: `expansionID .. ":delve:" .. mapID`
+- Zone / city: `expansionID .. ":zone:" .. uiMapID` (`instanceType = "zone"`, `isCity` for cities)
 - Synthetic Classic–Cata World cards: `expansionID .. ":world"` (instanceID 0)
 
 Favorites and list selection use the same key.
@@ -62,6 +65,8 @@ card key), which is exactly what `ApplyTotals` recomputes after hydrate. Those t
 sets never overlap because the extras files are pre-diffed against `JournalLoot`,
 and achievement rows are excluded on both sides. Synthetic World cards hold extras
 only, so their count comes from `CountExtrasLoot` alone — it is not `0`.
+World cards also carry `rareCount` (unique extras `npcID`s with no boss
+encounter) so the list line can show `4 Bosses | 13 Rares` before hydrate.
 
 Hydrate itself is Instant-only: `C_Item.GetItemInfoInstant` plus
 `GetItemNameByID` / `GetItemQualityByID`. It must not call `GetItemInfo` or
@@ -100,6 +105,49 @@ card per expansion (`JournalSyntheticWorldExpansions`). Expansion-wide outdoor
 extras (`world = true`) attach to `exp:world` and also to that expansion's hub
 card when one exists.
 
+World card encounters are:
+
+- **World Bosses** — Adventure Guide bosses on the hub, plus extras whose
+  `encounterID` matches (or a new boss row when ATT has an encounter ID the
+  Guide does not list).
+- **World Rares** — extras with an `npcID` and no matching boss encounter,
+  one section per creature. Names resolve from `npcID` at runtime.
+- **General Loot** — leftover extras with neither a boss encounter nor an
+  NPC (`encounterID = 0`).
+- The same item may appear on more than one rare when it drops in several
+  places. Card item counts stay unique itemIDs.
+- World cards attach exploration-category achievements for that expansion
+  (`JournalWorldAchievements`) plus any map-keyed Journal achievements.
+  World-hub achievement rows carry `zoneMapID` when
+  `JournalAchievementZones` knows the place, so Catalog can jump to that
+  Zone / City card.
+
+## Zones and cities
+
+Cards come from generated `JournalZoneMembership` (cities for every expansion,
+plus The War Within and Midnight outdoor zones). Classification uses `UiMap`
+Type 3 / System 0: continent children plus the city / special-zone seed
+(Undermine, Vashj'ir trio, Nazjatar, Korthia). Wowhead zone lists are
+AreaTable ids, joined through `UiMapAssignment`. Classic–Dragonflight outdoor
+zones register from `OneWoW_ExtendedData` via
+`OneWoW_CatalogData_Journal_API.RegisterZoneMembership` and stamp
+`source = "extended"`. Floor UiMaps fold through `JournalZoneCollapse`
+(Wrath Dalaran 125 stays separate from Legion Dalaran 627).
+
+Zone cards use the World encounter layout (rares, bosses when present,
+General Loot). Extras with a membership `mapID` attach to that zone key
+**and** stay on the World hub. Unknown mapIDs (for example ATT Midnight
+`2600`) stay World-only. Zone achievements come from
+`JournalZoneAchievements` (ExploreArea overlays via WorldMapOverlay /
+AreaTable, plus English title fallback for Adventurer / Treasures / glyphs
+at generate time). Runtime only calls `GetAchievementInfo`.
+
+Dungeon and raid extras with an `encounterID` merge onto that boss the same
+way. Live EJ creates a missing boss row when the Adventure Guide lists one
+OneWoW did not ship. Live ATT is a fallback only: if AllTheThings is already loaded it places
+extras we have not shipped yet. Encounter rows carry `source`
+(`ej` / `att` / `att-live` / `extended`) for the Journal Source icon.
+
 ## Delves
 
 Delves are not Encounter Journal instances. Cards come from `DelveMembership`
@@ -131,6 +179,8 @@ python bin/journal_db2_tools.py report
 | `Data/Generated/DelveMembership.lua` | `ns.DelveMembership` (primary delve MapIDs, not EJ) |
 | `Data/Generated/DelveEntrances.lua` | `ns.DelveEntrances` (AreaPOI world doors) |
 | `Data/Generated/Achievements.lua` | `ns.JournalAchievements`, `ns.DelveAchievements` |
+| `Data/Generated/ZoneMembership.lua` | `ns.JournalZoneMembership`, `ns.JournalZoneCollapse` |
+| `Data/Generated/ZoneAchievements.lua` | `ns.JournalZoneAchievements`, `ns.JournalAchievementZones` |
 | `Data/Generated/JournalEncounters.lua` | `ns.JournalEncounters` (boss rows per instanceID) |
 | `Data/Generated/JournalLoot.lua` | `ns.JournalLoot` (Adventure Guide items per instanceID) |
 | `Data/Generated/JournalWorldHubs.lua` | `ns.JournalWorldHubs`, `ns.JournalSyntheticWorldExpansions` |
@@ -169,7 +219,7 @@ display and classification fields `BuildExtrasEncounter` / `DetermineItemSpecial
 read (`name`, `icon`, `quality`, `classID`, `subclassID`, `itemType`, `itemSubType`,
 `isTransmog`, `isToy`, `toyID`, `mountID`, `speciesID`, `achievementID`,
 `questSources`) plus its location (`instanceID` or `world`, `encounterID`,
-`difficulties`, `source`, `npcID`). It deliberately omits `link`: the visible-row
+`difficulties`, `source`, `npcID`, `mapID`). It deliberately omits `link`: the visible-row
 fill resolves a live link through the store item loader, and `link` was the single
 heaviest field in the legacy tables.
 

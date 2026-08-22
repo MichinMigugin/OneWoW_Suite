@@ -11,7 +11,9 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_STATUS_NA"] = "N/A",
 
     ["JOURNAL_GENERAL_LOOT"] = "Allgemeine Beute",
-    ["JOURNAL_ALSO_FROM_ATT"] = "Auch von ATT",
+    ["JOURNAL_WORLD_BOSSES"]  = "Weltbosse",
+    ["JOURNAL_WORLD_RARES"]   = "Weltrare",
+    ["JOURNAL_NPC_UNNAMED"]   = "NPC #%d",
     ["JOURNAL_ACHIEVEMENT_LOOT"] = "Erfolg",
     ["JOURNAL_QUEST_LOOT"] = "Questbezogen / Questbeute",
     ["JOURNAL_UNKNOWN_ITEM"] = "Unbekannter Gegenstand",

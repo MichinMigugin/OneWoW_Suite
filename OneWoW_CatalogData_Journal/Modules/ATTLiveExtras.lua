@@ -1,5 +1,6 @@
--- Live ATT extras overlay. Only runs if AllTheThings is already loaded.
--- Never LoadAddOn / EnsureLoaded ATT. Per-card SearchForField only.
+-- Live ATT extras overlay. Fallback only: ATT already loaded, and the
+-- extra is not already on the shipped card. Never LoadAddOn / EnsureLoaded.
+-- Per-card SearchForField only.
 local _, ns = ...
 
 local JournalData = ns.JournalData
@@ -8,6 +9,70 @@ ns.ATTLiveExtras = ATTLive
 
 local HEADER_RARES = -46
 local HEADER_WORLD_BOSSES = -61
+
+local function PositiveMapID(value)
+    return type(value) == "number" and value > 0 and value or nil
+end
+
+local function MapIDFromCoords(coords)
+    if type(coords) ~= "table" then
+        return nil
+    end
+    local first = coords[1]
+    if type(first) == "table" then
+        return PositiveMapID(first[3] or first.mapID)
+    end
+    for mapID, points in pairs(coords) do
+        if type(mapID) == "number" and mapID > 0 and type(points) == "table" then
+            return mapID
+        end
+    end
+    return nil
+end
+
+local function MapIDFromMaps(maps)
+    if type(maps) ~= "table" then
+        return nil
+    end
+    for i = 1, #maps do
+        local id = PositiveMapID(maps[i])
+        if id then
+            return id
+        end
+    end
+    return nil
+end
+
+---@param group table
+---@param GetRelativeValue function|nil
+---@param fallback number|nil
+---@return number|nil
+local function ResolveWorldMapID(group, GetRelativeValue, fallback)
+    local mapID = MapIDFromCoords(group.coords)
+    if mapID then
+        return mapID
+    end
+    if GetRelativeValue then
+        mapID = PositiveMapID(GetRelativeValue(group, "mapID") or group.mapID)
+        if mapID then
+            return mapID
+        end
+        mapID = MapIDFromCoords(GetRelativeValue(group, "coords"))
+        if mapID then
+            return mapID
+        end
+        mapID = MapIDFromMaps(GetRelativeValue(group, "maps") or group.maps)
+        if mapID then
+            return mapID
+        end
+    else
+        mapID = PositiveMapID(group.mapID) or MapIDFromMaps(group.maps)
+        if mapID then
+            return mapID
+        end
+    end
+    return PositiveMapID(fallback)
+end
 
 ---@return table|nil
 local function GetATT()
@@ -51,14 +116,24 @@ local function CollectWorldRareItems(group, out)
     end
 end
 
+---@param itemID number
+---@param encounterID number|nil
+---@param npcID number|nil
+---@return string
+local function LocKey(itemID, encounterID, npcID)
+    return (itemID or 0) .. ":" .. (encounterID or 0) .. ":" .. (tonumber(npcID) or 0)
+end
+
 ---@param inst table
 ---@return table seen
-local function ExistingItemIDs(inst)
+local function ExistingLocKeys(inst)
     local seen = {}
     for _, enc in ipairs(inst.encounters or {}) do
+        local encID = (enc.encounterID and enc.encounterID > 0) and enc.encounterID or 0
+        local npcID = enc.npcID
         for _, item in ipairs(enc.items or {}) do
             if item.itemID then
-                seen[item.itemID] = true
+                seen[LocKey(item.itemID, encID, npcID or item.npcID)] = true
             end
         end
     end
@@ -87,16 +162,18 @@ local function HarvestGroups(inst, groups, worldOnly, att, seen, extras)
         for j = 1, #harvested do
             local node = harvested[j]
             local itemID = node.itemID
-            if itemID and not seen[itemID] then
+            if itemID then
                 local unobtainable = node.u or (GetRelativeValue and GetRelativeValue(node, "u"))
-                if not unobtainable then
-                    seen[itemID] = true
-                    local loc = {
-                        encounterID = GetRelativeValue and GetRelativeValue(node, "encounterID") or 0,
-                        instanceID  = inst.instanceID,
-                        npcID       = GetRelativeValue and GetRelativeValue(node, "npcID") or node.npcID,
-                        source      = "att-live",
-                    }
+                local loc = {
+                    encounterID = GetRelativeValue and GetRelativeValue(node, "encounterID") or 0,
+                    instanceID  = inst.instanceID,
+                    npcID       = GetRelativeValue and GetRelativeValue(node, "npcID") or node.npcID,
+                    mapID       = ResolveWorldMapID(node, GetRelativeValue, inst.mapID),
+                    source      = "att-live",
+                }
+                local locKey = LocKey(itemID, loc.encounterID, loc.npcID)
+                if not unobtainable and not seen[locKey] then
+                    seen[locKey] = true
                     tinsert(extras, {
                         itemID   = itemID,
                         itemData = {
@@ -115,6 +192,7 @@ local function HarvestGroups(inst, groups, worldOnly, att, seen, extras)
                         encounterID  = loc.encounterID,
                         instanceID   = loc.instanceID,
                         npcID        = loc.npcID,
+                        mapID        = loc.mapID,
                     })
                 end
             end
@@ -137,40 +215,28 @@ function JournalData:MergeLiveATTExtras(inst)
         att:GetDatabaseRoot()
     end
 
-    local seen = ExistingItemIDs(inst)
+    local seen = ExistingLocKeys(inst)
     local extras = {}
-    if inst.instanceID and inst.instanceID > 0 then
+    if inst.instanceType ~= "zone" and inst.instanceID and inst.instanceID > 0 then
         HarvestGroups(inst, att.SearchForField("instanceID", inst.instanceID), false, att, seen, extras)
     end
-    if inst.instanceType == "world" and inst.mapID then
+    if (inst.instanceType == "world" or inst.instanceType == "zone") and inst.mapID then
         HarvestGroups(inst, att.SearchForField("mapID", inst.mapID), true, att, seen, extras)
     end
     if #extras == 0 then
         return false
     end
 
-    local extrasEnc
-    for _, enc in ipairs(inst.encounters) do
-        if enc.encounterID == self.EXTRAS_ENC_ID then
-            extrasEnc = enc
-            break
+    local added = false
+    for i = 1, #extras do
+        if self:PlaceExtraOnCard(inst, extras[i]) then
+            added = true
         end
     end
-    local built = self:BuildExtrasEncounter(extras)
-    if not built then
+    if not added then
         return false
     end
-    if extrasEnc then
-        for _, item in ipairs(built.items) do
-            tinsert(extrasEnc.items, item)
-        end
-        sort(extrasEnc.items, function(a, b)
-            return (a.name or "") < (b.name or "")
-        end)
-    else
-        tinsert(inst.encounters, built)
-        self:SortEncountersInPlace(inst)
-    end
+    self:SortEncountersInPlace(inst)
     self:RecalculateInstanceTotals(inst)
     return true
 end

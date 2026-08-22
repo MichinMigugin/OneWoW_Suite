@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Version: R6.2608.1804
 ## Title: OneWoW - |cFFFFFFFFExtended Data|r
-## Notes: Optional leftover older quests (and later extra NPCs and items) for Catalog.
+## Notes: Optional leftover older quests and Classic-Dragonflight Journal zone cards for Catalog.
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW
@@ -27,8 +27,9 @@ Locales\ruRU.lua
 Locales\ptBR.lua
 Locales\itIT.lua
 
-# Queue before data files; flush after Quests is ready.
+# Queue before data files; flush after Quests / Journal is ready.
 Core\QuestQueue.lua
+Core\JournalQueue.lua
 
 # Leftover older quests (Classic through Dragonflight). TWW and Midnight stay in the Suite Quests pack.
 Data\Quests\QuestDB_classic.lua
@@ -41,6 +42,9 @@ Data\Quests\QuestDB_legion.lua
 Data\Quests\QuestDB_bfa.lua
 Data\Quests\QuestDB_shadowlands.lua
 Data\Quests\QuestDB_dragonflight.lua
+
+# Older outdoor Journal zones (Classic through Dragonflight). Cities and TWW / Midnight stay in the Suite Journal pack.
+Data\Journal\ZoneMembership.lua
 
 Core\Core.lua
 

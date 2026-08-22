@@ -8,10 +8,10 @@
 
 This is a companion data addon for the OneWoW Catalog. It provides:
 
-- **Instance Information** - Detailed data about all dungeons, raids, Delves, and World hubs
+- **Instance Information** - Detailed data about all dungeons, raids, Delves, World hubs, zones, and cities
 - **Encounter Details** - Information about bosses and encounters
-- **Loot Tables** - Adventure Guide loot, plus a separate Also from ATT extras section
-- **Achievements** - Dungeon, raid, and Delve achievements on Journal cards
+- **Loot Tables** - Adventure Guide loot; World cards split World Bosses and World Rares; unplaced extras sit under General Loot
+- **Achievements** - Dungeon, raid, Delve, and World exploration achievements on Journal cards
 - **Expansion Coverage** - All expansions from Classic through Midnight (Delves: The War Within and Midnight)
 
 ---
@@ -42,7 +42,7 @@ Classic, The Burning Crusade, Wrath of the Lich King, Cataclysm, Mists of Pandar
 
 1. Open the OneWoW Catalog
 2. Click the "Journal" tab
-3. Browse instances by expansion or search for specific raids, dungeons, Delves, or World hubs
+3. Browse instances by expansion or search for specific raids, dungeons, Delves, World hubs, zones, or cities
 4. Click on an instance to see detailed encounter information
 5. View loot and other relevant data
 

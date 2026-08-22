@@ -33,7 +33,7 @@
 - The default Quests pack now ships Midnight and The War Within in full, plus older story and campaign chains. Leftover older quests moved to optional Extended Data so the main download stays smaller.
 
 ## Extended Data
-- New optional extra pack for leftover older quests. Catalog, Midnight, The War Within, and completion tracking work without it. Not included in the main Suite download.
+- New optional extra pack for leftover older quests and Classic through Dragonflight Journal zone cards. Catalog, Midnight, The War Within, and completion tracking work without it. Not included in the main Suite download.
 
 ## Journal
 - Logging in no longer stalls on Journal.
@@ -43,8 +43,12 @@
 - Journal data is about 23 MB smaller, so it loads faster and uses far less memory. Item Search drops, item detail drop lists, and the item tooltip's instance lines are unchanged.
 - Opening the first card in an expansion is quicker. The Journal no longer sifts the whole expansion to find extra AllTheThings drops.
 - The item count on a card no longer changes when you open it, and World cards show their real item count instead of 0.
-- Loot on a card now matches the Adventure Guide. Extra AllTheThings drops (trash, quest items, outdoor rares) sit in their own Also from ATT section, not mixed into boss loot.
+- Loot on a card now matches the Adventure Guide. Extra drops with a known boss or rare sit on that encounter, including bosses or rares OneWoW did not already list. Unplaced extras stay under General Loot.
+- World cards list World Bosses and World Rares, each with their own loot, and show a rares count next to bosses (for example 4 Bosses | 13 Rares). A drop that comes from several rares is listed on each rare. World cards also include that expansion's exploration achievements (Explore, Adventurer, Treasures). Source icons on encounters and loot mark Adventure Guide (WoW), shipped OneWoW data, or live AllTheThings.
+- Zone and city cards now list that place's Explore achievement, Skyriding Glyphs when the title names the city, and world rares we already shipped with a known map. AllTheThings only fills leftovers it still has.
+- When AllTheThings is loaded, the Journal filter bar shows ATT Detected. It only adds leftovers that are not already in shipped OneWoW data.
 - Instance Type includes World. Classic through Cataclysm get a World card; later expansions use the Adventure Guide outdoor hubs.
+- Instance Type also lists Zones and Cities. The World hub stays the full list for that expansion. A pin on a rare, boss, or achievement opens that place's card when we know the zone. Cities and The War Within / Midnight zones ship with Journal, including City of Threads, Tazavesh, and Midnight's Quel'Thalas zones (Eversong Woods, Silvermoon City, Harandar, Voidstorm, Isle of Quel'Danas, Zul'Aman, The Coiled Isle). Older outdoor zones need optional Extended Data and use a book source icon.
 - Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.
 - Journal cards and details show a dungeon, raid, or Delve icon next to the type. Bountiful delves use the bountiful icon. Delve cards use the official entrance background.
 - Instance Type now includes Delves (The War Within and Midnight). Show Bountiful sits next to Has uncollected and keeps only this week's bountiful doors; it clears when you close Catalog or press Clear. Bountiful cards use a gold border when the filter is off.

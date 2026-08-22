@@ -123,6 +123,20 @@ function OneWoW_CatalogData_Journal_API.GetInstanceByMapID(mapID)
     return ns.JournalData:GetInstanceByMapID(mapID)
 end
 
+--- Zone / city card for a UiMap ID.
+---@param expansionID number|nil
+---@param mapID number
+---@return table|nil instanceData
+function OneWoW_CatalogData_Journal_API.GetZoneInstance(expansionID, mapID)
+    return ns.JournalData:GetZoneInstance(expansionID, mapID)
+end
+
+--- Merge older outdoor zone cards from Extended Data.
+---@param byExp table
+function OneWoW_CatalogData_Journal_API.RegisterZoneMembership(byExp)
+    ns.JournalData:RegisterZoneMembership(byExp)
+end
+
 --- All instance cards for a world map ID (dual remakes may return multiple).
 ---@param mapID number
 ---@return table instances
@@ -150,4 +164,11 @@ end
 ---@return boolean added
 function OneWoW_CatalogData_Journal_API.MergeLiveATTExtras(inst)
     return ns.JournalData:MergeLiveATTExtras(inst)
+end
+
+--- Localized creature name from npcID, or nil until the client cache fills.
+---@param npcID number
+---@return string|nil name
+function OneWoW_CatalogData_Journal_API.ResolveNPCName(npcID)
+    return ns.JournalData.ResolveNPCName(npcID)
 end

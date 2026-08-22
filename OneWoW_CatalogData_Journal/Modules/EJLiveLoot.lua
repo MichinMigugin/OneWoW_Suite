@@ -466,16 +466,29 @@ local function processOneInstance(job)
             local bossName, _, bossID = EJ_GetEncounterInfoByIndexCompat(bi)
             if not bossName or not bossID then break end
             local enc = findEncounter(inst, bossID)
-            if enc then
-                if bossName then
-                    enc.name = bossName
-                end
-                if not enc.bossIndex or enc.bossIndex == 0 then
-                    enc.bossIndex = bi
-                end
-                local ejMap = EJLive:ScanEncounterDifficulties(instanceID, bossID, inst, iidWorld, skipNormal)
-                mergeEJRowsIntoEncounter(enc, ejMap)
+            if not enc then
+                enc = {
+                    encounterID  = bossID,
+                    name         = bossName,
+                    nameResolved = bossName ~= nil,
+                    bossIndex    = bi,
+                    items        = {},
+                    source       = "ej",
+                }
+                tinsert(inst.encounters, enc)
+                JournalData:EnsureWorldSectionHeaders(inst)
+            else
+                enc.source = "ej"
             end
+            if bossName then
+                enc.name = bossName
+                enc.nameResolved = true
+            end
+            if not enc.bossIndex or enc.bossIndex == 0 then
+                enc.bossIndex = bi
+            end
+            local ejMap = EJLive:ScanEncounterDifficulties(instanceID, bossID, inst, iidWorld, skipNormal)
+            mergeEJRowsIntoEncounter(enc, ejMap)
             bi = bi + 1
         end
         JournalData:SortEncountersInPlace(inst)
@@ -494,7 +507,8 @@ function EJLive:SetMergeTarget(inst)
     mergeRetries = 0
 end
 
---- Scan one card against live EJ. Names and item links only; does not add items.
+--- Scan one card against live EJ. Creates missing boss rows. Names and item
+--- links only on loot that is already on the card.
 ---@param inst table
 function EJLive:MergeInstance(inst)
     if mergeBusy then return end
