@@ -323,13 +323,9 @@ function CoordsModule:CheckVisibility()
 end
 
 function CoordsModule:CopyCoordinates()
-    local mapID = C_Map.GetBestMapForUnit("player")
-    if not mapID then return end
-    local position = C_Map.GetPlayerMapPosition(mapID, "player")
-    if not position then return end
-    local x, y = position:GetXY()
-    if x and y then
-        local coordString = format("%.2f %.2f", x * 100, y * 100)
+    local _, x, y = OneWoW.Location.GetPlayerLocation()
+    if x then
+        local coordString = format("%.2f %.2f", x, y)
         OneWoW.CopyPaste:Copy(L["COORDS_COPY_TITLE"], coordString)
         print("|cFFFFD100OneWoW QoL:|r " .. format(L["COORDS_COPIED"], coordString))
     end

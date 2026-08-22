@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("zhTW", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "無法設定路徑點。",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "語言選擇",
     ["LANGUAGE_DESC"] = "選擇插件介面使用的語言。變更會立即生效。",

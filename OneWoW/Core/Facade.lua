@@ -41,6 +41,7 @@ local SERVICE_KEYS = {
     "RecipeKnownUtil",
     "Collectibles",
     "GearProficiency",
+    "Location",
     "Merchant",
     "Inventory",
     "GuildBankTransfer",

@@ -1323,13 +1323,12 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         GameTooltip:Hide()
     end)
     setLocBtn:SetScript("OnClick", function()
-        local mapID = C_Map.GetBestMapForUnit("player")
-        local coords = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
-        if mapID and coords then
+        local mapID, px, py = OneWoW.Location.GetPlayerLocation()
+        if mapID and px then
             local d = ns.NPCs:GetNPC(npcID)
             if d then
                 d.mapID = mapID
-                d.coords = {x = coords.x * 100, y = coords.y * 100}
+                d.coords = {x = px, y = py}
                 local mapInfo = C_Map.GetMapInfo(mapID)
                 if mapInfo then d.zone = mapInfo.name end
                 d.modified = GetServerTime()

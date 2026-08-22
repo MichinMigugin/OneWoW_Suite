@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["LABEL_PROFESSION_1"] = "Профессия 1:",
     ["LABEL_PROFESSION_2"] = "Профессия 2:",
     ["MSG_NPC_ID_EXISTS"] = "НИП с таким ID уже существует.",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "Не удалось установить точку маршрута.",
     ["NPC_ID_EDIT_TOOLTIP"] = "Измените ID НИП. Найдите правильные ID на WoWHead.",
     ["NPC_ID_TOOLTIP"] = "Оставьте пустым для автогенерации. Найдите ID на WoWHead.",
     ["NPC_LABEL_COORD_X"] = "Коорд. X:",

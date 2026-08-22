@@ -159,18 +159,12 @@ local function GetInteractNPC()
                     local npc = { npcID = npcID, npcName = UnitName(unit) }
                     npc.name = npc.npcName
 
-                    local mapID = C_Map.GetBestMapForUnit("player")
+                    local mapID, x, y = OneWoW.Location.GetPlayerLocation()
                     if mapID then
                         npc.mapID = mapID
                         npc.zoneName = GetMapName(mapID)
-                        local pos = C_Map.GetPlayerMapPosition(mapID, "player")
-                        if pos then
-                            local x, y = pos:GetXY()
-                            if x and y then
-                                npc.x = x * 100
-                                npc.y = y * 100
-                            end
-                        end
+                        npc.x = x
+                        npc.y = y
                     end
 
                     return npc

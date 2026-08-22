@@ -3,6 +3,9 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local strfind = strfind
 
+-- ns, not the Facade global: this file loads before Core/Facade.lua.
+local Location = ns.Location
+
 local L = ns.L
 
 local function WithUnitAsTarget(unit, fn)
@@ -310,15 +313,8 @@ local function HandleNPCAdd(unit, npcIDNum)
         end
 
         local npcName = UnitName(targetUnit) or ("NPC " .. npcIDNum)
-        local mapID   = C_Map.GetBestMapForUnit("player")
-        local coords  = nil
-        if mapID then
-            local pos = C_Map.GetPlayerMapPosition(mapID, "player")
-            if pos then
-                local x, y = pos:GetXY()
-                coords = { x = x * 100, y = y * 100 }
-            end
-        end
+        local mapID, x, y = Location.GetPlayerLocation()
+        local coords = x and { x = x, y = y } or nil
         local mapInfo  = mapID and C_Map.GetMapInfo(mapID)
         local zoneName = (mapInfo and mapInfo.name) or GetZoneText() or ""
 
@@ -350,13 +346,11 @@ local function HandleNPCUpdateLocation(_, npcIDNum)
     local npcData = OneWoW_Notes_API.GetNPC(npcIDNum)
     if not npcData then return end
 
-    local mapID = C_Map.GetBestMapForUnit("player")
-    local pos   = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
+    local mapID, x, y = Location.GetPlayerLocation()
 
-    if mapID and pos then
-        local x, y    = pos:GetXY()
+    if mapID and x then
         npcData.mapID  = mapID
-        npcData.coords = { x = x * 100, y = y * 100 }
+        npcData.coords = { x = x, y = y }
         local mapInfo  = C_Map.GetMapInfo(mapID)
         if mapInfo then npcData.zone = mapInfo.name end
         OneWoW_Notes_API.SaveNPC(npcIDNum, npcData)

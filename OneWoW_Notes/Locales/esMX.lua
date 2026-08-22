@@ -460,7 +460,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["LABEL_PROFESSION_1"] = "Profesión 1:",
     ["LABEL_PROFESSION_2"] = "Profesión 2:",
     ["MSG_NPC_ID_EXISTS"] = "Ya existe un PNJ con ese ID.",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "No se pudo establecer el punto de ruta.",
     ["NPC_ID_EDIT_TOOLTIP"] = "Cambia el ID del PNJ. Encuentra los ID correctos en WoWHead.",
     ["NPC_ID_TOOLTIP"] = "Déjalo en blanco para generarlo automáticamente. Encuentra los ID en WoWHead.",
     ["NPC_LABEL_COORD_X"] = "Coord. X:",

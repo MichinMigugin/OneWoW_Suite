@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("koKR", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "길 표시를 설정할 수 없습니다.",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "언어 선택",
     ["LANGUAGE_DESC"] = "애드온 인터페이스에 사용할 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",

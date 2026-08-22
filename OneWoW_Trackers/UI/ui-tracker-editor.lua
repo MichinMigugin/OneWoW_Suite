@@ -2,6 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
+local Location = OneWoW.Location
 
 ns.TrackerEditor = {}
 local TE_UI = ns.TrackerEditor
@@ -51,14 +52,11 @@ local function UpdateTitleFromTarget(nameBox)
 end
 
 local function FillCoordsFromPosition(card)
-    local mapID = C_Map.GetBestMapForUnit("player")
-    local pos = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
-    if not mapID or not pos then FillMsg("TRACKER_FILL_NO_POSITION"); return end
-    local x, y = pos:GetXY()
-    if not x or not y then FillMsg("TRACKER_FILL_NO_POSITION"); return end
+    local mapID, x, y = Location.GetPlayerLocation()
+    if not mapID or not x then FillMsg("TRACKER_FILL_NO_POSITION"); return end
     if card._field_mapID then card._field_mapID:SetText(tostring(mapID)) end
-    if card._field_x then card._field_x:SetText(format("%.1f", x * 100)) end
-    if card._field_y then card._field_y:SetText(format("%.1f", y * 100)) end
+    if card._field_x then card._field_x:SetText(format("%.1f", x)) end
+    if card._field_y then card._field_y:SetText(format("%.1f", y)) end
 end
 
 local function FillInstanceFromCurrent(card)

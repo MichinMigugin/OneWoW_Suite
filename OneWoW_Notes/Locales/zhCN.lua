@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["LABEL_PROFESSION_1"] = "专业 1：",
     ["LABEL_PROFESSION_2"] = "专业 2：",
     ["MSG_NPC_ID_EXISTS"] = "该 ID 的 NPC 已存在。",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "无法设置路径点。",
     ["NPC_ID_EDIT_TOOLTIP"] = "更改 NPC ID。在 WoWHead 上查找正确的 ID。",
     ["NPC_ID_TOOLTIP"] = "留空以自动生成。在 WoWHead 上查找 ID。",
     ["NPC_LABEL_COORD_X"] = "坐标 X：",

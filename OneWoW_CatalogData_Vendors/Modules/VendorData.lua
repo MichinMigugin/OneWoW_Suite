@@ -5,7 +5,10 @@ local VendorData = ns.VendorData
 
 local pairs = pairs
 local tinsert, sort = tinsert, sort
-local C_Map, C_SuperTrack = C_Map, C_SuperTrack
+local Location = OneWoW.Location
+
+-- Vendor locations are stored as 0-100.
+local PERCENT_COORDS = { format = "percent" }
 
 local staticIndex = nil
 local function BuildStaticIndex()
@@ -230,14 +233,7 @@ function VendorData:CreateWaypoint(vendor, mapID)
 
     if not location or not mapID then return false end
 
-    local x = (location.x or 0) / 100
-    local y = (location.y or 0) / 100
-    local uiMapPoint = UiMapPoint.CreateFromCoordinates(mapID, x, y)
-
-    C_Map.SetUserWaypoint(uiMapPoint)
-    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-
-    return true
+    return Location.SetWaypoint(mapID, location.x or 0, location.y or 0, PERCENT_COORDS)
 end
 
 function VendorData:GetItemCount(npcID)

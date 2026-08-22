@@ -2,6 +2,11 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
+local Location = OneWoW.Location
+
+-- Hearth coordinates are stored as raw API fractions here, unlike the 0-100 the
+-- rest of the suite keeps. The map opens even when no coordinates were captured.
+local HEARTH_WAYPOINT = { format = "fraction", openMap = true }
 
 ns.UI = ns.UI or {}
 
@@ -679,11 +684,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
             hearthContainer:EnableMouse(true)
             hearthContainer:SetScript("OnMouseUp", function()
-                if hearthX and hearthY and C_Map.CanSetUserWaypointOnMap(hearthMapID) then
-                    C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(hearthMapID, hearthX, hearthY))
-                    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                end
-                OpenWorldMap(hearthMapID)
+                Location.SetWaypoint(hearthMapID, hearthX, hearthY, HEARTH_WAYPOINT)
             end)
             hearthContainer:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

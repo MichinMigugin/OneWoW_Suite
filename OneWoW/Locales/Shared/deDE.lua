@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("deDE", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "Wegpunkt konnte nicht gesetzt werden.",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Sprachauswahl",
     ["LANGUAGE_DESC"] = "Wähle die Sprache der Addon-Oberfläche. Änderungen werden sofort übernommen.",

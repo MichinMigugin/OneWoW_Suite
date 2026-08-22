@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["LABEL_PROFESSION_1"] = "專業 1：",
     ["LABEL_PROFESSION_2"] = "專業 2：",
     ["MSG_NPC_ID_EXISTS"] = "該 ID 的 NPC 已存在。",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "無法設定路徑點。",
     ["NPC_ID_EDIT_TOOLTIP"] = "變更 NPC ID。在 WoWHead 上尋找正確的 ID。",
     ["NPC_ID_TOOLTIP"] = "留空以自動產生。在 WoWHead 上尋找 ID。",
     ["NPC_LABEL_COORD_X"] = "座標 X：",

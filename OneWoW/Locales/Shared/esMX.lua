@@ -2,6 +2,10 @@ local _, ns = ...
 
 -- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 ns.Locale:RegisterShared("esMX", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "No se pudo establecer el punto de ruta.",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
     ["LANGUAGE_DESC"] = "Elige el idioma de la interfaz del addon. Los cambios se aplican al instante.",

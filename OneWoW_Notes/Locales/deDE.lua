@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["LABEL_PROFESSION_1"] = "Beruf 1:",
     ["LABEL_PROFESSION_2"] = "Beruf 2:",
     ["MSG_NPC_ID_EXISTS"] = "Ein NSC mit dieser ID existiert bereits.",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "Wegpunkt konnte nicht gesetzt werden.",
     ["NPC_ID_EDIT_TOOLTIP"] = "Die NSC-ID ändern. Korrekte IDs findest du auf WoWHead.",
     ["NPC_ID_TOOLTIP"] = "Leer lassen zum automatischen Generieren. IDs findest du auf WoWHead.",
     ["NPC_LABEL_COORD_X"] = "Koord. X:",

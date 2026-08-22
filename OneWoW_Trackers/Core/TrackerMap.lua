@@ -3,12 +3,16 @@ local _, ns = ...
 ns.TrackerMap = {}
 local TM = ns.TrackerMap
 
+local Location = OneWoW.Location
+
 local pairs, ipairs, format = pairs, ipairs, format
 local tinsert, wipe = tinsert, wipe
-local math_sqrt = math.sqrt
+local math_atan2, math_cos, math_sin = math.atan2, math.cos, math.sin
 
 local initialized = false
 local MINIMAP_PIN_SIZE = 16
+-- Pins fade out to nothing over this much map-percent distance.
+local MINIMAP_PIN_RANGE = 50
 local TrackerDataProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
 
 function TrackerDataProviderMixin:RemoveAllData()
@@ -125,15 +129,8 @@ function TM:UpdateMinimapPins()
     local TD = ns.TrackerData
     if not TD then return end
 
-    local currentMap = C_Map.GetBestMapForUnit("player")
-    if not currentMap then return end
-
-    local pos = C_Map.GetPlayerMapPosition(currentMap, "player")
-    if not pos then return end
-
-    local playerX, playerY = pos:GetXY()
-    playerX = playerX * 100
-    playerY = playerY * 100
+    local currentMap, playerX, playerY = Location.GetPlayerLocation()
+    if not currentMap or not playerX then return end
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
@@ -166,21 +163,18 @@ function TM:UpdateMinimapPins()
 end
 
 function TM:AddMinimapPin(targetX, targetY, playerX, playerY, label)
-    local dx = targetX - playerX
-    local dy = targetY - playerY
-    local dist = math_sqrt(dx * dx + dy * dy)
-
-    if dist > 50 then return end
+    local dist = Location.DistanceMapPercent(targetX, targetY, playerX, playerY)
+    if not dist or dist > MINIMAP_PIN_RANGE then return end
 
     local pin = self:GetMinimapPin()
     if not pin then return end
 
-    local angle = math.atan2(dy, dx)
+    local angle = math_atan2(targetY - playerY, targetX - playerX)
     local minimapRadius = Minimap:GetWidth() / 2
 
-    local scale = dist / 50
-    local pinX = math.cos(angle) * minimapRadius * scale
-    local pinY = -math.sin(angle) * minimapRadius * scale
+    local scale = dist / MINIMAP_PIN_RANGE
+    local pinX = math_cos(angle) * minimapRadius * scale
+    local pinY = -math_sin(angle) * minimapRadius * scale
 
     pin:ClearAllPoints()
     pin:SetPoint("CENTER", Minimap, "CENTER", pinX, pinY)

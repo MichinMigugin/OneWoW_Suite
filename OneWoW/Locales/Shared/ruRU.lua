@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("ruRU", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "Не удалось установить точку маршрута.",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Выбор языка",
     ["LANGUAGE_DESC"] = "Выберите язык интерфейса аддона. Изменения применяются сразу.",

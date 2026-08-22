@@ -365,19 +365,15 @@ function NotesContextMenu:ShowEditBoxContextMenu(editBox)
         info.text = L["CTX_ADD_CURRENT_LOCATION"]
         info.notCheckable = true
         info.func = function()
-            local mapID = C_Map.GetBestMapForUnit("player")
+            local mapID, x, y = OneWoW.Location.GetPlayerLocation()
             if not mapID then
                 print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_CANNOT_DETERMINE_LOCATION"])
                 return
             end
-            local position = C_Map.GetPlayerMapPosition(mapID, "player")
-            if not position then
+            if not x then
                 print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_CANNOT_GET_POSITION"])
                 return
             end
-            local x, y = position:GetXY()
-            x = x * 100
-            y = y * 100
             local waypoint = string.format("(map=%d %.2f %.2f Location)", mapID, x, y)
             if ns.NotesHyperlinks then
                 local converted = ns.NotesHyperlinks:ConvertManualLinks(waypoint)

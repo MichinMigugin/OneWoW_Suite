@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("frFR", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "Impossible de définir le point de repère.",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Sélection de la langue",
     ["LANGUAGE_DESC"] = "Choisissez la langue de l'interface de l'addon. Les changements s'appliquent immédiatement.",

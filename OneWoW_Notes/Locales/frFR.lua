@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["LABEL_PROFESSION_1"] = "Métier 1 :",
     ["LABEL_PROFESSION_2"] = "Métier 2 :",
     ["MSG_NPC_ID_EXISTS"] = "Un PNJ avec cet ID existe déjà.",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "Impossible de définir le point de repère.",
     ["NPC_ID_EDIT_TOOLTIP"] = "Modifier l'ID du PNJ. Trouvez les bons ID sur WoWHead.",
     ["NPC_ID_TOOLTIP"] = "Laisser vide pour générer automatiquement. Trouvez les ID sur WoWHead.",
     ["NPC_LABEL_COORD_X"] = "Coord. X :",

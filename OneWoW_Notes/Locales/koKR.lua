@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["LABEL_PROFESSION_1"] = "전문기술 1:",
     ["LABEL_PROFESSION_2"] = "전문기술 2:",
     ["MSG_NPC_ID_EXISTS"] = "해당 ID의 NPC가 이미 존재합니다.",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "길 표시를 설정할 수 없습니다.",
     ["NPC_ID_EDIT_TOOLTIP"] = "NPC ID를 변경합니다. 올바른 ID는 WoWHead에서 찾으세요.",
     ["NPC_ID_TOOLTIP"] = "자동 생성하려면 비워 두세요. ID는 WoWHead에서 찾으세요.",
     ["NPC_LABEL_COORD_X"] = "좌표 X:",

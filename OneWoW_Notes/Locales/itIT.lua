@@ -459,7 +459,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["LABEL_PROFESSION_1"] = "Professione 1:",
     ["LABEL_PROFESSION_2"] = "Professione 2:",
     ["MSG_NPC_ID_EXISTS"] = "Esiste già un PNG con quell'ID.",
-    ["MSG_CANNOT_SET_WAYPOINT"] = "Impossibile impostare il punto di riferimento.",
     ["NPC_ID_EDIT_TOOLTIP"] = "Cambia l'ID del PNG. Trova gli ID corretti su WoWHead.",
     ["NPC_ID_TOOLTIP"] = "Lascia vuoto per generarlo automaticamente. Trova gli ID su WoWHead.",
     ["NPC_LABEL_COORD_X"] = "Coord. X:",

@@ -2,6 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
+local Location = OneWoW.Location
 
 ns.TrackerPinned = {}
 local TP = ns.TrackerPinned
@@ -10,6 +11,9 @@ local ipairs, format, tinsert, tremove, pairs, math_max, math_abs = ipairs, form
 local GetTime, IsShiftKeyDown = GetTime, IsShiftKeyDown
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+-- Tracker steps store coordinates as 0-100.
+local PERCENT_COORDS = { format = "percent" }
 
 local DOUBLE_CLICK_INTERVAL = 0.4
 local HOVER_HIDE_DELAY      = 0.05
@@ -338,13 +342,11 @@ function TP:Create(listID)
                 local hasCoords = step.mapID and step.coordX and step.coordY and tonumber(step.mapID) and tonumber(step.coordX) and tonumber(step.coordY)
                 if hasCoords then
                     stepRow:SetScript("OnClick", function()
-                        local mid = tonumber(step.mapID)
-                        local cx = tonumber(step.coordX) / 100
-                        local cy = tonumber(step.coordY) / 100
-                        local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
-                        C_Map.SetUserWaypoint(mapPoint)
-                        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                        print(format("%s %s", L["ADDON_CHAT_PREFIX"], format(L["TRACKER_WAYPOINT_SET"], step.label or L["TRACKER_STEP_FALLBACK"], tonumber(step.coordX), tonumber(step.coordY))))
+                        if Location.SetWaypoint(step.mapID, step.coordX, step.coordY, PERCENT_COORDS) then
+                            print(format("%s %s", L["ADDON_CHAT_PREFIX"], format(L["TRACKER_WAYPOINT_SET"], step.label or L["TRACKER_STEP_FALLBACK"], tonumber(step.coordX), tonumber(step.coordY))))
+                        else
+                            print(format("%s %s", L["ADDON_CHAT_PREFIX"], L["MSG_CANNOT_SET_WAYPOINT"]))
+                        end
                     end)
                 elseif not step.rosterMode and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                     stepRow:RegisterForClicks("AnyDown", "AnyUp")

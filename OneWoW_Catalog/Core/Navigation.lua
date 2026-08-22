@@ -7,32 +7,26 @@ local L = ns.L
 -- Shared map navigation for the Catalog: opens the world map to a zone and, when
 -- coordinates are known, drops a super-tracked user waypoint.
 --
--- Quest/vendor coords are stored 0-100; the waypoint API wants 0-1, so values
--- > 1 are scaled in OpenMapPin. Journal DB2 doors arrive as continent Map.db2 +
--- world XY from generated JournalInstanceEntrances and are converted here.
--- Wowhead fallbacks already carry uiMapID + 0-100 and skip that conversion.
+-- Coordinate scaling and the waypoint call itself live in OneWoW.Location; this
+-- file owns the Catalog-specific half. Journal DB2 doors arrive as continent
+-- Map.db2 + world XY from generated JournalInstanceEntrances and are converted
+-- here. Wowhead fallbacks already carry uiMapID + 0-100 and skip that
+-- conversion, which is why OpenMapPin does not declare a coordinate format.
 -- Delve doors use AreaPOI; ContinentID 0 rows fall back to a live POI lookup.
 -- ============================================================================
 
 local tonumber = tonumber
 local ipairs = ipairs
 local C_Map, C_SuperTrack, C_EncounterJournal, C_AreaPoiInfo = C_Map, C_SuperTrack, C_EncounterJournal, C_AreaPoiInfo
-local CreateVector2D, OpenWorldMap, UnitFactionGroup = CreateVector2D, OpenWorldMap, UnitFactionGroup
+local CreateVector2D, UnitFactionGroup = CreateVector2D, UnitFactionGroup
 
 ns.Navigation = ns.Navigation or {}
 local Navigation = ns.Navigation
 
-local function ToFraction(value)
-    value = tonumber(value)
-    if not value then return nil end
-    if value > 1 then
-        value = value / 100
-    end
-    return value
-end
-
 --- Opens the world map to `mapID` and sets a super-tracked user waypoint when
---- x/y are provided and the map supports waypoints.
+--- x/y are provided and the map supports waypoints. Coordinates arrive from
+--- mixed sources (Wowhead 0-100, converted DB2 world positions), so the format
+--- is left to `OneWoW.Location`'s tolerant reading.
 ---@param mapID number
 ---@param x number|nil  0-100 or 0-1
 ---@param y number|nil  0-100 or 0-1
@@ -41,14 +35,7 @@ function Navigation:OpenMapPin(mapID, x, y)
     mapID = tonumber(mapID)
     if not mapID or mapID == 0 then return false end
 
-    OpenWorldMap(mapID)
-
-    x = ToFraction(x)
-    y = ToFraction(y)
-    if x and y and C_Map.CanSetUserWaypointOnMap(mapID) then
-        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
-        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-    end
+    OneWoW.Location.SetWaypoint(mapID, x, y, { openMap = true })
 
     return true
 end

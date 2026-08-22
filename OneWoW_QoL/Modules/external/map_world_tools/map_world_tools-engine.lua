@@ -350,17 +350,13 @@ local function UpdateCoordOverlay()
         cCursor.x:SetFormattedText("%s:", L["MAPWORLD_CURSOR"])
     end
 
-    local mapID = C_Map.GetBestMapForUnit("player")
+    local mapID, px, py = OneWoW.Location.GetPlayerLocation()
     if not mapID then
         cPlayer.x:SetFormattedText("%s:", PLAYER)
+    elseif px and px ~= 0 and py ~= 0 then
+        cPlayer.x:SetFormattedText("%s: %.1f, %.1f", PLAYER, px, py)
     else
-        local position = C_Map.GetPlayerMapPosition(mapID, "player")
-        if position and position.x ~= 0 and position.y ~= 0 then
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", PLAYER,
-                position.x * 100, position.y * 100)
-        else
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", PLAYER, 0, 0)
-        end
+        cPlayer.x:SetFormattedText("%s: %.1f, %.1f", PLAYER, 0, 0)
     end
 end
 

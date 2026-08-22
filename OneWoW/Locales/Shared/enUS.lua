@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("enUS", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "Could not set waypoint.",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Language Selection",
     ["LANGUAGE_DESC"] = "Choose your preferred language for the addon interface. Changes apply instantly.",

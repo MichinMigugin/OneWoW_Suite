@@ -1,6 +1,10 @@
 local _, ns = ...
 
 ns.Locale:RegisterShared("zhCN", {
+
+    -- migrated from OneWoW_Notes scope
+    ["MSG_CANNOT_SET_WAYPOINT"] = "无法设置路径点。",
+
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "语言选择",
     ["LANGUAGE_DESC"] = "选择插件界面使用的语言。更改会立即生效。",

@@ -160,6 +160,7 @@ Services\Overlays2\surfaces.lua
 Services\itemstatus.lua
 Services\toast-engine.lua
 Services\tooltip-engine.lua
+Services\Location.lua
 
 # Integrations
 Integrations\ExternalTooltipSync.lua
