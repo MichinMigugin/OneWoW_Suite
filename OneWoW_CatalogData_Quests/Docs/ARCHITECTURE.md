@@ -32,3 +32,6 @@ Per-expansion Lua shards under `Data/QuestDB/`:
 ## Tools (offline / Workspace)
 
 Wowhead refresh, slim/extended split, and BtW campaign-ID harvest live in OneWoW_Workspace (`bin/wowhead/`, `bin/catalog_data_status.py`). They are not loaded by the addon TOC.
+
+Static schema, slim vs full, and build-time source order: [QUEST_DATA.md](QUEST_DATA.md).
+Workspace pipeline: `Docs/DATA_PIPELINE.md`.

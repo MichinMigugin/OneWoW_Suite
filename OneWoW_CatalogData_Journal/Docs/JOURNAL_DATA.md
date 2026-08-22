@@ -190,6 +190,7 @@ python bin/journal_db2_tools.py report
 
 CSV schema / mermaid: OneWoW_Workspace `.wow_db2/docs/journal.md`.
 Extract build pin: OneWoW_Workspace `.wow_db2/README.md`.
+Warehouse / source order: OneWoW_Workspace `Docs/DATA_PIPELINE.md`.
 Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
 ## Generated from the ATT extract

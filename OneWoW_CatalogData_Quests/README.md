@@ -48,7 +48,7 @@ Midnight and The War Within ship in full. Classic through Dragonflight ship stor
 
 ## Documentation
 
-Technical reference: [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md).
+Technical reference: [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md). Data rules and build sources: [Docs/QUEST_DATA.md](Docs/QUEST_DATA.md).
 
 ---
 
