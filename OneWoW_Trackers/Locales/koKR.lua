@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d개 단계",
     ["TRACKER_REQUIRES_HINT"]             = "선택한 단계를 완료하기 전에는 이 단계를 완료로 표시할 수 없습니다.",
     ["TRACKER_REQUIRES_EMPTY"]            = "이 목록에 다른 단계가 없습니다.",
+    ["TRACKER_OBJECTIVES_HINT"]           = "여기 있는 모든 목표가 완료되면 단계가 완료됩니다.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. 여관주인과 대화",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "주간 체크리스트",
     ["TRACKER_QS_WEEKLY_DESC"]             = "위대한 금고, 월드 보스, 주간 퀘스트 같은 주간 과제를 추적합니다. 지역 주간 초기화 요일에 초기화됩니다.",
     ["TRACKER_QS_DAILY_TITLE"]             = "일일 과제",

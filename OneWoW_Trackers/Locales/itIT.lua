@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d passi",
     ["TRACKER_REQUIRES_HINT"]             = "Non è possibile spuntare questo passo finché i passi selezionati non sono completati.",
     ["TRACKER_REQUIRES_EMPTY"]            = "Nessun altro passo in questo elenco.",
+    ["TRACKER_OBJECTIVES_HINT"]           = "Il passo si completa quando tutti gli obiettivi qui sono fatti.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. Parla con l'oste",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Lista settimanale",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Traccia attività settimanali come Gran Banca, boss mondiali e missioni settimanali. Si reimposta nel giorno di reset settimanale della tua regione.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Attività giornaliere",

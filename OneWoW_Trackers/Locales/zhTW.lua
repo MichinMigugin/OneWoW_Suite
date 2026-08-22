@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d個步驟",
     ["TRACKER_REQUIRES_HINT"]             = "在所選步驟完成前，無法將此項目勾選為完成。",
     ["TRACKER_REQUIRES_EMPTY"]            = "此清單中沒有其他步驟。",
+    ["TRACKER_OBJECTIVES_HINT"]           = "此處的所有目標完成後，該步驟即完成。",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. 與旅店老闆交談",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "每週清單",
     ["TRACKER_QS_WEEKLY_DESC"]             = "追蹤每週任務，如寶庫、世界首領和每週任務。在你所在區域的每週重置日重置。",
     ["TRACKER_QS_DAILY_TITLE"]             = "每日任務",

@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d pasos",
     ["TRACKER_REQUIRES_HINT"]             = "No se puede marcar como completado hasta que los pasos seleccionados estén completos.",
     ["TRACKER_REQUIRES_EMPTY"]            = "No hay otros pasos en esta lista.",
+    ["TRACKER_OBJECTIVES_HINT"]           = "El paso se completa cuando todos los objetivos de aquí están hechos.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. Habla con el tabernero",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Lista semanal",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Rastrea tareas semanales como Gran cámara, jefes de mundo y misiones semanales. Se reinicia el día de reinicio semanal de tu región.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tareas diarias",

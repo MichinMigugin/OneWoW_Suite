@@ -193,6 +193,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_REQUIRES_COUNT"]          = "%d steps",
     ["TRACKER_REQUIRES_HINT"]           = "Checking this off is blocked until the selected steps are complete.",
     ["TRACKER_REQUIRES_EMPTY"]          = "No other steps in this list.",
+    ["TRACKER_OBJECTIVES_HINT"]         = "The step completes when every objective here is done.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]       = "e.g. Talk to the innkeeper",
     ["TRACKER_QS_WEEKLY_TITLE"]         = "Weekly Checklist",
     ["TRACKER_QS_WEEKLY_DESC"]          = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets on your region's weekly reset day.",
     ["TRACKER_QS_DAILY_TITLE"]          = "Daily Tasks",

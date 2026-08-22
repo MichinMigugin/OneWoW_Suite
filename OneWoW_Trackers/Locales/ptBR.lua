@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d passos",
     ["TRACKER_REQUIRES_HINT"]             = "Marcar como concluído fica bloqueado até os passos selecionados serem concluídos.",
     ["TRACKER_REQUIRES_EMPTY"]            = "Não há outros passos nesta lista.",
+    ["TRACKER_OBJECTIVES_HINT"]           = "O passo é concluído quando todos os objetivos aqui estiverem feitos.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. Fale com o estalajadeiro",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Lista semanal",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Rastreie tarefas semanais como Grande Cofre, chefes de mundo e missões semanais. Reinicia no dia de reinício semanal da sua região.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tarefas diárias",

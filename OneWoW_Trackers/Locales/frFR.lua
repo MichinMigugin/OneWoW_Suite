@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d étapes",
     ["TRACKER_REQUIRES_HINT"]             = "Cocher cette étape est bloqué tant que les étapes sélectionnées ne sont pas terminées.",
     ["TRACKER_REQUIRES_EMPTY"]            = "Aucune autre étape dans cette liste.",
+    ["TRACKER_OBJECTIVES_HINT"]           = "L'étape se termine lorsque tous les objectifs ici sont accomplis.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. Parler à l'aubergiste",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Liste hebdomadaire",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Suivez les tâches hebdomadaires comme la grande chambre forte, les boss de monde et les quêtes hebdomadaires. Se réinitialise le jour de reset hebdomadaire de votre région.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tâches quotidiennes",

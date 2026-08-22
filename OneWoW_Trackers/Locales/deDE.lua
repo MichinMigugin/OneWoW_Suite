@@ -190,6 +190,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_REQUIRES_COUNT"]            = "%d Schritte",
     ["TRACKER_REQUIRES_HINT"]             = "Abhaken ist gesperrt, bis die ausgewählten Schritte abgeschlossen sind.",
     ["TRACKER_REQUIRES_EMPTY"]            = "Keine anderen Schritte in dieser Liste.",
+    ["TRACKER_OBJECTIVES_HINT"]           = "Der Schritt ist abgeschlossen, wenn jedes Ziel hier erledigt ist.",
+    ["TRACKER_FH_OBJECTIVE_DESC"]         = "e.g. Mit dem Gastwirt sprechen",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Wöchentliche Checkliste",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Verfolge wöchentliche Aufgaben wie Große Schatzkammer, Weltbosse und wöchentliche Quests. Setzt am wöchentlichen Reset-Tag deiner Region zurück.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tägliche Aufgaben",
