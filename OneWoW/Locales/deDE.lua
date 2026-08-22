@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "Katalog - Erweiterte Daten",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "Das Standard-Questpaket enthält Midnight und The War Within vollständig sowie ältere Story- und Kampagnenketten. Optionale Erweiterte Daten fügen übrig gebliebene ältere Quests hinzu, ohne den Hauptdownload aufzublähen.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Fortschritt verfolgt Saison 2 von Midnight: Der Giftige Abgrund und Die Gezeitengebundene Grotte, den neuen Mythisch+-Dungeonpool, Mistcrests und Nymrissa Wavecaller. /1wat status zeigt, was Fortschritt in dieser Woche verfolgt.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "Der mitgelieferte wöchentliche Midnight-Tracker folgt den Mistcrests von Saison 2. Schritte für Abzeichen, Ruf und Ähnliches zeigen das echte Ziel und werten dagegen ab. Erledigte ausblenden blendet fertige Listen aus; jede Liste kann erledigte Schritte ausblenden. Filter sitzen über der Liste.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "Der Schritt-Editor kann jeden Tracker-Typ erstellen, den das Addon mitliefert: Quests, Schatzkammer, Berufe, Beute, Timer, Kampagnen, Erkundung und verschachtelte Ziele. Eine ID zeigt den Namen beim Tippen. Kartenwegpunkte werden auf Karten gesetzt, die das erlauben.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW umschalten",
     ["CMD_KEYWORD_HELP"] = "Hilfe zu Suchbegriffen öffnen",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker öffnen",

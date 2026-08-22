@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "Catálogo - Dados estendidos",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "O pacote padrão de missões inclui Midnight e The War Within por completo, mais as cadeias de história e campanha mais antigas. Os Dados estendidos opcionais acrescentam as missões restantes sem inflar o download principal.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progresso acompanha a Temporada 2 de Midnight: Abismo Peçonhento e Gruta Marejante, o novo conjunto de masmorras Míticas+, Mistcrests e Nymrissa Wavecaller. /1wat status mostra o que o Progresso está acompanhando nesta semana.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "O rastreador semanal Midnight incluso segue os Mistcrests da temporada 2. Etapas de moeda, reputação e semelhantes mostram o alvo real e são concluídas em relação a ele. Ocultar concluídos oculta as listas finalizadas; cada lista pode ocultar etapas concluídas. Os filtros ficam acima da lista.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "O editor de etapas pode criar cada tipo de rastreador do addon: missões, grande câmara, profissões, saque, cronômetros, campanhas, exploração e objetivos aninhados. Digitar um ID mostra o nome. Pontos de rota são colocados nos mapas que permitem.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir a ajuda de palavras-chave de busca",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

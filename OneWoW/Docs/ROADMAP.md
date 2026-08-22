@@ -95,18 +95,31 @@ It has been discussed and approved in principle; record the final shape in
 
 ### P-4 · Step-type authorability
 
-**Gates:** Trackers §2 (task-list mapping), §8 (rare packs), §17 (holiday packs), §19
-(never-lie weeklies).
+**Shipped.** The step editor can author every shipped track type, including nested
+objectives and gates. `rare_quest` remains a quest-scope **label** on the quest card, not
+its own picker row. Dusting for Moths (`quest_account` + coords + renown) is reproducible
+in the UI.
 
-The engine supports 38 track types; the step editor's picker exposes 20. Absent from the
-picker: `rare_quest`, `quest_account`, `loot_item`, `custom_timer`, `campaign`,
-`quest_progress`, `quest_active`, `quest_world`, `location`, `exploration`, all three
-`vault_*`, all five `prof_*`.
+Phases (0–7):
 
-The visible symptom: the flagship collectible-shaped preset (Dusting for Moths) uses
-`quest_account` and ships as an OWT1 import string — a player cannot reproduce it in the UI.
-"Map Collectionist gates onto types we already have" is true for the engine and false for the
-author. Does **not** block Slice 1 (collection steps are in the picker).
+0. Shared location service — see **P-4b**
+1. Engine semantics: objective roll-up, `requiresSteps` user check-off gate, faction
+   visibility, latched `exploration`
+2. Type field schema registry, explicit max / `noMax`, "Tracked as" fallback
+3. `CreateEntityIdField` + resolver registry (quest/npc from Catalog as they load)
+4. Picker parity: vault, profession, quest scopes + `questIDs`, description, step-level
+   waypoint on any type
+5. Gates in the editor: faction, profession, calendar event, `requiresSteps`
+6. Nested objectives editor
+7. Remaining picker types: loot, timer, zone, campaign, quest progress, exploration
+
+### P-4b · Shared location service (`OneWoW.Location`)
+
+**Shipped.** Suite-wide map helpers (`ToFraction` / `ToPercent`, `GetPlayerMapID`,
+`GetPlayerLocation`, `SetWaypoint` with `CanSetUserWaypointOnMap` and
+`opts.format` / `openMap` / `superTrack`, `DistanceMapPercent`, `IsWithinRadius`). No pin
+rendering. Consumed by Trackers, Catalog Navigation (waypoint half), Notes NPCs, Vendors,
+and AltTracker hearth. See [ARCHITECTURE.md](ARCHITECTURE.md) core service roster.
 
 ---
 
@@ -125,7 +138,8 @@ Items marked **parallel** have no dependency on the item above them.
 | 4 | Collectible-key handoff `_API` + "Track this" (§1) | Trackers ← Notes | 0 |
 | 5 | Lockout skip / dim for the logged-in char (§3) | Trackers | 3 |
 | 6 | Daily loot-lock on a wanted key (§2 + §8) | Collectibles | 2, and 5 for the lockout half |
-| 7 | Step-type authorability (P-4) | Trackers | 0 |
+| 7a | Shared location service (`OneWoW.Location`) (P-4b) | Core | — · **shipped** |
+| 7 | Step-type authorability (P-4) | Trackers | 0, 7a · **shipped** |
 | 8 | Unobtainable overlay + achievement→reward map (§3–§4) | Collectibles | — |
 | 9 | Wowhead URL builder (§9) | Collectibles | — |
 | 10 | AltTracker2 Phase 0–2 (scaffold → Home/Dossier → Ask v1) | AltTracker2 | 3 for lockout asks |
@@ -189,9 +203,9 @@ Recorded so the same claims do not get re-derived from the older text:
 - `rare_quest` is a **literal alias** of `quest` — identical evaluator, identical
   `IsQuestFlaggedCompleted` call, no distinct reset semantics. It is a display name, not a
   daily-lock capability. The capability still needs P-1 plus a daily-reset list.
-- `requiresSteps` exists and evaluates, but its only effect is **dimming** a hub row. It does
-  not hide the step, block completion, feed `IsStepVisible`, appear in the editor, or parse in
-  Markup — serialize/import only.
+- `requiresSteps` exists and evaluates. It **dims** a hub row and **blocks user check-off**
+  (`TD:CanCompleteStep` on hub + pin). It does not hide the step or feed `IsStepVisible`.
+  The step editor has a sibling picker. Markup still does not parse it.
 - `hideCompleted` and `pinnedHideCompleted` are **not a pair**. `pinnedHideCompleted` is a
   persisted per-list field honored by the pin and hub detail; the hub-side "Hide completed" is
   a session filter over the left rail that hides fully complete *lists*.

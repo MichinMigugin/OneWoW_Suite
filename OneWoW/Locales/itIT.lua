@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "Catalogo - Dati estesi",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "Il pacchetto missioni predefinito include Midnight e The War Within per intero, più le catene storia e campagna più vecchie. I Dati estesi opzionali aggiungono le missioni rimaste senza appesantire il download principale.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Avanzamento segue Midnight Stagione 2: Abissi Velenosi e Grotta Vincolata alla Marea, il nuovo pool di spedizioni Mitiche+, Mistcrests e Nymrissa Wavecaller. /1wat status mostra cosa sta seguendo Avanzamento questa settimana.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "Il tracker settimanale Midnight incluso segue i Mistcrests della stagione 2. I passi di valuta, reputazione e simili mostrano l'obiettivo reale e si completano rispetto a esso. Nascondi completati nasconde le liste finite; ogni lista può nascondere i passi completati. I filtri stanno sopra l'elenco.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "L'editor dei passi può creare ogni tipo di tracker incluso: missioni, gran caveau, professioni, bottino, timer, campagne, esplorazione e obiettivi nidificati. Digitando un ID ne mostra il nome. I punti mappa si piazzano sulle mappe che lo consentono.",
     ["CMD_TOGGLE_ONEWOW"] = "Attiva/disattiva OneWoW",
     ["CMD_KEYWORD_HELP"] = "Apri l'aiuto sulle parole chiave di ricerca",
     ["CMD_OPEN_ALTTRACKER"] = "Apri AltTracker",

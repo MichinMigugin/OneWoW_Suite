@@ -44,12 +44,12 @@ Do not invent parallel track types. The engine already evaluates:
 | “N of these quests” | `quest_pool` / `quest_pool_account` |
 | Kill / loot / talk / enter instance | `kill_creature`, `loot_item`, `npc_interact`, `enter_instance` |
 | Map pin on a step | `mapID` + `coordX`/`coordY` + `TrackerMap` |
-| Step gating | `professionRequired`, `eventRequired` (calendar `eventID`) hide; `requiresSteps` only **dims**, see caveat |
+| Step gating | `professionRequired`, `eventRequired` (calendar `eventID`), `faction` hide; `requiresSteps` dims **and** blocks user check-off (`TD:CanCompleteStep`); editor picker; still does not hide |
 | Per-alt “who has done this step” | `rosterMode` (current char stamped into an account roster) |
 | Cross-alt quest completion | `OneWoW_CatalogData_Quests_API.GetCompletedCharacters` / `GetActiveCharacters` — public, with UI in Catalog |
 | Collectible-shaped preset | Dusting for Moths (`TrackerPresets` — `quest_account` + coords + renown gates) |
 | Hide completed | `pinnedHideCompleted` (persisted, per list) — the hub filter is a different thing, see caveat |
-| Interval timer step | `custom_timer` (reset is currently broken — see below) |
+| Interval timer step | `custom_timer` (`trackParams.interval` in seconds; reset reads `sp.lastCompleted`) |
 | Instance / map / difficulty identity | `OneWoW_CatalogData_Journal_API` (`GetInstanceByMapID`, live EJ merge); Generated `JournalMapDifficulties` / `JournalInstanceMeta` |
 | Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins, Tracker hub detail (sections + steps; drop a step on a header). `TD:MoveStepToSection` migrates the progress blob |
 
@@ -59,20 +59,25 @@ Do not invent parallel track types. The engine already evaluates:
   `C_QuestLog.IsQuestFlaggedCompleted`, no distinct reset semantics. It is a label, not a
   daily-lock capability. The real capability needs the curated key → hidden-quest map
   ([`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-1) plus a daily-reset list.
-- **`requiresSteps` only dims a hub row.** It does not hide the step, block completion, feed
-  `IsStepVisible`, appear in the step editor, or parse in Markup — serialize/import only.
-  §2's ordered prereqs and §6's prune both assume more than this.
+- **`requiresSteps` dims a hub row and blocks user check-off** via `TD:CanCompleteStep`
+  (hub + pin). It does not hide the step or feed `IsStepVisible`. The step editor has a
+  sibling picker. Markup still does not parse it — serialize/import plus the editor. §2's
+  ordered prereqs and §6's prune both assume more than this.
 - **`hideCompleted` and `pinnedHideCompleted` are not a pair.** `pinnedHideCompleted` is a
   persisted per-list field honored by the pin and hub detail. The hub-side "Hide completed"
   is a session filter over the left rail that hides fully complete *lists*.
-- **Only 20 of 38 track types are in the step editor's picker.** Absent: `rare_quest`,
-  `quest_account`, `loot_item`, `custom_timer`, `campaign`, `quest_progress`, `quest_active`,
-  `quest_world`, `location`, `exploration`, all `vault_*`, all `prof_*`. Dusting for Moths
-  uses `quest_account` and therefore cannot be reproduced by a player in the UI — it ships as
-  an import string. See [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-4.
-- **`custom_timer` interval reset is broken.** `Core/Resets.lua` reads `sp.lastComplete`;
-  every writer sets `sp.lastCompleted`. The read is always nil, so a completed timer step
-  clears on the next reconcile. §11 builds on this type.
+- **Picker is type-family, not one card per engine type.** Quest scopes
+  (`quest` / `quest_account` / `quest_world` / `quest_active` / `rare_quest`) share one
+  card; vault slots and profession tasks share one card each. `rare_quest` is a **label**,
+  not its own card (same evaluator as `quest`). Remaining singles have their own cards
+  (loot, timer, zone, campaign, quest progress, exploration). Nested objectives reuse the
+  same schema. Dusting for Moths is authorable in the UI. See
+  [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-4 (shipped).
+- **`custom_timer` reset uses `sp.lastCompleted` plus `trackParams.interval` (seconds).**
+  The step editor collects the interval in hours. Objective rows still show seconds.
+- **Objective roll-up:** a step with an `objectives` array completes when every objective is
+  done (`EvaluateStep`), regardless of the parent `trackType`. `faction` (`alliance` /
+  `horde` / `both`) hides steps and sections; profession and calendar event gates also hide.
 
 **Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. Lockouts are not consulted. There is no “set instance difficulty” step. (`eventRequired` fail-open **shipped** — see §4.)
 

@@ -397,8 +397,7 @@ end
 ---@param nameFS FontString
 ---@param iconTex Texture
 ---@param iconFrame Frame
----@param includeGuideMark boolean|nil
-local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame, includeGuideMark)
+local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame)
     local addon = GetDataAddon()
     if not addon or not item or not item.itemID then
         return
@@ -1257,7 +1256,7 @@ local function BuildQuestItemRow(parent, item, yOffset)
     itemName:SetText(item.name)
     itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
 
-    FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame, false)
+    FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame)
 
     itemRow:EnableMouse(true)
     itemRow:SetScript("OnEnter", function(myself)
@@ -1877,7 +1876,7 @@ RefreshDetailView = function(isSecondRefresh)
 
                 AddSourceIcon(itemRow, item)
 
-                FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame, false)
+                FillVisibleItemRow(item, itemRow, itemName, iconTex, iconFrame)
 
                 local diffText = OneWoW_GUI:CreateFS(itemRow, 10)
                 diffText:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)

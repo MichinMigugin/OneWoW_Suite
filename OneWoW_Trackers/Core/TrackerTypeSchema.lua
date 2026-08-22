@@ -68,10 +68,10 @@ local BY_TYPE = {
     quest_pool_account  = QUEST_POOL,
     quest_progress      = {
         ID("questID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID", "quest"),
-        F("objectiveIndex", "TRACKER_FL_PICK", "TRACKER_FH_PICK", { width = 80, default = 1 }),
+        F("objectiveIndex", "TRACKER_FL_OBJECTIVE_INDEX", "TRACKER_FH_PICK", { width = 80, default = 1 }),
     },
     campaign            = {
-        ID("campaignID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID", "campaign"),
+        ID("campaignID", "TRACKER_FL_CAMPAIGN_ID", "TRACKER_FH_CAMPAIGN_ID", "campaign"),
     },
     level               = {
         F("level", "TRACKER_FL_LEVEL", "TRACKER_FH_LEVEL", { width = 60 }),
@@ -135,7 +135,7 @@ local BY_TYPE = {
         ID("itemModifiedAppearanceID", "TRACKER_FL_APPEARANCE_ID", "TRACKER_FH_APPEARANCE_ID", "transmog"),
     },
     exploration         = {
-        F("areaID", "TRACKER_FL_MAP_ID", "TRACKER_FH_MAP_ID"),
+        F("areaID", "TRACKER_FL_AREA_ID", "TRACKER_FH_AREA_ID"),
     },
     vault_raid          = EMPTY,
     vault_dungeon       = EMPTY,
@@ -158,7 +158,7 @@ local BY_TYPE = {
         ID("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID", "currency"),
     },
     custom_timer        = {
-        F("interval", "TRACKER_FL_COUNT", "TRACKER_FH_COUNT", { width = 80, default = 3600 }),
+        F("interval", "TRACKER_FL_INTERVAL", "TRACKER_FH_INTERVAL", { width = 80, default = 3600 }),
     },
 }
 

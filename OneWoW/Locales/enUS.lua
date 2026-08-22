@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "Catalog - Extended Data",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "Default Quests now ships Midnight and The War Within in full, plus older story and campaign chains. Optional Extended Data adds leftover older quests without bloating the main download.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progress tracks Midnight Season 2: The Venomous Abyss and The Tidebound Grotto, the new Mythic+ dungeon pool, Mistcrests, and Nymrissa Wavecaller. /1wat status shows what Progress is tracking this week.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "The bundled Midnight weekly tracker follows Season 2 Mistcrests. Currency, reputation, and similar steps show the real target and complete against it. Hide Done hides finished lists; each list can hide completed steps. Filters sit above the list.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "The step editor can author every tracker type the addon ships: quests, vault, professions, loot, timers, campaigns, exploration, and nested objectives. Typing an ID shows its name. Map waypoints set on maps that allow them.",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",
     ["CMD_KEYWORD_HELP"] = "Open Search Keywords help",
     ["CMD_OPEN_ALTTRACKER"] = "Open AltTracker",

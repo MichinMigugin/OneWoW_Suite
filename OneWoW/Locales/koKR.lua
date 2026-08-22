@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "카탈로그 - 확장 데이터",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "기본 퀘스트 팩은 한밤과 내부 전쟁을 전부 담고, 이전 확장팩은 이야기/캠페인만 담습니다. 선택 사항인 확장 데이터는 남은 이전 퀘스트를 메인 다운로드를 키우지 않고 더합니다.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "진행도는 한밤 2 시즌을 추적합니다: 맹독 심연과 해일결속 동굴, 새로운 신화+ 던전 목록, Mistcrests, Nymrissa Wavecaller. /1wat status는 이번 주 진행도가 추적하는 내용을 보여 줍니다.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "포함된 한밤 주간 추적기는 2시즌 Mistcrests를 따릅니다. 화폐, 평판 등의 단계는 실제 목표를 표시하고 그 기준으로 완료됩니다. 완료 항목 숨기기는 끝난 목록을 숨기고, 각 목록에서 완료된 단계를 숨길 수 있습니다. 필터는 목록 위에 있습니다.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "단계 편집기로 애드온이 제공하는 모든 추적 유형을 작성할 수 있습니다. 퀘스트, 금고, 전문 기술, 전리품, 타이머, 대장정, 탐험, 중첩 목표. ID를 입력하면 이름이 표시됩니다. 허용하는 지도에 위치 표시가 지정됩니다.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker 열기",

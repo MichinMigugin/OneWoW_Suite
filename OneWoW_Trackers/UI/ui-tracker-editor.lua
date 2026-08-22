@@ -12,6 +12,8 @@ local TE_UI = ns.TrackerEditor
 local tinsert, tremove, tonumber, tostring = tinsert, tremove, tonumber, tostring
 local strtrim, sort, pairs, ipairs = strtrim, sort, pairs, ipairs
 local floor = math.floor
+local CreateVector2D = CreateVector2D
+local C_MapExplorationInfo = C_MapExplorationInfo
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
@@ -60,6 +62,21 @@ local function FillCoordsFromPosition(card)
     if card._field_mapID then card._field_mapID:SetText(tostring(mapID)) end
     if card._field_x then card._field_x:SetText(format("%.1f", x)) end
     if card._field_y then card._field_y:SetText(format("%.1f", y)) end
+end
+
+local function FillMapFromPosition(card)
+    local mapID = Location.GetPlayerMapID()
+    if not mapID then FillMsg("TRACKER_FILL_NO_POSITION"); return end
+    if card._field_mapID then card._field_mapID:SetText(tostring(mapID)) end
+end
+
+local function FillAreaFromPosition(card)
+    local mapID, x, y = Location.GetPlayerLocation()
+    if not mapID or not x then FillMsg("TRACKER_FILL_NO_POSITION"); return end
+    local ids = C_MapExplorationInfo.GetExploredAreaIDsAtPosition(
+        mapID, CreateVector2D(x / 100, y / 100))
+    if not ids or not ids[1] then FillMsg("TRACKER_FILL_NO_AREA"); return end
+    if card._field_areaID then card._field_areaID:SetText(tostring(ids[1])) end
 end
 
 local function FillInstanceFromCurrent(card)
@@ -625,6 +642,33 @@ local function AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
             end
             taskDD:SetSelected(currentTask)
         end
+        return
+    end
+
+    if cat.extra == "timer" then
+        local hoursBox = OneWoW_GUI:CreateEditBox(fieldRow, {
+            width = 80,
+            height = 22,
+            maxLetters = 4,
+            showClear = false,
+        })
+        hoursBox:SetNumeric(true)
+        local hours = 1
+        if existing and existing.trackParams and CategoryMatches(cat, existing.trackType) then
+            local n = tonumber(existing.trackParams.interval)
+            if n and n > 0 then
+                hours = floor(n / 3600 + 0.5)
+                if hours < 1 then hours = 1 end
+            end
+        end
+        hoursBox:SetText(tostring(hours))
+        card._hoursBox = hoursBox
+        PlaceFieldSlot(layout, fieldRow, {
+            key = "intervalHours",
+            labelKey = "TRACKER_REPEAT_HOURS",
+            hintKey = "TRACKER_REPEAT_HINT",
+            width = 140,
+        }, hoursBox)
     end
 end
 
@@ -666,6 +710,14 @@ end
 
 local function ReadVaultCard(card)
     return card._vaultDD and card._vaultDD:GetValue() or "vault_raid", {}
+end
+
+local function ReadTimerCard(card)
+    local hours = tonumber(card._hoursBox and card._hoursBox:GetText())
+    if not hours or hours <= 0 then
+        hours = 1
+    end
+    return "custom_timer", { interval = hours * 3600 }
 end
 
 local OBJ_HOST_EMPTY_H = 8
@@ -1159,6 +1211,13 @@ local STEP_CATEGORIES = {
     },
     { key = "quest_pool",          titleKey = "TRACKER_SC_QUEST_POOL_TITLE",          descKey = "TRACKER_SC_QUEST_POOL_DESC",          trackType = "quest_pool" },
     { key = "quest_pool_account",  titleKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_TITLE",  descKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_DESC",  trackType = "quest_pool_account" },
+    { key = "quest_progress",      titleKey = "TRACKER_TYPE_QUEST_PROGRESS",          descKey = "TRACKER_SC_QUEST_PROGRESS_DESC",      trackType = "quest_progress" },
+    {
+        key = "campaign",
+        titleText = L["CAMPAIGN"],
+        descKey = "TRACKER_SC_CAMPAIGN_DESC",
+        trackType = "campaign",
+    },
     { key = "item",                titleKey = "TRACKER_SC_ITEM_TITLE",                descKey = "TRACKER_SC_ITEM_DESC",                trackType = "item" },
     { key = "currency",            titleKey = "TRACKER_SC_CURRENCY_TITLE",            descKey = "TRACKER_SC_CURRENCY_DESC",            trackType = "currency" },
     { key = "achievement",         titleKey = "TRACKER_SC_ACHIEVEMENT_TITLE",         descKey = "TRACKER_SC_ACHIEVEMENT_DESC",         trackType = "achievement" },
@@ -1177,6 +1236,22 @@ local STEP_CATEGORIES = {
         trackType = "coordinates",
         fillKey = "TRACKER_FILL_FROM_POSITION",
         onFill = function(card) FillCoordsFromPosition(card) end,
+    },
+    {
+        key = "location",
+        titleKey = "TRACKER_SC_ZONE_TITLE",
+        descKey = "TRACKER_SC_ZONE_DESC",
+        trackType = "location",
+        fillKey = "TRACKER_FILL_FROM_POSITION",
+        onFill = function(card) FillMapFromPosition(card) end,
+    },
+    {
+        key = "exploration",
+        titleKey = "TRACKER_TYPE_EXPLORATION",
+        descKey = "TRACKER_SC_EXPLORATION_DESC",
+        trackType = "exploration",
+        fillKey = "TRACKER_FILL_FROM_POSITION",
+        onFill = function(card) FillAreaFromPosition(card) end,
     },
     {
         key = "npc",
@@ -1202,6 +1277,7 @@ local STEP_CATEGORIES = {
         fillKey = "TRACKER_FILL_FROM_TARGET",
         onFill = function(card) FillCreatureFromTarget(card, "creatureID") end,
     },
+    { key = "loot_item",   titleKey = "TRACKER_TYPE_LOOT_ITEM",    descKey = "TRACKER_SC_LOOT_DESC",     trackType = "loot_item" },
     { key = "mount",       titleKey = "TRACKER_SC_MOUNT_TITLE",    descKey = "TRACKER_SC_MOUNT_DESC",    trackType = "mount" },
     { key = "pet",         titleKey = "TRACKER_SC_PET_TITLE",      descKey = "TRACKER_SC_PET_DESC",      trackType = "pet" },
     { key = "toy",         titleKey = "TRACKER_SC_TOY_TITLE",      descKey = "TRACKER_SC_TOY_DESC",      trackType = "toy" },
@@ -1218,6 +1294,13 @@ local STEP_CATEGORIES = {
         trackType = "prof_skill",
         extra = "profession",
         matchesTypes = { "prof_skill", "prof_concentration", "prof_knowledge", "prof_firstcraft", "prof_catchup" },
+    },
+    {
+        key = "custom_timer",
+        titleKey = "TRACKER_TYPE_CUSTOM_TIMER",
+        descKey = "TRACKER_SC_TIMER_DESC",
+        trackType = "custom_timer",
+        extra = "timer",
     },
 }
 
@@ -2026,15 +2109,17 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             local layout = { fx = 0, fy = 0, rowH = FIELD_ROW_H }
             local isNew = not existing
-            for _, field in ipairs(fields) do
-                local existingVal
-                if existing and existing.trackParams and CategoryMatches(cat, existing.trackType) then
-                    existingVal = existing.trackParams[field.key]
+            if cat.extra ~= "timer" then
+                for _, field in ipairs(fields) do
+                    local existingVal
+                    if existing and existing.trackParams and CategoryMatches(cat, existing.trackType) then
+                        existingVal = existing.trackParams[field.key]
+                    end
+                    local widget = CreateFieldWidget(fieldRow, field, existingVal, isNew)
+                    widget._fieldKey = field.key
+                    card["_field_" .. field.key] = widget
+                    PlaceFieldSlot(layout, fieldRow, field, widget)
                 end
-                local widget = CreateFieldWidget(fieldRow, field, existingVal, isNew)
-                widget._fieldKey = field.key
-                card["_field_" .. field.key] = widget
-                PlaceFieldSlot(layout, fieldRow, field, widget)
             end
             AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
             fieldRow:SetHeight(FieldLayoutHeight(layout))
@@ -2091,6 +2176,8 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 elseif cat.extra == "quest" then
                     trackType, trackParams = ReadQuestCard(card)
                     if not trackParams then return end
+                elseif cat.extra == "timer" then
+                    trackType, trackParams = ReadTimerCard(card)
                 else
                     local hasRequired = true
                     for _, field in ipairs(fields) do

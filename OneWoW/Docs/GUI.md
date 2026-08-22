@@ -409,6 +409,8 @@ LINK_IDLE, LINK_HOVER, LINK_UNDERLINE,
 QUEST_ROW_SECTION, QUEST_ROW_CHILD, QUEST_ROW_GROUP_TOGGLE,
 KIND_TOKEN, KIND_SAVED, KIND_CATEGORY
 
+`CreateEntityIdField` uses TEXT_FEATURES_DISABLED for an invalid ID, TEXT_WARNING while an async name load is in flight, and TEXT_FEATURES_ENABLED when the name resolves.
+
 ### Get spacing value
 ```lua
 local px = OneWoW_GUI:GetSpacing("MD")
@@ -881,6 +883,29 @@ updates the X while typing. Prefer `onTextChanged` on `CreateEditBox` or
 `HookScript` when layering your own filter.
 
 Use `CreateEditBox` with `placeholderText` for search boxes. The deprecated `CreateSearchBox` wrapper has been removed.
+
+### Entity ID field
+Numeric ID input plus a resolved-name line. Optional load units register resolvers so `OneWoW_GUI` never depends on Catalog (or any other unit). Unregistered kinds stay a plain numeric edit box at the call site (`HasEntityResolver`).
+
+```lua
+OneWoW_GUI:RegisterEntityResolver("quest", {
+    Resolve = function(id) ... end,              -- name, icon, quality, link
+    RequestAsync = function(id, cb) ... end,     -- cb(id, info|nil)
+})
+
+local field = OneWoW_GUI:CreateEntityIdField(parent, {
+    width = 160,
+    height = 22,                 -- optional; ID box height
+    placeholderText = "e.g. 86387",
+    maxLetters = 12,
+    kind = "quest",              -- must match a registered resolver
+    onTextChanged = function(text) end,
+})
+field:GetText()        -- search text with placeholder filtered out
+field:GetSearchText()  -- same
+```
+
+Async paints are token-guarded so a reused or hidden field never takes a late write. Name-line colors: TEXT_FEATURES_DISABLED (invalid), TEXT_WARNING (loading), TEXT_FEATURES_ENABLED (resolved).
 
 ### Value add row / entry list / item list editor
 

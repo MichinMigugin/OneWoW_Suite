@@ -2,10 +2,15 @@
 
 # Home
 - The website link now opens onewow.net.
+- Map waypoints from Trackers, vendors, NPCs, and hearth now place on maps that allow them.
 
 ---
 
 # Trackers
+- The step editor can build every tracker type the addon ships, including nested objectives, Great Vault and profession tasks, loot, timers, campaigns, and exploration.
+- Typing a quest, item, NPC, or collectible ID in the editor shows its name.
+- Faction, profession, and holiday gates hide steps that do not apply to you. Steps that require other steps cannot be checked off until those are done.
+- A step with several objectives completes when every objective is done.
 - New List, step types, and editor dialogs use your game language instead of English.
 - Tracker category folders show in your game language, sorted alphabetically for that language.
 - Checking off steps and scrolling a long tracker list feels snappier.

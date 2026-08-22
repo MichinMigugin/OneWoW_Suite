@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "Catalogue - Données étendues",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "Les quêtes par défaut incluent Midnight et The War Within en entier, plus les chaînes d'histoire et de campagne plus anciennes. Les données étendues optionnelles ajoutent les quêtes restantes sans alourdir le téléchargement principal.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progression suit Saison Midnight 2 : L'abîme Venimeux et La grotte des Marées, le nouveau vivier de donjons mythiques +, les Mistcrests et Nymrissa Wavecaller. /1wat status montre ce que Progression suit cette semaine.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "Le suivi hebdomadaire Midnight fourni suit les Mistcrests de la saison 2. Les étapes de monnaies, de réputation et similaires affichent la vraie cible et se complètent par rapport à elle. Masquer les terminés masque les listes finies ; chaque liste peut masquer les étapes terminées. Les filtres sont au-dessus de la liste.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "L'éditeur d'étapes peut créer chaque type de suivi fourni : quêtes, grande chambre forte, métiers, butin, minuteurs, campagnes, exploration et objectifs imbriqués. Saisir un ID affiche son nom. Les points de passage se placent sur les cartes qui l'autorisent.",
     ["CMD_TOGGLE_ONEWOW"] = "Basculer OneWoW",
     ["CMD_KEYWORD_HELP"] = "Ouvrir l'aide des mots-clés de recherche",
     ["CMD_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",

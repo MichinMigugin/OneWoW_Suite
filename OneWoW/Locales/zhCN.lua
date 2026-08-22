@@ -173,7 +173,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_EXTENDED_TITLE"] = "目录 - 扩展数据",
     ["WHATS_NEW_H_EXTENDED_BODY"] = "默认任务包完整收录至暗之夜和地心之战，以及旧资料片剧情/战役。可选扩展数据补充剩余旧任务，不会撑大主下载。",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "进度追踪至暗之夜第2赛季：烈毒之渊和潮缚石窟、新的史诗钥石地下城池、Mistcrests，以及 Nymrissa Wavecaller。/1wat status 显示本周进度正在追踪的内容。",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "附带的至暗之夜每周追踪器跟随第2赛季 Mistcrests。货币、声望等步骤显示真实目标并按该目标完成。隐藏已完成会隐藏已完成的列表；每个列表可以隐藏已完成的步骤。筛选在列表上方。",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "步骤编辑器可编写插件提供的全部追踪类型：任务、宝库、专业、拾取、计时器、战役、探索以及嵌套目标。输入ID会显示名称。允许的地图上可设置路径点。",
     ["CMD_TOGGLE_ONEWOW"] = "切换 OneWoW",
     ["CMD_KEYWORD_HELP"] = "打开搜索关键词帮助",
     ["CMD_OPEN_ALTTRACKER"] = "打开 AltTracker",
