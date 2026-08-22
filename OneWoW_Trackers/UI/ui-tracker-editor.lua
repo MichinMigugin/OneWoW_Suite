@@ -262,6 +262,176 @@ local function ProfessionBySkillLine(skillLineID)
     end
 end
 
+local PROF_REQ_NONE = "none"
+
+local function FactionOptions()
+    return {
+        { text = L["OVR_EFFECT_BOTH"], value = "both" },
+        { text = FACTION_ALLIANCE, value = "alliance" },
+        { text = FACTION_HORDE, value = "horde" },
+    }
+end
+
+local function ProfessionRequiredOptions(existingID)
+    local opts = { { text = NONE, value = PROF_REQ_NONE } }
+    local seen = false
+    for _, prof in ipairs(TP:GetProfessionPresets()) do
+        tinsert(opts, { text = ProfessionDisplayName(prof), value = prof.baseSkillLineID })
+        if existingID and prof.baseSkillLineID == existingID then
+            seen = true
+        end
+    end
+    if existingID and not seen then
+        tinsert(opts, { text = tostring(existingID), value = existingID })
+    end
+    return opts
+end
+
+local function CollectRequiresKeys(selected)
+    local keys = {}
+    for key, on in pairs(selected) do
+        if on then tinsert(keys, key) end
+    end
+    return keys
+end
+
+local function ReadVisibilityGates(dialog)
+    local faction = dialog._factionDD:GetValue() or "both"
+    local profVal = dialog._profReqDD:GetValue()
+    local professionRequired = (type(profVal) == "number") and profVal or false
+    local eventID = tonumber(strtrim(dialog._eventBox:GetSearchText() or ""))
+    return faction, professionRequired, eventID or false
+end
+
+--- Faction / profession / calendar-event gates. These hide the step or
+--- section; an unknown event ID fail-opens in the engine.
+local function WireVisibilityGates(dialog, content, anchor, existing, dx)
+    dx = dx or 0
+    local factionLabel = OneWoW_GUI:CreateFS(content, 10)
+    factionLabel:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", dx, -8)
+    factionLabel:SetText(FACTION .. ":")
+    factionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local factionDD = CreateDropdown(content, 160, 26)
+    factionDD:SetPoint("TOPLEFT", factionLabel, "BOTTOMLEFT", 0, -2)
+    factionDD:SetOptions(FactionOptions())
+    factionDD:SetSelected((existing and existing.faction) or "both")
+    dialog._factionDD = factionDD
+
+    local profLabel = OneWoW_GUI:CreateFS(content, 10)
+    profLabel:SetPoint("TOPLEFT", factionLabel, "TOPLEFT", 180, 0)
+    profLabel:SetText(L["PROFESSION"] .. ":")
+    profLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local existingProf = existing and tonumber(existing.professionRequired)
+    local profDD = CreateDropdown(content, 200, 26)
+    profDD:SetPoint("TOPLEFT", profLabel, "BOTTOMLEFT", 0, -2)
+    profDD:SetOptions(ProfessionRequiredOptions(existingProf))
+    profDD:SetSelected(existingProf or PROF_REQ_NONE)
+    dialog._profReqDD = profDD
+
+    local eventLabel = OneWoW_GUI:CreateFS(content, 10)
+    eventLabel:SetPoint("TOPLEFT", factionDD, "BOTTOMLEFT", 0, -8)
+    eventLabel:SetText(L["TRACKER_FL_EVENT_ID"] .. ":")
+    eventLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local eventBox = OneWoW_GUI:CreateEditBox(content, {
+        width = 120,
+        height = 26,
+        placeholderText = L["TRACKER_FH_EVENT_ID"],
+        maxLetters = 8,
+        showClear = false,
+    })
+    eventBox:SetPoint("TOPLEFT", eventLabel, "BOTTOMLEFT", 0, -2)
+    if existing and existing.eventRequired then
+        eventBox:SetText(tostring(existing.eventRequired))
+    end
+    dialog._eventBox = eventBox
+
+    local gateHint = OneWoW_GUI:CreateFS(content, 10)
+    gateHint:SetPoint("TOPLEFT", eventBox, "BOTTOMLEFT", 0, -2)
+    gateHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    gateHint:SetJustifyH("LEFT")
+    gateHint:SetWordWrap(true)
+    gateHint:SetText(L["TRACKER_GATE_HINT"])
+    gateHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    return gateHint
+end
+
+local function RefreshRequiresLabel(dialog)
+    local keys = CollectRequiresKeys(dialog._requiresSelected)
+    local textFS = dialog._requiresText
+    if #keys == 0 then
+        textFS:SetText(NONE)
+        return
+    end
+    if #keys == 1 then
+        textFS:SetText(dialog._requiresLabels[keys[1]] or keys[1])
+        return
+    end
+    textFS:SetText(format(L["TRACKER_REQUIRES_COUNT"], #keys))
+end
+
+--- Sibling-step picker. requiresSteps blocks user check-off; it does not hide.
+local function WireRequiresPicker(dialog, content, anchor, listID, excludeKey, existing)
+    local selected = {}
+    local labels = {}
+    local siblings = {}
+    for _, row in ipairs(ns.TrackerData:GetAllStepsFlat(listID)) do
+        local step = row.step
+        labels[step.key] = step.label or L["TRACKER_STEP_FALLBACK"]
+        if step.key ~= excludeKey then
+            tinsert(siblings, step)
+        end
+    end
+    if existing and existing.requiresSteps then
+        for _, key in ipairs(existing.requiresSteps) do
+            selected[key] = true
+        end
+    end
+    dialog._requiresSelected = selected
+    dialog._requiresLabels = labels
+
+    local reqLabel = OneWoW_GUI:CreateFS(content, 10)
+    reqLabel:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -8)
+    reqLabel:SetText(L["TRACKER_FL_REQUIRES"] .. ":")
+    reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local dd, textFS = OneWoW_GUI:CreateDropdown(content, { width = 320, height = 26 })
+    dd:SetPoint("TOPLEFT", reqLabel, "BOTTOMLEFT", 0, -2)
+    dialog._requiresText = textFS
+    RefreshRequiresLabel(dialog)
+
+    dd:SetScript("OnClick", function()
+        OneWoW_GUI:CloseAttachFilterMenu()
+        MenuUtil.CreateContextMenu(dd, function(_, rootDescription)
+            rootDescription:CreateTitle(L["TRACKER_FL_REQUIRES"])
+            if #siblings == 0 then
+                rootDescription:CreateTitle(L["TRACKER_REQUIRES_EMPTY"])
+                return
+            end
+            for _, step in ipairs(siblings) do
+                local key = step.key
+                rootDescription:CreateCheckbox(labels[key], function()
+                    return selected[key] == true
+                end, function()
+                    selected[key] = not selected[key]
+                    RefreshRequiresLabel(dialog)
+                end)
+            end
+        end)
+    end)
+
+    local reqHint = OneWoW_GUI:CreateFS(content, 10)
+    reqHint:SetPoint("TOPLEFT", dd, "BOTTOMLEFT", 0, -2)
+    reqHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    reqHint:SetJustifyH("LEFT")
+    reqHint:SetWordWrap(true)
+    reqHint:SetText(L["TRACKER_REQUIRES_HINT"])
+    reqHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    return reqHint
+end
+
 local function MatchProfessionFromStep(trackType, params)
     params = params or {}
     for _, prof in ipairs(TP:GetProfessionPresets()) do
@@ -543,6 +713,13 @@ local function ApplySharedStepFields(dialog, changes)
     local max, noMax = ReadStepCount(dialog, changes.trackType, changes.trackParams)
     changes.max = max
     changes.noMax = noMax
+    local faction, professionRequired, eventRequired = ReadVisibilityGates(dialog)
+    changes.faction = faction
+    changes.professionRequired = professionRequired
+    changes.eventRequired = eventRequired
+    if dialog._requiresSelected then
+        changes.requiresSteps = CollectRequiresKeys(dialog._requiresSelected)
+    end
 end
 
 local function FillSharedWaypoint(dialog)
@@ -1195,8 +1372,8 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     local dialog = CreateDialog({
         name = "TrackerSectionDialog",
         title = isEdit and L["TRACKER_EDIT_SECTION"] or L["TRACKER_ADD_SECTION"],
-        width = 400,
-        height = 200,
+        width = 480,
+        height = 380,
         destroyOnClose = true,
         buttons = {
             {
@@ -1205,12 +1382,25 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
                     local name = strtrim(frame._nameBox:GetText() or "")
                     if name == "" then name = L["TRACKER_SECTION_FALLBACK"] end
                     local resetVal = frame._resetDD:GetValue()
-                    local resetOverride = (resetVal and resetVal ~= "none") and resetVal or nil
+                    local resetOverride = (resetVal and resetVal ~= "none") and resetVal or false
+                    local faction, professionRequired, eventRequired = ReadVisibilityGates(frame)
 
                     if isEdit then
-                        TD:UpdateSection(listID, sectionKey, { label = name, resetOverride = resetOverride })
+                        TD:UpdateSection(listID, sectionKey, {
+                            label = name,
+                            resetOverride = resetOverride,
+                            faction = faction,
+                            professionRequired = professionRequired,
+                            eventRequired = eventRequired,
+                        })
                     else
-                        TD:AddSection(listID, { label = name, resetOverride = resetOverride })
+                        TD:AddSection(listID, {
+                            label = name,
+                            resetOverride = resetOverride,
+                            faction = faction,
+                            professionRequired = professionRequired,
+                            eventRequired = eventRequired,
+                        })
                     end
                     frame:Hide(); frame:SetParent(nil)
                     if callback then callback() end
@@ -1228,7 +1418,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
 
     MakeLabel(content, L["TRACKER_SECTION_NAME"], 10, yOfs)
     yOfs = yOfs - 16
-    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 360, height = 26, placeholderText = L["TRACKER_SECTION_NAME_PLACEHOLDER"] })
+    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 440, height = 26, placeholderText = L["TRACKER_SECTION_NAME_PLACEHOLDER"] })
     nameBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
     if existing then nameBox:SetText(existing.label or "") end
     dialog._nameBox = nameBox
@@ -1246,6 +1436,8 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
 
+    WireVisibilityGates(dialog, content, resetDD, existing, -50)
+
     dialog:Show()
 end
 
@@ -1261,7 +1453,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         name = "TrackerStepWizard",
         title = isEdit and L["TRACKER_EDIT_STEP"] or L["TRACKER_ADD_STEP"],
         width = 650,
-        height = 860,
+        height = 980,
         destroyOnClose = true,
         buttons = {
             {
@@ -1390,8 +1582,11 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         maxBox:SetText(tostring(existing.max))
     end
 
+    local gateBottom = WireVisibilityGates(dialog, content, maxHint, existing)
+    local reqBottom = WireRequiresPicker(dialog, content, gateBottom, listID, existing and existing.key, existing)
+
     local notesLabel = OneWoW_GUI:CreateFS(content, 10)
-    notesLabel:SetPoint("TOPLEFT", maxHint, "BOTTOMLEFT", 0, -8)
+    notesLabel:SetPoint("TOPLEFT", reqBottom, "BOTTOMLEFT", 0, -8)
     notesLabel:SetText(L["TRACKER_NOTES_LABEL"])
     notesLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
