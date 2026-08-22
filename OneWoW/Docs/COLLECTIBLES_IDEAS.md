@@ -304,7 +304,7 @@ about to run X — what collectibles still drop on this difficulty, and is the
 boss dead this reset?" That wants a thin curated **key → { instanceID,
 encounterID, difficultyIDs }** (Collection Log `MountDropCategories` shape), not
 their raid-pack encyclopedia. **Activity UI is Catalog Journal** (`OneWoW_Catalog`
-+ `OneWoW_CatalogData_Journal_API`, membership/difficulties from `.wow_db2`
++ `OneWoW_CatalogData_Journal_API`, membership/difficulties from `.warehouse/Sources/Wago`
 Generated Lua). A Trackers in-instance strip is a *consumer* of those IDs, not a
 second EJ. Notes is not a loot log. **Decide the key→instance map before building
 the strip.**

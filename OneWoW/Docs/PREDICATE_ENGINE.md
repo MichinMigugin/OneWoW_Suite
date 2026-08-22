@@ -278,7 +278,7 @@ Resolution is **lazy** on first read of `props.isMidnightS1` or `props.isMidnigh
 2. **Track list IDs** — identity-cached `props.bonusIDs` against generated `ns.SeasonTrackBonusListIDs[11][ordinal]` (sequence **1–8** only). Sequence 9+ crafted stamps (Voidforged `13653`/`13654`) stay on `#currentseason`, not `#midnights1`.
 3. **Tooltip label** — `EXPANSION_SEASON_NAME:format(MidnightName, ordinal)` (e.g. `Midnight Season 1`). **Gray standalone headers match** (the opposite of `#currentseason`) so leftover S1 stamps still classify.
 
-**Maintenance:** curated group IDs live in OneWoW_Workspace `bin/season_bonus_list_ids.py`. After a new Midnight season’s `ItemBonusListGroup` block appears in OneWoW_Workspace `.wow_db2`, add those groups to the mapping and run `python bin/season_bonus_list_ids.py generate` from OneWoW_Workspace. There is no DisplaySeason FK.
+**Maintenance:** curated group IDs live in OneWoW_Workspace `bin/season_bonus_list_ids.py`. After a new Midnight season’s `ItemBonusListGroup` block appears in OneWoW_Workspace `.warehouse/Sources/Wago`, add those groups to the mapping and run `python bin/season_bonus_list_ids.py generate` from OneWoW_Workspace. There is no DisplaySeason FK.
 
 **Debug:** `/petooltip` also prints `#midnights1` / `#midnights2` hits.
 

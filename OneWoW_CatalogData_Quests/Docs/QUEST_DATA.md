@@ -2,7 +2,7 @@
 
 Runtime rules for `OneWoW_CatalogData_Quests` and how static shards are built.
 Build-time source order lives in OneWoW_Workspace
-[`Docs/DATA_PIPELINE.md`](../../../Docs/DATA_PIPELINE.md).
+[`Docs/WAREHOUSE_PLAN.md`](../../../Docs/WAREHOUSE_PLAN.md).
 
 Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
@@ -10,8 +10,8 @@ Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 1. **Static shards** — `Data/QuestDB/QuestDB_*.lua` merged into
    `ns.ExternalQuestDB`. Wowhead-derived today. DB2 `QuestV2` / `QuestPOIBlob`
-   are now in `.wow_db2/`; generators that emit from them are not written yet.
-   An ATT quest dump (`.att_extract/quests`) is still missing.
+   are now in `.warehouse/Sources/Wago/`; generators that emit from them are not written yet.
+   ATT quest rows would come from `.warehouse/Sources/ATT` (not dumped as a second file).
 2. **Live scanner** — `QuestScanner` heals text, giver, and turn-in from the
    quest log / quest frame as the player plays. It does not invent quest IDs
    for the shipped DB.
@@ -45,7 +45,7 @@ OneWoW_Workspace `bin/lib/wowhead/quest_lua.py`.
 
 Quest “tracks” in Catalog are pin + chain IDs. Map blobs (`QuestPOI`,
 `QuestPOIBlob`, `QuestPOIPoint`) are listed as No in
-`.wow_db2/docs/available-data.md` and are not generated yet.
+`.warehouse/Sources/Wago/docs/available-data.md` and are not generated yet.
 
 `GetQuest` returns static ⊕ runtime SV. Display hygiene drops DNT / NYI /
 REMOVED rows.
@@ -64,13 +64,13 @@ Campaign slim set: `bin/wowhead/btw-campaign-ids.py` writes
 `bin/wowhead/data/btw-campaign-ids.json`. Pin fill:
 `bin/wowhead/fill-btw-pins.py` (never overwrites an existing pin).
 
-Wowhead cache is `.quest_extract/` (gitignored). Merge **never drops**
+Wowhead cache is `.warehouse/Sources/WowHead/quests/` (gitignored). Merge **never drops**
 existing giver/turn-in pins or text when Wowhead is blank.
 
 Intended build order once DB2 quest tables are pulled:
 
 1. DB2 IDs / flags / lines / POI
-2. ATT providers / coords (`.att_extract/quests`, not dumped yet)
+2. ATT providers / coords (`.warehouse/Sources/ATT`, not generated yet)
 3. Wowhead lore text and leftover pins
 4. Live scanner heals while playing
 
