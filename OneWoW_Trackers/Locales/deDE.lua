@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_STEP_DESC"]             = "Beschreibung:",
     ["TRACKER_TRACK_TYPE"]            = "Verfolgungstyp:",
     ["TRACKER_MAX_COUNT"]            = "Max. Anzahl:",
+    ["TRACKER_NO_MAX"]               = "Zählen ohne Zielwert",
+    ["TRACKER_NO_MAX_HINT"]          = "Zeigt eine laufende Zahl; der Schritt gilt nicht als abgeschlossen durch eine Zielzahl.",
 
     ["TRACKER_EXPORT_TITLE"]          = "Liste exportieren",
     ["TRACKER_EXPORT_HINT"]           = "Kopiere den Text unten und teile ihn:",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_NEW_STEP"]             = "Neuer Schritt",
     ["TRACKER_STEP_FALLBACK"]             = "Schritt",
     ["TRACKER_STEP_TRACK_HEADER"]             = "Wie soll dieser Schritt verfolgt werden?",
+    ["TRACKER_TRACKED_AS"]                    = "Verfolgt als: %s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. 10 Spinnen töten, Taverne besuchen, Quest abschließen...",
     ["TRACKER_WAYPOINT_SET"]             = "Wegpunkt gesetzt für %s (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]             = "Schließe zuerst die erforderlichen Schritte ab.",

@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_STEP_DESC"]              = "Description :",
     ["TRACKER_TRACK_TYPE"]             = "Type de suivi :",
     ["TRACKER_MAX_COUNT"]              = "Nombre max :",
+    ["TRACKER_NO_MAX"]                 = "Compter sans objectif",
+    ["TRACKER_NO_MAX_HINT"]            = "Affiche un compteur continu ; ne marque pas l'etape comme terminee a partir d'un nombre cible.",
 
     ["TRACKER_EXPORT_TITLE"]           = "Exporter la liste",
     ["TRACKER_EXPORT_HINT"]            = "Copiez le texte ci-dessous et partagez-le :",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_NEW_STEP"]             = "Nouvelle étape",
     ["TRACKER_STEP_FALLBACK"]             = "Étape",
     ["TRACKER_STEP_TRACK_HEADER"]             = "Comment cette étape doit-elle être suivie ?",
+    ["TRACKER_TRACKED_AS"]                    = "Suivi en tant que : %s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Tuer 10 araignées, Visiter la taverne, Terminer la quête...",
     ["TRACKER_WAYPOINT_SET"]             = "Point de passage défini pour %s (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]             = "Terminez d'abord les étapes requises.",

@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_STEP_DESC"]             = "설명:",
     ["TRACKER_TRACK_TYPE"]            = "추적 유형:",
     ["TRACKER_MAX_COUNT"]            = "최대 횟수:",
+    ["TRACKER_NO_MAX"]               = "목표 없이 횟수 세기",
+    ["TRACKER_NO_MAX_HINT"]          = "진행 횟수만 표시하며, 목표 수치로 단계를 완료하지 않습니다.",
 
     ["TRACKER_EXPORT_TITLE"]          = "목록 내보내기",
     ["TRACKER_EXPORT_HINT"]           = "아래 텍스트를 복사하여 공유하세요:",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_NEW_STEP"]             = "새 단계",
     ["TRACKER_STEP_FALLBACK"]             = "단계",
     ["TRACKER_STEP_TRACK_HEADER"]             = "이 단계를 어떻게 추적할까요?",
+    ["TRACKER_TRACKED_AS"]                    = "추적 유형: %s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "예: 거미 10마리 처치, 선술집 방문, 퀘스트 완료...",
     ["TRACKER_WAYPOINT_SET"]             = "%s (%.1f, %.1f) 경유지 설정됨",
     ["TRACKER_STEP_REQUIRES"]             = "먼저 필요한 단계를 완료하세요.",

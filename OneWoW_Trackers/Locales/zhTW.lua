@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_STEP_DESC"]             = "描述：",
     ["TRACKER_TRACK_TYPE"]            = "追蹤類型：",
     ["TRACKER_MAX_COUNT"]            = "最大數量：",
+    ["TRACKER_NO_MAX"]               = "無目標計數",
+    ["TRACKER_NO_MAX_HINT"]          = "顯示累計次數，不根據目標數字將步驟標為完成。",
 
     ["TRACKER_EXPORT_TITLE"]          = "匯出清單",
     ["TRACKER_EXPORT_HINT"]           = "複製下方文字並分享：",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_NEW_STEP"]             = "新步驟",
     ["TRACKER_STEP_FALLBACK"]             = "步驟",
     ["TRACKER_STEP_TRACK_HEADER"]             = "如何追蹤此步驟？",
+    ["TRACKER_TRACKED_AS"]                    = "追蹤為：%s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "例如：擊殺10隻蜘蛛、前往酒館、完成任務...",
     ["TRACKER_WAYPOINT_SET"]             = "已為 %s 設定路徑點 (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]             = "請先完成所需的步驟。",

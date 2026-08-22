@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRACKER_STEP_DESC"]             = "描述：",
     ["TRACKER_TRACK_TYPE"]            = "追踪类型：",
     ["TRACKER_MAX_COUNT"]            = "最大数量：",
+    ["TRACKER_NO_MAX"]               = "无目标计数",
+    ["TRACKER_NO_MAX_HINT"]          = "显示累计次数，不根据目标数字将步骤标为完成。",
 
     ["TRACKER_EXPORT_TITLE"]          = "导出列表",
     ["TRACKER_EXPORT_HINT"]           = "复制下方文本并分享：",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRACKER_NEW_STEP"]             = "新步骤",
     ["TRACKER_STEP_FALLBACK"]             = "步骤",
     ["TRACKER_STEP_TRACK_HEADER"]             = "如何追踪此步骤？",
+    ["TRACKER_TRACKED_AS"]                    = "追踪为：%s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "例如：击杀10只蜘蛛、前往酒馆、完成任务...",
     ["TRACKER_WAYPOINT_SET"]             = "已为 %s 设置路径点 (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]             = "请先完成所需的步骤。",

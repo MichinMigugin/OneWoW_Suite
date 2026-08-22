@@ -85,6 +85,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_STEP_DESC"]               = "Description:",
     ["TRACKER_TRACK_TYPE"]              = "Track Type:",
     ["TRACKER_MAX_COUNT"]               = "Max Count:",
+    ["TRACKER_NO_MAX"]                  = "Count with no target",
+    ["TRACKER_NO_MAX_HINT"]             = "Show a running count; do not mark the step complete from a target number.",
 
     ["TRACKER_EXPORT_TITLE"]            = "Export List",
     ["TRACKER_EXPORT_HINT"]             = "Copy the text below and share it:",
@@ -179,6 +181,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_NEW_STEP"]                = "New Step",
     ["TRACKER_STEP_FALLBACK"]           = "Step",
     ["TRACKER_STEP_TRACK_HEADER"]       = "How should this step be tracked?",
+    ["TRACKER_TRACKED_AS"]              = "Tracked as: %s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]   = "e.g. Kill 10 Spiders, Visit the Tavern, Complete quest...",
     ["TRACKER_WAYPOINT_SET"]            = "Waypoint set for %s (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]           = "Complete the required steps first.",

@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRACKER_STEP_DESC"]             = "Описание:",
     ["TRACKER_TRACK_TYPE"]            = "Тип отслеживания:",
     ["TRACKER_MAX_COUNT"]            = "Макс. число:",
+    ["TRACKER_NO_MAX"]               = "Счет без цели",
+    ["TRACKER_NO_MAX_HINT"]          = "Показывает текущий счет; шаг не отмечается выполненным по целевому числу.",
 
     ["TRACKER_EXPORT_TITLE"]          = "Экспорт списка",
     ["TRACKER_EXPORT_HINT"]           = "Скопируйте текст ниже и поделитесь им:",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRACKER_NEW_STEP"]             = "Новый шаг",
     ["TRACKER_STEP_FALLBACK"]             = "Шаг",
     ["TRACKER_STEP_TRACK_HEADER"]             = "Как отслеживать этот шаг?",
+    ["TRACKER_TRACKED_AS"]                    = "Отслеживается как: %s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Убить 10 пауков, Посетить таверну, Выполнить задание...",
     ["TRACKER_WAYPOINT_SET"]             = "Маршрутная точка установлена для %s (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]             = "Сначала выполните требуемые шаги.",

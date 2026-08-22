@@ -38,6 +38,7 @@ Locales\itIT.lua
 Core\Database.lua
 Core\API.lua
 Core\TrackerData.lua
+Core\TrackerTypeSchema.lua
 Core\Resets.lua
 ImportExport\Serialize.lua
 ImportExport\Markup.lua

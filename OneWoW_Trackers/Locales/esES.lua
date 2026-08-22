@@ -82,6 +82,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["TRACKER_STEP_DESC"]             = "Descripción:",
     ["TRACKER_TRACK_TYPE"]            = "Tipo de seguimiento:",
     ["TRACKER_MAX_COUNT"]            = "Cantidad máx.:",
+    ["TRACKER_NO_MAX"]               = "Contar sin objetivo",
+    ["TRACKER_NO_MAX_HINT"]          = "Muestra un recuento continuo; no marca el paso como completado por un numero objetivo.",
 
     ["TRACKER_EXPORT_TITLE"]          = "Exportar lista",
     ["TRACKER_EXPORT_HINT"]           = "Copia el texto de abajo y compártelo:",
@@ -176,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["TRACKER_NEW_STEP"]             = "Nuevo paso",
     ["TRACKER_STEP_FALLBACK"]             = "Paso",
     ["TRACKER_STEP_TRACK_HEADER"]             = "¿Cómo debe rastrearse este paso?",
+    ["TRACKER_TRACKED_AS"]                    = "Rastreado como: %s",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Matar 10 arañas, Visitar la taberna, Completar misión...",
     ["TRACKER_WAYPOINT_SET"]             = "Punto de ruta establecido para %s (%.1f, %.1f)",
     ["TRACKER_STEP_REQUIRES"]             = "Completa primero los pasos requeridos.",

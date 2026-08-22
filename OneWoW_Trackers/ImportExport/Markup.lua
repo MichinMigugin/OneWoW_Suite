@@ -9,6 +9,7 @@ local _, ns = ...
 -- ============================================================================
 
 local TD = ns.TrackerData
+local Schema = ns.TrackerTypeSchema
 
 local ipairs, tonumber = ipairs, tonumber
 local tinsert, wipe = tinsert, wipe
@@ -118,81 +119,7 @@ function TD:ParseMarkup(text, opts)
                 }
 
                 if paramStr then
-                    local parts = { strsplit(":", paramStr) }
-                    if objType == "quest" or objType == "quest_account" or objType == "quest_active" or objType == "rare_quest" then
-                        obj.params.questID = tonumber(parts[1])
-                    elseif objType == "quest_pool" or objType == "quest_pool_account" then
-                        local ids = {}
-                        if parts[1] then
-                            for id in parts[1]:gmatch("(%d+)") do
-                                tinsert(ids, tonumber(id))
-                            end
-                        end
-                        obj.params.questIDs = ids
-                        obj.params.pick = tonumber(parts[2]) or #ids
-                    elseif objType == "quest_progress" then
-                        obj.params.questID = tonumber(parts[1])
-                        obj.params.objectiveIndex = tonumber(parts[2]) or 1
-                    elseif objType == "campaign" then
-                        obj.params.campaignID = tonumber(parts[1])
-                    elseif objType == "quest_world" then
-                        obj.params.questID = tonumber(parts[1])
-                    elseif objType == "level" then
-                        obj.params.level = tonumber(parts[1])
-                    elseif objType == "item" then
-                        obj.params.itemID = tonumber(parts[1])
-                        obj.params.count = tonumber(parts[2]) or 1
-                    elseif objType == "currency" then
-                        obj.params.currencyID = tonumber(parts[1])
-                        obj.params.amount = tonumber(parts[2]) or 1
-                    elseif objType == "achievement" then
-                        obj.params.achievementID = tonumber(parts[1])
-                    elseif objType == "reputation" then
-                        obj.params.factionID = tonumber(parts[1])
-                        obj.params.standing = tonumber(parts[2]) or 6
-                    elseif objType == "renown" then
-                        obj.params.factionID = tonumber(parts[1])
-                        obj.params.level = tonumber(parts[2]) or 1
-                    elseif objType == "spell_known" then
-                        obj.params.spellID = tonumber(parts[1])
-                    elseif objType == "ilvl" then
-                        obj.params.ilvl = tonumber(parts[1])
-                    elseif objType == "location" then
-                        obj.params.mapID = tonumber(parts[1])
-                    elseif objType == "coordinates" then
-                        obj.params.mapID = tonumber(parts[1])
-                        obj.params.x = tonumber(parts[2])
-                        obj.params.y = tonumber(parts[3])
-                        obj.params.radius = tonumber(parts[4]) or 15
-                    elseif objType == "npc_interact" then
-                        obj.params.npcID = tonumber(parts[1])
-                    elseif objType == "toy" then
-                        obj.params.itemID = tonumber(parts[1])
-                    elseif objType == "mount" then
-                        obj.params.mountID = tonumber(parts[1])
-                    elseif objType == "pet" then
-                        obj.params.speciesID = tonumber(parts[1])
-                    elseif objType == "transmog" then
-                        obj.params.itemModifiedAppearanceID = tonumber(parts[1])
-                    elseif objType == "exploration" then
-                        obj.params.areaID = tonumber(parts[1])
-                    elseif objType == "loot_item" then
-                        obj.params.itemID = tonumber(parts[1])
-                    elseif objType == "vault_raid" then
-                        obj.params = {}
-                    elseif objType == "vault_dungeon" then
-                        obj.params = {}
-                    elseif objType == "vault_world" then
-                        obj.params = {}
-                    elseif objType == "prof_skill" then
-                        obj.params.baseSkillLineID = tonumber(parts[1])
-                    elseif objType == "prof_concentration" then
-                        obj.params.currencyID = tonumber(parts[1])
-                    elseif objType == "prof_knowledge" then
-                        obj.params.skillLineVariantID = tonumber(parts[1])
-                    elseif objType == "custom_timer" then
-                        obj.params.interval = tonumber(parts[1]) or 3600
-                    end
+                    obj.params = Schema.ParseParams(obj.type, paramStr)
                 end
 
                 tinsert(currentStep.objectives, obj)

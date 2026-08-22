@@ -3,6 +3,7 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 local Location = OneWoW.Location
+local Schema = ns.TrackerTypeSchema
 
 ns.TrackerEditor = {}
 local TE_UI = ns.TrackerEditor
@@ -164,6 +165,106 @@ local function CreateDropdown(parent, width, height)
     return dropdown
 end
 
+local FIELD_ROW_INNER = 590
+local FIELD_ROW_GAP = 20
+local FIELD_ROW_H = 38
+local SAVE_ROW_H = 26
+
+--- Editbox or dropdown from a schema field descriptor. Dropdowns exist so later
+--- picker phases can drop in without rewriting the card loop.
+local function CreateFieldWidget(parent, field, existingVal, isNew)
+    if field.widgetType == "dropdown" then
+        local dd = CreateDropdown(parent, field.width or 160, 22)
+        local opts = field.options
+        if type(opts) == "function" then opts = opts() end
+        dd:SetOptions(opts or {})
+        if existingVal ~= nil then
+            dd:SetSelected(existingVal)
+        elseif isNew and field.default ~= nil then
+            dd:SetSelected(field.default)
+        end
+        return dd
+    end
+
+    local fbox = OneWoW_GUI:CreateEditBox(parent, {
+        width = field.width or 120,
+        height = 22,
+        placeholderText = field.hintKey and L[field.hintKey] or nil,
+        maxLetters = field.maxLetters or 12,
+    })
+    if existingVal ~= nil then
+        if field.isList and type(existingVal) == "table" then
+            local parts = {}
+            for _, v in ipairs(existingVal) do
+                tinsert(parts, tostring(v))
+            end
+            fbox:SetText(table.concat(parts, ", "))
+        else
+            fbox:SetText(tostring(existingVal))
+        end
+    elseif isNew and field.default ~= nil then
+        fbox:SetText(tostring(field.default))
+    end
+    return fbox
+end
+
+local function ReadFieldWidget(widget, field)
+    if not widget then return nil end
+    if field.widgetType == "dropdown" then
+        return widget:GetValue()
+    end
+    local val = strtrim(widget:GetText() or "")
+    if val == "" then return nil end
+    if field.isList then
+        local list = {}
+        for part in val:gmatch("[^,%s]+") do
+            local n = tonumber(part)
+            if n then tinsert(list, n) end
+        end
+        return #list > 0 and list or nil
+    end
+    return tonumber(val) or val
+end
+
+--- Explicit max box wins; otherwise derive from type params (item count, pool pick, ...).
+local function ReadStepCount(dialog, trackType, trackParams)
+    if dialog._noMaxCheck:GetChecked() then
+        return 0, true
+    end
+    local explicit = tonumber(strtrim(dialog._maxBox:GetText() or ""))
+    if explicit then
+        return explicit, false
+    end
+    local max = 1
+    if trackType == "item" then
+        max = tonumber(trackParams and trackParams.count) or 1
+    elseif trackType == "quest_pool" or trackType == "quest_pool_account" then
+        max = tonumber(trackParams and trackParams.pick) or 1
+    elseif trackParams then
+        if trackParams.amount then
+            max = tonumber(trackParams.amount) or 1
+        elseif trackParams.level then
+            max = tonumber(trackParams.level) or 1
+        elseif trackParams.ilvl then
+            max = tonumber(trackParams.ilvl) or 1
+        elseif trackParams.standing then
+            max = tonumber(trackParams.standing) or 1
+        end
+    end
+    return max, false
+end
+
+local function ApplySharedStepFields(dialog, changes)
+    local resetVal = dialog._resetDD:GetValue()
+    changes.optional = not dialog._trackCheck:GetChecked()
+    changes.rosterMode = dialog._rosterCheck:GetChecked() and true or false
+    changes.resetOverride = (resetVal and resetVal ~= "none") and resetVal or false
+    changes.userNote = strtrim(dialog._notesBox:GetText() or "")
+    local max, noMax = ReadStepCount(dialog, changes.trackType, changes.trackParams)
+    changes.max = max
+    changes.noMax = noMax
+end
+
 local function HoursFromInterval(seconds)
     local n = tonumber(seconds)
     if not n or n <= 0 then return DEFAULT_REPEAT_HOURS end
@@ -320,79 +421,20 @@ local QUICK_START = {
     },
 }
 
+-- Presentation-only. Param widgets come from Schema.GetFields(trackType).
 local STEP_CATEGORIES = {
-    {
-        key = "checkbox",
-        titleKey = "TRACKER_SC_CHECKBOX_TITLE",
-        descKey = "TRACKER_SC_CHECKBOX_DESC",
-        trackType = "manual",
-        fields = {},
-    },
-    {
-        key = "quest",
-        titleKey = "TRACKER_SC_QUEST_TITLE",
-        descKey = "TRACKER_SC_QUEST_DESC",
-        trackType = "quest",
-        fields = { { key = "questID", labelKey = "TRACKER_FL_QUEST_ID", hintKey = "TRACKER_FH_QUEST_ID", width = 160 } },
-    },
-    {
-        key = "quest_pool",
-        titleKey = "TRACKER_SC_QUEST_POOL_TITLE",
-        descKey = "TRACKER_SC_QUEST_POOL_DESC",
-        trackType = "quest_pool",
-        fields = {
-            { key = "questIDs", labelKey = "TRACKER_FL_QUEST_IDS", hintKey = "TRACKER_FH_QUEST_IDS", width = 320, isList = true, maxLetters = 400 },
-            { key = "pick",     labelKey = "TRACKER_FL_PICK",      hintKey = "TRACKER_FH_PICK",      width = 80,  default = "1" },
-        },
-    },
-    {
-        key = "quest_pool_account",
-        titleKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_TITLE",
-        descKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_DESC",
-        trackType = "quest_pool_account",
-        fields = {
-            { key = "questIDs", labelKey = "TRACKER_FL_QUEST_IDS", hintKey = "TRACKER_FH_QUEST_IDS", width = 320, isList = true, maxLetters = 400 },
-            { key = "pick",     labelKey = "TRACKER_FL_PICK",      hintKey = "TRACKER_FH_PICK",      width = 80,  default = "1" },
-        },
-    },
-    {
-        key = "item",
-        titleKey = "TRACKER_SC_ITEM_TITLE",
-        descKey = "TRACKER_SC_ITEM_DESC",
-        trackType = "item",
-        fields = {
-            { key = "itemID", labelKey = "TRACKER_FL_ITEM_ID", hintKey = "TRACKER_FH_ITEM_ID", width = 160 },
-            { key = "count",  labelKey = "TRACKER_FL_COUNT",   hintKey = "TRACKER_FH_COUNT",   width = 80 },
-        },
-    },
-    {
-        key = "currency",
-        titleKey = "TRACKER_SC_CURRENCY_TITLE",
-        descKey = "TRACKER_SC_CURRENCY_DESC",
-        trackType = "currency",
-        fields = {
-            { key = "currencyID", labelKey = "TRACKER_FL_CURRENCY_ID", hintKey = "TRACKER_FH_CURRENCY_ID", width = 160 },
-            { key = "amount",     labelKey = "TRACKER_FL_AMOUNT",      hintKey = "TRACKER_FH_AMOUNT",      width = 100 },
-        },
-    },
-    {
-        key = "achievement",
-        titleKey = "TRACKER_SC_ACHIEVEMENT_TITLE",
-        descKey = "TRACKER_SC_ACHIEVEMENT_DESC",
-        trackType = "achievement",
-        fields = { { key = "achievementID", labelKey = "TRACKER_FL_ACHIEVEMENT_ID", hintKey = "TRACKER_FH_ACHIEVEMENT_ID", width = 160 } },
-    },
+    { key = "checkbox",            titleKey = "TRACKER_SC_CHECKBOX_TITLE",            descKey = "TRACKER_SC_CHECKBOX_DESC",            trackType = "manual" },
+    { key = "quest",               titleKey = "TRACKER_SC_QUEST_TITLE",               descKey = "TRACKER_SC_QUEST_DESC",               trackType = "quest" },
+    { key = "quest_pool",          titleKey = "TRACKER_SC_QUEST_POOL_TITLE",          descKey = "TRACKER_SC_QUEST_POOL_DESC",          trackType = "quest_pool" },
+    { key = "quest_pool_account",  titleKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_TITLE",  descKey = "TRACKER_SC_QUEST_POOL_ACCOUNT_DESC",  trackType = "quest_pool_account" },
+    { key = "item",                titleKey = "TRACKER_SC_ITEM_TITLE",                descKey = "TRACKER_SC_ITEM_DESC",                trackType = "item" },
+    { key = "currency",            titleKey = "TRACKER_SC_CURRENCY_TITLE",            descKey = "TRACKER_SC_CURRENCY_DESC",            trackType = "currency" },
+    { key = "achievement",         titleKey = "TRACKER_SC_ACHIEVEMENT_TITLE",         descKey = "TRACKER_SC_ACHIEVEMENT_DESC",         trackType = "achievement" },
     {
         key = "coordinates",
         titleKey = "TRACKER_SC_COORD_TITLE",
         descKey = "TRACKER_SC_COORD_DESC",
         trackType = "coordinates",
-        fields = {
-            { key = "mapID",  labelKey = "TRACKER_FL_MAP_ID", hintKey = "TRACKER_FH_MAP_ID", width = 100 },
-            { key = "x",      labelKey = "TRACKER_FL_X",      hintKey = "TRACKER_FH_XY",     width = 60 },
-            { key = "y",      labelKey = "TRACKER_FL_Y",      hintKey = "TRACKER_FH_XY",     width = 60 },
-            { key = "radius", labelKey = "TRACKER_FL_RANGE",  hintKey = "TRACKER_FH_RANGE",  width = 50, default = "15" },
-        },
         fillKey = "TRACKER_FILL_FROM_POSITION",
         onFill = function(card) FillCoordsFromPosition(card) end,
     },
@@ -401,7 +443,6 @@ local STEP_CATEGORIES = {
         titleKey = "TRACKER_SC_NPC_TITLE",
         descKey = "TRACKER_SC_NPC_DESC",
         trackType = "npc_interact",
-        fields = { { key = "npcID", labelKey = "TRACKER_FL_NPC_ID", hintKey = "TRACKER_FH_NPC_ID", width = 160 } },
         fillKey = "TRACKER_FILL_FROM_TARGET",
         onFill = function(card) FillCreatureFromTarget(card, "npcID") end,
     },
@@ -410,7 +451,6 @@ local STEP_CATEGORIES = {
         titleKey = "TRACKER_SC_INSTANCE_TITLE",
         descKey = "TRACKER_SC_INSTANCE_DESC",
         trackType = "enter_instance",
-        fields = { { key = "instanceID", labelKey = "TRACKER_FL_INSTANCE_ID", hintKey = "TRACKER_FH_INSTANCE_ID", width = 160 } },
         fillKey = "TRACKER_FILL_FROM_INSTANCE",
         onFill = function(card) FillInstanceFromCurrent(card) end,
     },
@@ -419,80 +459,26 @@ local STEP_CATEGORIES = {
         titleKey = "TRACKER_SC_KILL_TITLE",
         descKey = "TRACKER_SC_KILL_DESC",
         trackType = "kill_creature",
-        fields = { { key = "creatureID", labelKey = "TRACKER_FL_CREATURE_ID", hintKey = "TRACKER_FH_CREATURE_ID", width = 160 } },
         fillKey = "TRACKER_FILL_FROM_TARGET",
         onFill = function(card) FillCreatureFromTarget(card, "creatureID") end,
     },
-    {
-        key = "mount",
-        titleKey = "TRACKER_SC_MOUNT_TITLE",
-        descKey = "TRACKER_SC_MOUNT_DESC",
-        trackType = "mount",
-        fields = { { key = "mountID", labelKey = "TRACKER_FL_MOUNT_ID", hintKey = "TRACKER_FH_MOUNT_ID", width = 160 } },
-    },
-    {
-        key = "pet",
-        titleKey = "TRACKER_SC_PET_TITLE",
-        descKey = "TRACKER_SC_PET_DESC",
-        trackType = "pet",
-        fields = { { key = "speciesID", labelKey = "TRACKER_FL_SPECIES_ID", hintKey = "TRACKER_FH_SPECIES_ID", width = 160 } },
-    },
-    {
-        key = "toy",
-        titleKey = "TRACKER_SC_TOY_TITLE",
-        descKey = "TRACKER_SC_TOY_DESC",
-        trackType = "toy",
-        fields = { { key = "itemID", labelKey = "TRACKER_FL_TOY_ITEM_ID", hintKey = "TRACKER_FH_TOY_ITEM_ID", width = 160 } },
-    },
-    {
-        key = "transmog",
-        titleKey = "TRACKER_SC_TRANSMOG_TITLE",
-        descKey = "TRACKER_SC_TRANSMOG_DESC",
-        trackType = "transmog",
-        fields = { { key = "itemModifiedAppearanceID", labelKey = "TRACKER_FL_APPEARANCE_ID", hintKey = "TRACKER_FH_APPEARANCE_ID", width = 160 } },
-    },
-    {
-        key = "reputation",
-        titleKey = "TRACKER_SC_REP_TITLE",
-        descKey = "TRACKER_SC_REP_DESC",
-        trackType = "reputation",
-        fields = {
-            { key = "factionID", labelKey = "TRACKER_FL_FACTION_ID", hintKey = "TRACKER_FH_FACTION_ID", width = 160 },
-            { key = "standing",  labelKey = "TRACKER_FL_STANDING",    hintKey = "TRACKER_FH_STANDING",    width = 60 },
-        },
-    },
-    {
-        key = "renown",
-        titleKey = "TRACKER_SC_RENOWN_TITLE",
-        descKey = "TRACKER_SC_RENOWN_DESC",
-        trackType = "renown",
-        fields = {
-            { key = "factionID", labelKey = "TRACKER_FL_FACTION_ID",     hintKey = "TRACKER_FH_FACTION_ID",     width = 160 },
-            { key = "level",     labelKey = "TRACKER_FL_RENOWN_LEVEL",   hintKey = "TRACKER_FH_RENOWN_LEVEL",   width = 60 },
-        },
-    },
-    {
-        key = "level",
-        titleKey = "TRACKER_SC_LEVEL_TITLE",
-        descKey = "TRACKER_SC_LEVEL_DESC",
-        trackType = "level",
-        fields = { { key = "level", labelKey = "TRACKER_FL_LEVEL", hintKey = "TRACKER_FH_LEVEL", width = 60 } },
-    },
-    {
-        key = "ilvl",
-        titleKey = "TRACKER_SC_ILVL_TITLE",
-        descKey = "TRACKER_SC_ILVL_DESC",
-        trackType = "ilvl",
-        fields = { { key = "ilvl", labelKey = "TRACKER_FL_ILVL", hintKey = "TRACKER_FH_ILVL", width = 80 } },
-    },
-    {
-        key = "spell_known",
-        titleKey = "TRACKER_SC_SPELL_TITLE",
-        descKey = "TRACKER_SC_SPELL_DESC",
-        trackType = "spell_known",
-        fields = { { key = "spellID", labelKey = "TRACKER_FL_SPELL_ID", hintKey = "TRACKER_FH_SPELL_ID", width = 160 } },
-    },
+    { key = "mount",       titleKey = "TRACKER_SC_MOUNT_TITLE",    descKey = "TRACKER_SC_MOUNT_DESC",    trackType = "mount" },
+    { key = "pet",         titleKey = "TRACKER_SC_PET_TITLE",      descKey = "TRACKER_SC_PET_DESC",      trackType = "pet" },
+    { key = "toy",         titleKey = "TRACKER_SC_TOY_TITLE",      descKey = "TRACKER_SC_TOY_DESC",      trackType = "toy" },
+    { key = "transmog",    titleKey = "TRACKER_SC_TRANSMOG_TITLE", descKey = "TRACKER_SC_TRANSMOG_DESC", trackType = "transmog" },
+    { key = "reputation",  titleKey = "TRACKER_SC_REP_TITLE",      descKey = "TRACKER_SC_REP_DESC",      trackType = "reputation" },
+    { key = "renown",      titleKey = "TRACKER_SC_RENOWN_TITLE",   descKey = "TRACKER_SC_RENOWN_DESC",   trackType = "renown" },
+    { key = "level",       titleKey = "TRACKER_SC_LEVEL_TITLE",    descKey = "TRACKER_SC_LEVEL_DESC",    trackType = "level" },
+    { key = "ilvl",        titleKey = "TRACKER_SC_ILVL_TITLE",     descKey = "TRACKER_SC_ILVL_DESC",     trackType = "ilvl" },
+    { key = "spell_known", titleKey = "TRACKER_SC_SPELL_TITLE",    descKey = "TRACKER_SC_SPELL_DESC",    trackType = "spell_known" },
 }
+
+local function HasTypeCard(trackType)
+    for _, cat in ipairs(STEP_CATEGORIES) do
+        if cat.trackType == trackType then return true end
+    end
+    return false
+end
 
 local WIZARD_CARD_H = 60
 local WIZARD_CARD_PAD = 12
@@ -965,7 +951,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         name = "TrackerStepWizard",
         title = isEdit and L["TRACKER_EDIT_STEP"] or L["TRACKER_ADD_STEP"],
         width = 650,
-        height = 720,
+        height = 780,
         destroyOnClose = true,
         buttons = {
             {
@@ -979,20 +965,18 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     end
                     local stepName = strtrim(frame._nameBox:GetText() or "")
                     if stepName == "" then stepName = existing and existing.label or L["TRACKER_NEW_STEP"] end
-                    local resetVal3 = frame._resetDD:GetValue()
-                    local changes = {
-                        label = stepName,
-                        optional = not frame._trackCheck:GetChecked(),
-                        rosterMode = frame._rosterCheck:GetChecked() and true or false,
-                        resetOverride = (resetVal3 and resetVal3 ~= "none") and resetVal3 or false,
-                        userNote = strtrim(frame._notesBox:GetText() or ""),
-                    }
+                    local changes = { label = stepName }
                     if isEdit then
-                        TD:UpdateStep(listID, sectionKey, stepKey, changes)
+                        changes.trackType = existing.trackType
+                        changes.trackParams = existing.trackParams
                     else
                         changes.trackType = "manual"
                         changes.trackParams = {}
-                        changes.max = 1
+                    end
+                    ApplySharedStepFields(frame, changes)
+                    if isEdit then
+                        TD:UpdateStep(listID, sectionKey, stepKey, changes)
+                    else
                         TD:AddStep(listID, sectionKey, changes)
                     end
                     frame:Hide(); frame:SetParent(nil)
@@ -1054,8 +1038,50 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
 
+    local maxLabel = OneWoW_GUI:CreateFS(content, 10)
+    maxLabel:SetPoint("TOPLEFT", resetLabel, "TOPLEFT", 0, -36)
+    maxLabel:SetText(L["TRACKER_MAX_COUNT"])
+    maxLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local maxBox = OneWoW_GUI:CreateEditBox(content, {
+        width = 70,
+        height = 26,
+        maxLetters = 6,
+    })
+    maxBox:SetPoint("LEFT", maxLabel, "RIGHT", 8, 0)
+    maxBox:SetNumeric(true)
+    dialog._maxBox = maxBox
+
+    local noMaxCheck = OneWoW_GUI:CreateCheckbox(content, {
+        label = L["TRACKER_NO_MAX"],
+        onClick = function(myself)
+            if myself:GetChecked() then
+                maxBox:Disable()
+            else
+                maxBox:Enable()
+            end
+        end,
+    })
+    noMaxCheck:SetPoint("LEFT", maxBox, "RIGHT", 16, 0)
+    dialog._noMaxCheck = noMaxCheck
+
+    local maxHint = OneWoW_GUI:CreateFS(content, 10)
+    maxHint:SetPoint("TOPLEFT", maxLabel, "BOTTOMLEFT", 0, -2)
+    maxHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    maxHint:SetJustifyH("LEFT")
+    maxHint:SetWordWrap(true)
+    maxHint:SetText(L["TRACKER_NO_MAX_HINT"])
+    maxHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    if existing and existing.noMax then
+        noMaxCheck:SetChecked(true)
+        maxBox:Disable()
+    elseif existing and existing.max then
+        maxBox:SetText(tostring(existing.max))
+    end
+
     local notesLabel = OneWoW_GUI:CreateFS(content, 10)
-    notesLabel:SetPoint("TOPLEFT", resetLabel, "TOPLEFT", 0, -36)
+    notesLabel:SetPoint("TOPLEFT", maxHint, "BOTTOMLEFT", 0, -8)
     notesLabel:SetText(L["TRACKER_NOTES_LABEL"])
     notesLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -1074,8 +1100,17 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     typeHeader:SetText(L["TRACKER_STEP_TRACK_HEADER"])
     typeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
+    local scrollAnchor = typeHeader
+    if existing and not HasTypeCard(existing.trackType) then
+        local trackedFS = OneWoW_GUI:CreateFS(content, 10)
+        trackedFS:SetPoint("TOPLEFT", typeHeader, "BOTTOMLEFT", 0, -2)
+        trackedFS:SetText(format(L["TRACKER_TRACKED_AS"], TE:GetTrackTypeDisplayName(existing.trackType)))
+        trackedFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        scrollAnchor = trackedFS
+    end
+
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(content, {})
-    scrollFrame:SetPoint("TOPLEFT", typeHeader, "BOTTOMLEFT", 0, -6)
+    scrollFrame:SetPoint("TOPLEFT", scrollAnchor, "BOTTOMLEFT", 0, -6)
     scrollFrame:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -6, 4)
 
     local allCards = {}
@@ -1094,7 +1129,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
     local function CollapseAllExcept(keepCard)
         for _, c in ipairs(allCards) do
-            if c ~= keepCard and c._expanded and c._cat and #c._cat.fields > 0 then
+            if c ~= keepCard and c._expanded and c._cat and #(Schema.GetFields(c._cat.trackType)) > 0 then
                 c._expanded = false
                 if c._fieldRow then c._fieldRow:Hide() end
                 if c._saveFieldBtn then c._saveFieldBtn:Hide() end
@@ -1111,6 +1146,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
     for _, cat in ipairs(STEP_CATEGORIES) do
         local isActive = existing and existing.trackType == cat.trackType
+        local fields = Schema.GetFields(cat.trackType)
 
         local card = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
         card:SetBackdrop(BACKDROP_SIMPLE)
@@ -1147,57 +1183,46 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         card._descHeight = descHeight
         card._titleFS = titleFS
 
-        if #cat.fields > 0 then
+        if #fields > 0 then
             local fieldY = -(cardHeight)
             local fieldRow = CreateFrame("Frame", nil, card)
             fieldRow:SetPoint("TOPLEFT", card, "TOPLEFT", 10, fieldY)
             fieldRow:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, fieldY)
-            fieldRow:SetHeight(30)
+            fieldRow:SetHeight(FIELD_ROW_H)
             card._fieldRow = fieldRow
 
             local saveFieldBtn = OneWoW_GUI:CreateFitTextButton(card, { text = isEdit and SAVE or L["TRACKER_ADD_STEP"], height = 22 })
             card._saveFieldBtn = saveFieldBtn
 
-            local fx = 0
-            for _, field in ipairs(cat.fields) do
+            local fx, fy = 0, 0
+            local isNew = not existing
+            for _, field in ipairs(fields) do
+                local w = field.width or 120
+                if fx > 0 and fx + w > FIELD_ROW_INNER then
+                    fx = 0
+                    fy = fy - FIELD_ROW_H
+                end
+
                 local flbl = OneWoW_GUI:CreateFS(fieldRow, 10)
-                flbl:SetPoint("TOPLEFT", fieldRow, "TOPLEFT", fx, 0)
+                flbl:SetPoint("TOPLEFT", fieldRow, "TOPLEFT", fx, fy)
                 flbl:SetText(L[field.labelKey] .. ":")
                 flbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-                local fbox = OneWoW_GUI:CreateEditBox(fieldRow, {
-                    width = field.width or 120,
-                    height = 22,
-                    placeholderText = L[field.hintKey],
-                    maxLetters = field.maxLetters or 12,
-                })
-                fbox:SetPoint("TOPLEFT", flbl, "BOTTOMLEFT", 0, -1)
-                fbox._fieldKey = field.key
-
+                local existingVal
                 if existing and existing.trackParams and existing.trackType == cat.trackType then
-                    local val = existing.trackParams[field.key]
-                    if val ~= nil then
-                        if field.isList and type(val) == "table" then
-                            local parts = {}
-                            for _, v in ipairs(val) do
-                                tinsert(parts, tostring(v))
-                            end
-                            fbox:SetText(table.concat(parts, ", "))
-                        else
-                            fbox:SetText(tostring(val))
-                        end
-                    end
+                    existingVal = existing.trackParams[field.key]
                 end
-                if not existing and field.default then
-                    fbox:SetText(field.default)
-                end
-
-                card["_field_" .. field.key] = fbox
-                fx = fx + (field.width or 120) + 20
+                local widget = CreateFieldWidget(fieldRow, field, existingVal, isNew)
+                widget:SetPoint("TOPLEFT", flbl, "BOTTOMLEFT", 0, -1)
+                widget._fieldKey = field.key
+                card["_field_" .. field.key] = widget
+                fx = fx + w + FIELD_ROW_GAP
             end
+            fieldRow:SetHeight(-fy + FIELD_ROW_H)
 
             saveFieldBtn:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, -4)
-            local expandedHeight = cardHeight + 42 + 30
+            local expandedHeight = cardHeight + fieldRow:GetHeight() + SAVE_ROW_H
+            card._expandedHeight = expandedHeight
 
             local fillBtn
             if cat.onFill then
@@ -1233,65 +1258,24 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 if stepName == "" then stepName = L[cat.titleKey] end
 
                 local trackParams = {}
-                for _, field in ipairs(cat.fields) do
-                    local w = card["_field_" .. field.key]
-                    if w then
-                        local val = strtrim(w:GetText() or "")
-                        if val ~= "" then
-                            if field.isList then
-                                local list = {}
-                                for part in val:gmatch("[^,%s]+") do
-                                    local n = tonumber(part)
-                                    if n then tinsert(list, n) end
-                                end
-                                if #list > 0 then
-                                    trackParams[field.key] = list
-                                end
-                            else
-                                trackParams[field.key] = tonumber(val) or val
-                            end
-                        end
-                    end
-                end
-
                 local hasRequired = true
-                for _, field in ipairs(cat.fields) do
-                    if not field.default then
-                        local w = card["_field_" .. field.key]
-                        if w then
-                            local val = strtrim(w:GetText() or "")
-                            if val == "" then hasRequired = false; break end
-                        end
+                for _, field in ipairs(fields) do
+                    local w = card["_field_" .. field.key]
+                    local val = ReadFieldWidget(w, field)
+                    if val ~= nil then
+                        trackParams[field.key] = val
+                    elseif not field.default then
+                        hasRequired = false
                     end
                 end
                 if not hasRequired then return end
 
-                local max = 1
-                if cat.trackType == "item" then
-                    max = tonumber(trackParams.count) or 1
-                elseif cat.trackType == "quest_pool" or cat.trackType == "quest_pool_account" then
-                    max = tonumber(trackParams.pick) or 1
-                elseif trackParams.amount then
-                    max = tonumber(trackParams.amount) or 1
-                elseif trackParams.level then
-                    max = tonumber(trackParams.level) or 1
-                elseif trackParams.ilvl then
-                    max = tonumber(trackParams.ilvl) or 1
-                elseif trackParams.standing then
-                    max = tonumber(trackParams.standing) or 1
-                end
-
-                local resetVal = dialog._resetDD:GetValue()
                 local changes = {
                     label = stepName,
                     trackType = cat.trackType,
                     trackParams = trackParams,
-                    max = max,
-                    optional = not dialog._trackCheck:GetChecked(),
-                    rosterMode = dialog._rosterCheck:GetChecked() and true or false,
-                    resetOverride = (resetVal and resetVal ~= "none") and resetVal or false,
-                    userNote = strtrim(dialog._notesBox:GetText() or ""),
                 }
+                ApplySharedStepFields(dialog, changes)
 
                 if cat.trackType == "coordinates" then
                     changes.mapID = trackParams.mapID
@@ -1317,21 +1301,16 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         card._expanded = isActive
 
         card:SetScript("OnClick", function(myself)
-            if #cat.fields == 0 then
+            if #fields == 0 then
                 local stepName = strtrim(nameBox:GetText() or "")
                 if stepName == "" then stepName = L[cat.titleKey] end
 
-                local resetVal2 = dialog._resetDD:GetValue()
                 local changes = {
                     label = stepName,
                     trackType = cat.trackType,
                     trackParams = {},
-                    max = 1,
-                    optional = not dialog._trackCheck:GetChecked(),
-                    rosterMode = dialog._rosterCheck:GetChecked() and true or false,
-                    resetOverride = (resetVal2 and resetVal2 ~= "none") and resetVal2 or false,
-                    userNote = strtrim(dialog._notesBox:GetText() or ""),
                 }
+                ApplySharedStepFields(dialog, changes)
 
                 if isEdit then
                     TD:UpdateStep(listID, sectionKey, stepKey, changes)
@@ -1352,8 +1331,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 if myself._saveFieldBtn then myself._saveFieldBtn:Show() end
                 if myself._fillBtn then myself._fillBtn:Show() end
                 if myself._titleBtn then myself._titleBtn:Show() end
-                local newH = 28 + (descHeight) + 8 + 42 + 30
-                myself:SetHeight(newH)
+                myself:SetHeight(myself._expandedHeight or (28 + descHeight + 8 + FIELD_ROW_H + SAVE_ROW_H))
                 myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
