@@ -22,6 +22,9 @@ local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
 local DEFAULT_REPEAT_HOURS = 24
 local LIST_FORM_HEIGHT = 376
 local LIST_FORM_HEIGHT_REPEAT = 426
+local TYPE_LIST_H = 300
+local STEP_EDITOR_HEIGHT = 700
+local stepEditorCollapsed = {}
 
 local function MakeLabel(parent, text, x, y)
     local fs = OneWoW_GUI:CreateFS(parent, 10)
@@ -110,6 +113,8 @@ local function CreateDialog(config)
         width = config.width or 500,
         height = config.height or 400,
         showBrand = true,
+        showScrollFrame = config.showScrollFrame,
+        relayout = config.relayout,
         buttons = config.buttons,
         onClose = function()
             if config.onClose then config.onClose() end
@@ -120,7 +125,8 @@ local function CreateDialog(config)
     })
 
     local frame = result.frame
-    frame.content = result.contentFrame
+    frame.content = result.scrollContent or result.contentFrame
+    frame.scrollFrame = result.scrollFrame
     dialogCache[dialogName] = frame
     frame:HookScript("OnHide", function()
         OneWoW_GUI:CloseAttachFilterMenu()
@@ -132,6 +138,58 @@ local function CreateDialog(config)
     end)
     frame:Hide()
     return frame
+end
+
+local function IsStepCardCollapsed(key, existing)
+    if stepEditorCollapsed[key] ~= nil then
+        return stepEditorCollapsed[key]
+    end
+    if key == "tracking" then
+        return false
+    end
+    if not existing then
+        return true
+    end
+    if key == "gates" then
+        local req = existing.requiresSteps
+        return not ((existing.faction and existing.faction ~= "both")
+            or existing.professionRequired
+            or existing.eventRequired
+            or (req and #req > 0))
+    end
+    if key == "notes" then
+        local note = existing.userNote
+        local desc = existing.description
+        return not ((note and note ~= "") or (desc and desc ~= ""))
+    end
+    if key == "waypoint" then
+        return not existing.mapID
+    end
+    if key == "objectives" then
+        local objs = existing.objectives
+        return not (objs and #objs > 0)
+    end
+    return false
+end
+
+local function MakeEditorCard(stack, parent, key, title, existing)
+    local card = OneWoW_GUI:CreateCard(parent, {
+        title = title,
+        collapsed = IsStepCardCollapsed(key, existing),
+        onToggle = function(collapsed)
+            stepEditorCollapsed[key] = collapsed
+            stack:Relayout()
+        end,
+    })
+    stack:AddFrame(card)
+    return card
+end
+
+local function HintHeight(fs, wrapW)
+    if wrapW and wrapW > 50 then
+        fs:SetWidth(wrapW)
+    end
+    return fs:GetStringHeight() or 14
 end
 
 local function CreateDropdown(parent, width, height, searchable)
@@ -323,10 +381,16 @@ end
 
 --- Faction / profession / calendar-event gates. These hide the step or
 --- section; an unknown event ID fail-opens in the engine.
-local function WireVisibilityGates(dialog, content, anchor, existing, dx)
-    dx = dx or 0
+--- opts.anchor + opts.dx: section editor (relative to a prior widget).
+--- No anchor: pack from the top of content (step-editor card).
+local function WireVisibilityGates(dialog, content, existing, opts)
+    opts = opts or {}
     local factionLabel = OneWoW_GUI:CreateFS(content, 10)
-    factionLabel:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", dx, -8)
+    if opts.anchor then
+        factionLabel:SetPoint("TOPLEFT", opts.anchor, "BOTTOMLEFT", opts.dx or 0, -8)
+    else
+        factionLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+    end
     factionLabel:SetText(FACTION .. ":")
     factionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -368,7 +432,7 @@ local function WireVisibilityGates(dialog, content, anchor, existing, dx)
 
     local gateHint = OneWoW_GUI:CreateFS(content, 10)
     gateHint:SetPoint("TOPLEFT", eventBox, "BOTTOMLEFT", 0, -2)
-    gateHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    gateHint:SetPoint("RIGHT", content, "RIGHT", opts.rightInset or -10, 0)
     gateHint:SetJustifyH("LEFT")
     gateHint:SetWordWrap(true)
     gateHint:SetText(L["TRACKER_GATE_HINT"])
@@ -391,7 +455,8 @@ local function RefreshRequiresLabel(dialog)
 end
 
 --- Sibling-step picker. requiresSteps blocks user check-off; it does not hide.
-local function WireRequiresPicker(dialog, content, anchor, listID, excludeKey, existing)
+local function WireRequiresPicker(dialog, content, anchor, listID, excludeKey, existing, opts)
+    opts = opts or {}
     local selected = {}
     local labels = {}
     local siblings = {}
@@ -442,7 +507,7 @@ local function WireRequiresPicker(dialog, content, anchor, listID, excludeKey, e
 
     local reqHint = OneWoW_GUI:CreateFS(content, 10)
     reqHint:SetPoint("TOPLEFT", dd, "BOTTOMLEFT", 0, -2)
-    reqHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    reqHint:SetPoint("RIGHT", content, "RIGHT", opts.rightInset or -10, 0)
     reqHint:SetJustifyH("LEFT")
     reqHint:SetWordWrap(true)
     reqHint:SetText(L["TRACKER_REQUIRES_HINT"])
@@ -769,6 +834,12 @@ local function SyncObjHostHeight(dialog)
         h = math.min(OBJ_HOST_MAX_H, math.max(40, contentH))
     end
     dialog._objHost:SetHeight(h)
+    if dialog._objCard and dialog._objChromeH then
+        dialog._objCard:SetContentHeight(dialog._objChromeH + h)
+    end
+    if dialog._stepStack then
+        dialog._stepStack:Relayout()
+    end
 end
 
 local function ReflowObjectiveRows(dialog)
@@ -931,18 +1002,12 @@ local function CommitStep(dialog, listID, sectionKey, stepKey, isEdit, changes, 
     if callback then callback() end
 end
 
-local function WireObjectivesEditor(dialog, content, anchor, existing)
-    local header = OneWoW_GUI:CreateFS(content, 12)
-    header:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -10)
-    header:SetText(OBJECTIVES_LABEL)
-    header:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-
+local function WireObjectivesEditor(dialog, content, existing)
     local addBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ADD, height = 22 })
-    addBtn:SetPoint("RIGHT", content, "RIGHT", -10, 0)
-    addBtn:SetPoint("TOP", header, "TOP", 0, 2)
+    addBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
 
     local hint = OneWoW_GUI:CreateFS(content, 10)
-    hint:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -2)
+    hint:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -2)
     hint:SetPoint("RIGHT", addBtn, "LEFT", -8, 0)
     hint:SetJustifyH("LEFT")
     hint:SetWordWrap(true)
@@ -952,7 +1017,7 @@ local function WireObjectivesEditor(dialog, content, anchor, existing)
     local host = OneWoW_GUI:CreateFrame(content, { backdrop = BACKDROP_SIMPLE })
     host:ClearAllPoints()
     host:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -4)
-    host:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    host:SetPoint("RIGHT", content, "RIGHT", 0, 0)
     host:SetHeight(OBJ_HOST_EMPTY_H)
     dialog._objHost = host
 
@@ -973,7 +1038,9 @@ local function WireObjectivesEditor(dialog, content, anchor, existing)
         end
     end
 
-    return host
+    local hintH = hint:GetStringHeight() or 14
+    dialog._objChromeH = math.max(22, hintH + 4) + 4
+    return dialog._objChromeH + (host:GetHeight() or OBJ_HOST_EMPTY_H)
 end
 
 --- Explicit max box wins; otherwise derive from type params (item count, pool pick, ...).
@@ -1776,7 +1843,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
 
-    WireVisibilityGates(dialog, content, resetDD, existing, -50)
+    WireVisibilityGates(dialog, content, existing, { anchor = resetDD, dx = -50 })
 
     dialog:Show()
 end
@@ -1789,11 +1856,16 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     local existing = stepKey and TD:GetStep(listID, sectionKey, stepKey) or nil
     local isEdit = existing ~= nil
 
+    local stackRelayout = {}
     local dialog = CreateDialog({
         name = "TrackerStepWizard",
         title = isEdit and L["TRACKER_EDIT_STEP"] or L["TRACKER_ADD_STEP"],
         width = 650,
-        height = 980,
+        height = STEP_EDITOR_HEIGHT,
+        showScrollFrame = true,
+        relayout = function()
+            if stackRelayout.fn then stackRelayout.fn() end
+        end,
         destroyOnClose = true,
         buttons = {
             {
@@ -1823,47 +1895,67 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         },
     })
     if not dialog then return end
-    local content = dialog.content
+    local host = dialog.content
+    local wrapW = 560
 
-    local nameLabel = OneWoW_GUI:CreateFS(content, 10)
-    nameLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
+    local stack = OneWoW_GUI:CreateCardStack(host, {
+        getCollapsed = function(key) return IsStepCardCollapsed(key, existing) end,
+        setCollapsed = function(key, collapsed) stepEditorCollapsed[key] = collapsed end,
+        marginX = 4,
+        startY = -4,
+        gap = 8,
+    })
+    dialog._stepStack = stack
+    stack.OnRelayout = function()
+        local h = host:GetHeight() or 1
+        host:SetHeight(h + 20)
+    end
+    stackRelayout.fn = function() stack:Relayout() end
+
+    local hero = CreateFrame("Frame", nil, host)
+    hero:SetHeight(260)
+    stack:AddFrame(hero)
+
+    local nameLabel = OneWoW_GUI:CreateFS(hero, 10)
+    nameLabel:SetPoint("TOPLEFT", hero, "TOPLEFT", 0, -2)
     nameLabel:SetText(L["TRACKER_STEP_LABEL"])
     nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 610, height = 26, placeholderText = L["TRACKER_STEP_NAME_PLACEHOLDER"] })
+    local nameBox = OneWoW_GUI:CreateEditBox(hero, { height = 26, placeholderText = L["TRACKER_STEP_NAME_PLACEHOLDER"] })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -2)
+    nameBox:SetPoint("RIGHT", hero, "RIGHT", 0, 0)
     if existing then nameBox:SetText(existing.label or "") end
     dialog._nameBox = nameBox
 
-    local trackCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_TRACK_AS_TASK"] })
+    local trackCheck = OneWoW_GUI:CreateCheckbox(hero, { label = L["TRACKER_TRACK_AS_TASK"] })
     trackCheck:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -8)
     trackCheck:SetChecked(not existing or not existing.optional)
     dialog._trackCheck = trackCheck
 
-    local trackHint = OneWoW_GUI:CreateFS(content, 10)
+    local trackHint = OneWoW_GUI:CreateFS(hero, 10)
     trackHint:SetPoint("TOPLEFT", trackCheck, "BOTTOMLEFT", 18, -2)
     trackHint:SetText(L["TRACKER_TRACK_HINT"])
     trackHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local rosterCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ROSTER_MODE"] })
+    local rosterCheck = OneWoW_GUI:CreateCheckbox(hero, { label = L["TRACKER_ROSTER_MODE"] })
     rosterCheck:SetPoint("TOPLEFT", trackHint, "BOTTOMLEFT", -18, -8)
     rosterCheck:SetChecked(existing and existing.rosterMode or false)
     dialog._rosterCheck = rosterCheck
 
-    local rosterHint = OneWoW_GUI:CreateFS(content, 10)
+    local rosterHint = OneWoW_GUI:CreateFS(hero, 10)
     rosterHint:SetPoint("TOPLEFT", rosterCheck, "BOTTOMLEFT", 18, -2)
-    rosterHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    rosterHint:SetPoint("RIGHT", hero, "RIGHT", 0, 0)
     rosterHint:SetJustifyH("LEFT")
     rosterHint:SetWordWrap(true)
     rosterHint:SetText(L["TRACKER_ROSTER_HINT"])
     rosterHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local resetLabel = OneWoW_GUI:CreateFS(content, 10)
+    local resetLabel = OneWoW_GUI:CreateFS(hero, 10)
     resetLabel:SetPoint("TOPLEFT", rosterHint, "BOTTOMLEFT", -18, -8)
     resetLabel:SetText(L["TRACKER_RESET_LABEL"])
     resetLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local resetDD = CreateDropdown(content, 220, 26)
+    local resetDD = CreateDropdown(hero, 220, 26)
     resetDD:SetPoint("LEFT", resetLabel, "RIGHT", 8, 0)
     resetDD:SetOptions({
         { text = L["TRACKER_RESET_DEFAULT"], value = "none" },
@@ -1874,12 +1966,12 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
 
-    local maxLabel = OneWoW_GUI:CreateFS(content, 10)
+    local maxLabel = OneWoW_GUI:CreateFS(hero, 10)
     maxLabel:SetPoint("TOPLEFT", resetLabel, "TOPLEFT", 0, -36)
     maxLabel:SetText(L["TRACKER_MAX_COUNT"])
     maxLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local maxBox = OneWoW_GUI:CreateEditBox(content, {
+    local maxBox = OneWoW_GUI:CreateEditBox(hero, {
         width = 70,
         height = 26,
         maxLetters = 6,
@@ -1888,7 +1980,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     maxBox:SetNumeric(true)
     dialog._maxBox = maxBox
 
-    local noMaxCheck = OneWoW_GUI:CreateCheckbox(content, {
+    local noMaxCheck = OneWoW_GUI:CreateCheckbox(hero, {
         label = L["TRACKER_NO_MAX"],
         onClick = function(myself)
             if myself:GetChecked() then
@@ -1901,9 +1993,10 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     noMaxCheck:SetPoint("LEFT", maxBox, "RIGHT", 16, 0)
     dialog._noMaxCheck = noMaxCheck
 
-    local maxHint = OneWoW_GUI:CreateFS(content, 10)
-    maxHint:SetPoint("TOPLEFT", maxLabel, "BOTTOMLEFT", 0, -2)
-    maxHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    local maxHint = OneWoW_GUI:CreateFS(hero, 10)
+    maxHint:SetPoint("TOP", maxBox, "BOTTOM", 0, -4)
+    maxHint:SetPoint("LEFT", maxLabel, "LEFT", 0, 0)
+    maxHint:SetPoint("RIGHT", hero, "RIGHT", 0, 0)
     maxHint:SetJustifyH("LEFT")
     maxHint:SetWordWrap(true)
     maxHint:SetText(L["TRACKER_NO_MAX_HINT"])
@@ -1916,44 +2009,53 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         maxBox:SetText(tostring(existing.max))
     end
 
-    local gateBottom = WireVisibilityGates(dialog, content, maxHint, existing)
-    local reqBottom = WireRequiresPicker(dialog, content, gateBottom, listID, existing and existing.key, existing)
+    local rosterH = HintHeight(rosterHint, wrapW)
+    local maxHintH = HintHeight(maxHint, wrapW)
+    hero:SetHeight(6 + 14 + 2 + 26 + 8 + 22 + 2 + 14 + 8 + 22 + 2 + rosterH + 8 + 26 + 10 + 26 + 4 + maxHintH)
 
-    local notesLabel = OneWoW_GUI:CreateFS(content, 10)
-    notesLabel:SetPoint("TOPLEFT", reqBottom, "BOTTOMLEFT", 0, -8)
+    local cardOpts = { rightInset = 0 }
+    local gatesCard = MakeEditorCard(stack, host, "gates", L["TRACKER_CARD_VISIBILITY"], existing)
+    local gateBottom = WireVisibilityGates(dialog, gatesCard.content, existing, cardOpts)
+    local reqBottom = WireRequiresPicker(dialog, gatesCard.content, gateBottom, listID, existing and existing.key, existing, cardOpts)
+    local gateHintH = HintHeight(gateBottom, wrapW)
+    local reqHintH = HintHeight(reqBottom, wrapW)
+    gatesCard:SetContentHeight(94 + gateHintH + 52 + reqHintH)
+
+    local notesCard = MakeEditorCard(stack, host, "notes", L["TRACKER_CARD_NOTES"], existing)
+    local ncontent = notesCard.content
+    local notesLabel = OneWoW_GUI:CreateFS(ncontent, 10)
+    notesLabel:SetPoint("TOPLEFT", ncontent, "TOPLEFT", 0, 0)
     notesLabel:SetText(L["TRACKER_NOTES_LABEL"])
     notesLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local notesContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
+    local notesContainer = OneWoW_GUI:CreateFrame(ncontent, { backdrop = BACKDROP_SOFT })
     notesContainer:ClearAllPoints()
     notesContainer:SetPoint("TOPLEFT", notesLabel, "BOTTOMLEFT", 0, -2)
-    notesContainer:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    notesContainer:SetPoint("RIGHT", ncontent, "RIGHT", 0, 0)
     notesContainer:SetHeight(50)
     local notesScroll, notesBox = OneWoW_GUI:CreateScrollEditBox(notesContainer, { name = "TrackerStepNotes", maxLetters = 500 })
     notesScroll:SetAllPoints(notesContainer)
     if existing and existing.userNote and existing.userNote ~= "" then notesBox:SetText(existing.userNote) end
     dialog._notesBox = notesBox
 
-    local descLabel = OneWoW_GUI:CreateFS(content, 10)
+    local descLabel = OneWoW_GUI:CreateFS(ncontent, 10)
     descLabel:SetPoint("TOPLEFT", notesContainer, "BOTTOMLEFT", 0, -8)
     descLabel:SetText(L["TRACKER_STEP_DESC"])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local descContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
+    local descContainer = OneWoW_GUI:CreateFrame(ncontent, { backdrop = BACKDROP_SOFT })
     descContainer:ClearAllPoints()
     descContainer:SetPoint("TOPLEFT", descLabel, "BOTTOMLEFT", 0, -2)
-    descContainer:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    descContainer:SetPoint("RIGHT", ncontent, "RIGHT", 0, 0)
     descContainer:SetHeight(50)
     local descScroll, descBox = OneWoW_GUI:CreateScrollEditBox(descContainer, { name = "TrackerStepDesc", maxLetters = 500 })
     descScroll:SetAllPoints(descContainer)
     if existing and existing.description and existing.description ~= "" then descBox:SetText(existing.description) end
     dialog._descBox = descBox
+    notesCard:SetContentHeight(14 + 2 + 50 + 8 + 14 + 2 + 50)
 
-    local wpLabel = OneWoW_GUI:CreateFS(content, 10)
-    wpLabel:SetPoint("TOPLEFT", descContainer, "BOTTOMLEFT", 0, -8)
-    wpLabel:SetText(L["TRACKER_STEP_WAYPOINT"])
-    wpLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
+    local wpCard = MakeEditorCard(stack, host, "waypoint", L["TRACKER_CARD_WAYPOINT"], existing)
+    local wcontent = wpCard.content
     local wpMapField = {
         key = "mapID",
         labelKey = "TRACKER_FL_MAP_ID",
@@ -1962,23 +2064,23 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         widgetType = "entityId",
         entityKind = "map",
     }
-    local wpMap = CreateFieldWidget(content, wpMapField, existing and existing.mapID, false)
-    wpMap:SetPoint("TOPLEFT", wpLabel, "BOTTOMLEFT", 0, -2)
+    local wpMap = CreateFieldWidget(wcontent, wpMapField, existing and existing.mapID, false)
+    wpMap:SetPoint("TOPLEFT", wcontent, "TOPLEFT", 0, 0)
     dialog._wpMap = wpMap
 
-    local wpX = OneWoW_GUI:CreateEditBox(content, {
+    local wpX = OneWoW_GUI:CreateEditBox(wcontent, {
         width = 60, height = 22, placeholderText = L["TRACKER_FH_XY"], maxLetters = 6, showClear = false,
     })
     wpX:SetPoint("TOPLEFT", wpMap, "TOPRIGHT", 20, 0)
     dialog._wpX = wpX
 
-    local wpY = OneWoW_GUI:CreateEditBox(content, {
+    local wpY = OneWoW_GUI:CreateEditBox(wcontent, {
         width = 60, height = 22, placeholderText = L["TRACKER_FH_XY"], maxLetters = 6, showClear = false,
     })
     wpY:SetPoint("TOPLEFT", wpX, "TOPRIGHT", 8, 0)
     dialog._wpY = wpY
 
-    local wpRadius = OneWoW_GUI:CreateEditBox(content, {
+    local wpRadius = OneWoW_GUI:CreateEditBox(wcontent, {
         width = 50, height = 22, placeholderText = L["TRACKER_FL_RANGE"], maxLetters = 4, showClear = false,
     })
     wpRadius:SetPoint("TOPLEFT", wpY, "TOPRIGHT", 8, 0)
@@ -1999,29 +2101,35 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         end
     end
 
-    local wpFill = OneWoW_GUI:CreateFitTextButton(content, { text = L["TRACKER_FILL_FROM_POSITION"], height = 22 })
+    local wpFill = OneWoW_GUI:CreateFitTextButton(wcontent, { text = L["TRACKER_FILL_FROM_POSITION"], height = 22 })
     wpFill:SetPoint("LEFT", wpRadius, "RIGHT", 8, 0)
     wpFill:SetScript("OnClick", function() FillSharedWaypoint(dialog) end)
+    wpCard:SetContentHeight(wpMap:GetHeight() or 40)
 
-    local objHost = WireObjectivesEditor(dialog, content, wpMap, existing)
+    local objCard = MakeEditorCard(stack, host, "objectives", OBJECTIVES_LABEL, existing)
+    dialog._objCard = objCard
+    local objH = WireObjectivesEditor(dialog, objCard.content, existing)
+    objCard:SetContentHeight(objH)
 
-    local typeHeader = OneWoW_GUI:CreateFS(content, 12)
-    typeHeader:SetPoint("TOPLEFT", objHost, "BOTTOMLEFT", 0, -10)
-    typeHeader:SetText(L["TRACKER_STEP_TRACK_HEADER"])
-    typeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-
-    local scrollAnchor = typeHeader
+    local trackingCard = MakeEditorCard(stack, host, "tracking", L["TRACKER_STEP_TRACK_HEADER"], existing)
+    local tcontent = trackingCard.content
+    local typeListTop = 0
     if existing and not HasTypeCard(existing.trackType) then
-        local trackedFS = OneWoW_GUI:CreateFS(content, 10)
-        trackedFS:SetPoint("TOPLEFT", typeHeader, "BOTTOMLEFT", 0, -2)
+        local trackedFS = OneWoW_GUI:CreateFS(tcontent, 10)
+        trackedFS:SetPoint("TOPLEFT", tcontent, "TOPLEFT", 0, 0)
+        trackedFS:SetPoint("RIGHT", tcontent, "RIGHT", 0, 0)
+        trackedFS:SetJustifyH("LEFT")
         trackedFS:SetText(format(L["TRACKER_TRACKED_AS"], TE:GetTrackTypeDisplayName(existing.trackType)))
         trackedFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-        scrollAnchor = trackedFS
+        typeListTop = -20
     end
 
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(content, {})
-    scrollFrame:SetPoint("TOPLEFT", scrollAnchor, "BOTTOMLEFT", 0, -6)
-    scrollFrame:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -6, 4)
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(tcontent, {})
+    scrollFrame:ClearAllPoints()
+    scrollFrame:SetPoint("TOPLEFT", tcontent, "TOPLEFT", 0, typeListTop)
+    scrollFrame:SetPoint("TOPRIGHT", tcontent, "TOPRIGHT", 0, typeListTop)
+    scrollFrame:SetHeight(TYPE_LIST_H)
+    trackingCard:SetContentHeight((-typeListTop) + TYPE_LIST_H)
 
     local allCards = {}
     local CARD_GAP = 3
@@ -2265,6 +2373,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     end
 
     ReflowCards()
+    stack:Finish()
     dialog:Show()
 end
 
