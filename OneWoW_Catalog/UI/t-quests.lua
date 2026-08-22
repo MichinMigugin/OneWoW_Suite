@@ -1721,18 +1721,6 @@ local function GetQuestChainIDs(questData)
     return ids
 end
 
-local function GetQuestChainColor(questID, tracker)
-    if C_QuestLog.IsOnQuest(questID) then
-        return 0.3, 1, 0.3
-    end
-
-    if tracker and tracker.IsCompletedByCurrentChar(questID) then
-        return 0.72, 0.72, 0.72
-    end
-
-    return 1, 0.82, 0
-end
-
 local function GetQuestMapTarget(questData)
     if not questData then return nil end
 
@@ -3121,9 +3109,18 @@ function ShowQuestDetail(panels, questData)
 
         yOffset = yOffset - 20
 
-        local xOffset = PAD + 8
-        local rowY = yOffset
-        local rowHeight = 20
+        local currentQuestID = tonumber(questData.id)
+        local chainRowWidth = W - 8
+
+        local function chainRowColor(isCurrent, isHover)
+            if isCurrent then
+                return OneWoW_GUI:GetThemeColor("TEXT_WARNING")
+            end
+            if isHover then
+                return OneWoW_GUI:GetThemeColor("LINK_HOVER")
+            end
+            return OneWoW_GUI:GetThemeColor("LINK_IDLE")
+        end
 
         local function getChainName(chainQuestID)
             local chainQuest =
@@ -3133,6 +3130,15 @@ function ShowQuestDetail(panels, questData)
                 and chainQuest.name
                 or GetQuestDisplayName(chainQuestID, questData)
                 or ("Quest " .. tostring(chainQuestID))
+        end
+
+        local function groupContainsCurrent(ids)
+            for i = 1, #ids do
+                if tonumber(ids[i]) == currentQuestID then
+                    return true
+                end
+            end
+            return false
         end
 
         local segments = {}
@@ -3170,72 +3176,52 @@ function ShowQuestDetail(panels, questData)
             index = nextIndex
         end
 
-        local function getGroupColor(segment)
-            local hasActive = false
-            local allCompleted = true
-
-            for _, groupQuestID in ipairs(segment.ids) do
-                if C_QuestLog.IsOnQuest(groupQuestID) then
-                    hasActive = true
-                end
-
-                if not (tracker and tracker.IsCompletedByCurrentChar(groupQuestID)) then
-                    allCompleted = false
-                end
-            end
-
-            if hasActive then
-                return 0.3, 1, 0.3
-            elseif allCompleted then
-                return 0.72, 0.72, 0.72
-            end
-
-            return 1, 0.82, 0
-        end
-
-        local function addChainToken(text, r, g, b, onClick, onEnter, onLeave, chainQuestID)
+        local function addChainRow(label, isCurrent, chainQuestID, namePrefix, onClick, onEnter, indent)
+            indent = indent or 8
             local questBtn = track(CreateFrame("Button", nil, parent))
+            questBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + indent, yOffset)
+            questBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
+
             local questText = OneWoW_GUI:CreateFS(questBtn, 12)
-            questText:SetPoint("LEFT", questBtn, "LEFT", 0, 0)
-            questText:SetText(HighlightSearchText(text))
-            questText:SetTextColor(r, g, b)
-            RegisterVisibleQuestName(chainQuestID, questText, nil, nil, HighlightSearchText)
+            questText:SetPoint("TOPLEFT", questBtn, "TOPLEFT", 0, 0)
+            questText:SetPoint("TOPRIGHT", questBtn, "TOPRIGHT", 0, 0)
+            questText:SetJustifyH("LEFT")
+            questText:SetWordWrap(true)
+            questText:SetWidth(chainRowWidth - indent + 8)
+            questText:SetText(HighlightSearchText(label))
+            questText:SetTextColor(chainRowColor(isCurrent, false))
+            RegisterVisibleQuestName(chainQuestID, questText, namePrefix, nil, HighlightSearchText)
 
-            local btnWidth = questText:GetStringWidth() + 4
-            if xOffset + btnWidth > W and xOffset > PAD + 8 then
-                xOffset = PAD + 8
-                rowY = rowY - rowHeight
+            local rowHeight = math.max(18, (questText:GetStringHeight() or 12) + 2)
+            questBtn:SetHeight(rowHeight)
+
+            if onClick then
+                questBtn:SetScript("OnClick", onClick)
             end
-
-            questBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", xOffset, rowY)
-            questBtn:SetSize(btnWidth, 18)
-            questBtn:SetScript("OnClick", onClick)
             questBtn:SetScript("OnEnter", function(self)
-                questText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                questText:SetTextColor(chainRowColor(isCurrent, true))
                 if onEnter then
                     onEnter(self)
                 end
             end)
             questBtn:SetScript("OnLeave", function()
-                questText:SetTextColor(r, g, b)
-                if onLeave then
-                    onLeave()
-                end
+                questText:SetTextColor(chainRowColor(isCurrent, false))
+                GameTooltip:Hide()
             end)
 
-            xOffset = xOffset + btnWidth
+            yOffset = yOffset - rowHeight - 2
         end
 
         for segmentIndex, segment in ipairs(segments) do
+            local stepPrefix = tostring(segmentIndex) .. ". "
             if segment.type == "group" then
-                local r, g, b = getGroupColor(segment)
+                local isCurrent = groupContainsCurrent(segment.ids)
                 local groupText = segment.name .. " x" .. tostring(#segment.ids)
-
-                addChainToken(
-                    groupText,
-                    r,
-                    g,
-                    b,
+                addChainRow(
+                    stepPrefix .. groupText,
+                    isCurrent,
+                    nil,
+                    stepPrefix,
                     function()
                         questChainGroupExpanded[segment.key] =
                             not questChainGroupExpanded[segment.key]
@@ -3253,21 +3239,16 @@ function ShowQuestDetail(panels, questData)
                             0
                         )
                         GameTooltip:Show()
-                    end,
-                    function()
-                        GameTooltip:Hide()
-                    end,
-                    nil
+                    end
                 )
             else
-                local r, g, b = GetQuestChainColor(segment.id, tracker)
-
-                addChainToken(
-                    segment.name,
-                    r,
-                    g,
-                    b,
-                    function()
+                local isCurrent = tonumber(segment.id) == currentQuestID
+                addChainRow(
+                    stepPrefix .. segment.name,
+                    isCurrent,
+                    segment.id,
+                    stepPrefix,
+                    isCurrent and nil or function()
                         if OpenQuestByID then
                             OpenQuestByID(segment.id, panels)
                         end
@@ -3276,34 +3257,17 @@ function ShowQuestDetail(panels, questData)
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                         GameTooltip:AddLine(segment.name, 1, 0.82, 0)
                         GameTooltip:AddLine("Quest ID: " .. tostring(segment.id), 0.6, 0.6, 0.6)
-                        GameTooltip:AddLine(" ")
-                        GameTooltip:AddLine("Click to open this quest", 0, 1, 0)
+                        if not isCurrent then
+                            GameTooltip:AddLine(" ")
+                            GameTooltip:AddLine("Click to open this quest", 0, 1, 0)
+                        end
                         GameTooltip:Show()
-                    end,
-                    function()
-                        GameTooltip:Hide()
-                    end,
-                    segment.id
+                    end
                 )
-            end
-
-            if segmentIndex < #segments then
-                local sepText = track(OneWoW_GUI:CreateFS(parent, 12))
-                sepText:SetText(" > ")
-                sepText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-                local sepWidth = sepText:GetStringWidth()
-                if xOffset + sepWidth > W then
-                    xOffset = PAD + 8
-                    rowY = rowY - rowHeight
-                end
-
-                sepText:SetPoint("TOPLEFT", parent, "TOPLEFT", xOffset, rowY)
-                xOffset = xOffset + sepWidth
             end
         end
 
-        yOffset = rowY - rowHeight - 4
+        yOffset = yOffset - 2
 
         for _, segment in ipairs(segments) do
             if segment.type == "group" and questChainGroupExpanded[segment.key] then
@@ -3315,40 +3279,30 @@ function ShowQuestDetail(panels, questData)
 
                 for _, groupQuestID in ipairs(segment.ids) do
                     local groupQuestName = getChainName(groupQuestID)
-                    local r, g, b = GetQuestChainColor(groupQuestID, tracker)
-                    local childBtn = track(CreateFrame("Button", nil, parent))
-                    childBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 24, yOffset)
-                    childBtn:SetSize(W - 32, 16)
-
-                    local childText = OneWoW_GUI:CreateFS(childBtn, 11)
-                    childText:SetPoint("LEFT", childBtn, "LEFT", 0, 0)
-                    childText:SetPoint("RIGHT", childBtn, "RIGHT", 0, 0)
-                    childText:SetJustifyH("LEFT")
-                    childText:SetWordWrap(false)
-                    childText:SetText(tostring(groupQuestID) .. " - " .. HighlightSearchText(groupQuestName))
-                    childText:SetTextColor(r, g, b)
-                    RegisterVisibleQuestName(groupQuestID, childText, tostring(groupQuestID) .. " - ", nil, HighlightSearchText)
-
-                    childBtn:SetScript("OnClick", function()
-                        if OpenQuestByID then
-                            OpenQuestByID(groupQuestID, panels)
-                        end
-                    end)
-                    childBtn:SetScript("OnEnter", function(self)
-                        childText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                        GameTooltip:AddLine(groupQuestName, 1, 0.82, 0)
-                        GameTooltip:AddLine("Quest ID: " .. tostring(groupQuestID), 0.6, 0.6, 0.6)
-                        GameTooltip:AddLine(" ")
-                        GameTooltip:AddLine("Click to open this quest", 0, 1, 0)
-                        GameTooltip:Show()
-                    end)
-                    childBtn:SetScript("OnLeave", function()
-                        childText:SetTextColor(r, g, b)
-                        GameTooltip:Hide()
-                    end)
-
-                    yOffset = yOffset - 18
+                    local isCurrent = tonumber(groupQuestID) == currentQuestID
+                    local childPrefix = tostring(groupQuestID) .. " - "
+                    addChainRow(
+                        childPrefix .. groupQuestName,
+                        isCurrent,
+                        groupQuestID,
+                        childPrefix,
+                        isCurrent and nil or function()
+                            if OpenQuestByID then
+                                OpenQuestByID(groupQuestID, panels)
+                            end
+                        end,
+                        function(self)
+                            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                            GameTooltip:AddLine(groupQuestName, 1, 0.82, 0)
+                            GameTooltip:AddLine("Quest ID: " .. tostring(groupQuestID), 0.6, 0.6, 0.6)
+                            if not isCurrent then
+                                GameTooltip:AddLine(" ")
+                                GameTooltip:AddLine("Click to open this quest", 0, 1, 0)
+                            end
+                            GameTooltip:Show()
+                        end,
+                        24
+                    )
                 end
 
                 yOffset = yOffset - 4
