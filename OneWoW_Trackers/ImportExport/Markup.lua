@@ -159,6 +159,7 @@ function TD:CreateListFromParsed(parsed)
         description = parsed.description,
         listType = parsed.listType or "guide",
         category = parsed.category,
+        author = parsed.author,
     })
     if not list then return nil end
 

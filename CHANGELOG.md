@@ -7,6 +7,7 @@
 ---
 
 # Trackers
+- Restore Examples brings back the Dusting for Moths collection list.
 - The step editor groups optional fields into collapsible sections.
 - The step editor can build every tracker type the addon ships, including nested objectives, Great Vault and profession tasks, loot, timers, campaigns, and exploration.
 - Typing a quest, item, NPC, or collectible ID in the editor shows its name.
