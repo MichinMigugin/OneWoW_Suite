@@ -1,7 +1,7 @@
 # Catalog Journal — data rules
 
 Runtime rules for `OneWoW_CatalogData_Journal` and how they relate to client DB2
-extracts under OneWoW_Workspace `.wow_db2`.
+extracts under OneWoW_Workspace `.warehouse/Sources/Wago`.
 
 ## Two boxes
 
@@ -188,30 +188,26 @@ python bin/journal_db2_tools.py report
 
 `validate` fails if a fallback instanceID also has a `JournalInstanceEntrance` row: delete that handmade id so DB2 is the only source.
 
-CSV schema / mermaid: OneWoW_Workspace `.wow_db2/docs/journal.md`.
-Extract build pin: OneWoW_Workspace `.wow_db2/README.md`.
-Warehouse / source order: OneWoW_Workspace `Docs/DATA_PIPELINE.md`.
+CSV schema / mermaid: OneWoW_Workspace `.warehouse/Sources/Wago/docs/journal.md`.
+Extract build pin: OneWoW_Workspace `.warehouse/Sources/Wago/README.md`.
+Warehouse / source order: OneWoW_Workspace `Docs/WAREHOUSE_PLAN.md`.
 Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
 ## Generated from the ATT extract
 
-`OneWoW_Utility_Extractor` writes the `OneWoWItems_*` extract into OneWoW_Workspace
-`.journal_extract/`. It stays there as an **input**; it is not shipped.
-`bin/journal_extras.py` distils it into the only two pieces the addon needs:
+Raw ATT is the Workspace clone (`.warehouse/Sources/ATT`). Raw CSVs are
+`.warehouse/Sources/Wago`. Generators read every shelf under
+`.warehouse/Sources/`. Today's shipped extras and Generated files stay as
+they are until a feature generator is run on purpose.
+
+`bin/journal_extras.py` (later, from Sources) writes:
 
 | Output | Global | Contents |
 | --- | --- | --- |
 | `Data/<Expansion>-extras.lua` | `OneWoWExtras_<Expansion>` | loot the Adventure Guide does not list |
 | `Data/JournalItemNames.lua` | `ns.JournalItemNames` | offline names for Adventure Guide loot |
 
-```bash
-# from OneWoW_Workspace
-python bin/journal_extras.py measure   # row counts, world extras, per-field weight
-python bin/journal_extras.py emit      # rewrite both outputs
-```
-
-Re-run `emit` after either input changes — a new `journal_db2_tools.py generate`
-(loot moved into or out of the Adventure Guide) or a refreshed legacy extract.
+Shipped extras stay as they are until a feature generator is run on purpose.
 
 ### Extras rows
 

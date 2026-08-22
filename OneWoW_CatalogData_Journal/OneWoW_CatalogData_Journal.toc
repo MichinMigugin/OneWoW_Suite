@@ -48,7 +48,7 @@ Data\Midnight-extras.lua
 # Offline names for Adventure Guide loot (Item Search text matching).
 Data\JournalItemNames.lua
 
-# Generated membership / difficulties (from .wow_db2 via bin/journal_db2_tools.py)
+# Generated membership / difficulties (from .warehouse/Sources/Wago via bin/journal_db2_tools.py)
 Data\Generated\TierMembership.lua
 Data\Generated\MapDifficulties.lua
 Data\Generated\InstanceFlags.lua
