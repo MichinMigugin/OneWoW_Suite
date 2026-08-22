@@ -77,15 +77,20 @@ The Catalog works with companion data addons to provide complete information:
 ### Data: Quests (OneWoW_CatalogData_Quests)
 - Static quest database with live scanner enrichment
 - Per-character completion tracking
-- All expansions from Classic through Midnight
+- Midnight and The War Within in full, plus older story and campaign chains
 
-Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running.
+### Data: Extended Data (OneWoW_ExtendedData, optional extra)
+- Leftover older quests from Classic through Dragonflight
+- Not in the main Suite / CurseForge zip
+- Catalog works without it
+
+Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running. `OneWoW_ExtendedData` is a separate optional download.
 
 ---
 
 ## Disabling Data Modules
 
-`OneWoW_Catalog` always loads when enabled. The four **CatalogData** addons are separate load units; turn one off in the WoW addon list (or via suite feature controls) and only that pack's data disappears. Other Catalog tabs and unrelated suite addons keep working.
+`OneWoW_Catalog` always loads when enabled. The **CatalogData** addons (and optional **Extended Data**) are separate load units; turn one off in the WoW addon list (or via suite feature controls) and only that pack's data disappears. Other Catalog tabs and unrelated suite addons keep working.
 
 Per-pack READMEs have a short summary; this table is the canonical cross-module reference.
 
@@ -93,6 +98,7 @@ Per-pack READMEs have a short summary; this table is the canonical cross-module 
 | --- | --- | --- |
 | **Journal** (`OneWoW_CatalogData_Journal`) | Journal tab empty; Item Search drop filter and drop details; collection status on journal loot; navigate-to-instance from toasts | QoL Item Tracker — no instance/encounter lines on item tooltips; QoL — no collection grid on instance-entry toasts or ESC instance panel |
 | **Quests** (`OneWoW_CatalogData_Quests`) | Quests tab empty (including active-quest views); Item Search quest-reward filter and details; open-to-quest navigation | Notes — no associated-quest list on NPCs; Journal — no "View Quest" or quest completion on journal loot *(also needs Quests)*; AltTracker settings — quest completion not listed for character purge |
+| **Extended Data** (`OneWoW_ExtendedData`) | Leftover older quests (Classic through Dragonflight) missing from search | Nothing else. Midnight, The War Within, story/campaign chains, and completion tracking stay in Quests |
 | **Vendors** (`OneWoW_CatalogData_Vendors`) | Vendors tab empty; Item Search vendor filter and "sold by" details; open-to-vendor navigation | Core — no "Open Vendor Details" on NPC context menus; QoL Item Tracker — no vendor lines on item tooltips |
 | **Tradeskills** (`OneWoW_CatalogData_Tradeskills`) | Tradeskills tab empty; Item Search crafted filter and recipe details (including known-by alts) | ShoppingList — no craft detection, craft orders, recipe picker, or crafting-quality inventory rollup; QoL Professions Panel — no supplemental alt recipe data from tradeskill scans |
 
@@ -136,6 +142,7 @@ Supports all 11 suite locales via **OneWoW** — see [LOCALES.md](../OneWoW/Docs
 - **OneWoW_CatalogData_Tradeskills** - Recommended for recipe and profession data (optional)
 - **OneWoW_CatalogData_Vendors** - Recommended for vendor and item data (optional)
 - **OneWoW_CatalogData_Quests** - Recommended for quest database and completion data (optional)
+- **OneWoW_ExtendedData** - Optional extra leftover older quests (not in the main zip)
 
 ## Slash Commands
 

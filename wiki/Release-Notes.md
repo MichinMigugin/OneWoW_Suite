@@ -32,6 +32,10 @@
 #### Quests
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 - About 100 more Midnight quests now have giver pins, and more of them show quest text.
+- The default Quests pack now ships Midnight and The War Within in full, plus older story and campaign chains. Leftover older quests moved to optional Extended Data so the main download stays smaller.
+
+#### Extended Data
+- New optional extra pack for leftover older quests. Catalog, Midnight, The War Within, and completion tracking work without it. Not included in the main Suite download.
 
 #### Journal
 - Logging in no longer stalls on Journal.
@@ -72,7 +76,7 @@
 
 ---
 
-- **Last Updated**: Aug 21, 2026
+- **Last Updated**: Aug 22, 2026
 
 ## R6.2608.1804
 

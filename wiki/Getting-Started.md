@@ -21,7 +21,7 @@ Open **Manage Features** from the hub (Home link or Settings):
 
 * Turn on only what you use (Bags, QoL, AltTracker, Catalog, and so on)
 * A disabled module is **unloaded**, not merely hidden — less overhead, cleaner UI
-* For **Catalog** and **AltTracker**, keep their companion `*Data*` / `AltTracker_*` folders installed; they feed the parent feature and have no separate player UI of their own
+* For **Catalog** and **AltTracker**, keep their companion `*Data*` / `AltTracker_*` folders installed; they feed the parent feature and have no separate player UI of their own. **Extended Data** is an optional extra leftover-quest pack and is not in the main zip.
 
 Configure each enabled addon from its hub tab or its [slash command](Slash-Commands).
 

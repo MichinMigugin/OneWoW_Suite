@@ -12,6 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 # Desktop companion — not a WoW load unit; never ship in the CurseForge zip.
 SKIP_ADDONS = frozenset({"OneWoW_AccountSync"})
 
+# Optional extra download. Still has a TOC (version bumps see it) but stays
+# out of the main Suite zip.
+SKIP_FROM_SUITE_ZIP = frozenset({"OneWoW_ExtendedData"})
+
 INTERFACE_RE = re.compile(r"^(##\s*Interface:\s*)(.+)$", re.IGNORECASE | re.MULTILINE)
 VERSION_RE = re.compile(r"^(##\s*Version:\s*)(.+)$", re.IGNORECASE | re.MULTILINE)
 INTERFACE_LINE_RE = re.compile(r"^##\s*Interface:\s*(.+)$", re.IGNORECASE)
@@ -165,6 +169,7 @@ def should_skip_zip_member(rel: Path) -> bool:
 def write_suite_zip(zip_path: Path, addon_dirs: list[Path] | None = None) -> Path:
     """Write a sibling-addon zip (OneWoW/, OneWoW_Bags/, ...) and return the path."""
     dirs = addon_dirs if addon_dirs is not None else discover_addon_dirs()
+    dirs = [d for d in dirs if d.name not in SKIP_FROM_SUITE_ZIP]
     if not dirs:
         raise SystemExit("No shippable addon directories to package")
     zip_path.parent.mkdir(parents=True, exist_ok=True)

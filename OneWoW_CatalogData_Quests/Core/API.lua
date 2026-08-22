@@ -3,6 +3,13 @@ local _, ns = ...
 -- Public, cross-addon read surface for the Quests data store. ns stays private.
 OneWoW_CatalogData_Quests_API = {}
 
+--- Merge a static quest table (used by OneWoW_ExtendedData after Quests is ready).
+---@param source table<number, table>
+function OneWoW_CatalogData_Quests_API.RegisterQuestData(source)
+    ns:RegisterQuestData(source)
+    ns.QuestData:NotifyStaticDataChanged()
+end
+
 --- Returns the quest store settings.
 ---@return table settings
 function OneWoW_CatalogData_Quests_API.GetSettings()

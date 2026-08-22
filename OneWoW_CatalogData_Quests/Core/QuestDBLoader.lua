@@ -10,9 +10,9 @@ local _, ns = ...
 --   ns.ExternalQuestDB             [questID] = questData
 --   ns.ExternalQuestDBByExpansion  [expansionID][questID] = questData
 --
--- The data is pre-cleaned and expansion-normalized offline by
--- db2_exports/quest_tools/clean_questdb.lua, so the registrar is a plain merge with no runtime
--- scraping, no _G scanning, and no global pollution.
+-- Shards are emitted offline by bin/wowhead/quest-split.py (slim Suite
+-- files here; leftover older quests in OneWoW_ExtendedData). The registrar is
+-- a plain merge: no runtime scraping, no _G scanning, no global pollution.
 -- ============================================================================
 
 local pairs = pairs

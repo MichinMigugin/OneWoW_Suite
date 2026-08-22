@@ -8,7 +8,7 @@ Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` pro
 
 **SavedVariable:** `OneWoW_CatalogData_Quests_DB`
 
-**RequiredDeps:** `OneWoW`, `OneWoW_Catalog`. **LoadOnDemand:** yes (`## Group: OneWoW_Catalog`).
+**RequiredDeps:** `OneWoW`. **LoadOnDemand:** yes (`## Group: OneWoW_Catalog`).
 
 ## Modules
 
@@ -27,8 +27,8 @@ Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` pro
 
 Per-expansion Lua shards under `Data/QuestDB/`:
 
-`classic`, `bc`, `wotlk`, `cata`, `mop`, `wod`, `legion`, `bfa`, `shadowlands`, `dragonflight`, `warwithin`, `midnight`.
+`classic` through `dragonflight` are slim (story/campaign). `warwithin` and `midnight` are full. Leftover older rows live in `OneWoW_ExtendedData/Data/Quests/` and register through `OneWoW_CatalogData_Quests_API.RegisterQuestData`.
 
-## Tools (offline / dev)
+## Tools (offline / Workspace)
 
-`Tools/clean_questdb.lua`, `validate_load.lua`, `test_*.lua` — not loaded by the addon TOC.
+Wowhead refresh, slim/extended split, and BtW campaign-ID harvest live in OneWoW_Workspace (`bin/wowhead/`, `bin/catalog_data_status.py`). They are not loaded by the addon TOC.

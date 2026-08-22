@@ -27,7 +27,8 @@ Each pack is optional. Disable packs you do not need to save memory; Catalog its
 | **Journal** | Instances, encounters, Adventure Guide loot, Also from ATT extras, achievements, Delves, and World |
 | **Vendors** | Vendor NPCs and stock |
 | **Tradeskills** | Recipes and materials |
-| **Quests** | Quest DB and completion |
+| **Quests** | Quest DB and completion (Midnight and The War Within in full, plus older story/campaign) |
+| **Extended Data** | Optional leftover older quests. Not in the main Suite zip. Catalog works without it. |
 
 Turning a pack off empties its Catalog tab and removes related details elsewhere (for example vendor lines on tooltips, or Shopping List craft detection when Tradeskills is off). Other tabs keep working.
 
@@ -53,5 +54,6 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 ### Sources
 
 * [OneWoW_Catalog/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Catalog/README.md)
+* [OneWoW_ExtendedData/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_ExtendedData/README.md)
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — Catalog data-store catalog
 * [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md)

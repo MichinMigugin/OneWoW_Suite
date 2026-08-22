@@ -18,7 +18,7 @@ Players use quest data through the Catalog — this addon has no standalone UI.
 
 ## Supported Expansions
 
-Classic, The Burning Crusade, Wrath of the Lich King, Cataclysm, Mists of Pandaria, Warlords of Draenor, Legion, Battle for Azeroth, Shadowlands, Dragonflight, The War Within, Midnight.
+Midnight and The War Within ship in full. Classic through Dragonflight ship story and campaign chains (the same set BtWQuests uses as its chain books). Leftover older quests live in optional [OneWoW_ExtendedData](../OneWoW_ExtendedData/README.md).
 
 ---
 

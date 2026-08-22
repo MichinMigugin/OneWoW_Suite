@@ -1,0 +1,3 @@
+-- OneWoW_ExtendedData main file.
+-- Optional extra catalog data. This unit exposes no public globals; leftover
+-- quests register through OneWoW_CatalogData_Quests_API when Quests is ready.

@@ -1,0 +1,48 @@
+## Interface: 120007, 120100
+## Version: R6.2608.1804
+## Title: OneWoW - |cFFFFFFFFExtended Data|r
+## Notes: Optional leftover older quests (and later extra NPCs and items) for Catalog.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW
+## LoadOnDemand: 1
+## Category: OneWoW
+## Group: OneWoW_Catalog
+## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
+
+## X-Website: https://onewow.net/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Locales
+Locales\enUS.lua
+Locales\koKR.lua
+Locales\frFR.lua
+Locales\deDE.lua
+Locales\zhCN.lua
+Locales\esES.lua
+Locales\zhTW.lua
+Locales\esMX.lua
+Locales\ruRU.lua
+Locales\ptBR.lua
+Locales\itIT.lua
+
+# Queue before data files; flush after Quests is ready.
+Core\QuestQueue.lua
+
+# Leftover older quests (Classic through Dragonflight). TWW and Midnight stay in the Suite Quests pack.
+Data\Quests\QuestDB_classic.lua
+Data\Quests\QuestDB_bc.lua
+Data\Quests\QuestDB_wotlk.lua
+Data\Quests\QuestDB_cata.lua
+Data\Quests\QuestDB_mop.lua
+Data\Quests\QuestDB_wod.lua
+Data\Quests\QuestDB_legion.lua
+Data\Quests\QuestDB_bfa.lua
+Data\Quests\QuestDB_shadowlands.lua
+Data\Quests\QuestDB_dragonflight.lua
+
+Core\Core.lua
+
+# Main
+OneWoW_ExtendedData.lua

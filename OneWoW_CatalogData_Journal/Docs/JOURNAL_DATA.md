@@ -116,6 +116,7 @@ Produced by:
 
 ```bash
 # from OneWoW_Workspace
+python bin/catalog_data_status.py journal
 python bin/journal_db2_tools.py generate
 python bin/journal_db2_tools.py validate
 python bin/journal_db2_tools.py report
@@ -154,7 +155,7 @@ Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
 ```bash
 # from OneWoW_Workspace
-python bin/journal_extras.py measure   # row counts, per-field weight, projected size
+python bin/journal_extras.py measure   # row counts, world extras, per-field weight
 python bin/journal_extras.py emit      # rewrite both outputs
 ```
 
