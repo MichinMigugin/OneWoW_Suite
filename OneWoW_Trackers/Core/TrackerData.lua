@@ -467,6 +467,7 @@ function TD:AddSection(listID, opts)
         resetOverride = opts.resetOverride or nil,
         collapsed     = false,
         steps         = {},
+        faction              = opts.faction or "both",
         professionRequired = tonumber(opts.professionRequired) or nil,
         eventRequired      = tonumber(opts.eventRequired) or nil,
     }
@@ -978,6 +979,17 @@ function TD:AreStepDependenciesMet(listID, step)
         end
     end
     return true
+end
+
+--- User-initiated check-off only. Engine session bumps do not consult this.
+---@param listID string
+---@param sectionKey string
+---@param stepKey string
+---@return boolean
+function TD:CanCompleteStep(listID, sectionKey, stepKey)
+    local step = self:GetStep(listID, sectionKey, stepKey)
+    if not step then return false end
+    return self:AreStepDependenciesMet(listID, step)
 end
 
 function TD:SetActiveList(listID)

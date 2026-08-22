@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "如何追蹤此步驟？",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "例如：擊殺10隻蜘蛛、前往酒館、完成任務...",
     ["TRACKER_WAYPOINT_SET"]             = "已為 %s 設定路徑點 (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]             = "請先完成所需的步驟。",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "每週清單",
     ["TRACKER_QS_WEEKLY_DESC"]             = "追蹤每週任務，如寶庫、世界首領和每週任務。在你所在區域的每週重置日重置。",
     ["TRACKER_QS_DAILY_TITLE"]             = "每日任務",

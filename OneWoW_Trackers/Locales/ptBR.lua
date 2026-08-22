@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "Como esta etapa deve ser rastreada?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Matar 10 aranhas, Visitar a taverna, Completar missão...",
     ["TRACKER_WAYPOINT_SET"]             = "Ponto de rota definido para %s (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]             = "Conclua os passos exigidos primeiro.",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Lista semanal",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Rastreie tarefas semanais como Grande Cofre, chefes de mundo e missões semanais. Reinicia no dia de reinício semanal da sua região.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tarefas diárias",

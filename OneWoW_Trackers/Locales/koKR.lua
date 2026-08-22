@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "이 단계를 어떻게 추적할까요?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "예: 거미 10마리 처치, 선술집 방문, 퀘스트 완료...",
     ["TRACKER_WAYPOINT_SET"]             = "%s (%.1f, %.1f) 경유지 설정됨",
+    ["TRACKER_STEP_REQUIRES"]             = "먼저 필요한 단계를 완료하세요.",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "주간 체크리스트",
     ["TRACKER_QS_WEEKLY_DESC"]             = "위대한 금고, 월드 보스, 주간 퀘스트 같은 주간 과제를 추적합니다. 지역 주간 초기화 요일에 초기화됩니다.",
     ["TRACKER_QS_DAILY_TITLE"]             = "일일 과제",

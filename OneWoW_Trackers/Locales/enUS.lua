@@ -181,6 +181,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_STEP_TRACK_HEADER"]       = "How should this step be tracked?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]   = "e.g. Kill 10 Spiders, Visit the Tavern, Complete quest...",
     ["TRACKER_WAYPOINT_SET"]            = "Waypoint set for %s (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]           = "Complete the required steps first.",
     ["TRACKER_QS_WEEKLY_TITLE"]         = "Weekly Checklist",
     ["TRACKER_QS_WEEKLY_DESC"]          = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets on your region's weekly reset day.",
     ["TRACKER_QS_DAILY_TITLE"]          = "Daily Tasks",

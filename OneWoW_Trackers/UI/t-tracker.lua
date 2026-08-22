@@ -1084,10 +1084,14 @@ function ns.UI.CreateTrackerTab(parent)
                     checkBtn:SetChecked(isComplete)
 
                     if step.rosterMode then
-                        checkBtn:SetScript("OnClick", function()
+                        checkBtn:SetScript("OnClick", function(myself)
                             if TD:IsRosterCompleter(list.id, step.key, TD:GetCurrentCharKey()) then
                                 TD:RemoveRosterCompleter(list.id, step.key, TD:GetCurrentCharKey())
                             else
+                                if not TE:TryUserComplete(list.id, sec.key, step.key) then
+                                    myself:SetChecked(false)
+                                    return
+                                end
                                 TD:RecordRosterCompletion(list.id, step.key)
                             end
                             parent.RefreshList()
@@ -1095,7 +1099,11 @@ function ns.UI.CreateTrackerTab(parent)
                             TE:RefreshAllPinnedWindows()
                         end)
                     elseif step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
-                        checkBtn:SetScript("OnClick", function()
+                        checkBtn:SetScript("OnClick", function(myself)
+                            if not isComplete and not TE:TryUserComplete(list.id, sec.key, step.key) then
+                                myself:SetChecked(false)
+                                return
+                            end
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
                             parent.RefreshDetailProgress()
@@ -1160,6 +1168,7 @@ function ns.UI.CreateTrackerTab(parent)
                             objCheck:SetScript("OnClick", function()
                                 local nowComplete = TD:GetObjectiveProgress(list.id, sec.key, step.key, obj.key)
                                 TD:SetObjectiveComplete(list.id, sec.key, step.key, obj.key, not nowComplete)
+                                TE:EvaluateStep(list.id, sec.key, step)
                                 parent.RefreshList()
                                 parent.RefreshDetailProgress()
                                 TE:RefreshAllPinnedWindows()
@@ -1251,6 +1260,9 @@ function ns.UI.CreateTrackerTab(parent)
                                 print(format("%s %s", L["ADDON_CHAT_PREFIX"], L["MSG_CANNOT_SET_WAYPOINT"]))
                             end
                         elseif not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
+                            if not isComplete and not TE:TryUserComplete(list.id, sec.key, step.key) then
+                                return
+                            end
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
                             parent.RefreshDetailProgress()
@@ -1270,6 +1282,9 @@ function ns.UI.CreateTrackerTab(parent)
                             if not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                                 rootDescription:CreateDivider()
                                 rootDescription:CreateButton(stepRow._trackerComplete and (L["TRACKER_MARK_INCOMPLETE"]) or (L["TRACKER_MARK_COMPLETE"]), function()
+                                    if not stepRow._trackerComplete and not TE:TryUserComplete(list.id, sec.key, step.key) then
+                                        return
+                                    end
                                     TD:ToggleStepComplete(list.id, sec.key, step.key)
                                     parent.RefreshList()
                                     parent.RefreshDetailProgress()

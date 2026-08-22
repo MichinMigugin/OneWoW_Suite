@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "Come deve essere tracciato questo passo?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Uccidi 10 ragni, Visita la taverna, Completa la missione...",
     ["TRACKER_WAYPOINT_SET"]             = "Waypoint impostato per %s (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]             = "Completa prima i passi richiesti.",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Lista settimanale",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Traccia attività settimanali come Gran Banca, boss mondiali e missioni settimanali. Si reimposta nel giorno di reset settimanale della tua regione.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Attività giornaliere",

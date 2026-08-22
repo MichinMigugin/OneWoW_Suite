@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local Inventory = OneWoW.Inventory
+local Location = OneWoW.Location
 
 ns.TrackerEngine = {}
 local TE = ns.TrackerEngine
@@ -10,12 +11,15 @@ local pairs, ipairs, tonumber, tostring = pairs, ipairs, tonumber, tostring
 local tinsert, wipe = tinsert, wipe
 local format = format
 local time = time
+local UnitFactionGroup, CreateVector2D = UnitFactionGroup, CreateVector2D
+local C_MapExplorationInfo = C_MapExplorationInfo
 
 local eventFrame = nil
 local lootIndex = {}
 local npcIndex = {}
 local instanceIndex = {}
 local killIndex = {}
+local exploreIndex = {}
 local next = next
 local lastScanTime = 0
 local SCAN_THROTTLE = 1.0
@@ -102,11 +106,22 @@ function TE:HasProfession(baseSkillLineID)
     return false
 end
 
+local function MatchesFaction(faction)
+    if not faction or faction == "both" then return true end
+    return UnitFactionGroup("player") == faction
+end
+
 function TE:IsStepVisible(step, section)
+    if step and not MatchesFaction(step.faction) then
+        return false
+    end
     if step and step.professionRequired and not self:HasProfession(step.professionRequired) then
         return false
     end
     if step and step.eventRequired and not self:IsEventActive(step.eventRequired) then
+        return false
+    end
+    if section and not MatchesFaction(section.faction) then
         return false
     end
     if section and section.professionRequired and not self:HasProfession(section.professionRequired) then
@@ -119,6 +134,9 @@ function TE:IsStepVisible(step, section)
 end
 
 function TE:IsSectionVisible(section)
+    if section and not MatchesFaction(section.faction) then
+        return false
+    end
     if section and section.professionRequired and not self:HasProfession(section.professionRequired) then
         return false
     end
@@ -142,6 +160,7 @@ local function BuildIndices()
     wipe(npcIndex)
     wipe(instanceIndex)
     wipe(killIndex)
+    wipe(exploreIndex)
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
@@ -183,6 +202,14 @@ local function BuildIndices()
                     end
                 end
 
+                if tt == "exploration" and tp.areaID then
+                    local aid = tonumber(tp.areaID)
+                    if aid then
+                        exploreIndex[aid] = exploreIndex[aid] or {}
+                        tinsert(exploreIndex[aid], { listID = listID, sectionKey = sec.key, stepKey = step.key })
+                    end
+                end
+
                 for _, obj in ipairs(step.objectives or {}) do
                     local ot = obj.type
                     local op = obj.params or {}
@@ -214,6 +241,17 @@ local function BuildIndices()
                         if cid then
                             killIndex[cid] = killIndex[cid] or {}
                             tinsert(killIndex[cid], {
+                                listID = listID, sectionKey = sec.key,
+                                stepKey = step.key, objKey = obj.key,
+                            })
+                        end
+                    end
+
+                    if ot == "exploration" and op.areaID then
+                        local aid = tonumber(op.areaID)
+                        if aid then
+                            exploreIndex[aid] = exploreIndex[aid] or {}
+                            tinsert(exploreIndex[aid], {
                                 listID = listID, sectionKey = sec.key,
                                 stepKey = step.key, objKey = obj.key,
                             })
@@ -330,29 +368,34 @@ function TE:EvaluateList(listID)
         if self:IsSectionVisible(sec) then
             for _, step in ipairs(sec.steps or {}) do
                 if self:IsStepVisible(step, sec) then
-                    if step.trackType ~= "manual" and step.trackType ~= "npc_interact" and
-                       step.trackType ~= "loot_item" and step.trackType ~= "enter_instance" and
-                       step.trackType ~= "kill_creature" then
-                        self:EvaluateStep(listID, sec.key, step)
-                    end
-
-                    if step.objectives then
-                        for _, obj in ipairs(step.objectives) do
-                            if obj.type ~= "manual" and obj.type ~= "npc_interact" and
-                               obj.type ~= "loot_item" and obj.type ~= "enter_instance" and
-                               obj.type ~= "kill_creature" then
-                                local current, max = self:EvaluateObjective(obj)
-                                if current ~= nil then
-                                    local complete = max and max > 0 and current >= max
-                                    TD:SetObjectiveComplete(listID, sec.key, step.key, obj.key, complete)
-                                end
-                            end
-                        end
-                    end
+                    -- Session types without objectives no-op here (Evaluate
+                    -- returns nil); steps with objectives roll up through
+                    -- EvaluateStep so a ticked last objective can complete
+                    -- the parent instead of sitting in a dead exclusion list.
+                    self:EvaluateStep(listID, sec.key, step)
                 end
             end
         end
     end
+end
+
+-- Session latch: objectives roll up through EvaluateStep; bare session steps
+-- bump (or roster-record) the same way the four original handlers did.
+local function LatchSession(ref, max)
+    if ref.objKey then
+        TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
+        local step = TD:GetStep(ref.listID, ref.sectionKey, ref.stepKey)
+        if step then
+            TE:EvaluateStep(ref.listID, ref.sectionKey, step)
+        end
+        return
+    end
+    if StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
+        TD:RecordRosterCompletion(ref.listID, ref.stepKey)
+        return
+    end
+    local step = TD:GetStep(ref.listID, ref.sectionKey, ref.stepKey)
+    TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, max or (step and step.max) or 1)
 end
 
 local function OnItemLooted(itemID)
@@ -360,13 +403,7 @@ local function OnItemLooted(itemID)
     if not itemID or not lootIndex[itemID] then return end
 
     for _, ref in ipairs(lootIndex[itemID]) do
-        if ref.objKey then
-            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
-        elseif StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
-            TD:RecordRosterCompletion(ref.listID, ref.stepKey)
-        else
-            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
-        end
+        LatchSession(ref, 1)
     end
 
     FireCallbacks("OnProgressChanged")
@@ -378,13 +415,7 @@ local function OnNPCInteract(npcID)
     if not npcID or not npcIndex[npcID] then return end
 
     for _, ref in ipairs(npcIndex[npcID]) do
-        if ref.objKey then
-            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
-        elseif StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
-            TD:RecordRosterCompletion(ref.listID, ref.stepKey)
-        else
-            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
-        end
+        LatchSession(ref, 1)
     end
 
     FireCallbacks("OnProgressChanged")
@@ -399,13 +430,7 @@ local function OnEnterInstance()
     if not instanceID or not instanceIndex[instanceID] then return end
 
     for _, ref in ipairs(instanceIndex[instanceID]) do
-        if ref.objKey then
-            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
-        elseif StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
-            TD:RecordRosterCompletion(ref.listID, ref.stepKey)
-        else
-            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
-        end
+        LatchSession(ref, 1)
     end
 
     FireCallbacks("OnProgressChanged")
@@ -417,21 +442,39 @@ local function OnCreatureKilled(creatureID)
     if not creatureID or not killIndex[creatureID] then return end
 
     for _, ref in ipairs(killIndex[creatureID]) do
-        if ref.objKey then
-            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
-        else
-            local step = TD:GetStep(ref.listID, ref.sectionKey, ref.stepKey)
-            if step and step.rosterMode then
-                TD:RecordRosterCompletion(ref.listID, ref.stepKey)
-            else
-                local max = step and step.max or 1
-                TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, max)
-            end
-        end
+        LatchSession(ref)
     end
 
     FireCallbacks("OnProgressChanged")
     DeferRefresh()
+end
+
+-- There is no "has area X ever been explored" query, so exploration latches
+-- from the area IDs under the player's feet when fog updates (and once after
+-- login, in case the event fired before indices existed).
+local function OnAreaExplored()
+    if not next(exploreIndex) then return end
+    local mapID, x, y = Location.GetPlayerLocation()
+    if not mapID or not x then return end
+
+    local areaIDs = C_MapExplorationInfo.GetExploredAreaIDsAtPosition(
+        mapID, CreateVector2D(x / 100, y / 100))
+    if not areaIDs then return end
+
+    local any = false
+    for i = 1, #areaIDs do
+        local refs = exploreIndex[areaIDs[i]]
+        if refs then
+            for _, ref in ipairs(refs) do
+                LatchSession(ref, 1)
+                any = true
+            end
+        end
+    end
+    if any then
+        FireCallbacks("OnProgressChanged")
+        DeferRefresh()
+    end
 end
 
 local function OnPlayerEnteringWorld()
@@ -442,6 +485,7 @@ local function OnPlayerEnteringWorld()
     C_Timer.After(2, function()
         TE:FullScan()
         OnEnterInstance()
+        OnAreaExplored()
     end)
     C_Timer.After(3, function()
         C_Calendar.OpenCalendar()
@@ -488,6 +532,9 @@ local function OnEvent(_, event, ...)
         lastEventCheck = 0
         DeferScan(1.0)
 
+    elseif event == "MAP_EXPLORATION_UPDATED" then
+        OnAreaExplored()
+
     else
         DeferScan(0.5)
     end
@@ -533,6 +580,7 @@ function TE:Initialize()
     frame:RegisterEvent("NEW_PET_ADDED")
     frame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
     frame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
+    frame:RegisterEvent("MAP_EXPLORATION_UPDATED")
 
     frame:SetScript("OnEvent", OnEvent)
 
@@ -584,6 +632,22 @@ end
 function TE:NotifyProgressChanged()
     FireCallbacks("OnProgressChanged")
     self:RefreshAllPinnedWindows()
+end
+
+--- True when the player may check the step off. Does not wrap the mutators:
+--- engine-observed session bumps stay ungated. Un-completing is always allowed
+--- at the click site (do not call this for that path).
+---@param listID string
+---@param sectionKey string
+---@param stepKey string
+---@return boolean
+function TE:TryUserComplete(listID, sectionKey, stepKey)
+    if TD:CanCompleteStep(listID, sectionKey, stepKey) then
+        return true
+    end
+    local L = ns.L
+    print(format("%s %s", L["ADDON_CHAT_PREFIX"], L["TRACKER_STEP_REQUIRES"]))
+    return false
 end
 
 function TE:RestorePinnedWindows()

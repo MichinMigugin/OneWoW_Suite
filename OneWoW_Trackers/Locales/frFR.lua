@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "Comment cette étape doit-elle être suivie ?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Tuer 10 araignées, Visiter la taverne, Terminer la quête...",
     ["TRACKER_WAYPOINT_SET"]             = "Point de passage défini pour %s (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]             = "Terminez d'abord les étapes requises.",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Liste hebdomadaire",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Suivez les tâches hebdomadaires comme la grande chambre forte, les boss de monde et les quêtes hebdomadaires. Se réinitialise le jour de reset hebdomadaire de votre région.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tâches quotidiennes",

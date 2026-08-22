@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "Wie soll dieser Schritt verfolgt werden?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. 10 Spinnen töten, Taverne besuchen, Quest abschließen...",
     ["TRACKER_WAYPOINT_SET"]             = "Wegpunkt gesetzt für %s (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]             = "Schließe zuerst die erforderlichen Schritte ab.",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Wöchentliche Checkliste",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Verfolge wöchentliche Aufgaben wie Große Schatzkammer, Weltbosse und wöchentliche Quests. Setzt am wöchentlichen Reset-Tag deiner Region zurück.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tägliche Aufgaben",

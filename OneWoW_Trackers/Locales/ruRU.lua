@@ -178,6 +178,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRACKER_STEP_TRACK_HEADER"]             = "Как отслеживать этот шаг?",
     ["TRACKER_STEP_NAME_PLACEHOLDER"]             = "e.g. Убить 10 пауков, Посетить таверну, Выполнить задание...",
     ["TRACKER_WAYPOINT_SET"]             = "Маршрутная точка установлена для %s (%.1f, %.1f)",
+    ["TRACKER_STEP_REQUIRES"]             = "Сначала выполните требуемые шаги.",
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Еженедельный список",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Отслеживайте еженедельные задачи, такие как Великое хранилище, мировые боссы и еженедельные задания. Сбрасывается в день еженедельного сброса вашего региона.",
     ["TRACKER_QS_DAILY_TITLE"]             = "Ежедневные задачи",
