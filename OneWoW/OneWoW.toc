@@ -49,6 +49,7 @@ GUI\ItemListEditor.lua
 GUI\Virtualizer.lua
 GUI\Cards.lua
 GUI\Icons.lua
+GUI\EntityIdField.lua
 GUI\ReorderDrag.lua
 GUI\KeywordHelp.lua
 GUI\Settings.lua
@@ -161,6 +162,7 @@ Services\itemstatus.lua
 Services\toast-engine.lua
 Services\tooltip-engine.lua
 Services\Location.lua
+Services\EntityResolvers.lua
 
 # Integrations
 Integrations\ExternalTooltipSync.lua

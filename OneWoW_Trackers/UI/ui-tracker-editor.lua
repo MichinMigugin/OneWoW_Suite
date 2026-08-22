@@ -168,10 +168,18 @@ end
 local FIELD_ROW_INNER = 590
 local FIELD_ROW_GAP = 20
 local FIELD_ROW_H = 38
+local FIELD_ENTITY_ROW_H = 56
 local SAVE_ROW_H = 26
 
---- Editbox or dropdown from a schema field descriptor. Dropdowns exist so later
---- picker phases can drop in without rewriting the card loop.
+local function FieldSlotHeight(field)
+    if field.widgetType == "entityId" and OneWoW_GUI:HasEntityResolver(field.entityKind) then
+        return FIELD_ENTITY_ROW_H
+    end
+    return FIELD_ROW_H
+end
+
+--- Editbox, dropdown, or entity ID field from a schema descriptor.
+--- Unregistered entity kinds degrade to a plain numeric box.
 local function CreateFieldWidget(parent, field, existingVal, isNew)
     if field.widgetType == "dropdown" then
         local dd = CreateDropdown(parent, field.width or 160, 22)
@@ -184,6 +192,22 @@ local function CreateFieldWidget(parent, field, existingVal, isNew)
             dd:SetSelected(field.default)
         end
         return dd
+    end
+
+    if field.widgetType == "entityId" and OneWoW_GUI:HasEntityResolver(field.entityKind) then
+        local widget = OneWoW_GUI:CreateEntityIdField(parent, {
+            width = field.width or 160,
+            height = 22,
+            placeholderText = field.hintKey and L[field.hintKey] or nil,
+            maxLetters = field.maxLetters or 12,
+            kind = field.entityKind,
+        })
+        if existingVal ~= nil then
+            widget:SetText(tostring(existingVal))
+        elseif isNew and field.default ~= nil then
+            widget:SetText(tostring(field.default))
+        end
+        return widget
     end
 
     local fbox = OneWoW_GUI:CreateEditBox(parent, {
@@ -1195,12 +1219,17 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             card._saveFieldBtn = saveFieldBtn
 
             local fx, fy = 0, 0
+            local rowH = FIELD_ROW_H
             local isNew = not existing
             for _, field in ipairs(fields) do
                 local w = field.width or 120
+                local slotH = FieldSlotHeight(field)
                 if fx > 0 and fx + w > FIELD_ROW_INNER then
                     fx = 0
-                    fy = fy - FIELD_ROW_H
+                    fy = fy - rowH
+                    rowH = slotH
+                else
+                    if slotH > rowH then rowH = slotH end
                 end
 
                 local flbl = OneWoW_GUI:CreateFS(fieldRow, 10)
@@ -1218,7 +1247,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 card["_field_" .. field.key] = widget
                 fx = fx + w + FIELD_ROW_GAP
             end
-            fieldRow:SetHeight(-fy + FIELD_ROW_H)
+            fieldRow:SetHeight(-fy + rowH)
 
             saveFieldBtn:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, -4)
             local expandedHeight = cardHeight + fieldRow:GetHeight() + SAVE_ROW_H

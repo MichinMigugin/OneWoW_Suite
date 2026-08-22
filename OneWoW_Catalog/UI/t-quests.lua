@@ -973,8 +973,6 @@ end
 local npcNameCache = {}
 local npcNameRefreshPending = {}
 local NPC_NAME_REFRESH_DELAYS = { 0.1, 0.25, 0.5, 1.0 }
-local questNameCache = {}
-local questNameRefreshPending = {}
 
 local CLASS_NAMES = {
     [1] = "Warrior",
@@ -1437,30 +1435,6 @@ local function ScheduleNPCNameRefresh(npcID, questData)
     C_Timer.After(NPC_NAME_REFRESH_DELAYS[state.attempt], retry)
 end
 
-local function ResolveQuestName(questID)
-    questID = tonumber(questID)
-    if not questID then return nil end
-
-    if questNameCache[questID] then
-        return questNameCache[questID]
-    end
-
-    local questName
-
-    questName = C_QuestLog.GetTitleForQuestID(questID)
-
-    if (not questName or questName == "") and QuestUtils_GetQuestName then
-        questName = QuestUtils_GetQuestName(questID)
-    end
-
-    if questName and questName ~= "" then
-        questNameCache[questID] = questName
-        return questName
-    end
-
-    return nil
-end
-
 local function ApplyVisibleQuestName(questID, questName)
     questID = tonumber(questID)
     if not questID or not questName or questName == "" then
@@ -1516,61 +1490,14 @@ local function RegisterVisibleQuestName(questID, textObject, prefix, suffix, for
     })
 end
 
-local function ScheduleQuestNameRefresh(questID, questData)
-    questID = tonumber(questID)
-    if not questID or questNameRefreshPending[questID] then
-        return
+local function GetQuestDisplayName(questID, _)
+    local API = OneWoW_CatalogData_Quests_API
+    local questName = API and API.GetQuestName(questID)
+    if not questName and API then
+        API.RequestQuestName(questID, function(id, name)
+            ApplyVisibleQuestName(id, name)
+        end)
     end
-
-    local state = { attempt = 1 }
-    questNameRefreshPending[questID] = state
-
-    local function retry()
-        if questNameCache[questID] then
-            questNameRefreshPending[questID] = nil
-            ApplyVisibleQuestName(questID, questNameCache[questID])
-            return
-        end
-
-        local questName = ResolveQuestName(questID)
-        if questName then
-            questNameRefreshPending[questID] = nil
-            ApplyVisibleQuestName(questID, questName)
-            return
-        end
-
-        state.attempt = state.attempt + 1
-
-        local delay = NPC_NAME_REFRESH_DELAYS[state.attempt]
-        if delay
-            and selectedQuest
-            and questData
-            and selectedQuest.id == questData.id
-        then
-            C_Timer.After(delay, retry)
-        else
-            questNameRefreshPending[questID] = nil
-        end
-    end
-
-    C_Timer.After(NPC_NAME_REFRESH_DELAYS[state.attempt], retry)
-end
-
-local function GetQuestDisplayName(questID, questData)
-    local addon = GetDataAddon()
-    local quest =
-        addon
-        and addon.GetQuest(questID)
-
-    local questName =
-        quest
-        and quest.name
-        or ResolveQuestName(questID)
-
-    if not questName and questData then
-        ScheduleQuestNameRefresh(questID, questData)
-    end
-
     return questName or ("Quest " .. tostring(questID))
 end
 

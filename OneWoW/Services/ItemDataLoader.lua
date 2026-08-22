@@ -144,9 +144,13 @@ function ns:CreateItemDataLoader(dbTable)
         local frame = CreateFrame("Frame")
         frame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
         frame:SetScript("OnEvent", function(_, _, loadedItemID, success)
-            if not success then return end
             local callbacks = self._pending[loadedItemID]
             if not callbacks then return end
+            self._pending[loadedItemID] = nil
+            if not success then
+                self:FireCallbacks(callbacks, loadedItemID, nil)
+                return
+            end
             local name, link, quality, icon = self:ResolveItemData(loadedItemID)
             if IsCompleteItemData(name, link, quality, icon) then
                 local result = self:CacheItem(loadedItemID, name, quality, icon, link)
@@ -156,8 +160,9 @@ function ns:CreateItemDataLoader(dbTable)
                 -- persisting a partial entry.
                 self:FireCallbacks(callbacks, loadedItemID,
                     { name = name, quality = quality, icon = icon, link = link })
+            else
+                self:FireCallbacks(callbacks, loadedItemID, nil)
             end
-            self._pending[loadedItemID] = nil
         end)
     end
 

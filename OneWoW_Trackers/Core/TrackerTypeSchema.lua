@@ -9,7 +9,8 @@ local _, ns = ...
 -- a third if/elseif chain.
 --
 -- Field shape: key, labelKey, hintKey, width, isList, default, markupDefault,
--- maxLetters, widgetType ("editbox" | "dropdown"), options (table or fn).
+-- maxLetters, widgetType ("editbox" | "dropdown" | "entityId"), entityKind,
+-- options (table or fn).
 -- markupDefault = "listLength" means "omit this positional and use the length
 -- of the preceding isList field" (quest_pool pick).
 -- ============================================================================
@@ -34,8 +35,15 @@ local function F(key, labelKey, hintKey, extra)
     return extra
 end
 
+local function ID(key, labelKey, hintKey, kind, extra)
+    extra = extra or {}
+    extra.widgetType = "entityId"
+    extra.entityKind = kind
+    return F(key, labelKey, hintKey, extra)
+end
+
 local QUEST_ID = {
-    F("questID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID"),
+    ID("questID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID", "quest"),
 }
 
 local QUEST_POOL = {
@@ -59,72 +67,72 @@ local BY_TYPE = {
     quest_pool          = QUEST_POOL,
     quest_pool_account  = QUEST_POOL,
     quest_progress      = {
-        F("questID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID"),
+        ID("questID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID", "quest"),
         F("objectiveIndex", "TRACKER_FL_PICK", "TRACKER_FH_PICK", { width = 80, default = 1 }),
     },
     campaign            = {
-        F("campaignID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID"),
+        ID("campaignID", "TRACKER_FL_QUEST_ID", "TRACKER_FH_QUEST_ID", "campaign"),
     },
     level               = {
         F("level", "TRACKER_FL_LEVEL", "TRACKER_FH_LEVEL", { width = 60 }),
     },
     item                = {
-        F("itemID", "TRACKER_FL_ITEM_ID", "TRACKER_FH_ITEM_ID"),
+        ID("itemID", "TRACKER_FL_ITEM_ID", "TRACKER_FH_ITEM_ID", "item"),
         F("count", "TRACKER_FL_COUNT", "TRACKER_FH_COUNT", { width = 80, default = 1 }),
     },
     currency            = {
-        F("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID"),
+        ID("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID", "currency"),
         F("amount", "TRACKER_FL_AMOUNT", "TRACKER_FH_AMOUNT", { width = 100, default = 1 }),
     },
     achievement         = {
-        F("achievementID", "TRACKER_FL_ACHIEVEMENT_ID", "TRACKER_FH_ACHIEVEMENT_ID"),
+        ID("achievementID", "TRACKER_FL_ACHIEVEMENT_ID", "TRACKER_FH_ACHIEVEMENT_ID", "achievement"),
     },
     reputation          = {
-        F("factionID", "TRACKER_FL_FACTION_ID", "TRACKER_FH_FACTION_ID"),
+        ID("factionID", "TRACKER_FL_FACTION_ID", "TRACKER_FH_FACTION_ID", "faction"),
         F("standing", "TRACKER_FL_STANDING", "TRACKER_FH_STANDING", { width = 60, default = 6 }),
     },
     renown              = {
-        F("factionID", "TRACKER_FL_FACTION_ID", "TRACKER_FH_FACTION_ID"),
+        ID("factionID", "TRACKER_FL_FACTION_ID", "TRACKER_FH_FACTION_ID", "faction"),
         F("level", "TRACKER_FL_RENOWN_LEVEL", "TRACKER_FH_RENOWN_LEVEL", { width = 60, default = 1 }),
     },
     spell_known         = {
-        F("spellID", "TRACKER_FL_SPELL_ID", "TRACKER_FH_SPELL_ID"),
+        ID("spellID", "TRACKER_FL_SPELL_ID", "TRACKER_FH_SPELL_ID", "spell"),
     },
     ilvl                = {
         F("ilvl", "TRACKER_FL_ILVL", "TRACKER_FH_ILVL", { width = 80 }),
     },
     location            = {
-        F("mapID", "TRACKER_FL_MAP_ID", "TRACKER_FH_MAP_ID", { width = 100 }),
+        ID("mapID", "TRACKER_FL_MAP_ID", "TRACKER_FH_MAP_ID", "map", { width = 100 }),
     },
     coordinates         = {
-        F("mapID", "TRACKER_FL_MAP_ID", "TRACKER_FH_MAP_ID", { width = 100 }),
+        ID("mapID", "TRACKER_FL_MAP_ID", "TRACKER_FH_MAP_ID", "map", { width = 100 }),
         F("x", "TRACKER_FL_X", "TRACKER_FH_XY", { width = 60 }),
         F("y", "TRACKER_FL_Y", "TRACKER_FH_XY", { width = 60 }),
         F("radius", "TRACKER_FL_RANGE", "TRACKER_FH_RANGE", { width = 50, default = 15 }),
     },
     npc_interact        = {
-        F("npcID", "TRACKER_FL_NPC_ID", "TRACKER_FH_NPC_ID"),
+        ID("npcID", "TRACKER_FL_NPC_ID", "TRACKER_FH_NPC_ID", "npc"),
     },
     enter_instance      = {
-        F("instanceID", "TRACKER_FL_INSTANCE_ID", "TRACKER_FH_INSTANCE_ID"),
+        ID("instanceID", "TRACKER_FL_INSTANCE_ID", "TRACKER_FH_INSTANCE_ID", "instance"),
     },
     kill_creature       = {
-        F("creatureID", "TRACKER_FL_CREATURE_ID", "TRACKER_FH_CREATURE_ID"),
+        ID("creatureID", "TRACKER_FL_CREATURE_ID", "TRACKER_FH_CREATURE_ID", "npc"),
     },
     loot_item           = {
-        F("itemID", "TRACKER_FL_ITEM_ID", "TRACKER_FH_ITEM_ID"),
+        ID("itemID", "TRACKER_FL_ITEM_ID", "TRACKER_FH_ITEM_ID", "item"),
     },
     toy                 = {
-        F("itemID", "TRACKER_FL_TOY_ITEM_ID", "TRACKER_FH_TOY_ITEM_ID"),
+        ID("itemID", "TRACKER_FL_TOY_ITEM_ID", "TRACKER_FH_TOY_ITEM_ID", "toy"),
     },
     mount               = {
-        F("mountID", "TRACKER_FL_MOUNT_ID", "TRACKER_FH_MOUNT_ID"),
+        ID("mountID", "TRACKER_FL_MOUNT_ID", "TRACKER_FH_MOUNT_ID", "mount"),
     },
     pet                 = {
-        F("speciesID", "TRACKER_FL_SPECIES_ID", "TRACKER_FH_SPECIES_ID"),
+        ID("speciesID", "TRACKER_FL_SPECIES_ID", "TRACKER_FH_SPECIES_ID", "pet"),
     },
     transmog            = {
-        F("itemModifiedAppearanceID", "TRACKER_FL_APPEARANCE_ID", "TRACKER_FH_APPEARANCE_ID"),
+        ID("itemModifiedAppearanceID", "TRACKER_FL_APPEARANCE_ID", "TRACKER_FH_APPEARANCE_ID", "transmog"),
     },
     exploration         = {
         F("areaID", "TRACKER_FL_MAP_ID", "TRACKER_FH_MAP_ID"),
@@ -136,7 +144,7 @@ local BY_TYPE = {
         F("baseSkillLineID", "TRACKER_FL_SPELL_ID", "TRACKER_FH_SPELL_ID"),
     },
     prof_concentration  = {
-        F("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID"),
+        ID("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID", "currency"),
     },
     prof_knowledge      = {
         F("skillLineVariantID", "TRACKER_FL_SPELL_ID", "TRACKER_FH_SPELL_ID"),
@@ -147,7 +155,7 @@ local BY_TYPE = {
         }),
     },
     prof_catchup        = {
-        F("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID"),
+        ID("currencyID", "TRACKER_FL_CURRENCY_ID", "TRACKER_FH_CURRENCY_ID", "currency"),
     },
     custom_timer        = {
         F("interval", "TRACKER_FL_COUNT", "TRACKER_FH_COUNT", { width = 80, default = 3600 }),

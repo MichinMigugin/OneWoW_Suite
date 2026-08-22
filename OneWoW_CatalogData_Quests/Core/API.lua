@@ -1,5 +1,7 @@
 local _, ns = ...
 
+local OneWoW_GUI = OneWoW_GUI
+
 -- Public, cross-addon read surface for the Quests data store. ns stays private.
 OneWoW_CatalogData_Quests_API = {}
 
@@ -160,3 +162,82 @@ end
 function OneWoW_CatalogData_Quests_API.PurgeCharacter(charKey)
     return ns.CompletionTracker:PurgeCharacter(charKey)
 end
+
+local tinsert = tinsert
+local pendingQuestNames = {}
+
+local questNameFrame = CreateFrame("Frame")
+questNameFrame:RegisterEvent("QUEST_DATA_LOAD_RESULT")
+questNameFrame:SetScript("OnEvent", function(_, _, questID, success)
+    local cbs = pendingQuestNames[questID]
+    if not cbs then return end
+    pendingQuestNames[questID] = nil
+    local name = success and OneWoW_CatalogData_Quests_API.GetQuestName(questID) or nil
+    for i = 1, #cbs do
+        xpcall(cbs[i], CallErrorHandler, questID, name)
+    end
+end)
+
+--- Live or static quest title. Nil until the client has a name.
+---@param questID number
+---@return string|nil name
+function OneWoW_CatalogData_Quests_API.GetQuestName(questID)
+    questID = tonumber(questID)
+    if not questID then return nil end
+
+    local quest = ns.QuestData:GetQuest(questID)
+    if quest and quest.name and quest.name ~= "" then
+        return quest.name
+    end
+
+    local name = C_QuestLog.GetTitleForQuestID(questID)
+    if name and name ~= "" then
+        return name
+    end
+
+    name = QuestUtils_GetQuestName(questID)
+    if name and name ~= "" then
+        return name
+    end
+    return nil
+end
+
+--- Request a quest title. Invokes callback with (questID, name|nil).
+---@param questID number
+---@param callback fun(questID: number, name: string|nil)|nil
+---@return string|nil name
+function OneWoW_CatalogData_Quests_API.RequestQuestName(questID, callback)
+    questID = tonumber(questID)
+    if not questID then
+        if callback then callback(questID, nil) end
+        return nil
+    end
+
+    local name = OneWoW_CatalogData_Quests_API.GetQuestName(questID)
+    if name then
+        if callback then callback(questID, name) end
+        return name
+    end
+
+    if callback then
+        local list = pendingQuestNames[questID]
+        if not list then
+            list = {}
+            pendingQuestNames[questID] = list
+        end
+        tinsert(list, callback)
+    end
+    C_QuestLog.RequestLoadQuestByID(questID)
+    return nil
+end
+
+OneWoW_GUI:RegisterEntityResolver("quest", {
+    Resolve = function(id)
+        return OneWoW_CatalogData_Quests_API.GetQuestName(id)
+    end,
+    RequestAsync = function(id, cb)
+        OneWoW_CatalogData_Quests_API.RequestQuestName(id, function(questID, name)
+            cb(questID, name and { name = name } or nil)
+        end)
+    end,
+})

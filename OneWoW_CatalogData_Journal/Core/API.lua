@@ -1,5 +1,7 @@
 local _, ns = ...
 
+local OneWoW_GUI = OneWoW_GUI
+
 -- Public, cross-addon read surface for the Journal data store. ns stays private.
 OneWoW_CatalogData_Journal_API = {}
 
@@ -172,3 +174,63 @@ end
 function OneWoW_CatalogData_Journal_API.ResolveNPCName(npcID)
     return ns.JournalData.ResolveNPCName(npcID)
 end
+
+local tinsert = tinsert
+local pendingNPCNames = {}
+
+local function CreatureHyperlink(npcID)
+    return ("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID)
+end
+
+local function DeliverNPCName(npcID, name)
+    local cbs = pendingNPCNames[npcID]
+    if not cbs then return end
+    pendingNPCNames[npcID] = nil
+    local info = name and { name = name } or nil
+    for i = 1, #cbs do
+        xpcall(cbs[i], CallErrorHandler, npcID, info)
+    end
+end
+
+local npcNameFrame = CreateFrame("Frame")
+npcNameFrame:RegisterEvent("TOOLTIP_DATA_UPDATE")
+npcNameFrame:SetScript("OnEvent", function()
+    if not next(pendingNPCNames) then return end
+    for npcID, cbs in pairs(pendingNPCNames) do
+        local name = ns.JournalData.ResolveNPCName(npcID)
+        if name then
+            pendingNPCNames[npcID] = nil
+            local info = { name = name }
+            for i = 1, #cbs do
+                xpcall(cbs[i], CallErrorHandler, npcID, info)
+            end
+        end
+    end
+end)
+
+local function RequestNPCName(npcID, cb)
+    local name = ns.JournalData.ResolveNPCName(npcID)
+    if name then
+        cb(npcID, { name = name })
+        return
+    end
+    C_TooltipInfo.GetHyperlink(CreatureHyperlink(npcID))
+    local list = pendingNPCNames[npcID]
+    if not list then
+        list = {}
+        pendingNPCNames[npcID] = list
+        C_Timer.After(1, function()
+            if pendingNPCNames[npcID] then
+                DeliverNPCName(npcID, ns.JournalData.ResolveNPCName(npcID))
+            end
+        end)
+    end
+    tinsert(list, cb)
+end
+
+OneWoW_GUI:RegisterEntityResolver("npc", {
+    Resolve = function(id)
+        return ns.JournalData.ResolveNPCName(id)
+    end,
+    RequestAsync = RequestNPCName,
+})
