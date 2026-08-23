@@ -124,7 +124,7 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["VENDOR_FILTER_SAVED"] = "已儲存篩選「%s」。",
     ["VENDOR_FILTER_SLOT_CLEARED"] = "已清除自訂篩選槽位 %d。",
     ["VENDOR_CUSTOM_SLOT"] = "自訂 %d",
-    ["VENDOR_CUSTOM_SLOT_APPLY"] = "點擊載入此篩選。",
+    ["VENDOR_CUSTOM_SLOT_APPLY"] = "點擊以新增符合的物品並切換到販售清單。",
     ["VENDOR_SLOT_EMPTY"] = "空槽位——使用儲存篩選在此存放搜尋。",
     ["VENDOR_SLOT_CLEAR_TT"] = "清除此已儲存的篩選",
     ["VENDOR_SAVE_NEED_TITLE"] = "請輸入此篩選的標題。",

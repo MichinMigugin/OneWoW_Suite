@@ -124,7 +124,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["VENDOR_FILTER_SAVED"] = "필터 \"%s\" 저장됨.",
     ["VENDOR_FILTER_SLOT_CLEARED"] = "사용자 지정 필터 슬롯 %d을(를) 비웠습니다.",
     ["VENDOR_CUSTOM_SLOT"] = "사용자 지정 %d",
-    ["VENDOR_CUSTOM_SLOT_APPLY"] = "클릭하여 이 필터를 불러옵니다.",
+    ["VENDOR_CUSTOM_SLOT_APPLY"] = "클릭하면 일치하는 아이템을 추가하고 판매 목록으로 이동합니다.",
     ["VENDOR_SLOT_EMPTY"] = "빈 슬롯 — 필터 저장으로 검색을 여기에 보관하세요.",
     ["VENDOR_SLOT_CLEAR_TT"] = "저장된 이 필터 지우기",
     ["VENDOR_SAVE_NEED_TITLE"] = "이 필터의 제목을 입력하세요.",

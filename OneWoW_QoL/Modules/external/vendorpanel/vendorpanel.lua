@@ -1377,6 +1377,7 @@ function VendorPanel:AddGearBelowIlvl(targetIlvl)
         print("OneWoW QoL: " .. string.format(L["VENDOR_GEAR_ADDED"], count, targetIlvl))
         self:UpdatePreviewPanel()
         self:UpdateButton()
+        self:SetVendorTab("sell")
     else
         print("OneWoW QoL: " .. string.format(L["VENDOR_GEAR_NONE"], targetIlvl))
     end
@@ -1471,6 +1472,7 @@ function VendorPanel:ClearCustomFilterSlot(slotIndex)
     print("OneWoW QoL: " .. string.format(L["VENDOR_FILTER_SLOT_CLEARED"], slotIndex))
 end
 
+--- Add bag items matching a saved filter and switch to the sell list.
 function VendorPanel:ApplyCustomFilterSlot(slotIndex)
     local slot = GetCustomFilters()[slotIndex]
     if not slot or not slot.expr or slot.expr == "" then return end
@@ -1478,7 +1480,7 @@ function VendorPanel:ApplyCustomFilterSlot(slotIndex)
         state.addTab.searchBox:SetText(slot.expr)
         state.addTab.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
-    self:UpdateSearchPreview()
+    self:AddSearchMatches(slot.expr)
 end
 
 --- Add every bag item matching a bag-search expression to the sell list.

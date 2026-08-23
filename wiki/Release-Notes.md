@@ -86,7 +86,13 @@
 
 ---
 
-*No user-facing changes this release for QoL, Mail, Shopping List, Notes, or Direct Deposit.*
+### QoL
+#### Vendor Panel
+- Saved filters and the gear button add items and switch to the sell list so you can sell right away.
+
+---
+
+*No user-facing changes this release for Mail, Shopping List, Notes, or Direct Deposit.*
 
 ---
 

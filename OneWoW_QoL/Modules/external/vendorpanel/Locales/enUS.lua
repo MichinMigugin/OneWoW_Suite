@@ -123,7 +123,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["VENDOR_FILTER_SAVED"] = "Saved filter \"%s\".",
     ["VENDOR_FILTER_SLOT_CLEARED"] = "Cleared custom filter slot %d.",
     ["VENDOR_CUSTOM_SLOT"] = "Custom %d",
-    ["VENDOR_CUSTOM_SLOT_APPLY"] = "Click to load this filter.",
+    ["VENDOR_CUSTOM_SLOT_APPLY"] = "Click to add matching items and switch to the sell list.",
     ["VENDOR_SLOT_EMPTY"] = "Empty slot — use Save Filter to store a search here.",
     ["VENDOR_SLOT_CLEAR_TT"] = "Clear this saved filter",
     ["VENDOR_SAVE_NEED_TITLE"] = "Enter a title for this filter.",

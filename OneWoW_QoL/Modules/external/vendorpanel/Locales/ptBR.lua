@@ -124,7 +124,7 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["VENDOR_FILTER_SAVED"] = "Filtro \"%s\" salvo.",
     ["VENDOR_FILTER_SLOT_CLEARED"] = "Slot de filtro personalizado %d limpo.",
     ["VENDOR_CUSTOM_SLOT"] = "Personalizado %d",
-    ["VENDOR_CUSTOM_SLOT_APPLY"] = "Clique para carregar este filtro.",
+    ["VENDOR_CUSTOM_SLOT_APPLY"] = "Clique para adicionar os itens correspondentes e ir para a lista de venda.",
     ["VENDOR_SLOT_EMPTY"] = "Slot vazio — use Salvar filtro para armazenar uma busca aqui.",
     ["VENDOR_SLOT_CLEAR_TT"] = "Limpar este filtro salvo",
     ["VENDOR_SAVE_NEED_TITLE"] = "Digite um título para este filtro.",
