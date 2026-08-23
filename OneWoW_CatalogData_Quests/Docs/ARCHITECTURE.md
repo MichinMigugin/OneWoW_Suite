@@ -27,7 +27,7 @@ Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` pro
 
 Per-expansion Lua shards under `Data/QuestDB/`:
 
-Each expansion is one full `QuestDB_*.lua` shard. Late registers go through `OneWoW_CatalogData_Quests_API.RegisterQuestData`.
+Each expansion is one full `QuestDB_*.lua` shard. Shards load through `ns:RegisterQuestData`.
 
 ## Tools (offline / Workspace)
 

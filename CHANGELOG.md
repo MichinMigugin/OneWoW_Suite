@@ -38,7 +38,6 @@
 - Quest Chain on the detail pane is a numbered list that wraps with the panel. The quest you have open is highlighted. Other steps stay clickable links; completion is not scanned for the whole chain.
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 - About 100 more Midnight quests now have giver pins, and more of them show quest text.
-- The Quests pack now includes leftover older quests from Classic through Dragonflight. The separate Extended Data addon is gone.
 
 ## Journal
 - Logging in no longer stalls on Journal.

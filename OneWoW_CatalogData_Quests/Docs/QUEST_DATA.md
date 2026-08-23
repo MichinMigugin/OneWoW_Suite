@@ -22,8 +22,7 @@ cross-alt via AltTracker.
 ## What ships
 
 Every expansion ships a full `QuestDB_*.lua` shard (Classic through Midnight).
-Late registers still go through
-`OneWoW_CatalogData_Quests_API.RegisterQuestData`.
+Shards load through `ns:RegisterQuestData`.
 
 ## Schema
 

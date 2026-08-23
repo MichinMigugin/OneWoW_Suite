@@ -1810,15 +1810,6 @@ function QuestData:StoreQuestInfo(questID, data)
     QueueQuestUIRefresh()
 end
 
---- Wipe merged caches after a late static register.
-function QuestData:NotifyStaticDataChanged()
-    allQuestsCache = nil
-    wipe(expansionQuestsCache)
-    ClearQuestDerivedCaches()
-    self:InvalidateQuestRewardIndex()
-    QueueQuestUIRefresh()
-end
-
 --- Persist enrichment for an already-known quest WITHOUT invalidating the
 --- derived caches or triggering a list refresh. Used by the detail view to fill
 --- in display-only fields (mapID, classification, tagName) on click; rebuilding

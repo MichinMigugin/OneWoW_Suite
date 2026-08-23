@@ -79,7 +79,7 @@ The Catalog works with companion data addons to provide complete information:
 ### Data: Quests (OneWoW_CatalogData_Quests)
 - Static quest database with live scanner enrichment
 - Per-character completion tracking
-- Classic through Midnight in full, including leftover older quests
+- Classic through Midnight in full
 
 Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running.
 

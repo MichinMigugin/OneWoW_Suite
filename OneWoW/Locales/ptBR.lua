@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "Tradeskills segue o layout de Diário/Vendedores, com quantidades tenho/preciso da conta, um detalhe Em mãos e o filtro Tenho materiais quando Storage está disponível. Profissão é um menu; Limpar restaura o marcador de busca.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "Cartões de missões seguem o Diário (nome, Expansão | tipo de missão, tags). A expansão fica sob a busca; Zona e Progresso compartilham a linha. Limpar restaura o marcador de busca. O pacote de missões agora inclui as missões antigas restantes de Classic até Dragonflight. O addon separado Dados estendidos não existe mais.",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "Cartões de missões seguem o Diário (nome, Expansão | tipo de missão, tags). A expansão fica sob a busca; Zona e Progresso compartilham a linha. Limpar restaura o marcador de busca.",
     ["WHATS_NEW_H_MAIL_BODY"] = "As abas do Correio e os rótulos traduzidos mostram de novo o idioma certo em vez de caracteres ilegíveis. A janela do Correio segue a fonte da suíte quando você a altera, sem recarregar.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montaria automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montaria automática pausa em combate e em outras situações com auras restritas, detecta furtividade sem varrer bônus secretos e não dá mais erro quando os dados de aura estão restritos. As dicas de Montarias dos jogadores usam a mesma proteção.",

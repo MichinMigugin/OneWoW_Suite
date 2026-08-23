@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "Tradeskills folgt dem Layout von Journal/Vendors, mit accountweiten Hab/Brauche-Reagenzmengen, einer „Zur Hand“-Aufschlüsselung und dem Filter „Habe Materialien“, wenn Storage verfügbar ist. Beruf ist ein Dropdown; Löschen stellt den Suchplatzhalter wieder her.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "Quest-Listenkarten entsprechen dem Journal (Name, Erweiterung | Questtyp, Kategorie-Tags). Erweiterung sitzt unter der Suche; Zone und Fortschritt teilen eine Zeile. Löschen stellt den Suchplatzhalter wieder her. Das Questpaket enthält jetzt auch die restlichen älteren Quests von Classic bis Dragonflight. Das separate Addon Erweiterte Daten ist entfallen.",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "Quest-Listenkarten entsprechen dem Journal (Name, Erweiterung | Questtyp, Kategorie-Tags). Erweiterung sitzt unter der Suche; Zone und Fortschritt teilen eine Zeile. Löschen stellt den Suchplatzhalter wieder her.",
     ["WHATS_NEW_H_MAIL_BODY"] = "Post-Tabs und übersetzte Beschriftungen zeigen wieder die richtige Sprache statt verstümmelter Zeichen. Das Post-Fenster folgt der Suite-Schriftart, wenn ihr sie ändert, ohne Reload.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto-Reittier",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto-Reittier pausiert im Kampf und in anderen aura-beschränkten Situationen, erkennt Verstohlenheit ohne geheime Stärkungszauber zu scannen und löst keinen Fehler mehr aus, wenn Auradaten eingeschränkt sind. Spieler-Reittiere-Tooltips nutzen denselben Schutz.",

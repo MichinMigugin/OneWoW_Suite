@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "Tradeskills segue il layout di Diario/Mercanti, con quantità ho/serve a livello account, un dettaglio A portata di mano e il filtro Ho i materiali quando Storage è disponibile. Professione è un menu a discesa; Cancella ripristina il segnaposto di ricerca.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "Le schede missioni seguono il Diario (nome, Espansione | tipo missione, tag). L’espansione è sotto la ricerca; Zona e Progresso condividono una riga. Cancella ripristina il segnaposto di ricerca. Il pacchetto missioni ora include le missioni più vecchie rimaste da Classic a Dragonflight. L'addon separato Dati estesi non c'è più.",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "Le schede missioni seguono il Diario (nome, Espansione | tipo missione, tag). L’espansione è sotto la ricerca; Zona e Progresso condividono una riga. Cancella ripristina il segnaposto di ricerca.",
     ["WHATS_NEW_H_MAIL_BODY"] = "Le schede Posta e le etichette tradotte mostrano di nuovo la lingua giusta invece di caratteri illeggibili. La finestra Posta segue il carattere della suite quando lo cambiate, senza ricaricare.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Cavalcatura automatica",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Cavalcatura automatica si mette in pausa in combattimento e in altre situazioni con auree riservate, rileva lo stealth senza scansionare i buff segreti e non genera più errori quando i dati delle auree sono riservati. I tooltip di Cavalcature dei giocatori usano la stessa protezione.",

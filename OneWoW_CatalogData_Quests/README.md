@@ -18,7 +18,7 @@ Players use quest data through the Catalog — this addon has no standalone UI.
 
 ## Supported Expansions
 
-Classic through Midnight ship in full, including leftover older quests.
+Classic through Midnight ship in full.
 
 ---
 
