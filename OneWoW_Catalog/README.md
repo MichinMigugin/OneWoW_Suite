@@ -10,11 +10,11 @@
 Browse dungeons, raids, Delves, and World hubs from every expansion:
 - **All Expansions Covered** - Classic through Midnight (Delves: The War Within and Midnight; World cards for Classic through Cataclysm, outdoor hubs after that; Zone and City cards)
 - Loot matches the Adventure Guide; World cards list World Bosses and World Rares with their own loot and a rares count; extra drops with a known boss or rare sit on that encounter; the rest stay under General Loot; a drop from several rares is listed on each rare
-- Source icons on encounters and loot: Adventure Guide, shipped OneWoW data, Extended Data, or live AllTheThings. When AllTheThings is loaded, the filter bar shows ATT Detected
+- Source icons on encounters and loot: Adventure Guide, shipped OneWoW data, or live AllTheThings. When AllTheThings is loaded, the filter bar shows ATT Detected
 - See all instances and encounters at a glance
 - Pin on a card or the details toolbar opens the world map at that instance's entrance (gold pins are Wowhead locations until official doors ship)
 - Instance Type includes World, Zones, Cities, and Delves, with a Show Bountiful checkbox for this week's bountiful doors
-- A pin on a World-hub rare, boss, or achievement opens that zone or city when we know the map. Cities and current zones ship with Journal; older outdoor zones need Extended Data
+- A pin on a World-hub rare, boss, or achievement opens that zone or city when we know the map. Cities and outdoor zones for every expansion ship with Journal
 - Delve cards use official entrance background art
 - Achievements sit above loot on the details side (collapsible, same header as Items). Cards show bosses, rares (World), items, and the achievement count. World cards include that expansion's exploration achievements. Status is a check / Warband mark / X
 - Adventure Guide button on dungeon and raid details. Delves keep a disabled Difficulty dropdown so the map pin lines up
@@ -79,20 +79,15 @@ The Catalog works with companion data addons to provide complete information:
 ### Data: Quests (OneWoW_CatalogData_Quests)
 - Static quest database with live scanner enrichment
 - Per-character completion tracking
-- Midnight and The War Within in full, plus older story and campaign chains
+- Classic through Midnight in full, including leftover older quests
 
-### Data: Extended Data (OneWoW_ExtendedData, optional extra)
-- Leftover older quests from Classic through Dragonflight
-- Not in the main Suite / CurseForge zip
-- Catalog works without it
-
-Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running. `OneWoW_ExtendedData` is a separate optional download.
+Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running.
 
 ---
 
 ## Disabling Data Modules
 
-`OneWoW_Catalog` always loads when enabled. The **CatalogData** addons (and optional **Extended Data**) are separate load units; turn one off in the WoW addon list (or via suite feature controls) and only that pack's data disappears. Other Catalog tabs and unrelated suite addons keep working.
+`OneWoW_Catalog` always loads when enabled. The **CatalogData** addons are separate load units; turn one off in the WoW addon list (or via suite feature controls) and only that pack's data disappears. Other Catalog tabs and unrelated suite addons keep working.
 
 Per-pack READMEs have a short summary; this table is the canonical cross-module reference.
 
@@ -100,7 +95,6 @@ Per-pack READMEs have a short summary; this table is the canonical cross-module 
 | --- | --- | --- |
 | **Journal** (`OneWoW_CatalogData_Journal`) | Journal tab empty; Item Search drop filter and drop details; collection status on journal loot; navigate-to-instance from toasts | QoL Item Tracker — no instance/encounter lines on item tooltips; QoL — no collection grid on instance-entry toasts or ESC instance panel |
 | **Quests** (`OneWoW_CatalogData_Quests`) | Quests tab empty (including active-quest views); Item Search quest-reward filter and details; open-to-quest navigation | Notes — no associated-quest list on NPCs; Journal — no "View Quest" or quest completion on journal loot *(also needs Quests)*; AltTracker settings — quest completion not listed for character purge |
-| **Extended Data** (`OneWoW_ExtendedData`) | Leftover older quests (Classic through Dragonflight) missing from search | Nothing else. Midnight, The War Within, story/campaign chains, and completion tracking stay in Quests |
 | **Vendors** (`OneWoW_CatalogData_Vendors`) | Vendors tab empty; Item Search vendor filter and "sold by" details; open-to-vendor navigation | Core — no "Open Vendor Details" on NPC context menus; QoL Item Tracker — no vendor lines on item tooltips |
 | **Tradeskills** (`OneWoW_CatalogData_Tradeskills`) | Tradeskills tab empty; Item Search crafted filter and recipe details (including known-by alts) | ShoppingList — no craft detection, craft orders, recipe picker, or crafting-quality inventory rollup; QoL Professions Panel — no supplemental alt recipe data from tradeskill scans |
 
@@ -144,7 +138,6 @@ Supports all 11 suite locales via **OneWoW** — see [LOCALES.md](../OneWoW/Docs
 - **OneWoW_CatalogData_Tradeskills** - Recommended for recipe and profession data (optional)
 - **OneWoW_CatalogData_Vendors** - Recommended for vendor and item data (optional)
 - **OneWoW_CatalogData_Quests** - Recommended for quest database and completion data (optional)
-- **OneWoW_ExtendedData** - Optional extra leftover older quests (not in the main zip)
 
 ## Slash Commands
 

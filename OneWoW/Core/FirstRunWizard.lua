@@ -134,7 +134,6 @@ local STORE_ICONS = {
     OneWoW_AltTracker_Endgame       = 255347,   -- achievement_dungeon_heroic_gloryoftheraider
     OneWoW_AltTracker_Professions   = 4624728,  -- inv_10_specialization_professionbook_engineering_color1
     OneWoW_AltTracker_Storage       = 1542852,  -- inv_misc_treasurechest03b
-    OneWoW_ExtendedData             = 237446,   -- inv_misc_book_11
 }
 
 -- Sub-row copy and "What's affected?" modal keys (Catalog optional stores only).
@@ -143,7 +142,6 @@ local STORE_DESC_KEYS = {
     OneWoW_CatalogData_Quests      = "WIZARD_CAT_DATA_QUESTS_DESC",
     OneWoW_CatalogData_Vendors     = "WIZARD_CAT_DATA_VENDORS_DESC",
     OneWoW_CatalogData_Tradeskills = "WIZARD_CAT_DATA_TRADESKILLS_DESC",
-    OneWoW_ExtendedData            = "WIZARD_CAT_DATA_EXTENDED_DESC",
 }
 
 local STORE_AFFECTED_KEYS = {
@@ -162,10 +160,6 @@ local STORE_AFFECTED_KEYS = {
     OneWoW_CatalogData_Tradeskills = {
         title = "WIZARD_AFFECTED_TRADESKILLS_TITLE",
         body  = "WIZARD_AFFECTED_TRADESKILLS_BODY",
-    },
-    OneWoW_ExtendedData = {
-        title = "WIZARD_AFFECTED_EXTENDED_TITLE",
-        body  = "WIZARD_AFFECTED_EXTENDED_BODY",
     },
 }
 

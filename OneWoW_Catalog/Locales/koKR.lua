@@ -105,7 +105,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "난이도",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "OneWoW에 포함",
     ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "AllTheThings에서 실시간",
-    ["JOURNAL_SOURCE_EXTENDED_TT"] = "확장 데이터에서",
     ["JOURNAL_OPEN_ZONE_TT"] = "이 지역의 카드를 엽니다",
     ["JOURNAL_ATT_DETECTED"] = "ATT 감지됨",
     ["JOURNAL_ATT_DETECTED_TT"] = "추가 정보가 표시될 수 있습니다.",

@@ -31,7 +31,6 @@ Site and community: [https://onewow.net/](https://onewow.net/)
 | **Required** | `OneWoW` | Core hub and shared UI |
 | **Feature modules** | `OneWoW_Bags`, `OneWoW_QoL`, `OneWoW_AltTracker`, `OneWoW_Catalog`, `OneWoW_Trackers`, `OneWoW_Notes`, `OneWoW_ShoppingList`, `OneWoW_Mail`, `OneWoW_DirectDeposit` | Enable in Manage Features |
 | **Catalog data** | `OneWoW_CatalogData_*` | Companion data for Catalog — enable with Catalog |
-| **Extended Data** | `OneWoW_ExtendedData` | Optional extra leftover older quests. Not in the main zip. |
 | **AltTracker data** | `OneWoW_AltTracker_*` | Companion data for AltTracker — enable with AltTracker |
 | **Tools** | `OneWoW_Utility_DevTool` | Optional in-game developer inspector |
 

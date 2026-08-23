@@ -293,19 +293,15 @@ end
 local COL_SOURCE_RIGHT = -248
 local SOURCE_ICON_SIZE = 14
 local ATT_SOURCE_TEXTURE = "Interface\\AddOns\\AllTheThings\\assets\\logo_32x32"
-local EXTENDED_SOURCE_TEXTURE = 237446
 
 ---@param row table
----@return string kind "ej"|"att"|"extended"|"onewow"
+---@return string kind "ej"|"att"|"onewow"
 local function SourceKind(row)
     if row.source == "att-live" then
         return "att"
     end
     if row.source == "ej" then
         return "ej"
-    end
-    if row.source == "extended" then
-        return "extended"
     end
     return "onewow"
 end
@@ -318,9 +314,6 @@ local function SourceTooltipText(kind)
     end
     if kind == "ej" then
         return ADVENTURE_JOURNAL
-    end
-    if kind == "extended" then
-        return L["JOURNAL_SOURCE_EXTENDED_TT"]
     end
     return L["JOURNAL_SOURCE_ONEWOW_TT"]
 end
@@ -344,8 +337,6 @@ local function AddSourceIcon(parent, row, anchor)
         tex:SetAtlas("token-choice-wow")
     elseif kind == "att" then
         tex:SetTexture(ATT_SOURCE_TEXTURE)
-    elseif kind == "extended" then
-        tex:SetTexture(EXTENDED_SOURCE_TEXTURE)
     else
         tex:SetTexture(OneWoW_GUI.Constants.ICON_TEXTURES.neutral)
     end
@@ -800,25 +791,6 @@ local function CreateInstanceListRow(parent, _)
     end)
     card.pinBtn = pinBtn
 
-    local extIcon = CreateFrame("Frame", nil, card)
-    extIcon:SetSize(14, 14)
-    extIcon:SetPoint("RIGHT", pinBtn, "LEFT", -4, 0)
-    extIcon:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
-    local extTex = extIcon:CreateTexture(nil, "ARTWORK")
-    extTex:SetAllPoints()
-    extTex:SetTexture(EXTENDED_SOURCE_TEXTURE)
-    extIcon:EnableMouse(true)
-    extIcon:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["JOURNAL_SOURCE_EXTENDED_TT"])
-        GameTooltip:Show()
-    end)
-    extIcon:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    extIcon:Hide()
-    card.extendedIcon = extIcon
-
     local infoText = OneWoW_GUI:CreateFS(card, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
     infoText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, 0)
@@ -898,11 +870,6 @@ local function BindInstanceListRow(row, _, instData, state)
     -- Skeleton cards already carry the hydrated totals (Generated loot plus
     -- static extras), so there is never a "still loading" count to show.
     row.countText:SetText(table.concat(FormatCardCountParts(instData), "  |  "))
-    if instData.source == "extended" then
-        row.extendedIcon:Show()
-    else
-        row.extendedIcon:Hide()
-    end
 
     local availW = (row:GetWidth() > 0 and row:GetWidth() or 260) - CARD_TAG_PAD_X * 2
     local xPos = CARD_TAG_PAD_X
@@ -2844,3 +2811,4 @@ function ns.UI.OpenToInstance(mapID)
         end
     end)
 end
+                                                                                   

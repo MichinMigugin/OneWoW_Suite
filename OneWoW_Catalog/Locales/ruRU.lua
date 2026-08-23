@@ -106,7 +106,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Сложность",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "Поставляется с OneWoW",
     ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Вживую из AllTheThings",
-    ["JOURNAL_SOURCE_EXTENDED_TT"] = "Из Extended Data",
     ["JOURNAL_OPEN_ZONE_TT"] = "Открыть карточку этой зоны",
     ["JOURNAL_ATT_DETECTED"] = "ATT обнаружен",
     ["JOURNAL_ATT_DETECTED_TT"] = "Может быть добавлена дополнительная информация.",

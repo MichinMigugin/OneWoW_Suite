@@ -106,7 +106,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "难度",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "随 OneWoW 提供",
     ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "来自 AllTheThings 的实时数据",
-    ["JOURNAL_SOURCE_EXTENDED_TT"] = "来自扩展数据",
     ["JOURNAL_OPEN_ZONE_TT"] = "打开此地区的卡片",
     ["JOURNAL_ATT_DETECTED"] = "已检测到 ATT",
     ["JOURNAL_ATT_DETECTED_TT"] = "可能会加入更多信息。",

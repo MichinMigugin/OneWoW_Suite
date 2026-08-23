@@ -43,7 +43,6 @@ flowchart TB
         CDV[CatalogData_Vendors]
         CDT[CatalogData_Tradeskills]
         CDQ[CatalogData_Quests]
-        CDE[ExtendedData optional]
     end
     Catalog --> CatalogData
 
@@ -98,7 +97,6 @@ Companion addons for [OneWoW_Catalog](OneWoW_Catalog/README.md). Enable with Cat
 | [OneWoW_CatalogData_Vendors](OneWoW_CatalogData_Vendors/README.md) | Vendors and what they sell |
 | [OneWoW_CatalogData_Tradeskills](OneWoW_CatalogData_Tradeskills/README.md) | Professions and recipes |
 | [OneWoW_CatalogData_Quests](OneWoW_CatalogData_Quests/README.md) | Quest database and completion tracking |
-| [OneWoW_ExtendedData](OneWoW_ExtendedData/README.md) | Optional leftover older quests (not in the main zip) |
 
 ### AltTracker data stores
 

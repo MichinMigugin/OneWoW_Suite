@@ -21,12 +21,8 @@ cross-alt via AltTracker.
 
 ## What ships
 
-| Expansion set | Suite shard | Leftovers |
-| --- | --- | --- |
-| The War Within, Midnight | Full | — |
-| Classic through Dragonflight | Story / campaign (BtW chain books) | `OneWoW_ExtendedData/Data/Quests/` |
-
-Extended leftovers register through
+Every expansion ships a full `QuestDB_*.lua` shard (Classic through Midnight).
+Late registers still go through
 `OneWoW_CatalogData_Quests_API.RegisterQuestData`.
 
 ## Schema
@@ -60,7 +56,7 @@ python bin/wowhead/quest-refresh.py run --expansions midnight --only-new
 python bin/wowhead/quest-split.py emit --expansions all
 ```
 
-Campaign slim set: `bin/wowhead/btw-campaign-ids.py` writes
+BtW campaign IDs: `bin/wowhead/btw-campaign-ids.py` writes
 `bin/wowhead/data/btw-campaign-ids.json`. Pin fill:
 `bin/wowhead/fill-btw-pins.py` (never overwrites an existing pin).
 

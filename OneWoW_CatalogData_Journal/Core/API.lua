@@ -133,12 +133,6 @@ function OneWoW_CatalogData_Journal_API.GetZoneInstance(expansionID, mapID)
     return ns.JournalData:GetZoneInstance(expansionID, mapID)
 end
 
---- Merge older outdoor zone cards from Extended Data.
----@param byExp table
-function OneWoW_CatalogData_Journal_API.RegisterZoneMembership(byExp)
-    ns.JournalData:RegisterZoneMembership(byExp)
-end
-
 --- All instance cards for a world map ID (dual remakes may return multiple).
 ---@param mapID number
 ---@return table instances

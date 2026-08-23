@@ -699,7 +699,6 @@ ns.ModuleManifest = {
             "OneWoW_CatalogData_Vendors",
             "OneWoW_CatalogData_Quests",
             "OneWoW_CatalogData_Journal",
-            "OneWoW_ExtendedData",
         } },
     { addon = "OneWoW_Trackers",        display = "Trackers",      cmd = "/1wt",   module = "trackers",   tabOrder = 4, loadPhase = "login" },
     { addon = "OneWoW_QoL",             display = "QoL",           cmd = "/1wqol", module = "qol",        tabOrder = 5, loadPhase = "login" },
@@ -724,7 +723,6 @@ local STORE_LABEL_KEYS = {
     OneWoW_CatalogData_Quests       = "CAT_MOD_QUESTS",
     OneWoW_CatalogData_Vendors      = "CAT_MOD_VENDORS",
     OneWoW_CatalogData_Tradeskills  = "CAT_MOD_TRADESKILLS",
-    OneWoW_ExtendedData             = "CAT_MOD_EXTENDED_DATA",
 }
 
 --- Manifest entry for a root load unit, or nil.

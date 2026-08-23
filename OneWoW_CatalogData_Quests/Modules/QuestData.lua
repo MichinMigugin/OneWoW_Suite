@@ -1810,7 +1810,7 @@ function QuestData:StoreQuestInfo(questID, data)
     QueueQuestUIRefresh()
 end
 
---- Wipe merged caches after a late static register (Extended Data).
+--- Wipe merged caches after a late static register.
 function QuestData:NotifyStaticDataChanged()
     allQuestsCache = nil
     wipe(expansionQuestsCache)

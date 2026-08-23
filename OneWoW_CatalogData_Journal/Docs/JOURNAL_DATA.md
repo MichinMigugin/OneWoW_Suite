@@ -124,15 +124,12 @@ World card encounters are:
 
 ## Zones and cities
 
-Cards come from generated `JournalZoneMembership` (cities for every expansion,
-plus The War Within and Midnight outdoor zones). Classification uses `UiMap`
+Cards come from generated `JournalZoneMembership` (cities and outdoor zones
+for every expansion). Classification uses `UiMap`
 Type 3 / System 0: continent children plus the city / special-zone seed
 (Undermine, Vashj'ir trio, Nazjatar, Korthia). Wowhead zone lists are
-AreaTable ids, joined through `UiMapAssignment`. Classic–Dragonflight outdoor
-zones register from `OneWoW_ExtendedData` via
-`OneWoW_CatalogData_Journal_API.RegisterZoneMembership` and stamp
-`source = "extended"`. Floor UiMaps fold through `JournalZoneCollapse`
-(Wrath Dalaran 125 stays separate from Legion Dalaran 627).
+AreaTable ids, joined through `UiMapAssignment`. Floor UiMaps fold through
+`JournalZoneCollapse` (Wrath Dalaran 125 stays separate from Legion Dalaran 627).
 
 Zone cards use the World encounter layout (rares, bosses when present,
 General Loot). Extras with a membership `mapID` attach to that zone key
@@ -146,7 +143,7 @@ Dungeon and raid extras with an `encounterID` merge onto that boss the same
 way. Live EJ creates a missing boss row when the Adventure Guide lists one
 OneWoW did not ship. Live ATT is a fallback only: if AllTheThings is already loaded it places
 extras we have not shipped yet. Encounter rows carry `source`
-(`ej` / `att` / `att-live` / `extended`) for the Journal Source icon.
+(`ej` / `att` / `att-live`) for the Journal Source icon.
 
 ## Delves
 

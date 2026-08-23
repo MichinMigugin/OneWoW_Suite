@@ -12,9 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # Desktop companion — not a WoW load unit; never ship in the CurseForge zip.
 SKIP_ADDONS = frozenset({"OneWoW_AccountSync"})
 
-# Optional extra download. Still has a TOC (version bumps see it) but stays
-# out of the main Suite zip.
-SKIP_FROM_SUITE_ZIP = frozenset({"OneWoW_ExtendedData"})
+SKIP_FROM_SUITE_ZIP = frozenset()
 
 INTERFACE_RE = re.compile(r"^(##\s*Interface:\s*)(.+)$", re.IGNORECASE | re.MULTILINE)
 VERSION_RE = re.compile(r"^(##\s*Version:\s*)(.+)$", re.IGNORECASE | re.MULTILINE)

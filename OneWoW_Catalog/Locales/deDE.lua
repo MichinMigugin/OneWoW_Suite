@@ -106,7 +106,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Schwierigkeit",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "Mit OneWoW ausgeliefert",
     ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Live von AllTheThings",
-    ["JOURNAL_SOURCE_EXTENDED_TT"] = "Aus Extended Data",
     ["JOURNAL_OPEN_ZONE_TT"] = "Karte dieser Zone öffnen",
     ["JOURNAL_ATT_DETECTED"] = "ATT erkannt",
     ["JOURNAL_ATT_DETECTED_TT"] = "Es können zusätzliche Informationen hinzugefügt werden.",

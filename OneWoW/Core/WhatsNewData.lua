@@ -19,7 +19,7 @@ ns.WhatsNewData = {
         { titleKey = "MODULE_ALTTRACKER",             bodyKey = "WHATS_NEW_H_ALTTRACKER_BODY" },
         { titleKey = "MODULE_TRACKERS",               bodyKey = "WHATS_NEW_H_TRACKERS_BODY" },
         { titleKey = "MODULE_BAGS",                   bodyKey = "WHATS_NEW_H_BAGS_UI_BODY" },
-        { titleKey = "WHATS_NEW_H_EXTENDED_TITLE",    bodyKey = "WHATS_NEW_H_EXTENDED_BODY" },
+        { titleKey = "WHATS_NEW_H_QUESTS_TITLE",      bodyKey = "WHATS_NEW_H_QUESTS_BODY" },
         { titleKey = "MAIL",                          bodyKey = "WHATS_NEW_H_MAIL_BODY" },
     },
 }

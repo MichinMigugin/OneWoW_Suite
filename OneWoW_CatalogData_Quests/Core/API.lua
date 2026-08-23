@@ -5,7 +5,7 @@ local OneWoW_GUI = OneWoW_GUI
 -- Public, cross-addon read surface for the Quests data store. ns stays private.
 OneWoW_CatalogData_Quests_API = {}
 
---- Merge a static quest table (used by OneWoW_ExtendedData after Quests is ready).
+--- Merge a static quest table (used by QuestDB shards).
 ---@param source table<number, table>
 function OneWoW_CatalogData_Quests_API.RegisterQuestData(source)
     ns:RegisterQuestData(source)

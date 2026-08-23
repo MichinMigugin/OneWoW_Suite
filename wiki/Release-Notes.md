@@ -38,10 +38,7 @@
 - Quest Chain on the detail pane is a numbered list that wraps with the panel. The quest you have open is highlighted. Other steps stay clickable links; completion is not scanned for the whole chain.
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 - About 100 more Midnight quests now have giver pins, and more of them show quest text.
-- The default Quests pack now ships Midnight and The War Within in full, plus older story and campaign chains. Leftover older quests moved to optional Extended Data so the main download stays smaller.
-
-#### Extended Data
-- New optional extra pack for leftover older quests and Classic through Dragonflight Journal zone cards. Catalog, Midnight, The War Within, and completion tracking work without it. Not included in the main Suite download.
+- The Quests pack now includes leftover older quests from Classic through Dragonflight. The separate Extended Data addon is gone.
 
 #### Journal
 - Logging in no longer stalls on Journal.
@@ -56,7 +53,7 @@
 - Zone and city cards now list that place's Explore achievement, Skyriding Glyphs when the title names the city, and world rares we already shipped with a known map. AllTheThings only fills leftovers it still has.
 - When AllTheThings is loaded, the Journal filter bar shows ATT Detected. It only adds leftovers that are not already in shipped OneWoW data.
 - Instance Type includes World. Classic through Cataclysm get a World card; later expansions use the Adventure Guide outdoor hubs.
-- Instance Type also lists Zones and Cities. The World hub stays the full list for that expansion. A pin on a rare, boss, or achievement opens that place's card when we know the zone. Cities and The War Within / Midnight zones ship with Journal, including City of Threads, Tazavesh, and Midnight's Quel'Thalas zones (Eversong Woods, Silvermoon City, Harandar, Voidstorm, Isle of Quel'Danas, Zul'Aman, The Coiled Isle). Older outdoor zones need optional Extended Data and use a book source icon.
+- Instance Type also lists Zones and Cities. The World hub stays the full list for that expansion. A pin on a rare, boss, or achievement opens that place's card when we know the zone. Cities and outdoor zones for every expansion ship with Journal, including City of Threads, Tazavesh, and Midnight's Quel'Thalas zones (Eversong Woods, Silvermoon City, Harandar, Voidstorm, Isle of Quel'Danas, Zul'Aman, The Coiled Isle).
 - Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.
 - Journal cards and details show a dungeon, raid, or Delve icon next to the type. Bountiful delves use the bountiful icon. Delve cards use the official entrance background.
 - Instance Type now includes Delves (The War Within and Midnight). Show Bountiful sits next to Has uncollected and keeps only this week's bountiful doors; it clears when you close Catalog or press Clear. Bountiful cards use a gold border when the filter is off.
@@ -86,7 +83,7 @@
 
 ---
 
-- **Last Updated**: Aug 22, 2026
+- **Last Updated**: Aug 23, 2026
 
 ## R6.2608.1804
 
