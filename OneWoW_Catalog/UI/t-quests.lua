@@ -43,6 +43,7 @@ local availableFilterCache = {}
 local questRowStatusCache = {}
 local questGroupStatusCache = {}
 local activeQuestIDsAcrossAlts = {}
+local questCompletionJob = nil
 
 local QUEST_STATUS_TEXTURE_CHECK   = "Interface\\Buttons\\UI-CheckBox-Check"
 local QUEST_STATUS_ATLAS_BANG      = "SmallQuestBang"
@@ -746,6 +747,7 @@ local function GetActiveQuestLogQuests(addon)
 end
 
 local function GetAllCharactersActiveQuests(addon)
+    wipe(activeQuestIDsAcrossAlts)
     local byID = {}
 
     for _, quest in ipairs(GetActiveQuestLogQuests(addon)) do
@@ -1023,7 +1025,6 @@ local RACE_NAMES = {
 }
 
 local detailRenderVersion = 0
-local pendingRewardItemIDs = {}
 local rewardItemSearchWarmQueue = {}
 local rewardItemSearchWarmSeen = {}
 local rewardItemSearchWarmRunning = false
@@ -1111,37 +1112,6 @@ local function GetVisibleTooltipItemName()
     end
 
     return nil
-end
-
-local function RequestVisibleRewardItem(itemID)
-    itemID = tonumber(itemID)
-    if not itemID then
-        return
-    end
-
-    if pendingRewardItemIDs[itemID] then
-        return
-    end
-
-    local loader = ns.GetItemDataLoader()
-
-    local cachedItem = loader:GetCachedItem(itemID)
-    if cachedItem and cachedItem.name then
-        RememberAndApplyRewardItemName(itemID, cachedItem.name)
-        return
-    end
-
-    pendingRewardItemIDs[itemID] = true
-
-    loader:LoadItemData(itemID, function(_, itemData)
-        pendingRewardItemIDs[itemID] = nil
-
-        if not itemData or not itemData.name then
-            return
-        end
-
-        RememberAndApplyRewardItemName(itemID, itemData.name)
-    end)
 end
 
 local function GetRewardItemID(entry)
@@ -1321,7 +1291,7 @@ local function IsGenericNPCName(name)
         or name:find("^NPC #%d") ~= nil
 end
 
-local function ResolveNPCName(npcID, knownName)
+local function ResolveNPCName(npcID, knownName, allowLive)
     if not npcID then
         return nil
     end
@@ -1332,6 +1302,10 @@ local function ResolveNPCName(npcID, knownName)
 
     if npcNameCache[npcID] then
         return npcNameCache[npcID]
+    end
+
+    if not allowLive then
+        return nil
     end
 
     local hyperlink = ("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID)
@@ -1411,7 +1385,7 @@ local function ScheduleNPCNameRefresh(npcID, questData)
             return
         end
 
-        local npcName = ResolveNPCName(npcID)
+        local npcName = ResolveNPCName(npcID, nil, true)
         if npcName then
             npcNameRefreshPending[npcID] = nil
             ApplyVisibleNPCName(npcID, npcName)
@@ -1492,13 +1466,22 @@ end
 
 local function GetQuestDisplayName(questID, _)
     local API = OneWoW_CatalogData_Quests_API
-    local questName = API and API.GetQuestName(questID)
-    if not questName and API then
-        API.RequestQuestName(questID, function(id, name)
-            ApplyVisibleQuestName(id, name)
-        end)
-    end
+    local questName = API.GetQuestName(questID)
     return questName or ("Quest " .. tostring(questID))
+end
+
+local function RequestVisibleChainQuestName(questID)
+    questID = tonumber(questID)
+    if not questID then
+        return
+    end
+    local API = OneWoW_CatalogData_Quests_API
+    if API.GetQuestName(questID) then
+        return
+    end
+    API.RequestQuestName(questID, function(id, name)
+        ApplyVisibleQuestName(id, name)
+    end)
 end
 
 local function GetClassDisplayName(value)
@@ -2033,7 +2016,7 @@ function ShowQuestDetail(panels, questData)
         local npcID = tonumber(npcData.npcID)
         local fallbackNPCName = string.format(L["QUESTS_NPC_UNNAMED"], npcID or 0)
         local npcName =
-            (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name))
+            (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name, false))
             or (npcID and npcNameCache[npcID])
             or fallbackNPCName
 
@@ -2083,7 +2066,7 @@ function ShowQuestDetail(panels, questData)
                     return
                 end
 
-                local resolvedName = ResolveNPCName(npcID)
+                local resolvedName = ResolveNPCName(npcID, nil, true)
                 if resolvedName and resolvedName ~= npcName then
                     npcName = resolvedName
                     setLinkText("4dbfff")
@@ -2099,7 +2082,7 @@ function ShowQuestDetail(panels, questData)
 
         npcBtn:SetScript("OnEnter", function(self)
             local resolvedName =
-                (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name))
+                (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name, true))
                 or (npcID and npcNameCache[npcID])
 
             if resolvedName and resolvedName ~= npcName then
@@ -2145,7 +2128,7 @@ function ShowQuestDetail(panels, questData)
         npcBtn:SetScript("OnClick", function()
             if ns.Navigation and ns.Navigation.OpenNPC then
                 local resolvedName =
-                    (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name))
+                    (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name, true))
                     or (npcID and npcNameCache[npcID])
 
                 ns.Navigation:OpenNPC(npcData.npcID, {
@@ -2633,8 +2616,6 @@ function ShowQuestDetail(panels, questData)
             local itemColumns = math.max(1, math.min(5, math.floor((gridWidth + gridGap) / 190)))
             local itemColumnWidth = math.floor((gridWidth - (gridGap * (itemColumns - 1))) / itemColumns)
             local rewardItemEntries = {}
-            local immediateItemInfoBudget = 8
-            local immediateTooltipInfoBudget = 8
 
             for _, rewardItem in ipairs(questData.rewardItems) do
                 local itemID
@@ -2660,61 +2641,15 @@ function ShowQuestDetail(panels, questData)
                 local itemCount = entry.itemCount or 1
 
                 if itemID then
+                    local cachedName = addon.GetCachedItemName(itemID)
                     local itemName =
-                        addon.GetCachedItemName(itemID)
-
-                    local itemLink, itemQuality, itemTexture
-                    local itemIsQueued = pendingRewardItemIDs[itemID]
-
-                    local loader = ns.GetItemDataLoader()
-                    local cachedItem = loader:GetCachedItem(itemID)
-
-                    if cachedItem then
-                        itemName = itemName or cachedItem.name
-                        itemLink = itemLink or cachedItem.link
-                        itemQuality = itemQuality or cachedItem.quality
-                        itemTexture = itemTexture or cachedItem.icon
-                    end
-
-                    if not itemIsQueued and immediateItemInfoBudget > 0 then
-                        immediateItemInfoBudget = immediateItemInfoBudget - 1
-
-                        local fetchedName
-                        fetchedName, itemLink, itemQuality, _, _, _, _, _, _, itemTexture =
-                            C_Item.GetItemInfo(itemID)
-
-                        if fetchedName then
-                            itemName = fetchedName
-                        end
-                    end
-
-                    if not itemName
-                        and not itemIsQueued
-                        and immediateTooltipInfoBudget > 0
-                    then
-                        immediateTooltipInfoBudget = immediateTooltipInfoBudget - 1
-                        itemName = loader:GetTooltipItemName(itemID)
-                    end
-
-                    if itemName then
-                        pendingRewardItemIDs[itemID] = nil
-                        RememberAndApplyRewardItemName(itemID, itemName)
-                    elseif not itemName then
-                        RequestVisibleRewardItem(itemID)
-                    end
-
-                    local itemNameUnresolved = not itemName
-
-                    itemName =
-                        itemName
+                        cachedName
                         or string.format(L["QUESTS_ITEM_UNNAMED"], itemID)
-
-                    if not itemTexture then
-                        itemTexture = select(5, C_Item.GetItemInfoInstant(itemID))
-                    end
-
-                    itemTexture =
-                        itemTexture
+                    local itemNameUnresolved = not cachedName
+                    local itemLink
+                    local itemQuality
+                    local itemTexture =
+                        select(5, C_Item.GetItemInfoInstant(itemID))
                         or 134400
 
                     local itemFrame = track(
@@ -2775,40 +2710,55 @@ function ShowQuestDetail(panels, questData)
                         or ""
 
                     itemText:SetText(HighlightSearchText(itemName) .. countStr)
+                    itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+                    local function paintRewardName(resolvedName, quality, iconFile)
+                        if resolvedName and resolvedName ~= "" then
+                            itemName = resolvedName
+                            itemNameUnresolved = false
+                            itemText:SetText(HighlightSearchText(itemName) .. countStr)
+                        end
+                        if quality ~= nil then
+                            itemQuality = quality
+                            itemText:SetTextColor(OneWoW_GUI:GetItemQualityColor(quality))
+                        end
+                        if iconFile then
+                            itemTexture = iconFile
+                            icon:SetTexture(iconFile)
+                        end
+                    end
 
                     if itemNameUnresolved then
                         visibleRewardItemRows[itemID] = visibleRewardItemRows[itemID] or {}
-
                         table.insert(visibleRewardItemRows[itemID], {
                             renderVersion = detailRenderVersion,
                             apply = function(resolvedName)
-                                if not resolvedName or resolvedName == "" then
-                                    return
-                                end
-
-                                itemName = resolvedName
-                                itemNameUnresolved = false
-                                itemText:SetText(HighlightSearchText(itemName) .. countStr)
-
-                                local _, _, resolvedQuality = C_Item.GetItemInfo(itemID)
-                                if resolvedQuality then
-                                    local r, g, b = C_Item.GetItemQualityColor(resolvedQuality)
-                                    itemText:SetTextColor(r, g, b)
-                                end
+                                paintRewardName(resolvedName, nil, nil)
                             end,
                         })
                     end
 
-                    if itemQuality then
-                        local r, g, b =
-                            C_Item.GetItemQualityColor(itemQuality)
-
-                        itemText:SetTextColor(r, g, b)
-                    else
-                        itemText:SetTextColor(
-                            OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
-                        )
-                    end
+                    local loader = ns.GetItemDataLoader()
+                    ns.FillVisibleItem(itemFrame, itemID, {
+                        getCached = function(id)
+                            return loader:GetCachedItem(id)
+                        end,
+                        load = function(id, cb)
+                            loader:LoadItemData(id, cb)
+                        end,
+                        apply = function(result, paintWidgets)
+                            if result.name then
+                                RememberRewardItemName(itemID, result.name)
+                            end
+                            if result.link then
+                                itemLink = result.link
+                            end
+                            if not paintWidgets then
+                                return
+                            end
+                            paintRewardName(result.name, result.quality, result.icon)
+                        end,
+                    })
 
                     itemFrame:SetScript("OnEnter", function(self)
                         GameTooltip:SetOwner(
@@ -2827,7 +2777,6 @@ function ShowQuestDetail(panels, questData)
                             and RememberAndApplyRewardItemName(itemID, tooltipName)
                         then
                             itemName = tooltipName
-                            pendingRewardItemIDs[itemID] = nil
                             itemText:SetText(HighlightSearchText(itemName) .. countStr)
                         end
 
@@ -3053,10 +3002,10 @@ function ShowQuestDetail(panels, questData)
             local chainQuest =
                 addon.GetQuest(chainQuestID)
 
-            return chainQuest
-                and chainQuest.name
-                or GetQuestDisplayName(chainQuestID, questData)
-                or ("Quest " .. tostring(chainQuestID))
+            if chainQuest and chainQuest.name and chainQuest.name ~= "" then
+                return chainQuest.name
+            end
+            return GetQuestDisplayName(chainQuestID, questData)
         end
 
         local function groupContainsCurrent(ids)
@@ -3118,6 +3067,7 @@ function ShowQuestDetail(panels, questData)
             questText:SetText(HighlightSearchText(label))
             questText:SetTextColor(chainRowColor(isCurrent, false))
             RegisterVisibleQuestName(chainQuestID, questText, namePrefix, nil, HighlightSearchText)
+            RequestVisibleChainQuestName(chainQuestID)
 
             local rowHeight = math.max(18, (questText:GetStringHeight() or 12) + 2)
             questBtn:SetHeight(rowHeight)
@@ -3272,8 +3222,12 @@ local function UpdateQuestListEntry(btn, quest, _)
             btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
 
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_SECTION"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        ns.CardChrome.ApplyBackground(btn.bgTex, nil)
+        ns.CardChrome.ApplyRowChrome(btn, {
+            selected = false,
+            borderKey = "default",
+            fillTheme = "QUEST_ROW_SECTION",
+        })
         return
     end
 
@@ -3382,13 +3336,16 @@ local function UpdateQuestListEntry(btn, quest, _)
         end
     end
 
-    if selectedQuest and quest and selectedQuest.id == quest.id then
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-    elseif btn.isChild then
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_CHILD"))
-    else
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    end
+    local expLevel = quest and quest.expansion
+    ns.CardChrome.ApplyBackground(
+        btn.bgTex,
+        ns.CardChrome.ResolveExpansionBackground(expLevel, "level")
+    )
+    ns.CardChrome.ApplyRowChrome(btn, {
+        selected = selectedQuest and quest and selectedQuest.id == quest.id,
+        borderKey = ns.CardChrome.QuestBorderKey(quest),
+        fillTheme = btn.isChild and "QUEST_ROW_CHILD" or "BG_SECONDARY",
+    })
 end
 
 local function GetQuestListGroupName(quest)
@@ -3565,9 +3522,14 @@ end
 local function CreateQuestListRow(parent, api)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(QUEST_LIST_ROW_FRAME_HEIGHT)
+    btn:SetClipsChildren(true)
     btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    ns.CardChrome.Attach(btn)
+    ns.CardChrome.ApplyRowChrome(btn, {
+        selected = false,
+        borderKey = "quest.standard",
+        fillTheme = "BG_SECONDARY",
+    })
 
     local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
@@ -3656,34 +3618,26 @@ local function CreateQuestListRow(parent, api)
     end
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        ns.CardChrome.ApplyRowChrome(self, { hover = true })
         if self.nameText then
             self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         end
     end)
     btn:SetScript("OnLeave", function(self)
+        ns.CardChrome.ApplyRowChrome(self, { hover = false })
         if self.isSection then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_SECTION"))
             if self.nameText then
                 self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end
         elseif selectedQuest and self.quest and selectedQuest.id == self.quest.id then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             if self.nameText then
                 self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         elseif self.isGroup then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             if self.nameText then
                 self.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
             end
-        elseif self.isChild then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_CHILD"))
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
         else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             if self.nameText then
                 self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
@@ -3778,16 +3732,32 @@ local function CopyQuestResultArray(source)
     return copy
 end
 
-local function ApplyPostQueryQuestFilters(quests, databaseMode)
-    if completionFilter ~= "all" and not IsActiveFilterMode() then
+local function NeedsCompletionFilter()
+    return completionFilter ~= "all" and not IsActiveFilterMode()
+end
+
+local function QuestMatchesCompletion(quest)
+    if not quest or not quest.id then
+        return false
+    end
+    if completionFilter == "completed" then
+        return C_QuestLog.IsQuestFlaggedCompleted(quest.id)
+    end
+    if completionFilter == "not_completed" then
+        return not C_QuestLog.IsQuestFlaggedCompleted(quest.id)
+    end
+    if completionFilter == "warband" then
+        return C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id)
+    end
+    return true
+end
+
+local function ApplyPostQueryQuestFilters(quests, databaseMode, skipCompletion)
+    if not skipCompletion and NeedsCompletionFilter() then
         local filtered = {}
         for _, quest in ipairs(quests) do
-            if completionFilter == "completed" then
-                if C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
-            elseif completionFilter == "not_completed" then
-                if not C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
-            elseif completionFilter == "warband" then
-                if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then table.insert(filtered, quest) end
+            if QuestMatchesCompletion(quest) then
+                table.insert(filtered, quest)
             end
         end
         quests = filtered
@@ -3819,7 +3789,7 @@ local function ApplyPostQueryQuestFilters(quests, databaseMode)
     return quests
 end
 
-local function PublishQuestListResults(panels, addon, quests, favoriteQuests, previousScroll, loading)
+local function PublishQuestListResults(panels, addon, quests, favoriteQuests, previousScroll, loading, refreshDetail)
     favoriteQuests = favoriteQuests or {}
 
     if selectedQuest then
@@ -3895,8 +3865,29 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
     panels._favoriteQuestResults = favoriteQuests
     panels._questListEntries = BuildQuestListDisplayEntries(quests, favoriteQuests)
 
+    local keepIndex
+    if selectedQuest then
+        for i, entry in ipairs(panels._questListEntries) do
+            local q = entry.quest
+            if q and q.id == selectedQuest.id then
+                keepIndex = i
+                break
+            end
+        end
+    end
+
+    local didSelect = false
     if questListAPI then
-        questListAPI.Refresh()
+        if keepIndex then
+            if questListAPI.GetSelectedIndex() == keepIndex then
+                questListAPI.Refresh()
+            else
+                questListAPI.SetSelectedIndex(keepIndex)
+                didSelect = true
+            end
+        else
+            questListAPI.Refresh()
+        end
 
         local sf = panels.listScrollFrame
         if sf and sf.SetVerticalScroll then
@@ -3920,15 +3911,68 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
         end
     end
 
-    if selectedQuest and not loading then
+    if selectedQuest and not loading and refreshDetail and not didSelect then
         ShowQuestDetail(panels, addon.GetQuest(selectedQuest.id))
-        if questListAPI then
-            questListAPI.Refresh()
-        end
     end
 end
 
-function RefreshQuestList(panels)
+local function CancelCompletionFilter()
+    if questCompletionJob then
+        questCompletionJob:Cancel()
+        questCompletionJob = nil
+    end
+end
+
+local function StartCompletionFilter(panels, addon, rawQuests, previousScroll, listGeneration, refreshDetail)
+    local matches = {}
+
+    if panels.emptyList then
+        panels.emptyList:SetText(string.format(L["QUESTS_LOADING"], 0))
+        panels.emptyList:Show()
+    end
+
+    questCompletionJob = OneWoW.ChunkedJob.Start({
+        run = function(shouldYield)
+            for i = 1, #rawQuests do
+                if QuestMatchesCompletion(rawQuests[i]) then
+                    matches[#matches + 1] = rawQuests[i]
+                end
+                OneWoW.ChunkedJob.YieldIfNeeded(shouldYield)
+            end
+        end,
+        onProgress = function()
+            if not panels or panels._questListGeneration ~= listGeneration then
+                return
+            end
+            if panels.leftStatusText then
+                panels.leftStatusText:SetText(
+                    string.format(L["QUESTS_LOADING"], #matches)
+                )
+            end
+        end,
+        onComplete = function()
+            questCompletionJob = nil
+            if not panels or panels._questListGeneration ~= listGeneration then
+                return
+            end
+            local quests = ApplyPostQueryQuestFilters(matches, true, true)
+            PublishQuestListResults(
+                panels,
+                addon,
+                quests,
+                {},
+                previousScroll,
+                false,
+                refreshDetail
+            )
+        end,
+        onCancel = function()
+            questCompletionJob = nil
+        end,
+    })
+end
+
+function RefreshQuestList(panels, invalidateStatus)
     local previousScroll = 0
     if panels
         and panels.listScrollFrame
@@ -3937,14 +3981,16 @@ function RefreshQuestList(panels)
         previousScroll = panels.listScrollFrame:GetVerticalScroll() or 0
     end
 
-    wipe(questRowStatusCache)
-    wipe(questGroupStatusCache)
-    wipe(activeQuestIDsAcrossAlts)
+    if invalidateStatus then
+        wipe(questRowStatusCache)
+        wipe(questGroupStatusCache)
+    end
 
     local addon = GetDataAddon()
     if addon then
         addon.CancelSortedQuery()
     end
+    CancelCompletionFilter()
 
     panels._questListGeneration = (panels._questListGeneration or 0) + 1
     local listGeneration = panels._questListGeneration
@@ -4010,11 +4056,28 @@ function RefreshQuestList(panels)
                         return
                     end
                     StartRewardItemSearchWarmup(panels, addon, #rawResults)
-                    local quests = ApplyPostQueryQuestFilters(
-                        CopyQuestResultArray(rawResults),
-                        true
+                    local rawCopy = CopyQuestResultArray(rawResults)
+                    if NeedsCompletionFilter() then
+                        StartCompletionFilter(
+                            panels,
+                            addon,
+                            rawCopy,
+                            previousScroll,
+                            listGeneration,
+                            invalidateStatus
+                        )
+                        return
+                    end
+                    local quests = ApplyPostQueryQuestFilters(rawCopy, true, true)
+                    PublishQuestListResults(
+                        panels,
+                        addon,
+                        quests,
+                        {},
+                        previousScroll,
+                        false,
+                        invalidateStatus
                     )
-                    PublishQuestListResults(panels, addon, quests, {}, previousScroll, false)
                 end,
             }
         )
@@ -4036,7 +4099,15 @@ function RefreshQuestList(panels)
     end
 
     quests = ApplyPostQueryQuestFilters(quests, false)
-    PublishQuestListResults(panels, addon, quests, favoriteQuests, previousScroll, false)
+    PublishQuestListResults(
+        panels,
+        addon,
+        quests,
+        favoriteQuests,
+        previousScroll,
+        false,
+        invalidateStatus
+    )
 end
 
 function OpenQuestByID(questID, panels)
@@ -4801,8 +4872,6 @@ function ns.UI.CreateQuestsTab(parent)
 
     ns.UI.questsPanels = panels
 
-    emptyList:SetText(L["QUESTS_EMPTY"])
-    emptyDetail:SetText(L["QUESTS_SELECT"])
     panels.listScrollChild:SetHeight(100)
     panels.detailScrollChild:SetHeight(100)
 
@@ -4847,16 +4916,26 @@ function ns.UI.CreateQuestsTab(parent)
     -- covers a tab opened after data was already ready; the signal covers a
     -- mid-session load. Ongoing quest-enrichment refreshes still arrive via
     -- QuestData's QueueQuestUIRefresh -> RefreshQuestsList push.
-    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Quests", function()
-        PopulateExpansionDropdown(panels)
-        PopulateZoneDropdown(panels)
-        SetupProgressDropdown(panels)
-        SetupAdvancedDropdowns(panels)
-        panels.UpdateAdvancedTexts()
-        RefreshQuestList(panels)
-    end)
+    ns.WatchCatalogDataReady("OneWoW_CatalogData_Quests", {
+        emptyList = emptyList,
+        emptyDetail = emptyDetail,
+        noDataText = L["QUESTS_NO_DATA"],
+        emptyText = L["QUESTS_EMPTY"],
+        selectText = L["QUESTS_SELECT"],
+        isReady = function()
+            return GetDataAddon() ~= nil
+        end,
+        onReady = function()
+            PopulateExpansionDropdown(panels)
+            PopulateZoneDropdown(panels)
+            SetupProgressDropdown(panels)
+            SetupAdvancedDropdowns(panels)
+            panels.UpdateAdvancedTexts()
+            RefreshQuestList(panels)
+        end,
+    })
 
-    ns.UI.RefreshQuestsList = function()
-        RefreshQuestList(panels)
+    ns.UI.RefreshQuestsList = function(invalidateStatus)
+        RefreshQuestList(panels, invalidateStatus)
     end
 end

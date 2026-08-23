@@ -92,17 +92,14 @@ local function ClearDetailElements()
     wipe(detailElements)
 end
 
-local function ApplyItemRowBackdrop(row, index, selected)
-    if selected then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    elseif (index % 2) == 1 then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    else
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end
+local function ApplyItemRowBackdrop(row, index, selected, hover)
+    row._chromeFill = ((index % 2) == 1) and "BG_PRIMARY" or "BG_SECONDARY"
+    ns.CardChrome.ApplyRowChrome(row, {
+        selected = selected,
+        hover = hover,
+        borderKey = row._borderKey or "default",
+        fillTheme = row._chromeFill,
+    })
 end
 
 -- Resting (non-hovered) appearance for a single button, honoring availability
@@ -205,8 +202,14 @@ end
 local function CreateItemListRow(parent)
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetHeight(ITEM_ROW_HEIGHT)
-    row:SetBackdrop(BACKDROP_SIMPLE)
-    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    ns.CardChrome.Attach(row, { skipBackground = true })
+    row._borderKey = "default"
+    ns.CardChrome.ApplyRowChrome(row, {
+        selected = false,
+        borderKey = "default",
+        fillTheme = "BG_SECONDARY",
+    })
 
     local iconFrame = CreateFrame("Frame", nil, row, "BackdropTemplate")
     iconFrame:SetSize(22, 22)
@@ -265,8 +268,7 @@ local function CreateItemListRow(parent)
     end)
 
     row:SetScript("OnEnter", function(myself)
-        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        ApplyItemRowBackdrop(myself, myself.entryIndex or 0, myself._rowSelected, true)
         local result = myself.result
         if result and result.itemID then
             GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
@@ -276,7 +278,7 @@ local function CreateItemListRow(parent)
         end
     end)
     row:SetScript("OnLeave", function(myself)
-        ApplyItemRowBackdrop(myself, myself.entryIndex or 0, myself._rowSelected)
+        ApplyItemRowBackdrop(myself, myself.entryIndex or 0, myself._rowSelected, false)
         GameTooltip:Hide()
     end)
 
@@ -286,7 +288,8 @@ end
 local function BindItemListRow(row, index, result, state)
     row.result = result
     row._rowSelected = state.selected and true or false
-    ApplyItemRowBackdrop(row, index, row._rowSelected)
+    row._borderKey = "default"
+    ApplyItemRowBackdrop(row, index, row._rowSelected, false)
 
     row.icon:SetTexture(result.icon or 134400)
     row.nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))

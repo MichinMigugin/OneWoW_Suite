@@ -973,6 +973,39 @@ local function CompareQuestsByExpansionThenName(a, b)
     return CompareQuestsByName(a, b)
 end
 
+--- True when the sorted walk would return the expansion source unchanged.
+local function IsExpansionOnlySortedQuery(
+    zoneFilter,
+    typeFilter,
+    questTypeFilter,
+    searchTerms,
+    advancedFilters
+)
+    if searchTerms and #searchTerms > 0 then
+        return false
+    end
+    if zoneFilter and zoneFilter ~= "" then
+        return false
+    end
+    if typeFilter and typeFilter ~= "all" then
+        return false
+    end
+    if questTypeFilter and questTypeFilter ~= "all" then
+        return false
+    end
+    for key, value in pairs(advancedFilters or {}) do
+        if key ~= "groupType"
+            and key ~= "questType"
+            and value
+            and value ~= "all"
+            and value ~= ""
+        then
+            return false
+        end
+    end
+    return true
+end
+
 local function ShouldGroupResultsByExpansion(
     expansionFilter,
     zoneFilter,
@@ -1395,6 +1428,25 @@ local function BuildSortedQuestResults(
 
     local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
     local yieldCheck = shouldYield or function() return false end
+
+    -- Expansion (or All) with no other constraints: the sorted source array
+    -- is already the result. Walking it with include-checks is wasted work.
+    if IsExpansionOnlySortedQuery(
+        zoneFilter,
+        typeFilter,
+        questTypeFilter,
+        searchTerms,
+        advancedFilters
+    ) then
+        local questSource = GetSortedQuestSourceArray(self, expansionFilter)
+        for i = 1, #questSource do
+            results[i] = questSource[i]
+            YieldIfNeeded(yieldCheck)
+        end
+        RememberSortedQuestCache(cacheKey, results)
+        return
+    end
+
     local questSource = GetSortedQuestSourceArray(self, expansionFilter)
 
     for _, quest in ipairs(questSource) do

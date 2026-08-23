@@ -20,6 +20,8 @@
 * [DevTools](DevTool)
 
 ### [FAQ](FAQ)
+* [About](About)
+* [Compare](Compare)
 
 ### Developers
 * [Developers](Developers)

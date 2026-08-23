@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "商业技能布局对齐冒险指南/商人，提供账号范围的拥有/需要材料数量、手头明细，以及有 Storage 时的“已有材料”筛选。专业为下拉菜单；清除会恢复搜索占位提示。",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "任务列表卡片对齐冒险指南（名称、资料片 | 任务类型、分类标签）。资料片在搜索下方；区域与进度同一行。清除会恢复搜索占位提示。",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "任务列表卡片对齐冒险指南（名称、资料片 | 任务类型、分类标签）。资料片在搜索下方；区域与进度同一行。清除会恢复搜索占位提示。打开任务以及切换资料片或完成筛选不再卡顿。",
     ["WHATS_NEW_H_MAIL_BODY"] = "邮件标签页和翻译后的文字再次显示正确语言，而不再是乱码。更改套件字体后邮件窗口会跟随，无需重载。",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自动坐骑",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自动坐骑会在战斗及其他光环受限情况下暂停，无需扫描保密增益即可检测潜行，并在光环数据受限时不再报错。玩家坐骑的鼠标提示使用同样的保护。",

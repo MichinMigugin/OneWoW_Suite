@@ -43,6 +43,9 @@ OneWoW_Catalog.lua
 
 # Services
 Services\ItemDataLoader.lua
+Services\VisibleItemFill.lua
+Services\CatalogTabReady.lua
+Services\CardChrome.lua
 
 # UI
 # UI - Tabs

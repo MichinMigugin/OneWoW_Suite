@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "Tradeskills suit la présentation Journal/Marchands, avec quantités possédé/besoin à l’échelle du compte, un détail Sous la main et le filtre J’ai les matériaux quand Storage est dispo. Profession en menu déroulant ; Effacer restaure l’invite de recherche.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "Les cartes de quêtes suivent le Journal (nom, Extension | type de quête, tags). L’extension est sous la recherche ; Zone et Progrès partagent une ligne. Effacer restaure l’invite de recherche.",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "Les cartes de quêtes suivent le Journal (nom, Extension | type de quête, tags). L'extension est sous la recherche ; Zone et Progrès partagent une ligne. Effacer restaure l'invite de recherche. Ouvrir une quête et changer d'extension ou de filtres de progression ne bloque plus.",
     ["WHATS_NEW_H_MAIL_BODY"] = "Les onglets Courrier et les libellés traduits affichent à nouveau la bonne langue au lieu de caractères illisibles. La fenêtre Courrier suit la police de la suite quand vous la changez, sans rechargement.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Monture auto",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Monture auto se met en pause en combat et dans les autres situations où les auras sont restreintes, détecte la furtivité sans scanner les buffs secrets, et ne provoque plus d’erreur quand les données d’aura sont restreintes. Les infobulles de Montures des joueurs utilisent la même protection.",

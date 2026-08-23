@@ -35,11 +35,16 @@
 
 # Catalog
 ## Quests
+- Quest list cards use that expansion's Adventure Guide background, with a border for Campaign, Story, Legendary, and other quest types.
+- Opening a quest no longer hitches while reward names and NPC names load. Names fill in a moment later.
+- Picking an expansion or changing completion filters no longer freezes the list. Completed and warband matches appear as they are found.
 - Quest Chain on the detail pane is a numbered list that wraps with the panel. The quest you have open is highlighted. Other steps stay clickable links; completion is not scanned for the whole chain.
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 - About 100 more Midnight quests now have giver pins, and more of them show quest text.
 
 ## Journal
+- Zone, city, and other cards without their own art now use that expansion's Adventure Guide background. Classic Silvermoon uses Classic; Midnight Silvermoon uses Midnight.
+- Cards use a type-colored border for raid, dungeon, world, zone, city, Delve, and bountiful Delve.
 - Logging in no longer stalls on Journal.
 - Opening the Journal tab no longer rebuilds every dungeon and raid. Reloading in a dungeon or Delve stays responsive. Opening a dungeon or raid card no longer hitches while every item loads.
 - Loot names and quality colors show the first time you open a card, instead of turning up after you click away and back.
@@ -59,6 +64,9 @@
 - Details list achievements above items, and the section collapses like loot. Cards show the achievement count next to bosses and items. Status uses a check, Warband mark, and X. The check is green when you earned it; the Warband icon stays its normal color when the Warband has it and a grey account mark when it does not; the X is soft orange when it is still incomplete. Click a row to open it in Achievements.
 - Delves keep the Difficulty dropdown on the details toolbar so the map pin lines up with dungeons and raids. It stays disabled.
 - Dungeons and raids get an Adventure Guide button on the details toolbar.
+
+## Vendors
+- Quartermaster / Renown and Quest Giver cards use a matching border. Other vendor types stay on the usual edge.
 
 ---
 

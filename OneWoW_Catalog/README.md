@@ -15,7 +15,8 @@ Browse dungeons, raids, Delves, and World hubs from every expansion:
 - Pin on a card or the details toolbar opens the world map at that instance's entrance (gold pins are Wowhead locations until official doors ship)
 - Instance Type includes World, Zones, Cities, and Delves, with a Show Bountiful checkbox for this week's bountiful doors
 - A pin on a World-hub rare, boss, or achievement opens that zone or city when we know the map. Cities and outdoor zones for every expansion ship with Journal
-- Delve cards use official entrance background art
+- Delve cards use official entrance background art. Zones, cities, and other cards without their own art use that expansion's Adventure Guide background
+- Cards use a type-colored border for raid, dungeon, world, zone, city, Delve, and bountiful Delve
 - Achievements sit above loot on the details side (collapsible, same header as Items). Cards show bosses, rares (World), items, and the achievement count. World cards include that expansion's exploration achievements. Status is a check / Warband mark / X
 - Adventure Guide button on dungeon and raid details. Delves keep a disabled Difficulty dropdown so the map pin lines up
 - Detailed encounter information (if data addon is installed)
@@ -150,6 +151,11 @@ Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 ## Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+Browse-tab data rules (cheap list, Instant-only detail, chunked live-API filters):
+
+- Journal: [JOURNAL_DATA.md](../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md) (Lazy hydrate)
+- Quests: [QUEST_DATA.md](../OneWoW_CatalogData_Quests/Docs/QUEST_DATA.md) (Lazy hydrate)
 
 ## Support
 

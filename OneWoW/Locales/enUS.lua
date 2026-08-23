@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "Tradeskills matches Journal/Vendors layout, with account-wide have/need reagent counts, an On Hand breakdown, and a Have Materials filter when Storage is available. Profession is a dropdown; Clear restores the search placeholder.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "Quests list cards match Journal (name, Expansion | Quest Type, category tags). Expansion sits under search; Zone and Progress share a row. Clear restores the search placeholder.",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "Quests list cards match Journal (name, Expansion | Quest Type, category tags). Expansion sits under search; Zone and Progress share a row. Clear restores the search placeholder. Opening a quest and changing expansion or completion filters no longer hitch.",
     ["WHATS_NEW_H_MAIL_BODY"] = "Mail tabs and translated labels show the right language again instead of garbled characters. The Mail window follows the suite font when you change it, with no reload needed.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto Mount",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto Mount pauses in combat and other aura-restricted situations, detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.",

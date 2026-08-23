@@ -66,6 +66,6 @@ end
 --- Refresh the quests list when the quests tab UI is loaded.
 function OneWoW_Catalog_API.RefreshQuestsList()
     if ns.UI and ns.UI.RefreshQuestsList then
-        ns.UI.RefreshQuestsList()
+        ns.UI.RefreshQuestsList(true)
     end
 end

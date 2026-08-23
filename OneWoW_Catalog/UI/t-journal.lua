@@ -4,6 +4,7 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
 ns.UI = ns.UI or {}
@@ -203,89 +204,6 @@ local diffAbbrev = {
     ["25 Player (Heroic)"]  = "JOURNAL_DIFF_25H",
 }
 
-local ejBgCache = {}
-local delveBgCache = {}
-
-local function GetInstanceBackground(instanceID)
-    if ejBgCache[instanceID] ~= nil then
-        return ejBgCache[instanceID]
-    end
-    if EJ_GetInstanceInfo then
-        local _, _, bgImage = EJ_GetInstanceInfo(instanceID)
-        ejBgCache[instanceID] = bgImage or false
-        return bgImage or false
-    end
-    ejBgCache[instanceID] = false
-    return false
-end
-
--- Official entrance art uses delve-entrance-background-<slug>. A few doors
--- use a different suffix than the Map name.
-local DELVE_BG_ALIAS = {
-    [2826] = "delves-entrance-background-sewers",
-    [2831] = "delve-entrance-background-goblin-boss",
-}
-
--- keepPunctAsHyphen: Atal'Aman -> atal-aman. Strip first: Kriegval's Rest -> kriegvals-rest.
-local function SlugDelveName(name, keepPunctAsHyphen)
-    name = (name or ""):lower()
-    if not keepPunctAsHyphen then
-        name = name:gsub("['’`]", "")
-    end
-    name = name:gsub("[^%w]+", "-")
-    name = name:gsub("^-+", ""):gsub("-+$", "")
-    return name
-end
-
-local function TitleCaseSlug(slug)
-    return (slug:gsub("(%f[%w]%a)", string.upper))
-end
-
-local function AddDelveBgCandidates(candidates, slug)
-    if slug == "" then
-        return
-    end
-    tinsert(candidates, "delve-entrance-background-" .. slug)
-    tinsert(candidates, "delves-entrance-background-" .. slug)
-    tinsert(candidates, "delve-entrance-background-" .. TitleCaseSlug(slug))
-    if slug:sub(1, 4) == "the-" then
-        tinsert(candidates, "delve-entrance-background-" .. slug:sub(5))
-    else
-        tinsert(candidates, "delve-entrance-background-the-" .. slug)
-    end
-end
-
---- Per-delve card art. Probes known atlas names; falls back to the dashboard art.
----@param instData table
----@return string|nil atlas
-local function GetDelveBackgroundAtlas(instData)
-    local mid = instData and instData.mapID
-    if not mid then
-        return nil
-    end
-    if delveBgCache[mid] ~= nil then
-        return delveBgCache[mid] or nil
-    end
-
-    local candidates = {}
-    if DELVE_BG_ALIAS[mid] then
-        tinsert(candidates, DELVE_BG_ALIAS[mid])
-    end
-    AddDelveBgCandidates(candidates, SlugDelveName(instData.name, false))
-    AddDelveBgCandidates(candidates, SlugDelveName(instData.name, true))
-    tinsert(candidates, "delves-dashboard-background")
-
-    for i = 1, #candidates do
-        local atlas = candidates[i]
-        if C_Texture.GetAtlasInfo(atlas) then
-            delveBgCache[mid] = atlas
-            return atlas
-        end
-    end
-    delveBgCache[mid] = false
-    return nil
-end
-
 local function GetDataAddon()
     return OneWoW_CatalogData_Journal_API
 end
@@ -382,7 +300,7 @@ end
 --- Fill name / icon / quality for a visible loot row. Hydrate stays Instant-only,
 --- so a row can arrive with the placeholder name *and* the fallback quality (both
 --- come from the same uncached-item condition). The store item cache is the source
---- of truth for "resolved"; RequestLoadItemDataByID runs here, for this row.
+--- of truth for "resolved"; RequestLoadItemDataByID runs in FillVisibleItem.
 ---@param item table
 ---@param row Frame
 ---@param nameFS FontString
@@ -394,61 +312,46 @@ local function FillVisibleItemRow(item, row, nameFS, iconTex, iconFrame)
         return
     end
 
-    ---@param result table
-    ---@param paintWidgets boolean
-    local function apply(result, paintWidgets)
-        if result.name then
-            item.name = result.name
-            -- Keep the store's flag in step: the live EJ merge reads it to decide
-            -- whether a row still needs an EJ name.
-            item.nameResolved = true
-            if item.itemData then
-                item.itemData.name = result.name
+    ns.FillVisibleItem(row, item.itemID, {
+        getCached = addon.GetCachedItem,
+        load = addon.LoadItemData,
+        apply = function(result, paintWidgets)
+            if result.name then
+                item.name = result.name
+                -- Keep the store's flag in step: the live EJ merge reads it to decide
+                -- whether a row still needs an EJ name.
+                item.nameResolved = true
+                if item.itemData then
+                    item.itemData.name = result.name
+                end
             end
-        end
-        if result.icon then
-            item.icon = result.icon
-        end
-        if result.quality ~= nil then
-            item.quality = result.quality
-            if item.itemData then
-                item.itemData.quality = result.quality
+            if result.icon then
+                item.icon = result.icon
             end
-        end
-        if result.link and item.itemData then
-            item.itemData.link = result.link
-        end
-        if not paintWidgets then
-            return
-        end
-        nameFS:SetText(item.name)
-        iconTex:SetTexture(item.icon)
-        local qr, qg, qb = OneWoW_GUI:GetItemQualityColor(item.quality)
-        iconFrame:SetBackdropBorderColor(qr, qg, qb)
-        nameFS:SetTextColor(qr, qg, qb)
-    end
-
-    -- Store cache entries are complete by construction (the loader refuses to
-    -- persist partials), so a hit settles name, icon and quality in one pass with
-    -- no timer and no item request.
-    local cached = addon.GetCachedItem(item.itemID)
-    if cached then
-        apply(cached, true)
-        return
-    end
-
-    local token = {}
-    row._journalFillToken = token
-    addon.LoadItemData(item.itemID, function(_, result)
-        if not result then
-            return
-        end
-        local canPaint = row._journalFillToken == token and row:IsShown()
-        apply(result, canPaint)
-        if not canPaint and result.name then
-            ScheduleNameFillRefresh()
-        end
-    end)
+            if result.quality ~= nil then
+                item.quality = result.quality
+                if item.itemData then
+                    item.itemData.quality = result.quality
+                end
+            end
+            if result.link and item.itemData then
+                item.itemData.link = result.link
+            end
+            if not paintWidgets then
+                return
+            end
+            nameFS:SetText(item.name)
+            iconTex:SetTexture(item.icon)
+            local qr, qg, qb = OneWoW_GUI:GetItemQualityColor(item.quality)
+            iconFrame:SetBackdropBorderColor(qr, qg, qb)
+            nameFS:SetTextColor(qr, qg, qb)
+        end,
+        onStale = function(result)
+            if result.name then
+                ScheduleNameFillRefresh()
+            end
+        end,
+    })
 end
 
 -- Tooltips use the difficulty-scaled Encounter Journal link (captured per
@@ -616,20 +519,13 @@ local function ClearDetailElements()
     wipe(detailElements)
 end
 
-local function ApplyInstanceRowChrome(card, selected)
-    if selected then
-        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    elseif card._bountiful then
-        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-    else
-        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end
-    if card.bgTex then
-        card.bgTex:SetAlpha(0.3)
-    end
+local function ApplyInstanceRowChrome(card, selected, hover)
+    ns.CardChrome.ApplyRowChrome(card, {
+        selected = selected,
+        hover = hover,
+        borderKey = card._borderKey,
+        fillTheme = card._chromeFill,
+    })
 end
 
 local function ApplyJournalPinSource(btn, entranceSource)
@@ -712,8 +608,9 @@ local function CreateInstanceListRow(parent, _)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
     card:SetHeight(CARD_HEIGHT)
     card:SetClipsChildren(true)
-    card:SetBackdrop(BACKDROP_SIMPLE)
-    ApplyInstanceRowChrome(card, false)
+    card:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    ns.CardChrome.Attach(card)
+    ApplyInstanceRowChrome(card, false, false)
     -- SetPropagateMouseClicks became a protected function; calling it while the
     -- list refreshes in combat throws ADDON_ACTION_BLOCKED. false is the default
     -- state anyway, so skipping it under restriction is harmless. Gated on the
@@ -721,14 +618,6 @@ local function CreateInstanceListRow(parent, _)
     if not OneWoW.Restriction.IsProtectedActionBlocked() then
         card:SetPropagateMouseClicks(false)
     end
-
-    local bgTex = card:CreateTexture(nil, "ARTWORK")
-    bgTex:SetPoint("CENTER", card, "CENTER", 20, -5)
-    bgTex:SetSize(380, 140)
-    bgTex:SetDrawLayer("ARTWORK", -1)
-    bgTex:SetAlpha(0.3)
-    bgTex:Hide()
-    card.bgTex = bgTex
 
     local nameText = OneWoW_GUI:CreateFS(card, 12)
     nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -6)
@@ -815,14 +704,10 @@ local function CreateInstanceListRow(parent, _)
     end
 
     card:SetScript("OnEnter", function(myself)
-        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        if myself.bgTex and myself.bgTex:IsShown() then
-            myself.bgTex:SetAlpha(0.5)
-        end
+        ApplyInstanceRowChrome(myself, myself._rowSelected, true)
     end)
     card:SetScript("OnLeave", function(myself)
-        ApplyInstanceRowChrome(myself, myself._rowSelected)
+        ApplyInstanceRowChrome(myself, myself._rowSelected, false)
     end)
 
     return card
@@ -841,27 +726,9 @@ local function BindInstanceListRow(row, _, instData, state)
         and addon
         and addon.IsDelveBountiful(instData.mapID)
         or false
-    ApplyInstanceRowChrome(row, row._rowSelected)
-
-    if instData.instanceType == "delve" then
-        local atlas = GetDelveBackgroundAtlas(instData)
-        if atlas then
-            row.bgTex:SetTexture(nil)
-            row.bgTex:SetAtlas(atlas)
-            row.bgTex:Show()
-        else
-            row.bgTex:Hide()
-        end
-    else
-        local bgImage = GetInstanceBackground(instData.instanceID)
-        if bgImage and bgImage ~= false then
-            row.bgTex:SetAtlas(nil)
-            row.bgTex:SetTexture(bgImage)
-            row.bgTex:Show()
-        else
-            row.bgTex:Hide()
-        end
-    end
+    row._borderKey = ns.CardChrome.JournalBorderKey(instData, row._bountiful)
+    ns.CardChrome.ApplyBackground(row.bgTex, ns.CardChrome.ResolveJournalBackground(instData))
+    ApplyInstanceRowChrome(row, row._rowSelected, false)
 
     row.nameText:SetText(instData.name or "")
 
@@ -2703,61 +2570,59 @@ function ns.UI.CreateJournalTab(parent)
         end)
     end
 
-    -- Start in the no-data state; the data-ready watcher swaps to the live view
+    -- Start in the no-data state; WatchCatalogDataReady swaps to the live view
     -- once the Journal data unit's data is queryable. Catch-up covers a tab opened
-    -- after data was already ready; the signal covers a mid-session load. The
-    -- `wired` guard keeps it idempotent (scan-callback registration is not
-    -- dedup-safe, and catch-up + a later signal can both reach the handler).
-    emptyList:SetText(L["JOURNAL_NO_DATA"])
-    emptyDetail:SetText(L["JOURNAL_NO_DATA"])
+    -- after data was already ready; the signal covers a mid-session load.
     panels.listScrollChild:SetHeight(100)
     panels.detailScrollChild:SetHeight(100)
 
-    local wired = false
-    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Journal", function()
-        if wired then return end
-        local addon = GetDataAddon()
-        if not addon then return end
-        wired = true
-        emptyList:SetText(L["JOURNAL_EMPTY"])
-        emptyDetail:SetText(L["JOURNAL_SELECT"])
-        panels.detailScrollChild:SetHeight(100)
+    ns.WatchCatalogDataReady("OneWoW_CatalogData_Journal", {
+        emptyList = emptyList,
+        emptyDetail = emptyDetail,
+        noDataText = L["JOURNAL_NO_DATA"],
+        emptyText = L["JOURNAL_EMPTY"],
+        selectText = L["JOURNAL_SELECT"],
+        isReady = function()
+            return GetDataAddon() ~= nil
+        end,
+        onReady = function()
+            local addon = GetDataAddon()
+            panels.detailScrollChild:SetHeight(100)
 
-        if addon.RegisterScanCallback then
-            addon.RegisterScanCallback(function(reason)
-                local p = ns.UI.journalPanels
-                if not p then return end
-                -- Per-card live merge: refresh the open card and list chrome only.
-                -- RefreshJournalList re-selects and would re-enter MergeInstance.
-                if reason == "ej_merge" then
-                    if journalListAPI then
-                        journalListAPI.Refresh()
+            if addon.RegisterScanCallback then
+                addon.RegisterScanCallback(function(reason)
+                    local p = ns.UI.journalPanels
+                    if not p then return end
+                    -- Per-card live merge: refresh the open card and list chrome only.
+                    -- RefreshJournalList re-selects and would re-enter MergeInstance.
+                    if reason == "ej_merge" then
+                        if journalListAPI then
+                            journalListAPI.Refresh()
+                        end
+                        if selectedInstance then
+                            RefreshDetailView(false)
+                        end
+                        return
                     end
+                    InvalidateJournalFilterCache()
+                    RefreshJournalList(p)
                     if selectedInstance then
+                        local keepKey = JournalCacheKey(selectedInstance)
+                        for _, inst in ipairs(listResults) do
+                            if JournalCacheKey(inst) == keepKey then
+                                selectedInstance = inst
+                                break
+                            end
+                        end
                         RefreshDetailView(false)
                     end
-                    return
-                end
-                InvalidateJournalFilterCache()
-                RefreshJournalList(p)
-                if selectedInstance then
-                    local keepKey = JournalCacheKey(selectedInstance)
-                    for _, inst in ipairs(listResults) do
-                        if JournalCacheKey(inst) == keepKey then
-                            selectedInstance = inst
-                            break
-                        end
-                    end
-                    RefreshDetailView(false)
-                end
-            end)
-        end
+                end)
+            end
 
-        C_Timer.After(0.1, function()
             InitializeDropdowns(panels)
             RefreshJournalList(panels)
-        end)
-    end)
+        end,
+    })
 end
 
 function ns.UI.OpenToInstance(mapID)

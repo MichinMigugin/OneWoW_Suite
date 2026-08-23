@@ -85,7 +85,8 @@ quality: the row gets the localized `JOURNAL_UNKNOWN_ITEM` placeholder and quali
 item cache is the source of truth for "resolved"**. A visible detail row asks
 `GetCachedItem(itemID)`; a hit settles name, icon and quality in one pass, a miss
 goes through `LoadItemData` (this is the one place `RequestLoadItemDataByID` may
-run, and only for rows actually on screen). Never gate that fill on the name alone:
+run, and only for rows actually on screen). Catalog UI does that through
+`ns.FillVisibleItem` (fill token + `IsShown()`). Never gate that fill on the name alone:
 name and quality are separate facts, and the live EJ merge fills names without
 touching quality.
 

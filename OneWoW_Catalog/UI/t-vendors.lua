@@ -3,6 +3,7 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
 local ipairs, pairs = ipairs, pairs
@@ -287,14 +288,13 @@ local function VendorMatchesItemSearch(vendor, term, addon)
     return false
 end
 
-local function ApplyVendorRowChrome(row, selected)
-    if selected then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    else
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end
+local function ApplyVendorRowChrome(row, selected, hover)
+    ns.CardChrome.ApplyRowChrome(row, {
+        selected = selected,
+        hover = hover,
+        borderKey = row._borderKey,
+        fillTheme = row._chromeFill,
+    })
 end
 
 -- List card layout (portrait + 4 text rows):
@@ -305,8 +305,9 @@ end
 local function CreateVendorListRow(parent, _)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(EnsureVendorCardStride())
-    btn:SetBackdrop(BACKDROP_SIMPLE)
-    ApplyVendorRowChrome(btn, false)
+    btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    ns.CardChrome.Attach(btn, { skipBackground = true })
+    ApplyVendorRowChrome(btn, false, false)
 
     local portrait = btn:CreateTexture(nil, "ARTWORK")
     portrait:SetSize(VENDOR_CARD_PORTRAIT, VENDOR_CARD_PORTRAIT)
@@ -370,11 +371,10 @@ local function CreateVendorListRow(parent, _)
     end
 
     btn:SetScript("OnEnter", function(myself)
-        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        ApplyVendorRowChrome(myself, myself._rowSelected, true)
     end)
     btn:SetScript("OnLeave", function(myself)
-        ApplyVendorRowChrome(myself, myself._rowSelected)
+        ApplyVendorRowChrome(myself, myself._rowSelected, false)
     end)
 
     return btn
@@ -402,7 +402,8 @@ end
 local function BindVendorListRow(row, _, vendor, state)
     row.vendor = vendor
     row._rowSelected = state.selected and true or false
-    ApplyVendorRowChrome(row, row._rowSelected)
+    row._borderKey = ns.CardChrome.VendorBorderKey(vendor)
+    ApplyVendorRowChrome(row, row._rowSelected, false)
 
     ApplyVendorPortrait(row, vendor.displayID)
 

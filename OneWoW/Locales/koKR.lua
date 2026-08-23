@@ -158,7 +158,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_TRADESKILLS_TITLE"] = "Catalog — Tradeskills",
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "전문기술은 모험 안내서/상인과 같은 레이아웃에, 계정 전체 보유/필요 재료 수, 보유 중 내역, Storage가 있을 때 재료 보유 필터를 제공합니다. 전문기술은 드롭다운이며, 지우기는 검색 안내 문구를 복원합니다.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
-    ["WHATS_NEW_H_QUESTS_BODY"] = "퀘스트 목록 카드가 모험 안내서와 같습니다(이름, 확장팩 | 퀘스트 유형, 분류 태그). 확장팩은 검색 아래, 지역과 진행도는 한 줄을 공유합니다. 지우기는 검색 안내 문구를 복원합니다.",
+    ["WHATS_NEW_H_QUESTS_BODY"] = "퀘스트 목록 카드가 모험 안내서와 같습니다(이름, 확장팩 | 퀘스트 유형, 분류 태그). 확장팩은 검색 아래, 지역과 진행도는 한 줄을 공유합니다. 지우기는 검색 안내 문구를 복원합니다. 퀘스트를 열거나 확장팩 및 완료 필터를 바꿔도 더 이상 멈추지 않습니다.",
     ["WHATS_NEW_H_MAIL_BODY"] = "우편 탭과 번역된 이름이 깨진 문자 대신 올바른 언어로 다시 표시됩니다. 우편 창은 스위트 글꼴을 바꾸면 재시작 없이 따라갑니다.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "자동 탈것",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "자동 탈것은 전투 및 다른 오라 제한 상황에서 감지를 멈추고, 비밀 강화 효과를 검사하지 않고 은신을 감지하며, 오라 데이터가 제한되어도 오류가 나지 않습니다. 플레이어 탈것 툴팁도 같은 보호를 사용합니다.",

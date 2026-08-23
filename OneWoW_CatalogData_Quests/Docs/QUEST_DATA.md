@@ -45,6 +45,27 @@ Quest “tracks” in Catalog are pin + chain IDs. Map blobs (`QuestPOI`,
 `GetQuest` returns static ⊕ runtime SV. Display hygiene drops DNT / NYI /
 REMOVED rows.
 
+## Lazy hydrate
+
+The list and filter walk use static shard fields only: name, expansion, zone,
+flags, categories, and reward **IDs**. They must not call `C_QuestLog` completion
+APIs, `GetItemInfo`, tooltip hyperlinks, or `RequestLoadQuestByID`.
+
+Picking an expansion with no other filters copies the cached sorted source for
+that shard. It does not re-walk every quest applying include checks.
+
+Completion and warband filters are the Quests equivalent of Journal "Has
+uncollected": they need live client state, so they run as `OneWoW.ChunkedJob`
+and publish matches as they arrive.
+
+Detail open stays Instant-only for items (`GetItemInfoInstant` plus the Catalog
+item cache). `LoadItemData` / `RequestLoadQuestByID` / NPC tooltip scans run
+only for **visible** rows, with a fill token or render-version guard. Never
+`GetItemInfo` or `GetTooltipItemName` on the click frame.
+
+Journal's matching rules: [`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md)
+§ Lazy hydrate. Visible-row fill: Catalog `ns.FillVisibleItem`.
+
 ## Build (Workspace)
 
 ```bash

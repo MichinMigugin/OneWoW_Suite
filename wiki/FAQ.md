@@ -34,6 +34,24 @@ OneWoW keywords are **English-only** (`#epic`, `#armor`, …). Import foreign ca
 
 The feature must be **installed and enabled**. Open [Slash commands](Slash-Commands) for the list, then check Manage Features.
 
+## The project
+
+### Is OneWoW open source?
+
+Yes. The suite lives at [https://github.com/kellewic/OneWoW_Suite](https://github.com/kellewic/OneWoW_Suite). Anyone can read it, open an issue, or send a pull request. See [About](About).
+
+### Is OneWoW written by AI?
+
+The suite is **AI-assisted** and shipped by two full-time developers. Humans set the architecture, review what ships, and stand behind it. If you want to judge the code, read the repo. See [About](About).
+
+### Does it pass Wow API and LuaLS checks?
+
+Yes. OneWoW targets **Retail 12.1+** Wow API and uses LuaLS / Ketho-style API definitions plus the same class of checks people talk about when they review addons. See [Developers](Developers).
+
+### I found another OneWoW Alt Tracker on CurseForge
+
+The official site is [https://onewow.net/](https://onewow.net/). Download and CurseForge links on that site are the ones we ship. Older or similarly named CurseForge projects are not this suite.
+
 ## Conflicts and help
 
 ### Bags vs default bags / other bag addons
@@ -46,6 +64,8 @@ Enable only one primary bag UI you intend to use, or expect overlapping keybinds
 
 ## Related
 
+* [About](About)
+* [Compare](Compare)
 * [Install](Install)
 * [Getting started](Getting-Started)
 * [Slash commands](Slash-Commands)
