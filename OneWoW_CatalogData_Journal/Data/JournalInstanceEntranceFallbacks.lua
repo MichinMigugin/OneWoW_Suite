@@ -24,6 +24,16 @@ ns.JournalInstanceEntranceFallbacks = {
     [1320] = { { uiMapID = 2509, x = 47.24, y = 22.87, faction = -1 } }, -- The Venomous Abyss (Vaults of Atal'Utek)
     [1322] = { { uiMapID = 2509, x = 47.29, y = 68.16, faction = -1 } }, -- Altar of Fangs (Vaults of Atal'Utek)
 
+    -- Classic / Cata / MoP / BfA doors with no JournalInstanceEntrance row
+    [324] = { { uiMapID = 388, x = 34.7, y = 81.7, faction = -1 } }, -- Siege of Niuzao Temple (Townlong Steppes)
+    [742] = { { uiMapID = 36, x = 23.2, y = 26.3, faction = -1 } }, -- Blackwing Lair (Burning Steppes)
+    [1012] = { -- The MOTHERLODE!! (Zuldazar)
+        { uiMapID = 862, x = 39.80, y = 71.90, faction = 1 },
+        { uiMapID = 862, x = 56.18, y = 59.98, faction = 0 },
+    },
+    [1178] = { { uiMapID = 1462, x = 73.2, y = 36.4, faction = -1 } }, -- Operation: Mechagon (Mechagon)
+    [1301] = { { uiMapID = 32, x = 34.8, y = 83.8, faction = -1 } }, -- Blackrock Depths (Searing Gorge)
+
     -- The War Within (no JournalInstanceEntrance row on the current build pin)
     [1267] = { { uiMapID = 2215, x = 42.0, y = 50.0, faction = -1 } }, -- Priory of the Sacred Flame (Hallowfall)
     [1302] = { { uiMapID = 2371, x = 42.19, y = 21.73, faction = -1 } }, -- Manaforge Omega (K'aresh; not Dornogal 2339)

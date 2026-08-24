@@ -198,7 +198,11 @@ Raw shelves are the Workspace clone (`.warehouse/Sources/ATT`), CSVs
 shelf under `.warehouse/Sources/`. Today's shipped extras and Generated files
 stay as they are until a feature generator is run on purpose.
 
-`bin/journal_extras.py` (later, from Sources) writes:
+`bin/att_dump.py journal` walks compiled ATT `Instances`, `Zones`, `Delves`,
+`WorldDrops`, `ExpansionFeatures`, `WorldEvents`, and `Holidays` into staging.
+`bin/wowhead/journal-drops.py fetch` pulls dungeon and outdoor NPC drops from
+Wowhead as last-fill (never invents an instance or item ID).
+`bin/journal_extras.py emit` (from Sources) writes:
 
 | Output | Global | Contents |
 | --- | --- | --- |
@@ -226,13 +230,14 @@ key per item, but older extracts repeat the same item many times (57,790 entries
 and silently dropped the earlier `locations`. Merging on read recovers 230 extras
 rows the client never saw, and keeps old extracts usable.
 
-Current output: 8,474 rows / 1.9 MB, against 69,822 legacy locations / 25.4 MB —
-12.1% of locations are genuine extras; the rest duplicate the Adventure Guide.
+Current output: 36,085 rows / 6.75 MB (diffed against `JournalLoot`; world-drop
+and outdoor rows sit on World / zone cards, instance rows on dungeon and raid
+cards). Wowhead NPC drops last-fill holes the Guide and clone extras omit.
 
 ### Item names and drop locations (cross-addon)
 
-`ns.JournalItemNames` covers Adventure Guide itemIDs only (18,137 of 19,067; the
-rest have no name in the extract and fall back to the client's cache). Extras rows
+`ns.JournalItemNames` covers Adventure Guide itemIDs only (19,068 of 19,068 from
+ItemSparse). Extras rows
 carry their own `name`, so `GetItemNameIndex` folds them in on first use and
 returns one map.
 
