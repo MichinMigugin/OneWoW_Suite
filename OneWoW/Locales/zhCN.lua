@@ -165,7 +165,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自动坐骑",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自动坐骑会在战斗及其他光环受限情况下暂停，无需扫描保密增益即可检测潜行，并在光环数据受限时不再报错。玩家坐骑的鼠标提示使用同样的保护。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 掉落与冒险指南一致。世界卡片分别列出世界首领和世界稀有及其掉落，并包含该资料片的探索与冒险者成就。实例类型还列出地区和主城。世界总览仍是完整列表；稀有、首领或成就上的图钉在知道地区时会打开该地的卡片。各资料片的主城和户外地区都随 Journal 提供。卡片显示首领、稀有、物品和成就数量。多个稀有都会掉落的物品会分别列在每个稀有下。已对应首领或稀有的额外掉落会归到该条目，其余仍在普通战利品。来源图标标出冒险指南、OneWoW 数据或实时 AllTheThings。已加载 AllTheThings 时，Journal 会显示已检测到 ATT。地下堡仍在地心之战与至暗之夜，并保留丰裕筛选。打开 Journal 和卡片不再卡住。",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal 掉落与冒险指南一致。世界卡片分别列出世界首领和世界稀有及其掉落，并包含该资料片的探索与冒险者成就。实例类型还列出地区和主城。世界总览仍是完整列表；稀有、首领或成就上的图钉在知道地区时会打开该地的卡片。各资料片的主城和户外地区都随 Journal 提供。卡片显示首领、稀有、物品和成就数量。多个稀有都会掉落的物品会分别列在每个稀有下。已对应首领或稀有的额外掉落会归到该条目，其余仍在普通战利品。来源图标标出冒险指南或 OneWoW 数据。已加载 AllTheThings 时，Journal 会显示已检测到 ATT，并可加入其实时数据。地下堡仍在地心之战与至暗之夜，并保留丰裕筛选。打开 Journal 和卡片不再卡住。",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包设置 → 常规中，可以分别替换背包、银行（个人与战团一起）和公会银行。用 #disenchantable (#de) 查找可分解物品，用 #midnights1 / #midnights2 查找至暗之夜第1赛季和第2赛季装备。",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 图标浏览器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能现已包含图标浏览器。选择宏、银行标签、公会银行标签、装备方案或幻化套装图标时可搜索并筛选。",

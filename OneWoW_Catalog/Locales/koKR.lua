@@ -104,10 +104,10 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "난이도",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "OneWoW에 포함",
-    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "AllTheThings에서 실시간",
+    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "그들이 가진 추가 데이터가 있으면 추가됩니다.",
     ["JOURNAL_OPEN_ZONE_TT"] = "이 지역의 카드를 엽니다",
     ["JOURNAL_ATT_DETECTED"] = "ATT 감지됨",
-    ["JOURNAL_ATT_DETECTED_TT"] = "추가 정보가 표시될 수 있습니다.",
+    ["JOURNAL_ATT_DETECTED_TT"] = "그들이 가진 추가 데이터가 있으면 추가됩니다.",
     ["JOURNAL_COL_HDR_POINTS"] = "점수",
     ["JOURNAL_ACH_WARBAND"] = "전투부대",
     ["JOURNAL_ADVENTURE_GUIDE_TT"] = "모험 안내서에서 이 인스턴스를 엽니다.",

@@ -105,10 +105,10 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "难度",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "随 OneWoW 提供",
-    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "来自 AllTheThings 的实时数据",
+    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "他们拥有的额外数据将被加入。",
     ["JOURNAL_OPEN_ZONE_TT"] = "打开此地区的卡片",
     ["JOURNAL_ATT_DETECTED"] = "已检测到 ATT",
-    ["JOURNAL_ATT_DETECTED_TT"] = "可能会加入更多信息。",
+    ["JOURNAL_ATT_DETECTED_TT"] = "他们拥有的额外数据将被加入。",
     ["JOURNAL_COL_HDR_POINTS"] = "点数",
     ["JOURNAL_ACH_WARBAND"] = "战团",
     ["JOURNAL_ADVENTURE_GUIDE_TT"] = "在冒险指南中打开此副本。",

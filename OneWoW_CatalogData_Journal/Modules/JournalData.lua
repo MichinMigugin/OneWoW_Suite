@@ -442,7 +442,7 @@ local function AddExtraEntry(extrasByKey, key, itemID, itemData, loc)
         itemID       = itemID,
         itemData     = itemData,
         difficulties = loc.difficulties,
-        source       = loc.source or "att",
+        source       = loc.source,
         encounterID  = loc.encounterID or 0,
         instanceID   = loc.instanceID,
         npcID        = loc.npcID,
@@ -658,7 +658,7 @@ local function MakeExtrasItem(self, entry)
         quality      = (idata and idata.quality) or 1,
         special      = special,
         difficulties = entry.difficulties or {},
-        source       = entry.source or "att",
+        source       = entry.source,
         questSources = idata and idata.questSources,
         npcID        = entry.npcID,
     }
@@ -696,14 +696,14 @@ local function EncounterNameByID(encID)
 end
 
 ---@param items table
----@return string
+---@return string|nil
 local function LeftoverSource(items)
     for i = 1, #items do
         if items[i].source == "att-live" then
             return "att-live"
         end
     end
-    return "att"
+    return nil
 end
 
 ---@param enc table
@@ -752,7 +752,7 @@ local function NewRareEncounter(npcID, source)
         items        = {},
         worldRare    = true,
         npcID        = npcID,
-        source       = source or "att",
+        source       = source,
     }
 end
 
@@ -773,7 +773,7 @@ local function NewWorldBossEncounter(encID, npcID, source)
         bossIndex    = order or 999,
         items        = {},
         npcID        = npcID,
-        source       = source or "att",
+        source       = source,
     }
 end
 
@@ -805,14 +805,14 @@ function JournalData:AssembleWorldEncounters(bosses, extras)
             if encID and encID > 0 then
                 dest = bossByEnc[encID]
                 if not dest then
-                    dest = NewWorldBossEncounter(encID, npcID, "att")
+                    dest = NewWorldBossEncounter(encID, npcID, entry.source)
                     bossByEnc[encID] = dest
                     tinsert(encounters, dest)
                 end
             elseif npcID then
                 dest = rareByNpc[npcID]
                 if not dest then
-                    dest = NewRareEncounter(npcID, "att")
+                    dest = NewRareEncounter(npcID, entry.source)
                     rareByNpc[npcID] = dest
                     tinsert(encounters, dest)
                 end
@@ -912,7 +912,7 @@ end
 
 --- Place one extra onto an already-hydrated card. World cards get rare
 --- sections and World Bosses / World Rares headers; dungeon cards merge onto
---- a matching boss or create one when ATT/EJ has an encounter OneWoW did not.
+--- a matching boss or create one when live overlay or EJ has an encounter OneWoW did not.
 ---@param inst table
 ---@param entry table
 ---@return boolean added
@@ -923,7 +923,7 @@ function JournalData:PlaceExtraOnCard(inst, entry)
     end
     local encID = entry.encounterID
     local npcID = tonumber(entry.npcID)
-    local entrySource = entry.source or "att"
+    local entrySource = entry.source
     local isWorld = UsesWorldLayout(inst)
     local dest
     for _, enc in ipairs(inst.encounters) do

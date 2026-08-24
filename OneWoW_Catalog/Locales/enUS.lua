@@ -104,10 +104,10 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulty",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "Shipped with OneWoW",
-    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Live from AllTheThings",
+    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Any additional data they have will be added.",
     ["JOURNAL_OPEN_ZONE_TT"] = "Open this zone's card",
     ["JOURNAL_ATT_DETECTED"] = "ATT Detected",
-    ["JOURNAL_ATT_DETECTED_TT"] = "Additional information may be added.",
+    ["JOURNAL_ATT_DETECTED_TT"] = "Any additional data they have will be added.",
     ["JOURNAL_COL_HDR_POINTS"] = "Points",
     ["JOURNAL_ACH_WARBAND"] = "Warband",
     ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Open this instance in the Adventure Guide.",

@@ -3,7 +3,7 @@ OneWoW is a **World of Warcraft** Retail addon suite: alt tracking, an in-game c
 | Job | OneWoW | Altoholic | All The Things | Bagnon |
 | --- | --- | --- | --- | --- |
 | Account-wide alts, gold, banks | [AltTracker](AltTracker) | Yes. The long-standing alt addon. | No | No |
-| Collection completion | [Catalog](Catalog) Journal, plus leftover All The Things extras when ATT is loaded | Some inventory and collectable views | Yes. The collection addon. | No |
+| Collection completion | [Catalog](Catalog) Journal | Some inventory and collectable views | Yes. The collection addon. | No |
 | Bag UI and search | [Bags](Bags) | Inventory across characters | No | Yes. A bag UI. |
 | Quests and dailies | [Catalog](Catalog) quests and [Trackers](Trackers) lists | Limited | Completion, not custom lists | No |
 | One hub, unload what you skip | Yes. Manage Features unloads the module. | Separate DataStore stack | Its own UI | Bag windows only |
@@ -21,9 +21,9 @@ Use Altoholic if you want that specific addon and nothing else. Use OneWoW if yo
 
 All The Things is the collection-completion addon. OneWoW does not replace it.
 
-[Catalog](Catalog) is an in-game reference: dungeons, raids, Delves, vendors, professions, item sources, and quests. When All The Things is loaded, Journal can mark leftovers ATT still has that OneWoW did not already ship. ATT stays the specialist for “what is left to collect.” Catalog is the suite’s map of instances, vendors, recipes, and quests.
+[Catalog](Catalog) is an in-game reference: dungeons, raids, Delves, vendors, professions, item sources, and quests. If All The Things is loaded, Journal shows ATT Detected and can add anything All The Things has live. ATT stays the specialist for what is left to collect. Catalog is the suite's map of instances, vendors, recipes, and quests.
 
-Run both if you want ATT’s completion list and OneWoW’s hub. Skip Catalog’s Journal pack if you only want ATT.
+Run both if you want ATT's completion list and OneWoW's hub.
 
 ## vs Bagnon
 

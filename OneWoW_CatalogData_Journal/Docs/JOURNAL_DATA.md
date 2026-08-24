@@ -14,11 +14,11 @@ extracts under OneWoW_Workspace `.warehouse/Sources/Wago`.
    World Rares. Unplaced extras stay in General Loot (`encounterID = 0`).
    Never unioned across expansions.
 
-ATT on-disk extras (`OneWoWExtras_*`) stay expansion-scoped. A live overlay runs
+Shipped extras (`OneWoWExtras_*`) stay expansion-scoped. A live overlay runs
 only if AllTheThings is already loaded (never `LoadAddOn` / `EnsureLoaded` ATT).
 
-`OneWoWExtras_*` is generated, not hand-written — see "Generated from the legacy
-extract" below. The old `OneWoWItems_*` / `OneWoWInstances_*` / `OneWoWEncounters_*`
+`OneWoWExtras_*` is generated, not hand-written — see "Generated extras"
+below. The old `OneWoWItems_*` / `OneWoWInstances_*` / `OneWoWEncounters_*`
 tables **no longer ship**: 25.6 MB of Lua parsed at load, of which ~76% duplicated
 Generated data and ~half the entries were duplicate `[itemID]` keys Lua discarded
 anyway. Nothing may read those globals or add them back to the TOC.
@@ -44,7 +44,7 @@ Favorites and list selection use the same key.
 ## Lazy hydrate
 
 The in-memory card index is cheap: membership, delves, synthetic World, Generated
-loot counts and boss counts. Encounter rows (`C_Item`, ATT extras) load in
+loot counts and boss counts. Encounter rows (`C_Item`, extras) load in
 `EnsureEncounters` for **one card** when you open details, toast, or ESC
 collection, or when Has uncollected filters the current list.
 
@@ -109,7 +109,7 @@ card when one exists.
 World card encounters are:
 
 - **World Bosses** — Adventure Guide bosses on the hub, plus extras whose
-  `encounterID` matches (or a new boss row when ATT has an encounter ID the
+  `encounterID` matches (or a new boss row when an extra has an encounter ID the
   Guide does not list).
 - **World Rares** — extras with an `npcID` and no matching boss encounter,
   one section per creature. Names resolve from `npcID` at runtime.
@@ -142,9 +142,9 @@ at generate time). Runtime only calls `GetAchievementInfo`.
 
 Dungeon and raid extras with an `encounterID` merge onto that boss the same
 way. Live EJ creates a missing boss row when the Adventure Guide lists one
-OneWoW did not ship. Live ATT is a fallback only: if AllTheThings is already loaded it places
+OneWoW did not ship. Live overlay is a fallback only: if AllTheThings is already loaded it places
 extras we have not shipped yet. Encounter rows carry `source`
-(`ej` / `att` / `att-live`) for the Journal Source icon.
+(`ej` / `att-live` / omitted for shipped OneWoW extras) for the Journal Source icon.
 
 ## Delves
 
@@ -191,12 +191,12 @@ Extract build pin: OneWoW_Workspace `.warehouse/Sources/Wago/README.md`.
 Warehouse / source order: OneWoW_Workspace `Docs/WAREHOUSE_PLAN.md`.
 Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
-## Generated from the ATT extract
+## Generated extras
 
-Raw ATT is the Workspace clone (`.warehouse/Sources/ATT`). Raw CSVs are
-`.warehouse/Sources/Wago`. Generators read every shelf under
-`.warehouse/Sources/`. Today's shipped extras and Generated files stay as
-they are until a feature generator is run on purpose.
+Raw shelves are the Workspace clone (`.warehouse/Sources/ATT`), CSVs
+(`.warehouse/Sources/Wago`), and the rest of Sources. Generators read every
+shelf under `.warehouse/Sources/`. Today's shipped extras and Generated files
+stay as they are until a feature generator is run on purpose.
 
 `bin/journal_extras.py` (later, from Sources) writes:
 
@@ -214,9 +214,11 @@ display and classification fields `BuildExtrasEncounter` / `DetermineItemSpecial
 read (`name`, `icon`, `quality`, `classID`, `subclassID`, `itemType`, `itemSubType`,
 `isTransmog`, `isToy`, `toyID`, `mountID`, `speciesID`, `achievementID`,
 `questSources`) plus its location (`instanceID` or `world`, `encounterID`,
-`difficulties`, `source`, `npcID`, `mapID`). It deliberately omits `link`: the visible-row
-fill resolves a live link through the store item loader, and `link` was the single
-heaviest field in the legacy tables.
+`difficulties`, `npcID`, `mapID`, and `source` only for Adventure Guide
+(`ej`) or runtime live-added rows). Shipped extras omit `source`. The row
+deliberately omits `link`: the visible-row fill resolves a live link through
+the store item loader, and `link` was the single heaviest field in the
+legacy tables.
 
 Duplicate `[itemID]` keys are **merged**, not last-wins. The extractor now emits one
 key per item, but older extracts repeat the same item many times (57,790 entries for
@@ -266,6 +268,6 @@ On a cold session the first merge can beat the server's loot data, so the event
 retries — but only while `HasUnresolvedBossNames` is true and at most
 `MAX_MERGE_RETRIES` (3) times. Both bounds matter: the check is scoped to rows
 inside real encounters (`encounterID > 0`) because those are the only names EJ can
-supply, and without the counter, ATT extras and General / Achievement / Quest rows —
+supply, and without the counter, extras and General / Achievement / Quest rows —
 which EJ will never name — kept the retry permanently armed and re-merged the card
 every 0.25s for the rest of the session.

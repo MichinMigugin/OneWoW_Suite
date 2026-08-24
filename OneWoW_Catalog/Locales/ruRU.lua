@@ -105,10 +105,10 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Сложность",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "Поставляется с OneWoW",
-    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Вживую из AllTheThings",
+    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Будут добавлены все дополнительные данные, которые у них есть.",
     ["JOURNAL_OPEN_ZONE_TT"] = "Открыть карточку этой зоны",
     ["JOURNAL_ATT_DETECTED"] = "ATT обнаружен",
-    ["JOURNAL_ATT_DETECTED_TT"] = "Может быть добавлена дополнительная информация.",
+    ["JOURNAL_ATT_DETECTED_TT"] = "Будут добавлены все дополнительные данные, которые у них есть.",
     ["JOURNAL_COL_HDR_POINTS"] = "Очки",
     ["JOURNAL_ACH_WARBAND"] = "Отряд",
     ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Открыть это подземелье в путеводителе по приключениям.",

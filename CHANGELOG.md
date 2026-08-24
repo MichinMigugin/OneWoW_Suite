@@ -50,12 +50,12 @@
 - Loot names and quality colors show the first time you open a card, instead of turning up after you click away and back.
 - Has uncollected no longer freezes the game while it checks every card. Matching cards appear as they are found.
 - Journal data is about 23 MB smaller, so it loads faster and uses far less memory. Item Search drops, item detail drop lists, and the item tooltip's instance lines are unchanged.
-- Opening the first card in an expansion is quicker. The Journal no longer sifts the whole expansion to find extra AllTheThings drops.
+- Opening the first card in an expansion is quicker. The Journal no longer sifts the whole expansion to find extra drops.
 - The item count on a card no longer changes when you open it, and World cards show their real item count instead of 0.
 - Loot on a card now matches the Adventure Guide. Extra drops with a known boss or rare sit on that encounter, including bosses or rares OneWoW did not already list. Unplaced extras stay under General Loot.
-- World cards list World Bosses and World Rares, each with their own loot, and show a rares count next to bosses (for example 4 Bosses | 13 Rares). A drop that comes from several rares is listed on each rare. World cards also include that expansion's exploration achievements (Explore, Adventurer, Treasures). Source icons on encounters and loot mark Adventure Guide (WoW), shipped OneWoW data, or live AllTheThings.
-- Zone and city cards now list that place's Explore achievement, Skyriding Glyphs when the title names the city, and world rares we already shipped with a known map. AllTheThings only fills leftovers it still has.
-- When AllTheThings is loaded, the Journal filter bar shows ATT Detected. It only adds leftovers that are not already in shipped OneWoW data.
+- World cards list World Bosses and World Rares, each with their own loot, and show a rares count next to bosses (for example 4 Bosses | 13 Rares). A drop that comes from several rares is listed on each rare. World cards also include that expansion's exploration achievements (Explore, Adventurer, Treasures). Source icons on encounters and loot mark Adventure Guide (WoW) or shipped OneWoW data.
+- Zone and city cards now list that place's Explore achievement, Skyriding Glyphs when the title names the city, and world rares we already shipped with a known map.
+- When AllTheThings is loaded, the Journal filter bar shows ATT Detected and can add anything AllTheThings has live.
 - Instance Type includes World. Classic through Cataclysm get a World card; later expansions use the Adventure Guide outdoor hubs.
 - Instance Type also lists Zones and Cities. The World hub stays the full list for that expansion. A pin on a rare, boss, or achievement opens that place's card when we know the zone. Cities and outdoor zones for every expansion ship with Journal, including City of Threads, Tazavesh, and Midnight's Quel'Thalas zones (Eversong Woods, Silvermoon City, Harandar, Voidstorm, Isle of Quel'Danas, Zul'Aman, The Coiled Isle).
 - Instance cards get a map pin next to the favorite star, and the same pin sits on the details toolbar. Click it to open the world map and drop a waypoint at the entrance. Gold pins are Wowhead locations for doors the client has not published yet.

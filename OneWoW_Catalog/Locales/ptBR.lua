@@ -105,10 +105,10 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Dificuldade",
     ["JOURNAL_SOURCE_ONEWOW_TT"] = "Incluido no OneWoW",
-    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Ao vivo do AllTheThings",
+    ["JOURNAL_SOURCE_ATT_LIVE_TT"] = "Qualquer dado adicional que eles tiverem sera adicionado.",
     ["JOURNAL_OPEN_ZONE_TT"] = "Abrir o cartão desta zona",
     ["JOURNAL_ATT_DETECTED"] = "ATT detectado",
-    ["JOURNAL_ATT_DETECTED_TT"] = "Informacoes adicionais podem ser adicionadas.",
+    ["JOURNAL_ATT_DETECTED_TT"] = "Qualquer dado adicional que eles tiverem sera adicionado.",
     ["JOURNAL_COL_HDR_POINTS"] = "Pontos",
     ["JOURNAL_ACH_WARBAND"] = "Bando de Guerra",
     ["JOURNAL_ADVENTURE_GUIDE_TT"] = "Abrir esta instância no Guia da aventura.",
