@@ -14,22 +14,114 @@ local OneWoW = OneWoW
 
 local pairs, time = pairs, time
 
+local function CopyItemEntry(itemData)
+    local copy = {}
+    for key, value in pairs(itemData) do
+        copy[key] = value
+    end
+    return copy
+end
+
+-- Live scan is a filtered merchant window. Union static stock and other-map
+-- pins so a visit never deletes shipped rows the current window hid.
+local function UnionStaticInto(vendor, npcID)
+    local static = ns.StaticVendors and ns.StaticVendors[npcID]
+    if not static then return end
+
+    if vendor.expansion == nil then
+        vendor.expansion = static.expansion
+    end
+    if (not vendor.displayID or vendor.displayID == 0) and static.displayID then
+        vendor.displayID = static.displayID
+    end
+    if not vendor.roles then
+        vendor.roles = static.roles
+    end
+
+    if static.items then
+        if not vendor.items then vendor.items = {} end
+        for itemID, itemData in pairs(static.items) do
+            if not vendor.items[itemID] then
+                vendor.items[itemID] = CopyItemEntry(itemData)
+            end
+        end
+    end
+
+    if static.locations then
+        if not vendor.locations then vendor.locations = {} end
+        for mapID, loc in pairs(static.locations) do
+            if not vendor.locations[mapID] then
+                vendor.locations[mapID] = {
+                    zone = loc.zone,
+                    subzone = loc.subzone,
+                    x = loc.x,
+                    y = loc.y,
+                }
+            end
+        end
+    end
+end
+
 local OWNER_ID = "CatalogData_Vendors"
 
-local function ApplyScanCategory(vendor, scan)
-    -- User-assigned types are never overwritten. Existing category with no
-    -- source is grandfathered as user (pre-categorySource SavedVariables).
-    if vendor.categorySource == "user" then
-        return
+-- Uncategorized and General stay visitable, even when the player set them.
+local function IsOpenCategory(key)
+    return not key or key == "" or key == "general"
+end
+
+-- Scan sees the live row, which may not have copied static.category yet.
+local function EffectiveCategory(npcID, live)
+    if live.categorySource == "user" then
+        return live.category, "user"
     end
-    if vendor.category and not vendor.categorySource then
-        vendor.categorySource = "user"
+    if live.category and live.category ~= "" then
+        return live.category, live.categorySource or "static"
+    end
+    local static = ns.StaticVendors and ns.StaticVendors[npcID]
+    if static and static.category then
+        return static.category, "static"
+    end
+    return nil, nil
+end
+
+-- Visit fills Uncategorized / General. Decor we set may only move to another
+-- special (never General). Other specials we set stay. Non-specials we set
+-- (pet, repair, ...) may only upgrade to a special. Player types other than
+-- General / Uncategorized never change.
+local function ApplyScanCategory(vendor, scan, npcID)
+    local current, source = EffectiveCategory(npcID, vendor)
+    if source == "user" and not IsOpenCategory(current) then
         return
     end
 
-    local key = ns.VendorCategoryMap.Resolve(scan.subtitle, scan.canRepair)
-    if key then
-        vendor.category = key
+    local resolved = ns.VendorCategoryMap.Resolve(scan.subtitle, scan.canRepair)
+    if not resolved or resolved == current then
+        return
+    end
+
+    local incomingSpecial = ns.VendorCategoryMap.IsSpecial(resolved)
+    local currentSpecial = ns.VendorCategoryMap.IsSpecial(current)
+
+    if IsOpenCategory(current) then
+        vendor.category = resolved
+        vendor.categorySource = "scan"
+        return
+    end
+
+    if current == "decor" then
+        if incomingSpecial and resolved ~= "decor" then
+            vendor.category = resolved
+            vendor.categorySource = "scan"
+        end
+        return
+    end
+
+    if currentSpecial then
+        return
+    end
+
+    if incomingSpecial then
+        vendor.category = resolved
         vendor.categorySource = "scan"
     end
 end
@@ -79,7 +171,8 @@ function VendorScanner:MergeScanIntoDB(scan)
             existing.items[itemID] = itemData
         end
 
-        ApplyScanCategory(existing, scan)
+        ApplyScanCategory(existing, scan, npcID)
+        UnionStaticInto(existing, npcID)
     else
         local locations = {}
         if location and location.mapID then
@@ -106,7 +199,8 @@ function VendorScanner:MergeScanIntoDB(scan)
             scanCount = 1,
         }
         db.vendors[npcID] = vendor
-        ApplyScanCategory(vendor, scan)
+        ApplyScanCategory(vendor, scan, npcID)
+        UnionStaticInto(vendor, npcID)
     end
 
     if name ~= "" then

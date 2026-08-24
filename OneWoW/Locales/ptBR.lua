@@ -159,6 +159,8 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "Tradeskills segue o layout de Diário/Vendedores, com quantidades tenho/preciso da conta, um detalhe Em mãos e o filtro Tenho materiais quando Storage está disponível. Profissão é um menu; Limpar restaura o marcador de busca.",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
     ["WHATS_NEW_H_QUESTS_BODY"] = "Cartoes de missoes seguem o Diario (nome, Expansao | tipo de missao, tags). A expansao fica sob a busca; Zona e Progresso compartilham a linha. Limpar restaura o marcador de busca. Abrir uma missao e mudar expansao ou filtros de conclusao nao trava mais.",
+    ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",
+    ["WHATS_NEW_H_VENDORS_BODY"] = "A aba Vendors lista as lojas de Classic ate Midnight antes de voce visita-las. Nomes, zonas e nomes de itens preenchem enquanto voce olha, e o preco em ouro aparece nos itens de loja normais. Lojas de moradia, intendente, JxJ, guilda e imersoes vem com um tipo. Abrir um mercador ainda preenche o resto. Filtre por expansao, zona, moeda ou tipo.",
     ["WHATS_NEW_H_MAIL_BODY"] = "As abas do Correio e os rótulos traduzidos mostram de novo o idioma certo em vez de caracteres ilegíveis. A janela do Correio segue a fonte da suíte quando você a altera, sem recarregar.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montaria automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montaria automática pausa em combate e em outras situações com auras restritas, detecta furtividade sem varrer bônus secretos e não dá mais erro quando os dados de aura estão restritos. As dicas de Montarias dos jogadores usam a mesma proteção.",

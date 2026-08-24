@@ -140,6 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["VENDORS_LOCATION"] = "Local",
     ["VENDORS_FIRST_SEEN"] = "Visto pela primeira vez",
     ["VENDORS_LAST_SCANNED"] = "Última varredura",
+    ["VENDORS_UNSEEN_HINT"] = "Não visto - Fale com este NPC para adicionar o retrato e os preços atuais.",
     ["VENDORS_SCAN_COUNT"] = "Vezes varrido",
     ["VENDORS_ITEM_COUNT"] = "Itens à venda",
     ["VENDORS_LIMITED"] = "Limitado",

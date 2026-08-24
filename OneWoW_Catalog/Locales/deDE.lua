@@ -140,6 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["VENDORS_LOCATION"] = "Ort",
     ["VENDORS_FIRST_SEEN"] = "Zuerst gesehen",
     ["VENDORS_LAST_SCANNED"] = "Zuletzt gescannt",
+    ["VENDORS_UNSEEN_HINT"] = "Ungesehen - Sprecht mit diesem NSC, um Porträt und aktuelle Preise zu ergänzen.",
     ["VENDORS_SCAN_COUNT"] = "Anzahl Scans",
     ["VENDORS_ITEM_COUNT"] = "Gegenstände im Verkauf",
     ["VENDORS_LIMITED"] = "Begrenzt",

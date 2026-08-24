@@ -66,6 +66,13 @@
 - Dungeons and raids get an Adventure Guide button on the details toolbar.
 
 #### Vendors
+- The Vendors tab lists shops from Classic through Midnight before you visit them: stock, costs, and map pins when we have them. Opening a merchant still fills gaps.
+- Shops you have not opened yet show Unseen on the details pane. Visit that NPC to add their portrait and live prices.
+- Names, zones, and item names fill in as you look at a vendor. Type and price lines only show when we know them.
+- Housing shops ship as Decor. Quartermaster, PvP, Guild, and Delve shops get those types when we can tell. A quartermaster who also sells housing stays Quartermaster.
+- Opening a merchant can fill Uncategorized or General, and can upgrade a type we set to one of those specials. Types you pick yourself stick unless you leave them Uncategorized or General.
+- Normal shop items show their gold price. Token and reputation costs still come from the merchant when we do not already have them.
+- Filter vendors by expansion, like Quests.
 - Quartermaster / Renown and Quest Giver cards use a matching border. Other vendor types stay on the usual edge.
 
 ---
@@ -96,7 +103,7 @@
 
 ---
 
-- **Last Updated**: Aug 23, 2026
+- **Last Updated**: Aug 25, 2026
 
 ## R6.2608.1804
 

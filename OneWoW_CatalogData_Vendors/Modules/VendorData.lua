@@ -5,46 +5,169 @@ local VendorData = ns.VendorData
 
 local pairs = pairs
 local tinsert, sort = tinsert, sort
+local C_Map = C_Map
 local Location = OneWoW.Location
 
 -- Vendor locations are stored as 0-100.
 local PERCENT_COORDS = { format = "percent" }
 
-local staticIndex = nil
-local function BuildStaticIndex()
-    if staticIndex then return end
-    staticIndex = {}
-    if ns.StaticVendorItems then
-        for itemID, itemData in pairs(ns.StaticVendorItems) do
-            for npcID in pairs(itemData.vendors) do
-                if not staticIndex[npcID] then
-                    staticIndex[npcID] = {}
-                end
-                staticIndex[npcID][itemID] = {}
-            end
+local function CopyItemEntry(itemData)
+    local copy = {}
+    for key, value in pairs(itemData) do
+        copy[key] = value
+    end
+    return copy
+end
+
+local function CopyItems(src)
+    if not src then return {} end
+    local out = {}
+    for itemID, itemData in pairs(src) do
+        out[itemID] = CopyItemEntry(itemData)
+    end
+    return out
+end
+
+local function FillZoneName(mapID, loc)
+    if loc.zone and loc.zone ~= "" then return end
+    local info = C_Map.GetMapInfo(mapID)
+    if info and info.name then
+        loc.zone = info.name
+    end
+end
+
+local function CopyOneLocation(mapID, loc)
+    local copy = {
+        zone = loc.zone,
+        subzone = loc.subzone,
+        x = loc.x,
+        y = loc.y,
+        source = loc.source,
+        mapID = mapID,
+    }
+    FillZoneName(mapID, copy)
+    return copy
+end
+
+local function CopyLocations(src)
+    if not src then return {} end
+    local out = {}
+    for mapID, loc in pairs(src) do
+        out[mapID] = CopyOneLocation(mapID, loc)
+    end
+    return out
+end
+
+local function UnionItems(staticItems, liveItems)
+    local out = CopyItems(staticItems)
+    if liveItems then
+        for itemID, itemData in pairs(liveItems) do
+            out[itemID] = CopyItemEntry(itemData)
         end
     end
+    return out
+end
+
+local function UnionLocations(staticLocs, liveLocs)
+    local out = CopyLocations(staticLocs)
+    if liveLocs then
+        for mapID, loc in pairs(liveLocs) do
+            out[mapID] = CopyOneLocation(mapID, loc)
+        end
+    end
+    return out
+end
+
+-- Overlay static NpcDB onto a live SavedVariables row (or static-only).
+-- Does not write static fields into SavedVariables; callers that persist
+-- (scan / SetCategory) copy what they need.
+local function OverlayVendor(npcID, live)
+    local static = ns.StaticVendors and ns.StaticVendors[npcID]
+    if not live and not static then return nil end
+
+    local db = ns:GetDB()
+    if not live then
+        local vendor = {
+            npcID = npcID,
+            name = db.nameCache[npcID],
+            expansion = static.expansion,
+            displayID = static.displayID,
+            subtitle = static.subtitle,
+            category = static.category,
+            roles = static.roles,
+            items = CopyItems(static.items),
+            locations = CopyLocations(static.locations),
+            isStaticOnly = true,
+        }
+        return vendor
+    end
+
+    if not static then
+        if live.locations then
+            for mapID, loc in pairs(live.locations) do
+                loc.mapID = mapID
+                FillZoneName(mapID, loc)
+            end
+        end
+        return live
+    end
+
+    -- Player Uncategorized is intentional: do not restore a shipped type.
+    local category
+    if live.categorySource == "user" then
+        category = live.category
+    else
+        category = live.category
+        if not category or category == "" then
+            category = static.category
+        end
+    end
+
+    local expansion = static.expansion
+    if live.expansion ~= nil then
+        expansion = live.expansion
+    end
+
+    return {
+        npcID = npcID,
+        name = (live.name and live.name ~= "") and live.name or db.nameCache[npcID],
+        expansion = expansion,
+        displayID = (live.displayID and live.displayID > 0) and live.displayID or static.displayID,
+        subtitle = (live.subtitle and live.subtitle ~= "") and live.subtitle or static.subtitle,
+        creatureType = live.creatureType,
+        classification = live.classification,
+        level = live.level,
+        category = category,
+        categorySource = live.categorySource,
+        roles = live.roles or static.roles,
+        items = UnionItems(static.items, live.items),
+        locations = UnionLocations(static.locations, live.locations),
+        firstSeen = live.firstSeen,
+        lastScanned = live.lastScanned,
+        scanCount = live.scanCount,
+        isStaticOnly = false,
+    }
 end
 
 function VendorData:GetVendor(npcID)
     local db = ns:GetDB()
-    return db.vendors and db.vendors[npcID]
+    local live = db.vendors and db.vendors[npcID]
+    return OverlayVendor(npcID, live)
 end
 
 function VendorData:GetAllVendors()
-    BuildStaticIndex()
     local db = ns:GetDB()
     local result = {}
-    local seen = {}
     if db.vendors then
-        for npcID, vendor in pairs(db.vendors) do
-            result[npcID] = vendor
-            seen[npcID] = true
+        for npcID, live in pairs(db.vendors) do
+            result[npcID] = OverlayVendor(npcID, live)
         end
     end
-    for npcID, items in pairs(staticIndex) do
-        if not seen[npcID] then
-            result[npcID] = { npcID = npcID, name = db.nameCache and db.nameCache[npcID], items = items, isStaticOnly = true }
+    if ns.StaticVendors then
+        for npcID in pairs(ns.StaticVendors) do
+            if not result[npcID] then
+                result[npcID] = OverlayVendor(npcID, nil)
+            end
         end
     end
     return result
@@ -52,11 +175,8 @@ end
 
 function VendorData:GetVendorCount()
     local count = 0
-    local db = ns:GetDB()
-    if db.vendors then
-        for _ in pairs(db.vendors) do
-            count = count + 1
-        end
+    for _ in pairs(self:GetAllVendors()) do
+        count = count + 1
     end
     return count
 end
@@ -66,60 +186,38 @@ function VendorData:SearchVendors(searchTerm)
         return self:GetAllVendors()
     end
 
-    BuildStaticIndex()
     local results = {}
-    local db = ns:GetDB()
-    local seen = {}
     local term = searchTerm:lower()
 
-    if db.vendors then
-        for npcID, vendor in pairs(db.vendors) do
-            local matched = false
+    for npcID, vendor in pairs(self:GetAllVendors()) do
+        local matched = false
 
-            if vendor.name and vendor.name:lower():find(term, 1, true) then
-                matched = true
-            end
+        if vendor.name and vendor.name:lower():find(term, 1, true) then
+            matched = true
+        end
 
-            if not matched and vendor.locations then
-                for _, loc in pairs(vendor.locations) do
-                    if loc.zone and loc.zone:lower():find(term, 1, true) then
-                        matched = true
-                        break
-                    end
-                    if loc.subzone and loc.subzone:lower():find(term, 1, true) then
-                        matched = true
-                        break
-                    end
-                end
-            end
-
-            if not matched then
-                local idStr = tostring(npcID)
-                if idStr:find(term, 1, true) then
+        if not matched and vendor.locations then
+            for _, loc in pairs(vendor.locations) do
+                if loc.zone and loc.zone:lower():find(term, 1, true) then
                     matched = true
+                    break
                 end
-            end
-
-            if matched then
-                results[npcID] = vendor
-                seen[npcID] = true
+                if loc.subzone and loc.subzone:lower():find(term, 1, true) then
+                    matched = true
+                    break
+                end
             end
         end
-    end
 
-    for npcID, items in pairs(staticIndex) do
-        if not seen[npcID] then
-            local cachedName = db.nameCache and db.nameCache[npcID]
-            local matched = false
-            if cachedName and cachedName:lower():find(term, 1, true) then
+        if not matched then
+            local idStr = tostring(npcID)
+            if idStr:find(term, 1, true) then
                 matched = true
             end
-            if not matched and tostring(npcID):find(term, 1, true) then
-                matched = true
-            end
-            if matched then
-                results[npcID] = { npcID = npcID, name = cachedName, items = items, isStaticOnly = true }
-            end
+        end
+
+        if matched then
+            results[npcID] = vendor
         end
     end
 
@@ -128,29 +226,22 @@ end
 
 function VendorData:GetVendorsByItem(itemID)
     local results = {}
-    local db = ns:GetDB()
     local seen = {}
 
-    if db.vendors then
-        for npcID, vendor in pairs(db.vendors) do
-            if vendor.items and vendor.items[itemID] then
-                tinsert(results, vendor)
-                seen[npcID] = true
-            end
+    for npcID, vendor in pairs(self:GetAllVendors()) do
+        if vendor.items and vendor.items[itemID] then
+            tinsert(results, vendor)
+            seen[npcID] = true
         end
     end
 
     if ns.StaticVendorItems and ns.StaticVendorItems[itemID] then
-        BuildStaticIndex()
         for npcID in pairs(ns.StaticVendorItems[itemID].vendors) do
             if not seen[npcID] then
-                local liveVendor = db.vendors and db.vendors[npcID]
-                if liveVendor then
-                    tinsert(results, liveVendor)
-                else
-                    tinsert(results, { npcID = npcID, items = staticIndex[npcID] or {}, isStaticOnly = true })
+                local vendor = self:GetVendor(npcID)
+                if vendor then
+                    tinsert(results, vendor)
                 end
-                seen[npcID] = true
             end
         end
     end
@@ -160,20 +251,39 @@ end
 
 function VendorData:GetUniqueItemCount()
     local items = {}
-    local db = ns:GetDB()
-    if not db.vendors then return 0 end
-
-    for _, vendor in pairs(db.vendors) do
+    for _, vendor in pairs(self:GetAllVendors()) do
         if vendor.items then
             for itemID in pairs(vendor.items) do
                 items[itemID] = true
             end
         end
     end
-
     local count = 0
     for _ in pairs(items) do count = count + 1 end
     return count
+end
+
+function VendorData:GetAvailableExpansions()
+    local found = {}
+    for _, vendor in pairs(self:GetAllVendors()) do
+        if vendor.expansion ~= nil then
+            found[vendor.expansion] = true
+        end
+    end
+    local result = {}
+    for expID in pairs(found) do
+        local name = OneWoW:GetExpansionName(expID)
+        if name then
+            tinsert(result, {
+                id = expID,
+                name = name,
+            })
+        end
+    end
+    sort(result, function(a, b)
+        return a.id < b.id
+    end)
+    return result
 end
 
 function VendorData:GetStats()
@@ -265,11 +375,14 @@ function VendorData:GetCategory(npcID)
 end
 
 -- Sets (or clears, when categoryKey is nil/empty) the user-assigned category
--- for a vendor. If the vendor exists only in the static index, a minimal
--- record is materialized so the category can be persisted; the static items
--- are carried over so subsequent reads still see them.
--- Clearing restores Uncategorized and drops categorySource so the next scan
--- may auto-fill again. Setting marks categorySource = "user" (scan never overwrites).
+-- for a vendor. If the vendor exists only in the static NpcDB, a minimal
+-- record is materialized so the category can be persisted.
+-- Clearing keeps categorySource = "user" so overlay does not restore a shipped
+-- type; Uncategorized and General stay visitable (scan may replace them).
+-- Any other player type is sticky.
+---@param npcID number
+---@param categoryKey string|nil
+---@return boolean
 function VendorData:SetCategory(npcID, categoryKey)
     if not npcID then return false end
     local db = ns:GetDB()
@@ -277,19 +390,22 @@ function VendorData:SetCategory(npcID, categoryKey)
 
     local vendor = db.vendors[npcID]
     if not vendor then
-        BuildStaticIndex()
-        local staticItems = staticIndex and staticIndex[npcID]
+        local static = ns.StaticVendors and ns.StaticVendors[npcID]
         vendor = {
             npcID = npcID,
-            name  = db.nameCache and db.nameCache[npcID],
-            items = staticItems or {},
+            name  = db.nameCache[npcID],
+            items = CopyItems(static and static.items),
+            locations = CopyLocations(static and static.locations),
+            expansion = static and static.expansion,
+            displayID = static and static.displayID,
+            roles = static and static.roles,
         }
         db.vendors[npcID] = vendor
     end
 
     if not categoryKey or categoryKey == "" then
         vendor.category = nil
-        vendor.categorySource = nil
+        vendor.categorySource = "user"
     else
         vendor.category = categoryKey
         vendor.categorySource = "user"

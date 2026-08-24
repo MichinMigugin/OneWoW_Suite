@@ -140,6 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["VENDORS_LOCATION"] = "Ubicación",
     ["VENDORS_FIRST_SEEN"] = "Visto por primera vez",
     ["VENDORS_LAST_SCANNED"] = "Último escaneo",
+    ["VENDORS_UNSEEN_HINT"] = "Sin ver - Habla con este PNJ para añadir su retrato y los precios actuales.",
     ["VENDORS_SCAN_COUNT"] = "Veces escaneado",
     ["VENDORS_ITEM_COUNT"] = "Objetos en venta",
     ["VENDORS_LIMITED"] = "Limitado",

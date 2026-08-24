@@ -9,7 +9,7 @@
 ## Tabs (overview)
 
 * **Journal** — dungeons, raids, Delves, and World hubs across expansions; encounters, Adventure Guide loot, additional extras, and achievements when Journal data is installed. The pin next to the favorite star opens the map and marks the entrance.
-* **Vendors** — who sells what, where, and for which currency
+* **Vendors** — who sells what, where, and for which currency. Classic through Midnight shops ship with the Vendors pack; housing, Quartermaster, PvP, Guild, and Delve shops get a type when we can tell. Shops you have not opened yet show Unseen on the details pane. Opening a merchant still updates portrait, live prices, and pins. Filter by expansion, zone, currency, or type.
 * **Tradeskills** — recipes, materials, and profession requirements
 * **Item Search** — find an item and see vendors, crafts, drops, and other sources
 * **Quests** — quest database and completion tracking (with Quests data)
@@ -25,7 +25,7 @@ Each pack is optional. Disable packs you do not need to save memory; Catalog its
 | Pack | Fills |
 |------|--------|
 | **Journal** | Instances, encounters, Adventure Guide loot, additional extras, achievements, Delves, and World |
-| **Vendors** | Vendor NPCs and stock |
+| **Vendors** | Classic through Midnight vendor NPCs and stock (live scan fills gaps) |
 | **Tradeskills** | Recipes and materials |
 | **Quests** | Quest DB and completion for every expansion |
 
@@ -55,5 +55,6 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 ### Sources
 
 * [OneWoW_Catalog/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Catalog/README.md)
+* [OneWoW_CatalogData_Vendors/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_CatalogData_Vendors/README.md)
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — Catalog data-store catalog
 * [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md)

@@ -140,6 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["VENDORS_LOCATION"] = "Местоположение",
     ["VENDORS_FIRST_SEEN"] = "Впервые замечен",
     ["VENDORS_LAST_SCANNED"] = "Последнее сканирование",
+    ["VENDORS_UNSEEN_HINT"] = "Не встречался - Поговорите с этим НИП, чтобы добавить портрет и актуальные цены.",
     ["VENDORS_SCAN_COUNT"] = "Число сканирований",
     ["VENDORS_ITEM_COUNT"] = "Предметов в продаже",
     ["VENDORS_LIMITED"] = "Ограничено",

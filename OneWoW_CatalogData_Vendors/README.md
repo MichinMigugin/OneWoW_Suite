@@ -8,7 +8,7 @@
 
 This is a companion data addon for the OneWoW Catalog. It provides:
 
-- **Vendor Locations** - Where to find every NPC vendor
+- **Vendor Locations** - Where to find vendor NPCs (Classic through Midnight ship; opening a merchant still fills gaps)
 - **Item Prices** - Cost for items sold by vendors
 - **Vendor Inventory** - What each vendor sells
 - **Currency Information** - What currencies vendors accept

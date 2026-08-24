@@ -2,7 +2,7 @@ local _, ns = ...
 
 -- Maps NPC SubName (merchant tooltip subtitle) → VendorCategories key.
 -- Uses Blizzard GlobalStrings at runtime (locale-safe), plus a small curated
--- exact / prefix table for titles that have no tracking GlobalString
+-- exact / needle table for titles that have no tracking GlobalString
 -- ("General Goods", "Quartermaster"). Profession supply vendors use
 -- "{Profession} Supplies" (and locale remainders) built from
 -- C_TradeSkillUI.GetTradeSkillDisplayName. Never uses suite L[] labels.
@@ -31,6 +31,7 @@ local GLOBAL_SOURCES = {
     { "MINIMAP_TRACKING_BARBER",              "barbershop" },
     { "MINIMAP_TRACKING_TRANSMOGRIFIER",      "transmog" },
     { "MINIMAP_TRACKING_ITEM_UPGRADE_MASTER", "item_upgrade" },
+    { "AUCTION_CATEGORY_HOUSING",            "decor" },
 }
 
 -- Exact subtitle → key (client SubName strings with no GlobalString).
@@ -62,8 +63,9 @@ local EXACT_CURATED = {
     ["軍需官"] = "quartermaster",
 }
 
--- Lowercased prefix → key (Renown Quartermaster, …).
-local PREFIX_CURATED = {
+-- Lowercased needle → key. Quartermaster translations first so
+-- "Renown Quartermaster" stays quartermaster, not a generic match.
+local NEEDLE_CURATED = {
     { "quartermaster", "quartermaster" },
     { "rüstmeister", "quartermaster" },
     { "intendant", "quartermaster" },
@@ -76,7 +78,32 @@ local PREFIX_CURATED = {
     { "병참장교", "quartermaster" },
     { "军需官", "quartermaster" },
     { "軍需官", "quartermaster" },
+    { "renown", "quartermaster" },
+    { "reputation", "reputation" },
+    { "guild vendor", "guild_vendor" },
+    { "pvp", "pvp" },
+    { "conquest", "pvp" },
+    { "delve", "delve" },
+    { "housing", "decor" },
+    { "decor", "decor" },
 }
+
+-- Keys that outrank General Goods / pet / repair on visit and at emit.
+Map.SPECIAL = {
+    quartermaster = true,
+    reputation = true,
+    decor = true,
+    pvp = true,
+    guild_vendor = true,
+    delve = true,
+}
+
+--- True for Quartermaster, Reputation, Decor, PvP, Guild, and Delve.
+---@param key string|nil
+---@return boolean
+function Map.IsSpecial(key)
+    return key ~= nil and Map.SPECIAL[key] == true
+end
 
 -- TradeSkillLineIDs (same set RecipeKnownUtil uses for display names).
 local PROFESSION_SKILL_IDS = {
@@ -174,8 +201,8 @@ function Map.Resolve(subtitle, canRepair)
             return key
         end
         local lower = strlower(subtitle)
-        for _, entry in ipairs(PREFIX_CURATED) do
-            if strfind(lower, entry[1], 1, true) == 1 then
+        for _, entry in ipairs(NEEDLE_CURATED) do
+            if strfind(lower, entry[1], 1, true) then
                 return entry[2]
             end
         end

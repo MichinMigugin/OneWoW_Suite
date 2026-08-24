@@ -49,6 +49,12 @@ function OneWoW_CatalogData_Vendors_API.GetStats()
     return ns.VendorData:GetStats()
 end
 
+--- Expansions that have at least one vendor row, for the Vendors filter.
+---@return table expansions { { id, name }, ... } sorted by id
+function OneWoW_CatalogData_Vendors_API.GetAvailableExpansions()
+    return ns.VendorData:GetAvailableExpansions()
+end
+
 --- Sets the user category for a vendor NPC.
 ---@param npcID number
 ---@param categoryKey string|nil
@@ -60,6 +66,21 @@ end
 ---@param fn fun()|nil
 function OneWoW_CatalogData_Vendors_API.RegisterScanCallback(fn)
     ns:RegisterScanCallback(fn)
+end
+
+--- Cached NPC name from tooltip resolution or a merchant scan.
+---@param npcID number
+---@return string|nil name
+function OneWoW_CatalogData_Vendors_API.GetCachedNPCName(npcID)
+    return ns:GetDB().nameCache[npcID]
+end
+
+--- Persist a resolved NPC name for later overlay.
+---@param npcID number
+---@param name string
+function OneWoW_CatalogData_Vendors_API.RememberNPCName(npcID, name)
+    if not npcID or not name or name == "" then return end
+    ns:GetDB().nameCache[npcID] = name
 end
 
 --- Cached item-data entry from this store's item loader.

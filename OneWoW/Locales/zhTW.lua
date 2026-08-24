@@ -159,6 +159,8 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_TRADESKILLS_BODY"] = "商業技能版面與冒險指南/商人一致，提供帳號範圍的擁有/需要材料數量、手頭明細，以及有 Storage 時的「已有材料」篩選。專業為下拉選單；清除會還原搜尋預留文字。",
     ["WHATS_NEW_H_QUESTS_TITLE"] = "Catalog — Quests",
     ["WHATS_NEW_H_QUESTS_BODY"] = "任務清單卡片與冒險指南一致（名稱、資料片 | 任務類型、分類標籤）。資料片在搜尋下方；地區與進度同一列。清除會還原搜尋預留文字。開啟任務以及切換資料片或完成篩選不再卡住。",
+    ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",
+    ["WHATS_NEW_H_VENDORS_BODY"] = "商人分頁會在你拜訪之前列出從經典舊世到至暗之夜的商店。名稱、地區和物品名稱會在你查看時填入，一般商店物品會顯示金幣價格。房屋、補給官、PvP、公會和探究商店會附帶類型。打開商人仍會補齊其餘資訊。可依資料片、地區、貨幣或類型篩選。",
     ["WHATS_NEW_H_MAIL_BODY"] = "郵件分頁和翻譯後的文字再次顯示正確語言，而不再是亂碼。變更套件字型後郵件視窗會跟隨，無需重載。",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自動坐騎",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自動坐騎會在戰鬥及其他光環受限情況下暫停，無需掃描保密增益即可偵測潛行，並在光環資料受限時不再出錯。玩家坐騎的滑鼠提示使用同樣的保護。",

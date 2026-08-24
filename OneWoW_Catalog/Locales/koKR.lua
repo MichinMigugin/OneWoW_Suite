@@ -139,6 +139,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["VENDORS_LOCATION"] = "위치",
     ["VENDORS_FIRST_SEEN"] = "최초 발견",
     ["VENDORS_LAST_SCANNED"] = "마지막 기록",
+    ["VENDORS_UNSEEN_HINT"] = "미확인 - 이 NPC와 대화하면 초상화와 실제 가격이 추가됩니다.",
     ["VENDORS_SCAN_COUNT"] = "기록 횟수",
     ["VENDORS_ITEM_COUNT"] = "판매 품목",
     ["VENDORS_LIMITED"] = "한정",

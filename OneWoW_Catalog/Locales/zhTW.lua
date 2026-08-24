@@ -140,6 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["VENDORS_LOCATION"] = "位置",
     ["VENDORS_FIRST_SEEN"] = "首次發現",
     ["VENDORS_LAST_SCANNED"] = "最後掃描",
+    ["VENDORS_UNSEEN_HINT"] = "未見過 - 拜訪該 NPC 以加入頭像和即時價格。",
     ["VENDORS_SCAN_COUNT"] = "掃描次數",
     ["VENDORS_ITEM_COUNT"] = "販售物品",
     ["VENDORS_LIMITED"] = "限量",

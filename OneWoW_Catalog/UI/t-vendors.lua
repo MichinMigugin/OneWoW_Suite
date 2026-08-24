@@ -8,9 +8,11 @@ local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
 local ipairs, pairs = ipairs, pairs
 local tinsert, sort, wipe, tconcat = tinsert, sort, wipe, table.concat
-local C_Item, C_CurrencyInfo, C_Map, C_Timer = C_Item, C_CurrencyInfo, C_Map, C_Timer
+local C_Item, C_CurrencyInfo, C_Map, C_Timer, C_TooltipInfo = C_Item, C_CurrencyInfo, C_Map, C_Timer, C_TooltipInfo
 local SetPortraitTextureFromCreatureDisplayID = SetPortraitTextureFromCreatureDisplayID
 local math = math
+local OneWoW = OneWoW
+local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
 
 local L = ns.L
 ns.UI = ns.UI or {}
@@ -24,6 +26,7 @@ local zoneFilter = nil
 local currentZoneOnly = false
 local currencyFilter = nil
 local categoryFilter = nil
+local expansionFilter = -1
 local pendingFocusNpcID = nil
 local RefreshVendorList
 
@@ -74,7 +77,7 @@ local function FormatCost(itemData)
     elseif itemData.cost and itemData.cost > 0 then
         return OneWoW.Format.FormatGold(itemData.cost)
     end
-    return L["VENDORS_PRICE_UNKNOWN"]
+    return ""
 end
 
 local function FormatTimestamp(timestamp)
@@ -134,6 +137,7 @@ local function ClearVendorFilters(panels)
     currentZoneOnly = false
     currencyFilter = nil
     categoryFilter = nil
+    expansionFilter = -1
     if not panels then return end
     if panels.searchBox then
         panels.searchBox:SetText("")
@@ -146,6 +150,9 @@ local function ClearVendorFilters(panels)
     end
     if panels.categoryDropdownText then
         panels.categoryDropdownText:SetText(L["VENDORS_CATEGORY_ALL"])
+    end
+    if panels.expDropdownText then
+        panels.expDropdownText:SetText(L["QUESTS_EXPANSION_ALL"])
     end
     if panels.zoneCurrentCheckbox then
         panels.zoneCurrentCheckbox:SetChecked(false)
@@ -164,6 +171,27 @@ local function GetCurrentPlayerZone()
     return info.name, mapID
 end
 
+local function VendorHasVendorRole(vendor)
+    if not vendor then return false end
+    if vendor.roles then
+        for _, role in ipairs(vendor.roles) do
+            if role == "vendor" then return true end
+        end
+        return false
+    end
+    if vendor.items then
+        for _ in pairs(vendor.items) do
+            return true
+        end
+    end
+    return vendor.lastScanned ~= nil
+end
+
+local function VendorMatchesExpansion(vendor, filter)
+    if filter == nil or filter == -1 then return true end
+    return vendor.expansion == filter
+end
+
 local function BuildZoneList()
     local addon = GetDataAddon()
     if not addon then return {} end
@@ -171,10 +199,12 @@ local function BuildZoneList()
     local allVendors = addon.GetAllVendors()
     local zoneSet = {}
     for _, vendor in pairs(allVendors) do
-        if vendor.locations then
-            for _, loc in pairs(vendor.locations) do
-                if loc.zone and loc.zone ~= "" then
-                    zoneSet[loc.zone] = true
+        if VendorHasVendorRole(vendor) and VendorMatchesExpansion(vendor, expansionFilter) then
+            if vendor.locations then
+                for _, loc in pairs(vendor.locations) do
+                    if loc.zone and loc.zone ~= "" then
+                        zoneSet[loc.zone] = true
+                    end
                 end
             end
         end
@@ -197,33 +227,35 @@ local function BuildCurrencyList()
     local currencies = {}
 
     for _, vendor in pairs(allVendors) do
-        if vendor.items then
-            for _, itemData in pairs(vendor.items) do
-                if itemData.currencies then
-                    for _, curr in ipairs(itemData.currencies) do
-                        local key
-                        if curr.currencyID then
-                            key = "currency:" .. curr.currencyID
-                        elseif curr.itemID then
-                            key = "item:" .. curr.itemID
-                        end
-                        if key and not seen[key] then
-                            seen[key] = true
-                            local name = curr.name
-                            if (not name or name == "") and curr.itemID then
-                                name = C_Item.GetItemNameByID(curr.itemID)
+        if VendorHasVendorRole(vendor) and VendorMatchesExpansion(vendor, expansionFilter) then
+            if vendor.items then
+                for _, itemData in pairs(vendor.items) do
+                    if itemData.currencies then
+                        for _, curr in ipairs(itemData.currencies) do
+                            local key
+                            if curr.currencyID then
+                                key = "currency:" .. curr.currencyID
+                            elseif curr.itemID then
+                                key = "item:" .. curr.itemID
                             end
-                            if (not name or name == "") and curr.currencyID then
-                                local info = C_CurrencyInfo.GetCurrencyInfo(curr.currencyID)
-                                name = info and info.name
-                            end
-                            if name and name ~= "" then
-                                tinsert(currencies, {
-                                    key = key,
-                                    name = name,
-                                    currencyID = curr.currencyID,
-                                    itemID = curr.itemID,
-                                })
+                            if key and not seen[key] then
+                                seen[key] = true
+                                local name = curr.name
+                                if (not name or name == "") and curr.itemID then
+                                    name = C_Item.GetItemNameByID(curr.itemID)
+                                end
+                                if (not name or name == "") and curr.currencyID then
+                                    local info = C_CurrencyInfo.GetCurrencyInfo(curr.currencyID)
+                                    name = info and info.name
+                                end
+                                if name and name ~= "" then
+                                    tinsert(currencies, {
+                                        key = key,
+                                        name = name,
+                                        currencyID = curr.currencyID,
+                                        itemID = curr.itemID,
+                                    })
+                                end
                             end
                         end
                     end
@@ -380,6 +412,179 @@ local function CreateVendorListRow(parent, _)
     return btn
 end
 
+local NPC_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0 }
+local ITEM_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0, 2.0 }
+
+local function IsGenericVendorName(name)
+    return not name or name == "" or name:find("^NPC #%d") ~= nil
+end
+
+local function ResolveCreatureName(npcID)
+    local tooltipData = C_TooltipInfo.GetHyperlink(
+        ("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID)
+    )
+    if not tooltipData or not tooltipData.lines then
+        return nil
+    end
+    for _, line in ipairs(tooltipData.lines) do
+        local text = line.leftText
+        if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
+            return text
+        end
+    end
+    return nil
+end
+
+local function FillVendorName(npcID, knownName, apply, isCurrent)
+    local addon = GetDataAddon()
+    local function accept(name)
+        if IsGenericVendorName(name) then
+            return false
+        end
+        if addon then
+            addon.RememberNPCName(npcID, name)
+        end
+        apply(name)
+        return true
+    end
+
+    if accept(knownName) then
+        return
+    end
+    if addon and accept(addon.GetCachedNPCName(npcID)) then
+        return
+    end
+    if accept(ResolveCreatureName(npcID)) then
+        return
+    end
+
+    local attempt = 1
+    local function retry()
+        if isCurrent and not isCurrent() then
+            return
+        end
+        if addon and accept(addon.GetCachedNPCName(npcID)) then
+            return
+        end
+        if accept(ResolveCreatureName(npcID)) then
+            return
+        end
+        attempt = attempt + 1
+        local delay = NPC_NAME_RETRY[attempt]
+        if delay then
+            C_Timer.After(delay, retry)
+        end
+    end
+    C_Timer.After(NPC_NAME_RETRY[1], retry)
+end
+
+local function ResolveItemTooltipName(itemID)
+    local tooltipData = C_TooltipInfo.GetItemByID(itemID)
+    if not tooltipData or not tooltipData.lines then
+        return nil
+    end
+    for _, line in ipairs(tooltipData.lines) do
+        local text = line.leftText
+        if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
+            return text
+        end
+    end
+    return nil
+end
+
+local function FillVendorDetailItem(itemRow, itemID, itemName, iconTex, iconFrame, addon, isCurrent)
+    local function paint(name, quality, icon)
+        if name and name ~= "" and name ~= RETRIEVING_ITEM_INFO then
+            itemName:SetText(name)
+            if quality ~= nil then
+                local qr, qg, qb = OneWoW_GUI:GetItemQualityColor(quality)
+                itemName:SetTextColor(qr, qg, qb)
+                iconFrame:SetBackdropBorderColor(qr, qg, qb)
+            else
+                itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end
+        if icon then
+            iconTex:SetTexture(icon)
+        end
+    end
+
+    local instantName = C_Item.GetItemNameByID(itemID)
+    local instantIcon = C_Item.GetItemIconByID(itemID) or select(5, C_Item.GetItemInfoInstant(itemID))
+    if instantName then
+        paint(instantName, nil, instantIcon)
+    else
+        itemName:SetText(L["VENDORS_LOADING"])
+        itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        iconTex:SetTexture(instantIcon or 134400)
+    end
+
+    if addon then
+        ns.FillVisibleItem(itemRow, itemID, {
+            getCached = addon.GetCachedItem,
+            load = addon.LoadItemData,
+            apply = function(result, paintWidgets)
+                if not paintWidgets then
+                    return
+                end
+                paint(result.name, result.quality, result.icon)
+            end,
+        })
+    end
+
+    if instantName then
+        return
+    end
+
+    C_Item.RequestLoadItemDataByID(itemID)
+    local attempt = 1
+    local function retry()
+        if isCurrent and not isCurrent() then
+            return
+        end
+        local name = C_Item.GetItemNameByID(itemID) or ResolveItemTooltipName(itemID)
+        local icon = C_Item.GetItemIconByID(itemID) or select(5, C_Item.GetItemInfoInstant(itemID))
+        if name then
+            paint(name, nil, icon)
+            if addon then
+                addon.LoadItemData(itemID)
+            end
+            return
+        end
+        C_Item.RequestLoadItemDataByID(itemID)
+        attempt = attempt + 1
+        local delay = ITEM_NAME_RETRY[attempt]
+        if delay then
+            C_Timer.After(delay, retry)
+        else
+            itemName:SetText(string.format(L["QUESTS_ITEM_UNNAMED"], itemID))
+            itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+    C_Timer.After(ITEM_NAME_RETRY[1], retry)
+end
+
+local function LocationZoneLabel(loc)
+    if not loc then
+        return L["VENDORS_UNKNOWN_LOCATION"]
+    end
+    local zone = loc.zone
+    if (not zone or zone == "") and loc.mapID then
+        local info = C_Map.GetMapInfo(loc.mapID)
+        zone = info and info.name
+        if zone then
+            loc.zone = zone
+        end
+    end
+    if zone and zone ~= "" then
+        return zone
+    end
+    if loc.x and loc.y then
+        return string.format("%.1f, %.1f", loc.x, loc.y)
+    end
+    return L["VENDORS_UNKNOWN_LOCATION"]
+end
+
 local function ApplyVendorPortrait(row, displayID)
     local tex = row.portrait
     local id = (displayID and displayID > 0) and displayID or nil
@@ -407,12 +612,25 @@ local function BindVendorListRow(row, _, vendor, state)
 
     ApplyVendorPortrait(row, vendor.displayID)
 
-    if vendor.name and vendor.name ~= "" then
-        row.nameText:SetText(vendor.name)
+    local npcID = vendor.npcID
+    local nameToken = {}
+    row._nameToken = nameToken
+    local function paintName(name)
+        if row._nameToken ~= nameToken then return end
+        row.nameText:SetText(name)
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        vendor.name = name
+    end
+    if vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name) then
+        paintName(vendor.name)
     else
-        row.nameText:SetText("NPC #" .. (vendor.npcID or "?"))
+        row.nameText:SetText("NPC #" .. (npcID or "?"))
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        if npcID then
+            FillVendorName(npcID, vendor.name, paintName, function()
+                return row._nameToken == nameToken and row.vendor and row.vendor.npcID == npcID
+            end)
+        end
     end
 
     local metaParts = {}
@@ -421,6 +639,12 @@ local function BindVendorListRow(row, _, vendor, state)
     end
     if vendor.creatureType and vendor.creatureType ~= "" then
         tinsert(metaParts, vendor.creatureType)
+    end
+    if vendor.expansion ~= nil then
+        local expName = OneWoW:GetExpansionName(vendor.expansion)
+        if expName then
+            tinsert(metaParts, expName)
+        end
     end
     if #metaParts > 0 then
         row.metaText:SetText(tconcat(metaParts, " | "))
@@ -442,7 +666,7 @@ local function BindVendorListRow(row, _, vendor, state)
             itemCount = itemCount + 1
         end
     end
-    local zoneLabel = primaryLoc and primaryLoc.zone or L["VENDORS_UNKNOWN_LOCATION"]
+    local zoneLabel = LocationZoneLabel(primaryLoc)
     row.zoneText:SetText(zoneLabel .. " | " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
     row.zoneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -450,8 +674,7 @@ local function BindVendorListRow(row, _, vendor, state)
         row.categoryText:SetText(ns.VendorCategories:GetLabel(vendor.category))
         row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     else
-        row.categoryText:SetText(L["VENDORS_CATEGORY_NONE"])
-        row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        row.categoryText:SetText("")
     end
 
     if row.favBtn and ns.Favorites then
@@ -546,12 +769,30 @@ local function ShowVendorDetail(panels, vendor)
     nameHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     nameHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     nameHeader:SetJustifyH("LEFT")
-    if vendor.name and vendor.name ~= "" then
-        nameHeader:SetText(vendor.name)
+    local function paintDetailName(name)
+        if not nameHeader:IsShown() then return end
+        nameHeader:SetText(name)
         nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        vendor.name = name
+        if panels.rightStatusText then
+            local n = 0
+            if vendor.items then
+                for _ in pairs(vendor.items) do n = n + 1 end
+            end
+            panels.rightStatusText:SetText(name .. " - " .. n .. " " .. L["VENDORS_ITEMS_SHORT"])
+        end
+    end
+    if vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name) then
+        paintDetailName(vendor.name)
     else
         nameHeader:SetText("NPC #" .. (vendor.npcID or "?"))
         nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        if vendor.npcID then
+            local npcID = vendor.npcID
+            FillVendorName(npcID, vendor.name, paintDetailName, function()
+                return selectedVendor and selectedVendor.npcID == npcID
+            end)
+        end
     end
     tinsert(detailElements, nameHeader)
     yOffset = StepRow(yOffset, nameHeader:GetStringHeight(), 4)
@@ -571,12 +812,16 @@ local function ShowVendorDetail(panels, vendor)
 
     local infoParts = {}
     tinsert(infoParts, L["VENDORS_NPC_ID"] .. ": " .. (vendor.npcID or "?"))
+    local expName = vendor.expansion ~= nil and OneWoW:GetExpansionName(vendor.expansion)
+    if expName then
+        tinsert(infoParts, expName)
+    end
 
     local locPinHeight = 0
     if vendor.locations then
         local firstLoc = true
         for mapID, loc in pairs(vendor.locations) do
-            local zonePart = loc.zone or ""
+            local zonePart = LocationZoneLabel(loc)
             local coordStr = ""
             if loc.x and loc.y and loc.x > 0 then
                 coordStr = string.format(" (%.1f, %.1f)", loc.x, loc.y)
@@ -645,25 +890,35 @@ local function ShowVendorDetail(panels, vendor)
     tinsert(detailElements, divider)
     yOffset = yOffset - 8
 
-    local scanInfo = OneWoW_GUI:CreateFS(parent, 10)
-    scanInfo:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    scanInfo:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    scanInfo:SetJustifyH("LEFT")
-    scanInfo:SetWordWrap(true)
-    local scanParts = {}
-    if vendor.firstSeen then
-        tinsert(scanParts, L["VENDORS_FIRST_SEEN"] .. ": " .. FormatTimestamp(vendor.firstSeen))
-    end
-    if vendor.lastScanned then
+    if not vendor.lastScanned then
+        local unseenHint = OneWoW_GUI:CreateFS(parent, 10)
+        unseenHint:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        unseenHint:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        unseenHint:SetJustifyH("LEFT")
+        unseenHint:SetWordWrap(true)
+        unseenHint:SetText(L["VENDORS_UNSEEN_HINT"])
+        unseenHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        tinsert(detailElements, unseenHint)
+        yOffset = StepRow(yOffset, unseenHint:GetStringHeight(), 6)
+    else
+        local scanParts = {}
+        if vendor.firstSeen then
+            tinsert(scanParts, L["VENDORS_FIRST_SEEN"] .. ": " .. FormatTimestamp(vendor.firstSeen))
+        end
         tinsert(scanParts, L["VENDORS_LAST_SCANNED"] .. ": " .. FormatTimestamp(vendor.lastScanned))
+        if vendor.scanCount then
+            tinsert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
+        end
+        local scanInfo = OneWoW_GUI:CreateFS(parent, 10)
+        scanInfo:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        scanInfo:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        scanInfo:SetJustifyH("LEFT")
+        scanInfo:SetWordWrap(true)
+        scanInfo:SetText(tconcat(scanParts, "  |  "))
+        scanInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        tinsert(detailElements, scanInfo)
+        yOffset = StepRow(yOffset, scanInfo:GetStringHeight(), 6)
     end
-    if vendor.scanCount then
-        tinsert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
-    end
-    scanInfo:SetText(tconcat(scanParts, "  |  "))
-    scanInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    tinsert(detailElements, scanInfo)
-    yOffset = StepRow(yOffset, scanInfo:GetStringHeight(), 6)
 
     local itemCount = 0
     if vendor.items then
@@ -727,9 +982,14 @@ local function ShowVendorDetail(panels, vendor)
             local costText = OneWoW_GUI:CreateFS(itemRow, 10)
             costText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
             costText:SetJustifyH("RIGHT")
-            costText:SetText(FormatCost(itemData))
+            local costStr = FormatCost(itemData)
+            costText:SetText(costStr)
             costText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             tinsert(detailElements, costText)
+            if costStr == "" then
+                costText:Hide()
+                itemName:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
+            end
 
             if itemData.limited then
                 local limitTag = OneWoW_GUI:CreateFS(itemRow, 10)
@@ -739,28 +999,10 @@ local function ShowVendorDetail(panels, vendor)
                 tinsert(detailElements, limitTag)
             end
 
-            local cachedItem = addon and addon.GetCachedItem(itemID)
-            if cachedItem and cachedItem.name then
-                itemName:SetText(cachedItem.name)
-                itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cachedItem.quality))
-                iconTex:SetTexture(cachedItem.icon)
-                iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(cachedItem.quality))
-            else
-                itemName:SetText(L["VENDORS_LOADING"] .. " (" .. itemID .. ")")
-                itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                iconTex:SetTexture(134400)
-
-                if addon then
-                    addon.LoadItemData(itemID, function(_, data)
-                        if data and itemName:IsVisible() then
-                            itemName:SetText(data.name or "")
-                            itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(data.quality))
-                            iconTex:SetTexture(data.icon)
-                            iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(data.quality))
-                        end
-                    end)
-                end
-            end
+            local detailNpcID = vendor.npcID
+            FillVendorDetailItem(itemRow, itemID, itemName, iconTex, iconFrame, addon, function()
+                return selectedVendor and selectedVendor.npcID == detailNpcID and itemRow:IsShown()
+            end)
 
             local rowH = math.max(ICON_SIZE, itemName:GetStringHeight(), costText:GetStringHeight()) + ITEM_PAD * 2
             itemRow:SetHeight(rowH)
@@ -838,8 +1080,10 @@ function RefreshVendorList(panels)
 
         local passesCurrency = VendorMatchesCurrencyFilter(vendor, currencyFilter)
         local passesCategory = VendorMatchesCategoryFilter(vendor, categoryFilter)
+        local passesExpansion = VendorMatchesExpansion(vendor, expansionFilter)
+        local passesRole = VendorHasVendorRole(vendor)
 
-        if passesZone and passesSearch and passesCurrency and passesCategory then
+        if passesZone and passesSearch and passesCurrency and passesCategory and passesExpansion and passesRole then
             tinsert(filtered, vendor)
         end
     end
@@ -863,7 +1107,7 @@ function RefreshVendorList(panels)
     end
 
     local totalFiltered = #filtered
-    local hasActiveFilter = activeZoneFilter or (searchText ~= "") or currencyFilter or categoryFilter
+    local hasActiveFilter = activeZoneFilter or (searchText ~= "") or currencyFilter or categoryFilter or expansionFilter ~= -1
 
     if panels.leftStatusText then
         if hasActiveFilter then
@@ -926,7 +1170,11 @@ function RefreshVendorList(panels)
 
     if vendorListAPI then
         if keepIndex then
-            vendorListAPI.SetSelectedIndex(keepIndex)
+            if vendorListAPI.GetSelectedIndex() == keepIndex then
+                vendorListAPI.Refresh()
+            else
+                vendorListAPI.SetSelectedIndex(keepIndex)
+            end
         else
             vendorListAPI.SetSelectedIndex(nil)
             vendorListAPI.Refresh()
@@ -982,7 +1230,7 @@ end
 function ns.UI.CreateVendorsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
-    local HDR_H  = 70  -- two filter rows on the right
+    local HDR_H  = 70  -- two filter rows (search+expansion / currency+types+zone)
     local DD_PAD = 8
     local DD_GAP = 6
     local ROW2_Y = -38
@@ -1048,6 +1296,39 @@ function ns.UI.CreateVendorsTab(parent)
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
     panels.searchBox = searchBox
+
+    local expDropdown, expDropdownText = OneWoW_GUI:CreateDropdown(leftHeader, {
+        width = 10,
+        height = 26,
+        text = L["QUESTS_EXPANSION_ALL"],
+    })
+    expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, ROW2_Y)
+    expDropdown:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, ROW2_Y)
+    panels.expDropdownText = expDropdownText
+
+    OneWoW_GUI:AttachFilterMenu(expDropdown, {
+        searchable = false,
+        getActiveValue = function() return expansionFilter end,
+        buildItems = function()
+            local items = { { value = -1, text = L["QUESTS_EXPANSION_ALL"] } }
+            local addon = GetDataAddon()
+            if addon then
+                for _, exp in ipairs(addon.GetAvailableExpansions()) do
+                    tinsert(items, { value = exp.id, text = exp.name })
+                end
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            expansionFilter = value
+            expDropdownText:SetText(value == -1 and L["QUESTS_EXPANSION_ALL"] or text)
+            zoneFilter = nil
+            if panels.zoneDropdownText then
+                panels.zoneDropdownText:SetText(L["QUESTS_ZONE_ALL"])
+            end
+            RefreshVendorList(panels)
+        end,
+    })
 
     -- Right 2x2: [Currency] [Types] / [Zones] [Current Zone Only]
     local currencyDropdown, currencyDropdownText = OneWoW_GUI:CreateDropdown(rightHeader, {
@@ -1201,11 +1482,13 @@ function ns.UI.CreateVendorsTab(parent)
         currentZoneOnly = false
         currencyFilter = nil
         categoryFilter = nil
+        expansionFilter = -1
         searchBox:SetText(searchBox.placeholderText)
         searchBox:ClearFocus()
         zoneDropdownText:SetText(L["QUESTS_ZONE_ALL"])
         currencyDropdownText:SetText(L["VENDORS_CURRENCY_ALL"])
         categoryDropdownText:SetText(L["VENDORS_CATEGORY_ALL"])
+        expDropdownText:SetText(L["QUESTS_EXPANSION_ALL"])
         chkBox:SetChecked(false)
         RefreshVendorList(panels)
     end)

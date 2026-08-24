@@ -139,6 +139,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["VENDORS_LOCATION"] = "Location",
     ["VENDORS_FIRST_SEEN"] = "First Seen",
     ["VENDORS_LAST_SCANNED"] = "Last Scanned",
+    ["VENDORS_UNSEEN_HINT"] = "Unseen - Visit this NPC to add their portrait and live prices.",
     ["VENDORS_SCAN_COUNT"] = "Times Scanned",
     ["VENDORS_ITEM_COUNT"] = "Items for Sale",
     ["VENDORS_LIMITED"] = "Limited",

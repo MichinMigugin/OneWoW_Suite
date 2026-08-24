@@ -140,6 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["VENDORS_LOCATION"] = "Posizione",
     ["VENDORS_FIRST_SEEN"] = "Primo avvistamento",
     ["VENDORS_LAST_SCANNED"] = "Ultima scansione",
+    ["VENDORS_UNSEEN_HINT"] = "Non visto - Parla con questo PNG per aggiungere il ritratto e i prezzi attuali.",
     ["VENDORS_SCAN_COUNT"] = "Numero di scansioni",
     ["VENDORS_ITEM_COUNT"] = "Oggetti in vendita",
     ["VENDORS_LIMITED"] = "Limitato",
