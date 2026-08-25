@@ -71,6 +71,8 @@ local function OnEnable()
     OneWoW:RegisterMinimap("OneWoW_Catalog",
         ns.L["CTX_OPEN_CATALOG"],
         "catalog", nil)
+
+    ns.ArmCatalogDataPacks()
 end
 
 function OneWoW_Catalog:ApplyTheme()

@@ -40,6 +40,7 @@ Core\Navigation.lua
 
 # Main
 OneWoW_Catalog.lua
+Core\DataPackLoader.lua
 
 # Services
 Services\ItemDataLoader.lua

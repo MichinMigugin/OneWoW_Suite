@@ -38,6 +38,9 @@
 ---
 
 ### Catalog
+#### Fixes
+- Catalog no longer errors when you log in.
+
 #### Quests
 - Quest list cards use that expansion's Adventure Guide background, with a border for Campaign, Story, Legendary, and other quest types.
 - Opening a quest no longer hitches while reward names and NPC names load. Names fill in a moment later.
