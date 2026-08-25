@@ -803,7 +803,6 @@ function UI:SelectSubTab(moduleName, subTabName)
     -- addon is available (e.g. after a mid-session "Load Data Addons").
     local cached = moduleContentFrames[key]
     if cached and cached._isPlaceholder then
-        local tabInfo = FindModuleTab(moduleName, subTabName)
         if tabInfo and SubTabContentAvailable(tabInfo) then
             cached:Hide()
             cached:SetParent(nil)
@@ -813,21 +812,18 @@ function UI:SelectSubTab(moduleName, subTabName)
 
     if not moduleContentFrames[key] then
         if moduleName == "settings" and UI.settingsTabs then
-            for _, tabInfo in ipairs(UI.settingsTabs) do
-                if tabInfo.name == subTabName and tabInfo.create then
+            for _, settingsTab in ipairs(UI.settingsTabs) do
+                if settingsTab.name == subTabName and settingsTab.create then
                     local frame = CreateFrame("Frame", nil, contentArea)
                     frame:SetAllPoints()
-                    tabInfo.create(frame)
+                    settingsTab.create(frame)
                     moduleContentFrames[key] = frame
                     OneWoW_GUI:ApplyFontToFrame(frame)
                     break
                 end
             end
-        else
-            local tabInfo = FindModuleTab(moduleName, subTabName)
-            if tabInfo and tabInfo.create then
-                moduleContentFrames[key] = BuildModuleSubTabFrame(tabInfo)
-            end
+        elseif tabInfo and tabInfo.create then
+            moduleContentFrames[key] = BuildModuleSubTabFrame(tabInfo)
         end
     end
 
