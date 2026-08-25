@@ -178,6 +178,14 @@ ItemSearch.SOURCE_ADDONS = {
     "OneWoW_AltTracker_Storage",
 }
 
+ItemSearch.SOURCE_ADDON_BY_FILTER = {
+    drops   = "OneWoW_CatalogData_Journal",
+    vendors = "OneWoW_CatalogData_Vendors",
+    crafted = "OneWoW_CatalogData_Tradeskills",
+    quests  = "OneWoW_CatalogData_Quests",
+    owned   = "OneWoW_AltTracker_Storage",
+}
+
 -- Fill `results` (array) from sources. `shouldYield` is optional; when provided
 -- (ChunkedJob), YieldIfNeeded is called after each candidate so large walks
 -- stay off the hitch path. When omitted / always-false, this is synchronous.
@@ -319,7 +327,7 @@ local function BuildQueryResults(self, searchTerm, sourceFilter, results, should
     if doQuest then
         local questAddon = OneWoW_CatalogData_Quests_API
         if questAddon then
-            for _, itemID in ipairs(questAddon.GetRewardItemIDs()) do
+            for _, itemID in ipairs(questAddon.GetRewardItemIDs(yieldCheck)) do
                 if resultMap[itemID] then
                     results[resultMap[itemID]].isQuestReward = true
                 elseif not hasFilter then

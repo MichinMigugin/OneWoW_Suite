@@ -125,6 +125,7 @@ FirstRun.CATALOG = {
 local STORE_ICONS = {
     OneWoW_CatalogData_Journal      = 5341597,  -- inv_toy_booklibrary
     OneWoW_CatalogData_Quests       = 236670,   -- achievement_quests_completed_07
+    OneWoW_CatalogData_Quests_Archive = 236669, -- achievement_quests_completed_06
     OneWoW_CatalogData_Tradeskills  = 136241,   -- trade_blacksmithing
     OneWoW_CatalogData_Vendors      = 901746,   -- inv_misc_coinbag_special
     OneWoW_AltTracker_Accounting    = 413573,   -- achievement_guildperk_cashflow_rank2
@@ -140,6 +141,7 @@ local STORE_ICONS = {
 local STORE_DESC_KEYS = {
     OneWoW_CatalogData_Journal     = "WIZARD_CAT_DATA_JOURNAL_DESC",
     OneWoW_CatalogData_Quests      = "WIZARD_CAT_DATA_QUESTS_DESC",
+    OneWoW_CatalogData_Quests_Archive = "WIZARD_CAT_DATA_QUESTS_ARCHIVE_DESC",
     OneWoW_CatalogData_Vendors     = "WIZARD_CAT_DATA_VENDORS_DESC",
     OneWoW_CatalogData_Tradeskills = "WIZARD_CAT_DATA_TRADESKILLS_DESC",
 }
@@ -152,6 +154,10 @@ local STORE_AFFECTED_KEYS = {
     OneWoW_CatalogData_Quests = {
         title = "WIZARD_AFFECTED_QUESTS_TITLE",
         body  = "WIZARD_AFFECTED_QUESTS_BODY",
+    },
+    OneWoW_CatalogData_Quests_Archive = {
+        title = "WIZARD_AFFECTED_QUESTS_ARCHIVE_TITLE",
+        body  = "WIZARD_AFFECTED_QUESTS_ARCHIVE_BODY",
     },
     OneWoW_CatalogData_Vendors = {
         title = "WIZARD_AFFECTED_VENDORS_TITLE",
@@ -378,8 +384,10 @@ function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
     end
     -- Wanted consumer-pulled stores when the feature was already loaded (BringUp
     -- skipped): EnsureLoaded each datastore that Apply just opted in.
+    -- Catalog lazyStores stay unloaded until a tab / quest event / Item Search
+    -- source asks; ShoppingList still BringUp-pulls Tradeskills.
     for _, ds in ipairs(DATASTORE_ADDONS) do
-        if datastoreState[ds] and not C_AddOns.IsAddOnLoaded(ds) then
+        if datastoreState[ds] and not C_AddOns.IsAddOnLoaded(ds) and not ns:IsLazyStore(ds) then
             ns:EnsureLoaded(ds)
         end
     end
@@ -1030,7 +1038,7 @@ function FirstRun:BuildPanel(parent, opts)
             local manifest = ns:GetManifestByAddon(addonName)
             if manifest and manifest.stores then
                 for _, store in ipairs(manifest.stores) do
-                    if effective[store] and NeedsSoftLoad(store) then
+                    if effective[store] and not ns:IsLazyStore(store) and NeedsSoftLoad(store) then
                         childNeedsLoad = true
                         break
                     end

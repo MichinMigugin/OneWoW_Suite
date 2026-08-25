@@ -38,14 +38,22 @@
 # Catalog
 ## Fixes
 - Catalog no longer errors when you log in.
+- Catalog no longer errors when you browse older expansion quests.
+- Catalog no longer freezes when you move between tabs, open Journal quest items, or look at your quest log. Older expansions load one era at a time.
 
 ## Quests
 - Quest list cards use that expansion's Adventure Guide background, with a border for Campaign, Story, Legendary, and other quest types.
 - Opening a quest no longer hitches while reward names and NPC names load. Names fill in a moment later.
 - Picking an expansion or changing completion filters no longer freezes the list. Completed and warband matches appear as they are found.
 - Quest Chain on the detail pane is a numbered list that wraps with the panel. The quest you have open is highlighted. Other steps stay clickable links; completion is not scanned for the whole chain.
+- The Quests pack is Midnight and The War Within. Classic through Dragonflight load from Quest Archive when you browse those expansions, search all quests, or look up rewards.
+- Midnight, The War Within, Dragonflight, and Shadowlands lists have the pins and text we have. Battle for Azeroth through Classic will get that same fill soon.
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 - About 100 more Midnight quests now have giver pins, and more of them show quest text.
+- About 280 more Dragonflight quests, and more of them have giver pins.
+- About 270 more Shadowlands quests, and more of them have giver pins.
+- A quest only appears in one expansion. Burning Crusade quests sit under Burning Crusade.
+- More quests show a turn-in pin when we already know that NPC's location.
 
 ## Journal
 - Zone, city, and other cards without their own art now use that expansion's Adventure Guide background. Classic Silvermoon uses Classic; Midnight Silvermoon uses Midnight.

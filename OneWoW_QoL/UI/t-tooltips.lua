@@ -331,6 +331,8 @@ local ITEMTRACKER_TOGGLES = {
     { key = "showGuildBanks",  localeKey = "TIPS_ITEMTRACKER_SHOW_GUILDS" },
     { key = "showVendors",     localeKey = "TIPS_ITEMTRACKER_SHOW_VENDORS" },
     { key = "showInstances",   localeKey = "TIPS_ITEMTRACKER_SHOW_INSTANCES" },
+    { key = "showQuests",      localeKey = "TIPS_ITEMTRACKER_SHOW_QUESTS" },
+    { key = "showCrafted",     localeKey = "TIPS_ITEMTRACKER_SHOW_CRAFTED" },
 }
 
 local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
@@ -369,39 +371,28 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
 
     stack:AddCard("tips:it:requires", L["TIPS_ITEMTRACKER_REQUIRES_SECTION"], function(content, _)
         local rowY = 0
-        local vendorReqLabel = OneWoW_GUI:CreateFS(content, 12)
-        vendorReqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
-        vendorReqLabel:SetText(L["TIPS_ITEMTRACKER_VENDORS_REQUIRES"])
-        vendorReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        local function addRequireRow(labelKey, loaded)
+            local reqLabel = OneWoW_GUI:CreateFS(content, 12)
+            reqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+            reqLabel:SetText(L[labelKey])
+            reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local vendorDetected = (OneWoW_CatalogData_Vendors_API ~= nil)
-        local vendorDetVal = OneWoW_GUI:CreateFS(content, 12)
-        vendorDetVal:SetPoint("LEFT", vendorReqLabel, "RIGHT", 8, 0)
-        if vendorDetected then
-            vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_DETECTED"])
-            vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_NOT_DETECTED"])
-            vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+            local detVal = OneWoW_GUI:CreateFS(content, 12)
+            detVal:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
+            if loaded then
+                detVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_DETECTED"])
+                detVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                detVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_NOT_DETECTED"])
+                detVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+            end
+            rowY = rowY - math.max(24, reqLabel:GetStringHeight() + 8)
         end
-        rowY = rowY - math.max(24, vendorReqLabel:GetStringHeight() + 8)
 
-        local instReqLabel = OneWoW_GUI:CreateFS(content, 12)
-        instReqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
-        instReqLabel:SetText(L["TIPS_ITEMTRACKER_INSTANCES_REQUIRES"])
-        instReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-        local instDetected = (OneWoW_CatalogData_Journal ~= nil)
-        local instDetVal = OneWoW_GUI:CreateFS(content, 12)
-        instDetVal:SetPoint("LEFT", instReqLabel, "RIGHT", 8, 0)
-        if instDetected then
-            instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_DETECTED"])
-            instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_NOT_DETECTED"])
-            instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        rowY = rowY - math.max(24, instReqLabel:GetStringHeight() + 8)
+        addRequireRow("TIPS_ITEMTRACKER_VENDORS_REQUIRES", OneWoW_CatalogData_Vendors_API ~= nil)
+        addRequireRow("TIPS_ITEMTRACKER_INSTANCES_REQUIRES", OneWoW_CatalogData_Journal_API ~= nil)
+        addRequireRow("TIPS_ITEMTRACKER_QUESTS_REQUIRES", OneWoW_CatalogData_Quests_API ~= nil)
+        addRequireRow("TIPS_ITEMTRACKER_CRAFT_REQUIRES", OneWoW_CatalogData_Tradeskills_API ~= nil)
         return math.max(1, math.abs(rowY))
     end)
 

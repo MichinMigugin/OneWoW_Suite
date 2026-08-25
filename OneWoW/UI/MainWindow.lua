@@ -722,6 +722,15 @@ end
 -- (predicate, highest priority). When unavailable, the sub-tab renders a "Not
 -- loaded" placeholder instead of its content. A tab with none of these is always
 -- available (current behavior).
+-- Catalog data packs are lazyStores: opening a `requiresAddon` tab is the load
+-- trigger (explicit user action), not login BringUp.
+local function EnsureSubTabAddons(tabInfo)
+    if not tabInfo then return end
+    if tabInfo.requiresAddon then
+        ns:EnsureLoaded(tabInfo.requiresAddon)
+    end
+end
+
 local function SubTabContentAvailable(tabInfo)
     if tabInfo.isAvailable then return tabInfo.isAvailable() and true or false end
     if tabInfo.requiresAddon then return C_AddOns.IsAddOnLoaded(tabInfo.requiresAddon) end
@@ -784,6 +793,11 @@ function UI:SelectSubTab(moduleName, subTabName)
     HideAllContent()
 
     local key = moduleName .. ":" .. subTabName
+
+    local tabInfo = FindModuleTab(moduleName, subTabName)
+    if tabInfo then
+        EnsureSubTabAddons(tabInfo)
+    end
 
     -- Drop a stale placeholder so it rebuilds as real content now that its backing
     -- addon is available (e.g. after a mid-session "Load Data Addons").

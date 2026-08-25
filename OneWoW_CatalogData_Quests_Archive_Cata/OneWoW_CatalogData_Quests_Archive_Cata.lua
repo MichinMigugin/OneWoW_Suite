@@ -1,0 +1,3 @@
+-- Era shard pack for OneWoW_CatalogData_Quests_Archive.
+-- Shards register through Core/QuestDBLoader.lua; Core.lua imports them into
+-- OneWoW_CatalogData_Quests_API. This unit exposes no globals.

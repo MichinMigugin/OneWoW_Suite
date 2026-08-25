@@ -252,8 +252,6 @@ local function CaptureObjectives(data, questID)
         tinsert(detailList, {
             text = obj.text,
             objectiveType = obj.type,
-            finished = obj.finished and true or false,
-            numFulfilled = obj.numFulfilled,
             numRequired = obj.numRequired,
         })
     end

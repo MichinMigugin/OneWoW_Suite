@@ -227,11 +227,59 @@ function Navigation:OpenInstanceEntrance(instanceID, entrances)
     return true
 end
 
+local function NotesHasCoords(coords)
+    return type(coords) == "table" and tonumber(coords.x) and tonumber(coords.y)
+end
+
+--- Notes stores 0-100. Callers may pass `coords` or top-level `x`/`y` in either
+--- 0-1 or 0-100 (same mixed-source reading as OpenMapPin).
+---@param npcInfo table|nil
+---@return table
+local function NotesNPCPayload(npcInfo)
+    npcInfo = npcInfo or {}
+    local mapID = tonumber(npcInfo.mapID)
+    if mapID == 0 then
+        mapID = nil
+    end
+
+    local x, y = npcInfo.x, npcInfo.y
+    if NotesHasCoords(npcInfo.coords) then
+        x, y = npcInfo.coords.x, npcInfo.coords.y
+    end
+    x = OneWoW.Location.ToFraction(x)
+    y = OneWoW.Location.ToFraction(y)
+
+    local zone = npcInfo.zone
+    if zone == "" or zone == UNKNOWN then
+        zone = nil
+    end
+    if mapID and not zone then
+        local mapInfo = C_Map.GetMapInfo(mapID)
+        zone = mapInfo and mapInfo.name
+        if zone == "" then
+            zone = nil
+        end
+    end
+
+    local payload = {
+        name = npcInfo.name,
+        zone = zone,
+        mapID = mapID,
+        category = npcInfo.category or "Quest Givers",
+    }
+    if x and y then
+        payload.coords = { x = x * 100, y = y * 100 }
+    end
+    return payload
+end
+
 --- Opens OneWoW_Notes to the given NPC, adding it under "Quest Givers" if it is
---- not already a saved note. No-op (returns false) when Notes is not installed.
+--- not already a saved note. Fills missing name / zone / map / coords on an
+--- existing note; never overwrites coords the player already set.
+--- No-op (returns false) when Notes is not installed.
 --- OneWoW_Notes is an optional dependency, so its API presence is checked here.
 ---@param npcID number
----@param npcInfo table|nil  { name, zone, mapID, coords = { x, y } }
+---@param npcInfo table|nil  { name, zone, mapID, coords = { x, y }, x, y, category }
 ---@return boolean opened
 function Navigation:OpenNPC(npcID, npcInfo)
     npcID = tonumber(npcID)
@@ -241,20 +289,31 @@ function Navigation:OpenNPC(npcID, npcInfo)
     local notesAPI = OneWoW_Notes_API
     if not notesAPI then return false end
 
-    npcInfo = npcInfo or {}
+    local payload = NotesNPCPayload(npcInfo)
     local existing = notesAPI.GetNPC(npcID)
     if not existing then
-        notesAPI.AddOrUpdateNPC(npcID, {
-            name     = npcInfo.name,
-            zone     = npcInfo.zone,
-            mapID    = npcInfo.mapID,
-            coords   = npcInfo.coords,
-            category = "Quest Givers",
-        })
-    elseif npcInfo.name and npcInfo.name ~= "" then
+        notesAPI.AddOrUpdateNPC(npcID, payload)
+    else
+        local patch = {}
         local cur = existing.name
-        if not cur or cur == "" or cur:find("^NPC %d") then
-            notesAPI.AddOrUpdateNPC(npcID, { name = npcInfo.name })
+        if payload.name and payload.name ~= ""
+            and (not cur or cur == "" or cur:find("^NPC %d"))
+        then
+            patch.name = payload.name
+        end
+        if payload.zone and payload.zone ~= ""
+            and (not existing.zone or existing.zone == "")
+        then
+            patch.zone = payload.zone
+        end
+        if payload.mapID and not existing.mapID then
+            patch.mapID = payload.mapID
+        end
+        if payload.coords and not NotesHasCoords(existing.coords) then
+            patch.coords = payload.coords
+        end
+        if next(patch) then
+            notesAPI.AddOrUpdateNPC(npcID, patch)
         end
     end
     return notesAPI.OpenNPC(npcID)

@@ -11,11 +11,34 @@ function OneWoW_CatalogData_Quests_API.GetSettings()
     return ns:GetSettings()
 end
 
---- Returns one merged quest record.
+--- Returns one merged quest record from shards already in memory.
+--- Looking up an ID never parses Quest Archive. Load older expansions with
+--- EnsureArchiveThen or by picking that expansion in Catalog.
 ---@param questID number
 ---@return table|nil quest
 function OneWoW_CatalogData_Quests_API.GetQuest(questID)
     return ns.QuestData:GetQuest(questID)
+end
+
+--- Load Classic-Dragonflight era packs across frames, then run `callback`.
+---@param callback function
+function OneWoW_CatalogData_Quests_API.EnsureArchiveThen(callback)
+    ns.QuestData:EnsureArchiveThen(callback)
+end
+
+--- Merge Archive (or any extra) shards into the hot quest DB and re-apply overlays.
+---@param source table<number, table>
+function OneWoW_CatalogData_Quests_API.ImportQuestData(source)
+    ns:RegisterQuestData(source)
+    ns.ApplyGeneratedOverlays(source)
+    ns.QuestData:OnExternalDBChanged()
+end
+
+--- Ordered quest IDs for a later Guide button. Nil when the chain has fewer than 2 quests.
+---@param quest table|number
+---@return number[]|nil
+function OneWoW_CatalogData_Quests_API.GetQuestGuideChain(quest)
+    return ns.QuestData:GetQuestGuideChain(quest)
 end
 
 --- Returns all merged quest records keyed by quest ID.
@@ -110,16 +133,18 @@ function OneWoW_CatalogData_Quests_API.GetCachedItemName(itemID)
 end
 
 --- Returns all indexed quest-reward item IDs.
+---@param shouldYield fun(): boolean|nil
 ---@return number[] itemIDs
-function OneWoW_CatalogData_Quests_API.GetRewardItemIDs()
-    return ns.QuestData:GetRewardItemIDs()
+function OneWoW_CatalogData_Quests_API.GetRewardItemIDs(shouldYield)
+    return ns.QuestData:GetRewardItemIDs(shouldYield)
 end
 
 --- Returns quest IDs that reward an item.
 ---@param itemID number
+---@param loadArchive boolean|nil
 ---@return number[]|nil questIDs
-function OneWoW_CatalogData_Quests_API.GetQuestsRewardingItem(itemID)
-    return ns.QuestData:GetQuestsRewardingItem(itemID)
+function OneWoW_CatalogData_Quests_API.GetQuestsRewardingItem(itemID, loadArchive)
+    return ns.QuestData:GetQuestsRewardingItem(itemID, loadArchive)
 end
 
 --- Returns characters that completed a quest.

@@ -36,18 +36,15 @@ Core\Core.lua
 Core\QuestDBLoader.lua
 
 # Databases (each calls ns:RegisterQuestData; loader must precede them)
-Data\QuestDB\QuestDB_classic.lua
-Data\QuestDB\QuestDB_bc.lua
-Data\QuestDB\QuestDB_wotlk.lua
-Data\QuestDB\QuestDB_cata.lua
-Data\QuestDB\QuestDB_mop.lua
-Data\QuestDB\QuestDB_wod.lua
-Data\QuestDB\QuestDB_legion.lua
-Data\QuestDB\QuestDB_bfa.lua
-Data\QuestDB\QuestDB_shadowlands.lua
-Data\QuestDB\QuestDB_dragonflight.lua
 Data\QuestDB\QuestDB_warwithin.lua
 Data\QuestDB\QuestDB_midnight.lua
+
+# Generated overlays (from .warehouse/Sources via bin/quest_db2_tools.py)
+Data\Generated\QuestLines.lua
+Data\Generated\Campaigns.lua
+Data\Generated\QuestObjectives.lua
+Data\Generated\QuestPins.lua
+Data\Generated\Apply.lua
 
 # Modules
 Modules\QuestData.lua

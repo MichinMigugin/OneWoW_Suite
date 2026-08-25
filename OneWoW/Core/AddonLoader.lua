@@ -500,7 +500,9 @@ local function ManifestUnitsFor(addonName)
     for _, m in ipairs(manifest) do
         if m.addon == addonName then
             local units = { m.addon }
-            if m.stores then
+            -- lazyStores stay out of BringUp: Catalog packs parse on the tab /
+            -- quest event / Item Search source that needs them, not at login.
+            if m.stores and not m.lazyStores then
                 for _, store in ipairs(m.stores) do
                     units[#units + 1] = store
                 end
@@ -672,9 +674,9 @@ end
 -- are skipped by the orchestrator.
 -- `module` is the RegisterModule name for hub modules (used by the lazy-tab hook).
 -- `tabOrder` is the row-1 hub tab sort key (required on hub entries; load order
--- remains array-driven). `stores` lists a parent's data-store load units; the
--- orchestrator loads each one right after the parent so its OnAddonLoaded hook
--- fires deterministically (these are LoadOnDemand: 1 now, not LoadWith-auto-loaded).
+-- remains array-driven). `stores` lists a parent's data-store load units.
+-- `lazyStores = true` skips those stores at login BringUp and the startup
+-- store pass; a pack-backed tab, quest event, or Item Search source loads them.
 ns.ModuleManifest = {
     { addon = "OneWoW_Notes",           display = "Notes",         cmd = "/1wn",   module = "notes",      tabOrder = 1, loadPhase = "login" },
     { addon = "OneWoW_AltTracker",      display = "AltTracker",    cmd = "/1wat",  module = "alttracker", tabOrder = 2, loadPhase = "login",
@@ -694,10 +696,12 @@ ns.ModuleManifest = {
         } },
     { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/1wcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
         storePolicy = "optional",
+        lazyStores = true,
         stores = {
             "OneWoW_CatalogData_Tradeskills",
             "OneWoW_CatalogData_Vendors",
             "OneWoW_CatalogData_Quests",
+            "OneWoW_CatalogData_Quests_Archive",
             "OneWoW_CatalogData_Journal",
         } },
     { addon = "OneWoW_Trackers",        display = "Trackers",      cmd = "/1wt",   module = "trackers",   tabOrder = 4, loadPhase = "login" },
@@ -721,6 +725,7 @@ local STORE_LABEL_KEYS = {
     OneWoW_AltTracker_Auctions      = "DATA_MOD_AUCTIONS",
     OneWoW_CatalogData_Journal      = "CAT_MOD_JOURNAL",
     OneWoW_CatalogData_Quests       = "CAT_MOD_QUESTS",
+    OneWoW_CatalogData_Quests_Archive = "CAT_MOD_QUESTS_ARCHIVE",
     OneWoW_CatalogData_Vendors      = "CAT_MOD_VENDORS",
     OneWoW_CatalogData_Tradeskills  = "CAT_MOD_TRADESKILLS",
 }
@@ -755,6 +760,17 @@ end
 ---@return string|nil
 function ns:GetStoreLabelKey(storeAddon)
     return STORE_LABEL_KEYS[storeAddon]
+end
+
+--- True when a store is owned by a `lazyStores` hub (Catalog packs today).
+--- Login BringUp and the startup store pass skip these; a pack-backed tab,
+--- quest event, or Item Search source loads them on demand.
+---@param storeName string
+---@return boolean
+function ns:IsLazyStore(storeName)
+    if not storeName then return false end
+    local owner = ns:GetManifestStoreOwner(storeName)
+    return owner and owner.lazyStores and true or false
 end
 
 -- Row-1 tab order comes from each hub entry's tabOrder; placeholder labels from module.
@@ -823,6 +839,8 @@ local Orchestrator = ns.LoadOrchestrator
 --- A Blizzard-disabled (incl. per-character) module just fails EnsureLoaded with
 --- "DISABLED" and is skipped; parent-required stores (Endgame, Catalog packs) are
 --- also skipped when their hub is soft-opted-out via StoreRequiresParent.
+--- Catalog `lazyStores` are skipped here; they load on the tab / quest event /
+--- Item Search source that needs them.
 function Orchestrator:RunStartupPhase()
     ns:TraceRecord("startup.begin")
     for _, m in ipairs(Manifest) do
@@ -841,8 +859,10 @@ function Orchestrator:RunStartupPhase()
     -- Independent stores opted in while their owning hub is soft-opted-out
     -- (e.g. Storage without AltTracker). BringUp skipped them with the hub;
     -- parent-required stores still refuse via StoreRequiresParent.
+    -- lazyStores (Catalog packs) stay unloaded until a tab / quest event /
+    -- Item Search source asks for them.
     for _, m in ipairs(Manifest) do
-        if m.stores then
+        if m.stores and not m.lazyStores then
             for _, store in ipairs(m.stores) do
                 if not ns:IsFeatureOptedOut(store) then
                     ns:EnsureLoaded(store)

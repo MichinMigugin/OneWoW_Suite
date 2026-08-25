@@ -51,6 +51,7 @@ QoL **Inspect Gear** can save inspect notes into Notes when that module is enabl
 
 * Use account storage for guild/raid knowledge you want on every alt; character storage for private alts-only notes.
 * Pin a short checklist note while doing a long questline.
+* From Catalog Quests, click a giver or turn-in name to open that NPC here with its zone, map, and coordinates filled in.
 * Turn on vendor collectible capture (Prompt or Automatic) when shopping for mounts/toys you still need.
 
 ## Related

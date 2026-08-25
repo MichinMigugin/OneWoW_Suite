@@ -184,7 +184,13 @@ local function CreateSourceButton(parent, def)
         GameTooltip:Hide()
     end)
     btn:SetScript("OnClick", function(self)
-        if not self.available then return end
+        if not self.available then
+            local addon = ns.ItemSearch and ns.ItemSearch.SOURCE_ADDON_BY_FILTER[self.sourceKey]
+            if addon then
+                OneWoW:EnsureLoaded(addon)
+            end
+            return
+        end
         currentSource = self.sourceKey
         selectedItem  = nil
         UpdateSourceButtonStates()

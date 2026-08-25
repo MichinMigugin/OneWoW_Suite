@@ -18,6 +18,10 @@ Module shortcuts (when QoL is loaded):
 * `/bagbar` / `/owbb` — toggle **Bag Bar**
 * `/copytext` / `/ct` — **Copy Text** (only while that module is enabled)
 
+## Tooltips
+
+QoL has a **Tooltips** tab (not a module toggle). **Item Tracker** adds two blocks on item tooltips: **Where it is** (bags, bank, alts, and so on) and **Where to get it** (quest, vendor, instance, profession). Those source lines appear only when that Catalog pack is already loaded this session. Hovering an item does not load packs. Turn individual lines on or off under QoL → Tooltips → Item Tracker.
+
 ---
 
 ## Module categories (overview)
@@ -57,6 +61,7 @@ There are **35** external modules. The full labeled catalog lives in the repo ([
 ## Related
 
 * [Slash commands](Slash-Commands)
+* [Catalog](Catalog)
 * [Bags search syntax](Bags-Search-Syntax)
 * [Getting started](Getting-Started)
 

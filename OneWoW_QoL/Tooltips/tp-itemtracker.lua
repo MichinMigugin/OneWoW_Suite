@@ -19,13 +19,54 @@ end
 -- this only has to supply the tooltip's display fallback.
 local function GetInstanceData(itemID)
     local results = {}
-    for _, drop in ipairs(OneWoW_CatalogData_Journal_API.GetItemDropLocations(itemID)) do
+    local api = OneWoW_CatalogData_Journal_API
+    if not api then
+        return results
+    end
+    for _, drop in ipairs(api.GetItemDropLocations(itemID)) do
         table.insert(results, {
             instanceName  = drop.instanceName or "?",
             encounterName = drop.encounterName,
         })
     end
     return results
+end
+
+local function GetCraftData(itemID)
+    local results = {}
+    local api = OneWoW_CatalogData_Tradeskills_API
+    if not api then
+        return results
+    end
+    local seen = {}
+    for _, recipe in ipairs(api.GetRecipesByItem(itemID)) do
+        local label = recipe.prof or api.GetRecipeProfession(recipe.id)
+        if label and not seen[label] then
+            seen[label] = true
+            results[#results + 1] = { name = label }
+        end
+    end
+    return results
+end
+
+local SOURCE_ROW_CAP = 5
+
+local function AppendCappedSourceRows(lines, rows, leftR, leftG, leftB)
+    local shown = 0
+    for _, row in ipairs(rows) do
+        if shown >= SOURCE_ROW_CAP then
+            table.insert(lines, { type = "text", text = "  ...", r = 0.7, g = 0.7, b = 0.7 })
+            break
+        end
+        table.insert(lines, {
+            type  = "double",
+            left  = "    " .. row.left,
+            right = row.right,
+            lr = leftR, lg = leftG, lb = leftB,
+            rr = 0.7, rg = 0.7, rb = 0.7,
+        })
+        shown = shown + 1
+    end
 end
 
 local function GetClassColor(class)
@@ -213,6 +254,8 @@ local function ItemTrackerProvider(_, context)
     local showAlts      = cfg.showAlts      ~= false
     local showVendors   = cfg.showVendors   ~= false
     local showInstances = cfg.showInstances ~= false
+    local showQuests    = cfg.showQuests    ~= false
+    local showCrafted   = cfg.showCrafted   ~= false
     local altScope      = cfg.altScope
 
     local maxChars     = cfg.characterLimit
@@ -243,7 +286,7 @@ local function ItemTrackerProvider(_, context)
         if rows and #rows > 0 then
             table.insert(lines, {
                 type  = "double",
-                left  = "  " .. L["TIPS_ITEMTRACKER_HEADER"],
+                left  = "  " .. L["TIPS_ITEMTRACKER_WHERE_IS"],
                 right = string.format(L["TIPS_ITEMTRACKER_TOTAL"], total),
                 lr = 0.4, lg = 0.8, lb = 1.0,
                 rr = 1.0, rg = 1.0, rb = 1.0,
@@ -284,20 +327,30 @@ local function ItemTrackerProvider(_, context)
         end
     end
 
+    local sourceBlocks = {}
+
+    if showQuests and OneWoW_CatalogData_Quests_API then
+        local questIDs = OneWoW_CatalogData_Quests_API.GetQuestsRewardingItem(context.itemID, false)
+        if questIDs then
+            local rows = {}
+            for _, questID in ipairs(questIDs) do
+                local q = OneWoW_CatalogData_Quests_API.GetQuest(questID, false)
+                rows[#rows + 1] = {
+                    left  = (q and q.name) or tostring(questID),
+                    right = BATTLE_PET_SOURCE_2,
+                }
+            end
+            if #rows > 0 then
+                sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.9, lg = 0.85, lb = 0.5 }
+            end
+        end
+    end
+
     if showVendors and OneWoW_CatalogData_Vendors_API then
         local vendors = GetVendorData(context.itemID)
         if vendors and #vendors > 0 then
-            table.insert(lines, {
-                type = "text",
-                text = "  " .. L["TIPS_ITEMTRACKER_VENDORS_HEADER"],
-                r = 0.4, g = 0.8, b = 1.0,
-            })
-            local shownV = 0
+            local rows = {}
             for _, vendor in ipairs(vendors) do
-                if shownV >= 5 then
-                    table.insert(lines, { type = "text", text = "  ...", r = 0.7, g = 0.7, b = 0.7 })
-                    break
-                end
                 local vendorName = vendor.name or "?"
                 local zone
                 if vendor.locations then
@@ -306,50 +359,51 @@ local function ItemTrackerProvider(_, context)
                         break
                     end
                 end
-                if zone then
-                    table.insert(lines, {
-                        type  = "double",
-                        left  = "    " .. vendorName,
-                        right = zone,
-                        lr = 0.9, lg = 0.8, lb = 0.5,
-                        rr = 0.7, rg = 0.7, rb = 0.7,
-                    })
-                else
-                    table.insert(lines, {
-                        type = "text",
-                        text = "    " .. vendorName,
-                        r = 0.9, g = 0.8, b = 0.5,
-                    })
-                end
-                shownV = shownV + 1
+                rows[#rows + 1] = {
+                    left  = vendorName,
+                    right = zone or BATTLE_PET_SOURCE_3,
+                }
             end
+            sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.9, lg = 0.8, lb = 0.5 }
         end
     end
 
     if showInstances and OneWoW_CatalogData_Journal_API then
         local instEntries = GetInstanceData(context.itemID)
         if instEntries and #instEntries > 0 then
-            table.insert(lines, {
-                type = "text",
-                text = "  " .. L["TIPS_ITEMTRACKER_INSTANCES_HEADER"],
-                r = 0.4, g = 0.8, b = 1.0,
-            })
-            local shownI = 0
+            local rows = {}
             for _, entry in ipairs(instEntries) do
-                if shownI >= 5 then
-                    table.insert(lines, { type = "text", text = "  ...", r = 0.7, g = 0.7, b = 0.7 })
-                    break
-                end
-                local rightText = entry.encounterName or L["TIPS_ITEMTRACKER_GENERAL_LOOT"]
-                table.insert(lines, {
-                    type  = "double",
-                    left  = "    " .. entry.instanceName,
-                    right = rightText,
-                    lr = 0.7, lg = 0.9, lb = 0.7,
-                    rr = 0.7, rg = 0.7, rb = 0.7,
-                })
-                shownI = shownI + 1
+                rows[#rows + 1] = {
+                    left  = entry.instanceName,
+                    right = entry.encounterName or BATTLE_PET_SOURCE_1,
+                }
             end
+            sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.7, lg = 0.9, lb = 0.7 }
+        end
+    end
+
+    if showCrafted and OneWoW_CatalogData_Tradeskills_API then
+        local crafts = GetCraftData(context.itemID)
+        if #crafts > 0 then
+            local rows = {}
+            for _, craft in ipairs(crafts) do
+                rows[#rows + 1] = {
+                    left  = craft.name,
+                    right = BATTLE_PET_SOURCE_4,
+                }
+            end
+            sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.7, lg = 0.8, lb = 1.0 }
+        end
+    end
+
+    if #sourceBlocks > 0 then
+        table.insert(lines, {
+            type = "text",
+            text = "  " .. L["TIPS_ITEMTRACKER_WHERE_TO_GET"],
+            r = 0.4, g = 0.8, b = 1.0,
+        })
+        for _, block in ipairs(sourceBlocks) do
+            AppendCappedSourceRows(lines, block.rows, block.lr, block.lg, block.lb)
         end
     end
 

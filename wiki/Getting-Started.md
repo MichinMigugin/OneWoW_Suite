@@ -21,7 +21,7 @@ Open **Manage Features** from the hub (Home link or Settings):
 
 * Turn on only what you use (Bags, QoL, AltTracker, Catalog, and so on)
 * A disabled module is **unloaded**, not merely hidden — less overhead, cleaner UI
-* For **Catalog** and **AltTracker**, keep their companion `*Data*` / `AltTracker_*` folders installed; they feed the parent feature and have no separate player UI of their own.
+* For **Catalog** and **AltTracker**, keep their companion `*Data*` / `AltTracker_*` folders installed; they feed the parent feature and have no separate player UI of their own. Catalog packs load when you open that tab, not at login.
 
 Configure each enabled addon from its hub tab or its [slash command](Slash-Commands).
 
@@ -32,7 +32,7 @@ Even with no optional modules, **OneWoW** includes:
 * **Portal hub** — teleports, portals, and hearthstones in one place (favorites, filters, one-click use)
 * **Item status on hover** — collections, item level, junk, protected, quest, crafting, transmog, bind type, and more
 * **Collection toasts** — alerts when you learn mounts, pets, toys, recipes, transmog, and similar unlocks
-* **Enhanced tooltips** — collection status, notes, tracking hints, recipe status, categories (vendor price display is configurable under tooltip settings)
+* **Enhanced tooltips** — collection status, notes, tracking hints, recipe status, categories. Vendor price and Item Tracker (where it is / where to get it) are configurable under tooltip settings. Source lines show when that Catalog pack is already loaded.
 * **Universal search** — find items, portals, and suite data without digging through menus
 * **Shared themes** across OneWoW windows
 * **Eleven locales** — in-game text follows your WoW client language

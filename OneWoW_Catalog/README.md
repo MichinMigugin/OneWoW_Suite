@@ -80,7 +80,12 @@ The Catalog works with companion data addons to provide complete information:
 ### Data: Quests (OneWoW_CatalogData_Quests)
 - Static quest database with live scanner enrichment
 - Per-character completion tracking
-- Classic through Midnight in full
+- This expansion and the previous one (The War Within and Midnight)
+- Midnight through Shadowlands lists have the pins and text we have; Battle for Azeroth through Classic will get that same fill soon
+
+### Data: Quest Archive (OneWoW_CatalogData_Quests_Archive)
+- Classic through Dragonflight
+- Loads when you browse those expansions, search all quests, or look up quest rewards
 
 Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running.
 
@@ -96,6 +101,7 @@ Per-pack READMEs have a short summary; this table is the canonical cross-module 
 | --- | --- | --- |
 | **Journal** (`OneWoW_CatalogData_Journal`) | Journal tab empty; Item Search drop filter and drop details; collection status on journal loot; navigate-to-instance from toasts | QoL Item Tracker — no instance/encounter lines on item tooltips; QoL — no collection grid on instance-entry toasts or ESC instance panel |
 | **Quests** (`OneWoW_CatalogData_Quests`) | Quests tab empty (including active-quest views); Item Search quest-reward filter and details; open-to-quest navigation | Notes — no associated-quest list on NPCs; Journal — no "View Quest" or quest completion on journal loot *(also needs Quests)*; AltTracker settings — quest completion not listed for character purge |
+| **Quest Archive** (`OneWoW_CatalogData_Quests_Archive`) | Classic through Dragonflight missing from the Quests tab and from all-quest search | Reward lookups for those expansions stay empty until Archive is on |
 | **Vendors** (`OneWoW_CatalogData_Vendors`) | Vendors tab empty; Item Search vendor filter and "sold by" details; open-to-vendor navigation | Core — no "Open Vendor Details" on NPC context menus; QoL Item Tracker — no vendor lines on item tooltips |
 | **Tradeskills** (`OneWoW_CatalogData_Tradeskills`) | Tradeskills tab empty; Item Search crafted filter and recipe details (including known-by alts) | ShoppingList — no craft detection, craft orders, recipe picker, or crafting-quality inventory rollup; QoL Professions Panel — no supplemental alt recipe data from tradeskill scans |
 
@@ -139,6 +145,7 @@ Supports all 11 suite locales via **OneWoW** — see [LOCALES.md](../OneWoW/Docs
 - **OneWoW_CatalogData_Tradeskills** - Recommended for recipe and profession data (optional)
 - **OneWoW_CatalogData_Vendors** - Recommended for vendor and item data (optional)
 - **OneWoW_CatalogData_Quests** - Recommended for quest database and completion data (optional)
+- **OneWoW_CatalogData_Quests_Archive** - Classic through Dragonflight quests (optional)
 
 ## Slash Commands
 

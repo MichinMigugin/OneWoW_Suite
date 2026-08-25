@@ -213,21 +213,23 @@ local function CollectRawAttention()
                 if not gap then
                     -- available
                 elseif gap == "not_loaded" and ns:IsFeatureWanted(store, true) then
-                    local st, reason = ns:GetAddonStatus(store, true)
-                    if st == "warning" then
-                        add(
-                            "broken:" .. store,
-                            CLASS_BROKEN,
-                            false,
-                            format(L["HOME_ATTENTION_BROKEN"], UnitLabel(store), ns:GetLoadFailureText(reason))
-                        )
-                    else
-                        add(
-                            "load_pending:" .. store,
-                            CLASS_LOAD_PENDING,
-                            true,
-                            format(L["HOME_ATTENTION_LOAD_PENDING"], UnitLabel(store))
-                        )
+                    if not ns:IsLazyStore(store) then
+                        local st, reason = ns:GetAddonStatus(store, true)
+                        if st == "warning" then
+                            add(
+                                "broken:" .. store,
+                                CLASS_BROKEN,
+                                false,
+                                format(L["HOME_ATTENTION_BROKEN"], UnitLabel(store), ns:GetLoadFailureText(reason))
+                            )
+                        else
+                            add(
+                                "load_pending:" .. store,
+                                CLASS_LOAD_PENDING,
+                                true,
+                                format(L["HOME_ATTENTION_LOAD_PENDING"], UnitLabel(store))
+                            )
+                        end
                     end
                 elseif gap == "broken" then
                     add(

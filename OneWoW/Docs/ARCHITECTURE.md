@@ -95,7 +95,7 @@ Verified against current `.toc` files:
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | 1 |
 | **OneWoW_AltTracker_\*** (except Endgame) | OneWoW | — | 1 |
 | **OneWoW_AltTracker_Endgame** | OneWoW, OneWoW_AltTracker | — | 1 |
-| **OneWoW_CatalogData_\*** | OneWoW | — | 1 |
+| **OneWoW_CatalogData_\*** | OneWoW | — | 1 (Catalog packs: `lazyStores`; parse on tab / quest event / Item Search source) |
 
 ### OptionalDeps policy
 
@@ -335,9 +335,11 @@ dependency lazy/idempotent) — never rely on registration (TOC load) order. Thi
 is what lets a handler relocate to another load unit without ordering
 regressions.
 
-Mid-session loads use `OneWoW:BringUp(addon)`: loads `{ addon, ...stores }`, then one
+Mid-session loads use `OneWoW:BringUp(addon)`: loads `{ addon, ...stores }`
+(except `lazyStores`, which stay out of the batch), then one
 `Settle` pass (`OnPlayerLogin` over the set) so a parent's login runs only after its
-stores are loaded — matching cold start.
+eager stores are loaded — matching cold start. Catalog packs parse when a
+pack-backed tab, quest event, or Item Search source asks (`EnsureLoaded`).
 
 ### 3.6 `OnPlayerEnteringWorld`
 
@@ -389,6 +391,10 @@ OneWoW:CreateItemDataLoader(dbTable)            -> ItemDataLoader (shared async 
   feature (e.g. Bags → Storage + Character) so a Bags-only install loads data
   without AltTracker.
 - **`{ deferInCombat = true }`** queues to `PLAYER_REGEN_ENABLED`.
+- **Lazy Catalog packs:** Catalog `lazyStores` are skipped by login `BringUp` and
+  the startup store pass. Opening a `requiresAddon` tab, a quest event (scanner),
+  or an Item Search source is the load trigger — explicit user (or gameplay)
+  action, not a speculative preload.
 - **Lazy cross-module data:** reserve `WithAddon` for *explicit user actions* (e.g.
   Catalog AH scan → `OneWoW_AltTracker_Auctions`), not speculative tab opens.
 - **The funnel is mandatory.** Raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` calls
@@ -560,8 +566,10 @@ Endgame stays parent-required (`parentRequiredStores` / TOC) and mutes when
 AltTracker is off. Consumer pulls (Bags → Storage/Character, ShoppingList →
 Storage / Tradeskills) still show “required by …” and stay non-interactive while
 that consumer is on. Soft Apply writes per-store `SetFeatureOptOut` and
-`EnsureLoaded`s wanted-but-unloaded stores; cold start also `EnsureLoaded`s
-opted-in stores whose hub was skipped. See
+`EnsureLoaded`s wanted-but-unloaded **eager** stores; cold start also
+`EnsureLoaded`s opted-in eager stores whose hub was skipped. Catalog
+`lazyStores` stay unloaded until a tab / quest event / Item Search source.
+See
 [`OneWoW_Catalog/README.md#disabling-data-modules`](../../OneWoW_Catalog/README.md#disabling-data-modules)
 for per-pack impact detail.
 

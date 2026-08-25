@@ -43,6 +43,7 @@ flowchart TB
         CDV[CatalogData_Vendors]
         CDT[CatalogData_Tradeskills]
         CDQ[CatalogData_Quests]
+        CDQA[CatalogData_Quests_Archive]
     end
     Catalog --> CatalogData
 
@@ -94,9 +95,10 @@ Companion addons for [OneWoW_Catalog](OneWoW_Catalog/README.md). Enable with Cat
 | Addon | Description |
 |-------|-------------|
 | [OneWoW_CatalogData_Journal](OneWoW_CatalogData_Journal/README.md) | Dungeons, raids, and encounter data |
-| [OneWoW_CatalogData_Vendors](OneWoW_CatalogData_Vendors/README.md) | Vendors and what they sell |
+| [OneWoW_CatalogData_Vendors](OneWoW_CatalogData_Vendors/README.md) | Classic through Midnight vendors and what they sell |
 | [OneWoW_CatalogData_Tradeskills](OneWoW_CatalogData_Tradeskills/README.md) | Professions and recipes |
-| [OneWoW_CatalogData_Quests](OneWoW_CatalogData_Quests/README.md) | Quest database and completion tracking |
+| [OneWoW_CatalogData_Quests](OneWoW_CatalogData_Quests/README.md) | Quest database and completion tracking (this expansion and the previous one) |
+| [OneWoW_CatalogData_Quests_Archive](OneWoW_CatalogData_Quests_Archive/README.md) | Classic through Dragonflight quests |
 
 ### AltTracker data stores
 

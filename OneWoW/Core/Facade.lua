@@ -87,6 +87,7 @@ local COLON_METHODS = {
     "GetCatalogDatastores",
     "GetStoreCatalogConsumers",
     "GetStoreLabelKey",
+    "IsLazyStore",
     "StoreRequiresParent",
     "EvaluateSuiteAttention",
     "DismissFeatureAttention",

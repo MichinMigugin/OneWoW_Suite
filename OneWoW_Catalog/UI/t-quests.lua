@@ -7,6 +7,8 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local WOW_QUEST_GOLD = OneWoW_GUI.Constants.WOW_QUEST_GOLD
 local QUEST_LIST_ROW_HEIGHT = 60
 local QUEST_LIST_ROW_FRAME_HEIGHT = 56
+local QUEST_LIST_CAP_UNFILTERED = 25
+local QUEST_LIST_CAP_FILTERED = 50
 local QUEST_LIST_RIGHT_GUTTER = 28
 local QUEST_LIST_TAG_GAP = 8
 local QUEST_LIST_TAG_PAD_X = 8
@@ -477,6 +479,48 @@ local function IsDatabaseMode()
         or factionFilter ~= "all"
         or storyFilter ~= "all"
         or runtimeFilter ~= "all"
+end
+
+local function HasQuestListFilters()
+    return IsDatabaseMode() or IsActiveFilterMode() or runtimeFilter == "favorite"
+end
+
+local function GetQuestListCap()
+    if HasQuestListFilters() then
+        return QUEST_LIST_CAP_FILTERED
+    end
+    return QUEST_LIST_CAP_UNFILTERED
+end
+
+--- Keeps the left list short. `total` is the uncut match count for the status line.
+---@param quests table
+---@param favoriteQuests table|nil
+---@param cap number
+---@return table quests
+---@return table favoriteQuests
+---@return number total
+---@return boolean capped
+local function CapQuestListResults(quests, favoriteQuests, cap)
+    favoriteQuests = favoriteQuests or {}
+    local total = #quests + #favoriteQuests
+    if total <= cap then
+        return quests, favoriteQuests, total, false
+    end
+
+    local qOut, fOut = {}, {}
+    for i = 1, #quests do
+        if #qOut >= cap then
+            break
+        end
+        qOut[#qOut + 1] = quests[i]
+    end
+    for i = 1, #favoriteQuests do
+        if (#qOut + #fOut) >= cap then
+            break
+        end
+        fOut[#fOut + 1] = favoriteQuests[i]
+    end
+    return qOut, fOut, total, true
 end
 
 local function ResetAdvancedFilters()
@@ -1570,12 +1614,10 @@ end
 local function GetQuestStarterData(questData)
     if not questData then return nil end
 
-    -- Future scraper schema
     if questData.starts and questData.starts[1] then
         return questData.starts[1]
     end
 
-    -- Legacy compatibility
     if questData.questGiverID then
         return {
             npcID = questData.questGiverID,
@@ -1593,42 +1635,77 @@ local function GetQuestEnderData(questData)
         return questData.ends[1]
     end
 
+    if questData.questTurnInID then
+        return {
+            npcID = questData.questTurnInID,
+            npcName = questData.questTurnInName,
+        }
+    end
+
     return nil
 end
 
-local function AddUniqueQuestID(ids, seen, questID)
-    questID = tonumber(questID)
-    if questID and not seen[questID] then
-        seen[questID] = true
-        table.insert(ids, questID)
-    end
-end
-
-local function GetQuestChainIDs(questData)
-    if not questData then return nil end
-
-    local ids = {}
-    local seen = {}
-
-    if questData.storyline and #questData.storyline > 1 then
-        for _, questID in ipairs(questData.storyline) do
-            AddUniqueQuestID(ids, seen, questID)
-        end
-    elseif questData.series and #questData.series > 0 then
-        AddUniqueQuestID(ids, seen, questData.id)
-
-        for _, questID in ipairs(questData.series) do
-            AddUniqueQuestID(ids, seen, questID)
-        end
-
-        table.sort(ids)
-    end
-
-    if #ids <= 1 then
+local function FormatQuestPinLocation(pin, questData)
+    if not pin then
         return nil
     end
 
-    return ids
+    local mapID = pin.mapID or (questData and questData.mapID)
+    local mapName
+    if mapID and mapID ~= 0 then
+        local mapInfo = C_Map.GetMapInfo(mapID)
+        mapName = mapInfo and mapInfo.name
+    end
+
+    local x, y = pin.x, pin.y
+    if x and y then
+        if x <= 1 then
+            x = x * 100
+        end
+        if y <= 1 then
+            y = y * 100
+        end
+        local coord = string.format("%.1f, %.1f", x, y)
+        if mapName then
+            return mapName .. " (" .. coord .. ")"
+        end
+        return coord
+    end
+
+    return mapName
+end
+
+local function BuildNotesNPCInfo(npcData, questData, npcName)
+    local mapID = tonumber(npcData.mapID) or tonumber(questData and questData.mapID)
+    local x, y = npcData.x, npcData.y
+    if (not x or not y) and questData and questData.coords then
+        x = x or questData.coords.x
+        y = y or questData.coords.y
+        mapID = mapID or tonumber(questData.coords.mapID)
+    end
+    local zone
+    if questData then
+        zone = ResolveQuestZoneName(questData)
+        if zone == UNKNOWN then
+            zone = nil
+        end
+    end
+    return {
+        name = npcName,
+        zone = zone,
+        mapID = mapID,
+        x = x,
+        y = y,
+        category = "Quest Givers",
+    }
+end
+
+local function GetQuestChainIDs(questData)
+    local addon = GetDataAddon()
+    if not addon then
+        return nil
+    end
+    return addon.GetQuestGuideChain(questData)
 end
 
 local function GetQuestMapTarget(questData)
@@ -1637,6 +1714,11 @@ local function GetQuestMapTarget(questData)
     local starterData = GetQuestStarterData(questData)
     if starterData and starterData.mapID and starterData.x and starterData.y then
         return starterData.mapID, starterData.x, starterData.y
+    end
+
+    local enderData = GetQuestEnderData(questData)
+    if enderData and enderData.mapID and enderData.x and enderData.y then
+        return enderData.mapID, enderData.x, enderData.y
     end
 
     if questData.coords and questData.coords.mapID and questData.coords.x and questData.coords.y then
@@ -2011,10 +2093,16 @@ function ShowQuestDetail(panels, questData)
     local displayMapID = pinMapID or mapID
 
     local function addNPCNavigationRow(label, npcData)
-        if not npcData or not npcData.npcID then return end
+        if not npcData then return end
 
         local npcID = tonumber(npcData.npcID)
-        local fallbackNPCName = string.format(L["QUESTS_NPC_UNNAMED"], npcID or 0)
+        local objectID = tonumber(npcData.objectID)
+        local locationText = FormatQuestPinLocation(npcData, questData)
+        if not npcID and not objectID and not locationText then
+            return
+        end
+
+        local fallbackNPCName = npcID and string.format(L["QUESTS_NPC_UNNAMED"], npcID) or locationText
         local npcName =
             (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name, false))
             or (npcID and npcNameCache[npcID])
@@ -2034,18 +2122,25 @@ function ShowQuestDetail(panels, questData)
 
         npcText:SetAllPoints()
         npcText:SetJustifyH("LEFT")
+        npcText:SetWordWrap(true)
 
         local function setLinkText(color)
+            local suffix = ""
+            if locationText and npcName ~= locationText then
+                suffix = "|cff888888  " .. locationText
+            end
             npcText:SetText(
                 "|cff888888"
                 .. label
                 .. ": |cff"
                 .. color
-                .. npcName
+                .. (npcName or "")
+                .. suffix
             )
         end
 
         setLinkText("4dbfff")
+        npcBtn:SetHeight(math.max(16, npcText:GetStringHeight() or 16))
 
         if npcID and IsGenericNPCName(npcName) then
             RegisterVisibleNPCName(npcID, function(resolvedName)
@@ -2102,20 +2197,31 @@ function ShowQuestDetail(panels, questData)
             )
 
             GameTooltip:AddLine(
-                "NPC ID: " .. tostring(npcData.npcID),
+                locationText or npcName,
                 0.6,
                 0.6,
                 0.6
             )
 
+            if npcID then
+                GameTooltip:AddLine(
+                    "NPC ID: " .. tostring(npcData.npcID),
+                    0.6,
+                    0.6,
+                    0.6
+                )
+            end
+
             GameTooltip:AddLine(" ")
 
-            GameTooltip:AddLine(
-                "Click to add NPC to Notes and open Notes navigation",
-                0,
-                1,
-                0
-            )
+            if npcID then
+                GameTooltip:AddLine(
+                    "Click to add NPC to Notes and open Notes navigation",
+                    0,
+                    1,
+                    0
+                )
+            end
 
             GameTooltip:Show()
         end)
@@ -2126,39 +2232,28 @@ function ShowQuestDetail(panels, questData)
         end)
 
         npcBtn:SetScript("OnClick", function()
-            if ns.Navigation and ns.Navigation.OpenNPC then
-                local resolvedName =
-                    (npcID and ResolveNPCName(npcID, npcData.npcName or npcData.name, true))
-                    or (npcID and npcNameCache[npcID])
-
-                ns.Navigation:OpenNPC(npcData.npcID, {
-                    name = resolvedName or npcName,
-                    mapID = npcData.mapID or questData.mapID,
-                    x = npcData.x,
-                    y = npcData.y,
-                    zone = questData.zoneName,
-                    category = "Quest Givers",
-                })
+            if not npcID or not ns.Navigation or not ns.Navigation.OpenNPC then
+                return
             end
+            local resolvedName =
+                ResolveNPCName(npcID, npcData.npcName or npcData.name, true)
+                or npcNameCache[npcID]
+
+            ns.Navigation:OpenNPC(npcData.npcID, BuildNotesNPCInfo(
+                npcData,
+                questData,
+                resolvedName or npcName
+            ))
         end)
 
-        yOffset = yOffset - 20
+        yOffset = yOffset - math.max(20, (npcText:GetStringHeight() or 16) + 4)
     end
 
     local starterData = GetQuestStarterData(questData)
     local enderData = GetQuestEnderData(questData)
 
     addNPCNavigationRow(L["QUESTS_QUEST_GIVER"], starterData)
-
-    if enderData
-        and enderData.npcID
-        and (
-            not starterData
-            or starterData.npcID ~= enderData.npcID
-        )
-    then
-        addNPCNavigationRow(L["QUESTS_TURN_IN"], enderData)
-    end
+    addNPCNavigationRow(L["QUESTS_TURN_IN"], enderData)
 
     local metaFrame = track(CreateFrame("Frame", nil, parent))
 
@@ -2433,9 +2528,25 @@ function ShowQuestDetail(panels, questData)
 
     -- Objectives Section
 
-    if questData.objectivesText
-        and questData.objectivesText ~= ""
-    then
+    local staticObjectives = questData.db2Objectives
+    if (not staticObjectives or #staticObjectives == 0) and questData.objectiveDetails then
+        staticObjectives = questData.objectiveDetails
+    end
+    if (not staticObjectives or #staticObjectives == 0) and questData.objectives then
+        staticObjectives = {}
+        for _, objectiveText in ipairs(questData.objectives) do
+            table.insert(staticObjectives, { text = objectiveText })
+        end
+    end
+
+    local liveObjectives
+    if questData.id and C_QuestLog.IsOnQuest(questData.id) then
+        liveObjectives = C_QuestLog.GetQuestObjectives(questData.id)
+    end
+
+    local hasObjectiveText = HasDisplayQuestText(questData.objectivesText)
+    local hasObjectiveSteps = staticObjectives and #staticObjectives > 0
+    if hasObjectiveText or hasObjectiveSteps then
         addVSpace(4)
 
         local objLabel = track(
@@ -2458,40 +2569,65 @@ function ShowQuestDetail(panels, questData)
 
         yOffset = yOffset - 16
 
-        local objFs = track(
-            OneWoW_GUI:CreateFS(parent, 12)
-        )
+        if hasObjectiveText then
+            local objFs = track(
+                OneWoW_GUI:CreateFS(parent, 12)
+            )
 
-        objFs:SetPoint(
-            "TOPLEFT",
-            parent,
-            "TOPLEFT",
-            PAD + 8,
-            yOffset
-        )
+            objFs:SetPoint(
+                "TOPLEFT",
+                parent,
+                "TOPLEFT",
+                PAD + 8,
+                yOffset
+            )
 
-        objFs:SetPoint(
-            "TOPRIGHT",
-            parent,
-            "TOPRIGHT",
-            -PAD,
-            yOffset
-        )
+            objFs:SetPoint(
+                "TOPRIGHT",
+                parent,
+                "TOPRIGHT",
+                -PAD,
+                yOffset
+            )
 
-        objFs:SetJustifyH("LEFT")
-        objFs:SetWordWrap(true)
+            objFs:SetJustifyH("LEFT")
+            objFs:SetWordWrap(true)
 
-        objFs:SetText(
-            FormatAndHighlightQuestText(questData.objectivesText)
-        )
+            objFs:SetText(
+                FormatAndHighlightQuestText(questData.objectivesText)
+            )
 
-        objFs:SetWidth(W - 8)
+            objFs:SetWidth(W - 8)
 
-        objFs:SetTextColor(
-            OneWoW_GUI:GetThemeColor("TEXT_MUTED")
-        )
+            objFs:SetTextColor(
+                OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+            )
 
-        yOffset = yOffset - objFs:GetStringHeight() - 8
+            yOffset = yOffset - objFs:GetStringHeight() - 8
+        end
+
+        if hasObjectiveSteps then
+            for index, objective in ipairs(staticObjectives) do
+                local live = liveObjectives and liveObjectives[index]
+                local stepText
+                if live and live.text and live.text ~= "" then
+                    stepText = live.text
+                else
+                    stepText = objective.text
+                end
+                if HasDisplayQuestText(stepText) then
+                    local stepFs = track(OneWoW_GUI:CreateFS(parent, 12))
+                    stepFs:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
+                    stepFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
+                    stepFs:SetJustifyH("LEFT")
+                    stepFs:SetWordWrap(true)
+                    stepFs:SetWidth(W - 8)
+                    stepFs:SetText(FormatAndHighlightQuestText(stepText))
+                    stepFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                    yOffset = yOffset - stepFs:GetStringHeight() - 6
+                end
+            end
+        end
     end
 
     -- Rewards Section
@@ -2500,6 +2636,7 @@ function ShowQuestDetail(panels, questData)
         (questData.rewardGold and questData.rewardGold > 0)
         or (questData.rewardXP and questData.rewardXP > 0)
         or (questData.rewardItems and #questData.rewardItems > 0)
+        or (questData.rewardChoices and #questData.rewardChoices > 0)
         or (questData.rewardCurrencies and #questData.rewardCurrencies > 0)
 
     if hasRewards then
@@ -2539,7 +2676,7 @@ function ShowQuestDetail(panels, questData)
             local currHdr = track(OneWoW_GUI:CreateFS(parent, 10))
 
             currHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-            currHdr:SetText("Currencies:")
+            currHdr:SetText(CURRENCY .. ":")
 
             currHdr:SetTextColor(
                 OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
@@ -2597,12 +2734,16 @@ function ShowQuestDetail(panels, questData)
             end
         end
 
-        if questData.rewardItems and #questData.rewardItems > 0 then
+        local function addRewardItemGrid(items, headerText)
+            if not items or #items == 0 then
+                return
+            end
+
             local itemHdr = track(OneWoW_GUI:CreateFS(parent, 10))
 
             itemHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
 
-            itemHdr:SetText(ITEMS .. ":")
+            itemHdr:SetText(headerText)
 
             itemHdr:SetTextColor(
                 OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
@@ -2617,7 +2758,7 @@ function ShowQuestDetail(panels, questData)
             local itemColumnWidth = math.floor((gridWidth - (gridGap * (itemColumns - 1))) / itemColumns)
             local rewardItemEntries = {}
 
-            for _, rewardItem in ipairs(questData.rewardItems) do
+            for _, rewardItem in ipairs(items) do
                 local itemID
                 local itemCount = 1
 
@@ -2826,6 +2967,9 @@ function ShowQuestDetail(panels, questData)
                 yOffset = yOffset - (math.ceil(itemIndex / itemColumns) * rowHeight)
             end
         end
+
+        addRewardItemGrid(questData.rewardItems, ITEMS .. ":")
+        addRewardItemGrid(questData.rewardChoices, REWARD_CHOOSE)
 
         addVSpace(4)
     end
@@ -3825,6 +3969,15 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
         end
     end
 
+    local matchTotal = #quests + #favoriteQuests
+    local listCap = GetQuestListCap()
+    local wasCapped = false
+    quests, favoriteQuests, matchTotal, wasCapped = CapQuestListResults(
+        quests,
+        favoriteQuests,
+        listCap
+    )
+
     if #quests == 0 and #favoriteQuests == 0 then
         panels._questResults = {}
         panels._favoriteQuestResults = {}
@@ -3848,6 +4001,7 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
             panels.listScrollChild:SetHeight(100)
         end
         if panels.leftStatusText then
+            panels._questListCapTip = nil
             if loading then
                 panels.leftStatusText:SetText(string.format(L["QUESTS_LOADING"], 0))
             else
@@ -3905,8 +4059,15 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
     if panels.leftStatusText then
         local n = #quests + #favoriteQuests
         if loading then
+            panels._questListCapTip = nil
             panels.leftStatusText:SetText(string.format(L["QUESTS_LOADING"], n))
+        elseif wasCapped then
+            panels._questListCapTip = string.format(L["QUESTS_STATUS_CAPPED_TT"], listCap)
+            panels.leftStatusText:SetText(
+                string.format(L["QUESTS_STATUS_CAPPED"], n, matchTotal, listCap)
+            )
         else
+            panels._questListCapTip = nil
             panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], n))
         end
     end
@@ -4110,7 +4271,7 @@ function RefreshQuestList(panels, invalidateStatus)
     )
 end
 
-function OpenQuestByID(questID, panels)
+function OpenQuestByID(questID, panels, fromArchive)
     questID = tonumber(questID)
     if not questID then return false end
 
@@ -4124,7 +4285,15 @@ function OpenQuestByID(questID, panels)
         addon
         and addon.GetQuest(questID)
 
-    if not quest then return false end
+    if not quest then
+        if fromArchive or not (addon and addon.EnsureArchiveThen) then
+            return false
+        end
+        addon.EnsureArchiveThen(function()
+            OpenQuestByID(questID, panels, true)
+        end)
+        return true
+    end
 
     selectedQuest = quest
     searchText = "\"" .. tostring(questID) .. "\""
@@ -4313,10 +4482,7 @@ local function GetAvailableFilterValues(fieldName)
             end
         end
 
-        local source =
-            expansionFilter ~= -1
-            and addon.GetQuestsForExpansion(expansionFilter)
-            or addon.GetAllQuests()
+        local source = addon.GetQuestsForExpansion(expansionFilter)
 
         for _, quest in pairs(source) do
             for _, value in ipairs(quest.categories or {}) do
@@ -4525,9 +4691,20 @@ function ns.UI.OpenToQuest(questID)
         if not panels then return end
         local addon = GetDataAddon()
         if not addon then return end
-        local quest = addon.GetQuest(questID)
-        if quest then
-            ShowQuestDetail(panels, quest)
+
+        local function showDetail()
+            local quest = addon.GetQuest(questID)
+            if quest then
+                ShowQuestDetail(panels, quest)
+            end
+        end
+
+        if addon.GetQuest(questID) then
+            showDetail()
+            return
+        end
+        if addon.EnsureArchiveThen then
+            addon.EnsureArchiveThen(showDetail)
         end
     end)
 end
@@ -4578,6 +4755,26 @@ function ns.UI.CreateQuestsTab(parent)
     PositionContentArea()
 
     local panels = OneWoW_GUI:CreateSplitPanel(contentArea, { hideTitles = true })
+
+    if panels.leftStatusText then
+        panels.leftStatusText:SetPoint("RIGHT", panels.leftStatusBar, "RIGHT", -10, 0)
+        panels.leftStatusText:SetJustifyH("LEFT")
+    end
+    if panels.leftStatusBar then
+        panels.leftStatusBar:EnableMouse(true)
+        panels.leftStatusBar:SetScript("OnEnter", function(self)
+            local tip = panels._questListCapTip
+            if not tip then
+                return
+            end
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(tip, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        panels.leftStatusBar:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    end
 
     questListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
         name = "CatalogQuestsList",

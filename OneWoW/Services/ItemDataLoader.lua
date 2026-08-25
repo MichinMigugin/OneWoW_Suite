@@ -75,6 +75,10 @@ function ns:CreateItemDataLoader(dbTable)
     end
 
     function loader:GetCachedItem(itemID)
+        itemID = tonumber(itemID)
+        if not itemID then
+            return nil
+        end
         return self._db.itemCache[itemID] or nil
     end
 
@@ -98,6 +102,10 @@ function ns:CreateItemDataLoader(dbTable)
     end
 
     function loader:LoadItemData(itemID, callback)
+        itemID = tonumber(itemID)
+        if not itemID then
+            return nil
+        end
         local cached = self:GetCachedItem(itemID)
         if cached and cached.name then
             if callback then self:FireCallbacks({ callback }, itemID, cached) end
@@ -144,6 +152,8 @@ function ns:CreateItemDataLoader(dbTable)
         local frame = CreateFrame("Frame")
         frame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
         frame:SetScript("OnEvent", function(_, _, loadedItemID, success)
+            loadedItemID = tonumber(loadedItemID)
+            if not loadedItemID then return end
             local callbacks = self._pending[loadedItemID]
             if not callbacks then return end
             self._pending[loadedItemID] = nil

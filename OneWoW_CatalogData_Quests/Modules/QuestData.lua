@@ -16,6 +16,10 @@ local pairs, ipairs, next, type = pairs, ipairs, next, type
 local tonumber, tostring = tonumber, tostring
 local tinsert, tremove, sort, wipe = tinsert, tremove, sort, wipe
 local time, C_Timer = time, C_Timer
+local C_AddOns = C_AddOns
+local coroutine_yield = coroutine.yield
+
+local OneWoW = OneWoW
 
 local QuestData = {}
 ns.QuestData = QuestData
@@ -388,6 +392,14 @@ local function HasDisplayObjectives(quest)
         end
     end
 
+    if quest.db2Objectives then
+        for _, objective in ipairs(quest.db2Objectives) do
+            if type(objective) == "table" and HasDisplayQuestText(objective.text) then
+                return true
+            end
+        end
+    end
+
     return false
 end
 
@@ -751,6 +763,94 @@ local function ClearQuestDerivedCaches()
     questNPCIndex = nil
 end
 
+local ARCHIVE_HUB = "OneWoW_CatalogData_Quests_Archive"
+local ARCHIVE_EXPANSION_MAX = 9
+
+local ARCHIVE_PACK_ORDER = {
+    "OneWoW_CatalogData_Quests_Archive_Classic",
+    "OneWoW_CatalogData_Quests_Archive_Cata",
+    "OneWoW_CatalogData_Quests_Archive_Draenor",
+    "OneWoW_CatalogData_Quests_Archive_Bfa",
+    "OneWoW_CatalogData_Quests_Archive_Dragonflight",
+}
+
+local ARCHIVE_PACK_BY_EXPANSION = {
+    [0] = ARCHIVE_PACK_ORDER[1],
+    [1] = ARCHIVE_PACK_ORDER[1],
+    [2] = ARCHIVE_PACK_ORDER[2],
+    [3] = ARCHIVE_PACK_ORDER[2],
+    [4] = ARCHIVE_PACK_ORDER[3],
+    [5] = ARCHIVE_PACK_ORDER[3],
+    [6] = ARCHIVE_PACK_ORDER[4],
+    [7] = ARCHIVE_PACK_ORDER[4],
+    [8] = ARCHIVE_PACK_ORDER[5],
+    [9] = ARCHIVE_PACK_ORDER[5],
+}
+
+local function ExpansionNeedsArchive(expansionID)
+    return type(expansionID) == "number"
+        and expansionID >= 0
+        and expansionID <= ARCHIVE_EXPANSION_MAX
+end
+
+local function ArchiveHubWanted()
+    return OneWoW:IsFeatureWanted(ARCHIVE_HUB)
+end
+
+--- Load one era pack, or every era when expansionID is -1 / nil.
+--- When `shouldYield` is set (ChunkedJob), yield after each fresh LoadAddOn so
+--- Classic-Dragonflight never parse in one frame.
+---@param expansionID number|nil
+---@param shouldYield fun(): boolean|nil
+---@return boolean loaded
+function QuestData:EnsureArchiveLoaded(expansionID, shouldYield)
+    if not ArchiveHubWanted() then
+        return false
+    end
+
+    local packs
+    if ExpansionNeedsArchive(expansionID) then
+        packs = { ARCHIVE_PACK_BY_EXPANSION[expansionID] }
+    elseif expansionID == -1 or expansionID == nil then
+        packs = ARCHIVE_PACK_ORDER
+    else
+        return true
+    end
+
+    local allLoaded = true
+    for i = 1, #packs do
+        local name = packs[i]
+        if not C_AddOns.IsAddOnLoaded(name) then
+            OneWoW:EnsureLoaded(name)
+            if shouldYield then
+                coroutine_yield()
+            end
+        end
+        if not C_AddOns.IsAddOnLoaded(name) then
+            allLoaded = false
+        end
+    end
+    return allLoaded
+end
+
+--- Load every Archive era across frames, then run `onReady`.
+---@param onReady function
+function QuestData:EnsureArchiveThen(onReady)
+    OneWoW.ChunkedJob.Start({
+        run = function(shouldYield)
+            self:EnsureArchiveLoaded(-1, shouldYield)
+        end,
+        onComplete = onReady,
+    })
+end
+
+function QuestData:OnExternalDBChanged()
+    allQuestsCache = nil
+    wipe(expansionQuestsCache)
+    ClearQuestDerivedCaches()
+    self:InvalidateQuestRewardIndex()
+end
+
 local function CachePart(value)
     if value == nil then
         return ""
@@ -921,36 +1021,6 @@ GetQuestSearchBlob = function(quest)
     return blob
 end
 
-local function GetSortedQuestSourceArray(self, expansionFilter)
-    local sourceKey = CachePart(expansionFilter or -1)
-    local cachedSource = sortedQuestSourceCache[sourceKey]
-    if cachedSource then
-        return cachedSource
-    end
-
-    local sourceMap = self:GetQuestsForExpansion(expansionFilter)
-    local sourceArray = {}
-
-    for _, quest in pairs(sourceMap) do
-        tinsert(sourceArray, quest)
-    end
-
-    sort(sourceArray, function(a, b)
-        local aName = a.name or ""
-        local bName = b.name or ""
-
-        if aName ~= bName then
-            return aName < bName
-        end
-
-        return (a.id or 0) < (b.id or 0)
-    end)
-
-    sortedQuestSourceCache[sourceKey] = sourceArray
-
-    return sourceArray
-end
-
 local function CompareQuestsByName(a, b)
     local aName = a.name or ""
     local bName = b.name or ""
@@ -971,6 +1041,30 @@ local function CompareQuestsByExpansionThenName(a, b)
     end
 
     return CompareQuestsByName(a, b)
+end
+
+local function GetSortedQuestSourceArray(self, expansionFilter, shouldYield)
+    local sourceKey = CachePart(expansionFilter or -1)
+    local cachedSource = sortedQuestSourceCache[sourceKey]
+    if cachedSource then
+        return cachedSource
+    end
+
+    local sourceMap = self:GetQuestsForExpansion(expansionFilter, shouldYield)
+    local sourceArray = {}
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+    local yieldCheck = shouldYield or function() return false end
+
+    for _, quest in pairs(sourceMap) do
+        tinsert(sourceArray, quest)
+        YieldIfNeeded(yieldCheck)
+    end
+
+    OneWoW.ChunkedJob.Sort(sourceArray, CompareQuestsByName, shouldYield)
+
+    sortedQuestSourceCache[sourceKey] = sourceArray
+
+    return sourceArray
 end
 
 --- True when the sorted walk would return the expansion source unchanged.
@@ -1094,6 +1188,8 @@ local function NormalizeQuest(quest)
         for _, objective in ipairs(quest.objectiveDetails) do
             if type(objective) == "table" then
                 objective.text = CleanWowheadText(objective.text)
+                objective.finished = nil
+                objective.numFulfilled = nil
                 if objective.text then
                     tinsert(cleanedDetails, objective)
                 end
@@ -1280,29 +1376,127 @@ end
 -- QUEST ACCESS
 ------------------------------------------------------------
 
+local normalizedExternal = setmetatable({}, { __mode = "k" })
+
+--- One merged quest from shards already in memory. Never parses Quest Archive.
+---@param questID number
+---@return table|nil
 function QuestData:GetQuest(questID)
     if not questID then
         return nil
     end
 
     local external = GetExternalDB()[questID]
-
     local runtimeDB = GetRuntimeDB()
-
     local runtime =
         runtimeDB
         and runtimeDB.quests
         and runtimeDB.quests[questID]
 
-    return MergeQuestData(external, runtime)
+    if runtime then
+        return MergeQuestData(external, runtime)
+    end
+    if not external then
+        return nil
+    end
+    if not normalizedExternal[external] then
+        NormalizeQuest(external)
+        normalizedExternal[external] = true
+    end
+    return external
 end
 
-function QuestData:GetAllQuests()
+local function CopyQuestIDList(values)
+    local ids = {}
+    local seen = {}
+    for _, value in ipairs(values or {}) do
+        local questID = tonumber(value)
+        if questID and not seen[questID] then
+            seen[questID] = true
+            tinsert(ids, questID)
+        end
+    end
+    return ids
+end
+
+--- Ordered quest IDs for a later Guide button. Nil when the chain has fewer than 2 quests.
+---@param quest table|number
+---@return number[]|nil
+function QuestData:GetQuestGuideChain(quest)
+    if type(quest) ~= "table" then
+        quest = self:GetQuest(quest)
+    end
+    if not quest then
+        return nil
+    end
+
+    local questID = tonumber(quest.id)
+    for _, line in ipairs(quest.questLines or {}) do
+        local members = line.id and ns.QuestLineMembers[line.id]
+        if members and #members >= 2 then
+            return CopyQuestIDList(members)
+        end
+    end
+
+    local storyline = CopyQuestIDList(quest.storyline)
+    if #storyline >= 2 then
+        return storyline
+    end
+
+    local series = CopyQuestIDList(quest.series)
+    if questID then
+        local ids = { questID }
+        local seen = { [questID] = true }
+        for i = 1, #series do
+            local id = series[i]
+            if not seen[id] then
+                seen[id] = true
+                tinsert(ids, id)
+            end
+        end
+        if #ids >= 2 then
+            return ids
+        end
+    elseif #series >= 2 then
+        return series
+    end
+
+    local chain = CopyQuestIDList(quest.sourceQuests)
+    if questID then
+        local seen = {}
+        for i = 1, #chain do
+            seen[chain[i]] = true
+        end
+        if not seen[questID] then
+            tinsert(chain, questID)
+            seen[questID] = true
+        end
+        for _, id in ipairs(CopyQuestIDList(quest.nextQuests)) do
+            if not seen[id] then
+                seen[id] = true
+                tinsert(chain, id)
+            end
+        end
+    else
+        for _, id in ipairs(CopyQuestIDList(quest.nextQuests)) do
+            tinsert(chain, id)
+        end
+    end
+    if #chain >= 2 then
+        return chain
+    end
+
+    return nil
+end
+
+function QuestData:GetAllQuests(shouldYield)
     if allQuestsCache then
         return allQuestsCache
     end
 
     local results = {}
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+    local yieldCheck = shouldYield or function() return false end
 
     local externalDB = GetExternalDB()
     local runtimeDB = GetRuntimeDB()
@@ -1313,6 +1507,7 @@ function QuestData:GetAllQuests()
         if IsValidQuest(q) then
             results[questID] = q
         end
+        YieldIfNeeded(yieldCheck)
     end
 
     if runtimeDB and runtimeDB.quests then
@@ -1324,6 +1519,7 @@ function QuestData:GetAllQuests()
                     results[questID] = q
                 end
             end
+            YieldIfNeeded(yieldCheck)
         end
     end
 
@@ -1332,9 +1528,13 @@ function QuestData:GetAllQuests()
     return allQuestsCache
 end
 
-function QuestData:GetQuestsForExpansion(expansionID)
+function QuestData:GetQuestsForExpansion(expansionID, shouldYield)
+    if ExpansionNeedsArchive(expansionID) then
+        self:EnsureArchiveLoaded(expansionID, shouldYield)
+    end
+
     if not expansionID or expansionID == -1 then
-        return self:GetAllQuests()
+        return self:GetAllQuests(shouldYield)
     end
 
     if expansionQuestsCache[expansionID] then
@@ -1342,6 +1542,8 @@ function QuestData:GetQuestsForExpansion(expansionID)
     end
 
     local results = {}
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+    local yieldCheck = shouldYield or function() return false end
     local externalDB = GetExternalExpansionDB(expansionID)
 
     if not externalDB then
@@ -1357,6 +1559,7 @@ function QuestData:GetQuestsForExpansion(expansionID)
         then
             results[questID] = q
         end
+        YieldIfNeeded(yieldCheck)
     end
 
     local runtimeDB = GetRuntimeDB()
@@ -1372,6 +1575,7 @@ function QuestData:GetQuestsForExpansion(expansionID)
                     results[questID] = q
                 end
             end
+            YieldIfNeeded(yieldCheck)
         end
     end
 
@@ -1438,7 +1642,7 @@ local function BuildSortedQuestResults(
         searchTerms,
         advancedFilters
     ) then
-        local questSource = GetSortedQuestSourceArray(self, expansionFilter)
+        local questSource = GetSortedQuestSourceArray(self, expansionFilter, shouldYield)
         for i = 1, #questSource do
             results[i] = questSource[i]
             YieldIfNeeded(yieldCheck)
@@ -1447,7 +1651,7 @@ local function BuildSortedQuestResults(
         return
     end
 
-    local questSource = GetSortedQuestSourceArray(self, expansionFilter)
+    local questSource = GetSortedQuestSourceArray(self, expansionFilter, shouldYield)
 
     for _, quest in ipairs(questSource) do
         local include = true
@@ -1712,6 +1916,12 @@ function QuestData:StartSortedQuests(
     job = OneWoW.ChunkedJob.Start({
         budgetMs = opts.budgetMs,
         run = function(shouldYield)
+            local search = searchText and tostring(searchText):lower() or ""
+            if search ~= "" and (expansionFilter == -1 or expansionFilter == nil) then
+                self:EnsureArchiveLoaded(-1, shouldYield)
+            elseif ExpansionNeedsArchive(expansionFilter) then
+                self:EnsureArchiveLoaded(expansionFilter, shouldYield)
+            end
             BuildSortedQuestResults(
                 self,
                 expansionFilter,
@@ -1763,6 +1973,13 @@ function QuestData:GetAvailableExpansions()
 
     if ns.ExternalQuestDBByExpansion then
         for expID in pairs(ns.ExternalQuestDBByExpansion) do
+            found[expID] = true
+        end
+    end
+
+    local archiveName = C_AddOns.GetAddOnInfo(ARCHIVE_HUB)
+    if archiveName and archiveName ~= "" then
+        for expID = 0, ARCHIVE_EXPANSION_MAX do
             found[expID] = true
         end
     end
@@ -1932,7 +2149,7 @@ end
 function QuestData:GetInitialQuests(limit)
     local source = GetSortedQuestSourceArray(self, -1)
     local total = #source
-    local n = math.min(limit or 100, total)
+    local n = math.min(limit or 25, total)
 
     local out = {}
     for i = 1, n do
@@ -1948,7 +2165,7 @@ end
 
 local questRewardIndex = nil
 
-local function BuildQuestRewardIndex()
+local function BuildQuestRewardIndex(shouldYield)
     if questRewardIndex then
         return questRewardIndex
     end
@@ -1970,9 +2187,12 @@ local function BuildQuestRewardIndex()
         end
     end
 
-    for questID, quest in pairs(QuestData:GetAllQuests()) do
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+    local yieldCheck = shouldYield or function() return false end
+    for questID, quest in pairs(QuestData:GetAllQuests(shouldYield)) do
         indexList(questID, quest.rewardItems)
         indexList(questID, quest.rewardChoices)
+        YieldIfNeeded(yieldCheck)
     end
 
     return questRewardIndex
@@ -1981,11 +2201,17 @@ end
 --- Returns a sorted array of quest IDs that reward the given item, or nil.
 --- The index is built lazily from the merged quest set and cached until quest
 --- data changes (see InvalidateQuestRewardIndex).
+--- `loadArchive` true loads every Archive era (Item Search after packs are wanted).
 ---@param itemID number
+---@param loadArchive boolean|nil
 ---@return number[]|nil
-function QuestData:GetQuestsRewardingItem(itemID)
+function QuestData:GetQuestsRewardingItem(itemID, loadArchive)
     itemID = tonumber(itemID)
     if not itemID then return nil end
+
+    if loadArchive then
+        self:EnsureArchiveLoaded(-1)
+    end
 
     local bucket = BuildQuestRewardIndex()[itemID]
     if not bucket then return nil end
@@ -2000,9 +2226,11 @@ end
 
 --- Returns an array of every item ID that appears as a quest reward, for
 --- name-based Item Search cross-referencing.
+---@param shouldYield fun(): boolean|nil
 ---@return number[]
-function QuestData:GetRewardItemIDs()
-    local idx = BuildQuestRewardIndex()
+function QuestData:GetRewardItemIDs(shouldYield)
+    self:EnsureArchiveLoaded(-1, shouldYield)
+    local idx = BuildQuestRewardIndex(shouldYield)
     local ids = {}
     for itemID in pairs(idx) do
         ids[#ids + 1] = itemID

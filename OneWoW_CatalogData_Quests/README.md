@@ -8,9 +8,10 @@
 
 This is a companion data addon for the OneWoW Catalog. It provides:
 
-- **Quest Database** - Pre-cleaned static quest data (Wowhead-derived) merged from per-expansion tables
+- **Quest Database** - Pre-cleaned static quest data merged from per-expansion tables
 - **Live Scanner** - Enriches data from quest log events as you play
 - **Completion Tracking** - Per-character completion; optional cross-alt data when **OneWoW_AltTracker** is installed
+- **Quest Archive** - Classic through Dragonflight load from `OneWoW_CatalogData_Quests_Archive` when needed
 
 Players use quest data through the Catalog — this addon has no standalone UI.
 
@@ -18,7 +19,7 @@ Players use quest data through the Catalog — this addon has no standalone UI.
 
 ## Supported Expansions
 
-Classic through Midnight ship in full.
+This pack ships **The War Within** and **Midnight**. Classic through Dragonflight ship in **Quest Archive**. Midnight, The War Within, Dragonflight, and Shadowlands lists have the pins and text we have; Battle for Azeroth through Classic will get that same fill soon.
 
 ---
 

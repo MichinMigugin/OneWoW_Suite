@@ -1,0 +1,3 @@
+-- OneWoW_CatalogData_Quests_Archive main file.
+-- Older-expansion shards register through Core/QuestDBLoader.lua; Core.lua
+-- imports them into OneWoW_CatalogData_Quests_API. This unit exposes no globals.

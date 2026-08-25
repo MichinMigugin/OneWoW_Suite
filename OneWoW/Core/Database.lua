@@ -342,6 +342,8 @@ local DEFAULTS = {
                 showGuildBanks  = true,
                 showVendors     = true,
                 showInstances   = true,
+                showQuests      = true,
+                showCrafted     = true,
                 altScope        = { mode = "all", chars = {}, roles = {} },
             },
             recipeknowledge = {
