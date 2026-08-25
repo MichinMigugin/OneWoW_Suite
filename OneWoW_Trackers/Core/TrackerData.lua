@@ -89,6 +89,7 @@ local TRACK_TYPES = {
     "npc_interact",
     "enter_instance",
     "kill_creature",
+    "kill_encounter",
     "loot_item",
     "toy",
     "mount",

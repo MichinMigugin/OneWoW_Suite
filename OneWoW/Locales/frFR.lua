@@ -170,7 +170,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navigateur d’icônes",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Les fonctionnalités QoL incluent le Navigateur d’icônes. Recherchez et filtrez les icônes des macros, onglets de banque, onglets de banque de guilde, ensembles d’équipement et tenues de transmogrification.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progression suit Saison Midnight 2 : L'abîme Venimeux et La grotte des Marées, le nouveau vivier de donjons mythiques +, les Mistcrests et Nymrissa Wavecaller. /1wat status montre ce que Progression suit cette semaine.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "L'éditeur d'étapes peut créer chaque type de suivi fourni : quêtes, grande chambre forte, métiers, butin, minuteurs, campagnes, exploration et objectifs imbriqués. Saisir un ID affiche son nom. Les points de passage se placent sur les cartes qui l'autorisent.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "L'éditeur d'étapes peut créer chaque type de suivi, y compris Tuer un boss de donjon ou de raid. Dans un donjon ou un raid, Remplir depuis la cible ne peut pas lire les ID de créature ; remplissez la rencontre pendant le combat ou juste après la victoire. Saisir un ID affiche son nom. Les points de passage se placent sur les cartes qui l'autorisent.",
     ["CMD_TOGGLE_ONEWOW"] = "Basculer OneWoW",
     ["CMD_KEYWORD_HELP"] = "Ouvrir l'aide des mots-clés de recherche",
     ["CMD_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",

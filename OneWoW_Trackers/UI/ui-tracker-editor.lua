@@ -14,6 +14,8 @@ local strtrim, sort, pairs, ipairs = strtrim, sort, pairs, ipairs
 local floor = math.floor
 local CreateVector2D = CreateVector2D
 local C_MapExplorationInfo = C_MapExplorationInfo
+local UnitExists, UnitGUID, UnitName = UnitExists, UnitGUID, UnitName
+local GetInstanceInfo = GetInstanceInfo
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
@@ -39,24 +41,56 @@ local function FillMsg(key)
 end
 
 local function GetTargetCreatureID()
+    if not UnitExists("target") then return nil, "none" end
     local guid = UnitGUID("target")
-    if not guid or OneWoW.Restriction.IsSecret(guid) then return nil end
+    if not guid then return nil, "none" end
+    if OneWoW.Restriction.IsSecret(guid) then return nil, "restricted" end
     local unitType, _, _, _, _, npcID = strsplit("-", guid)
-    if unitType ~= "Creature" and unitType ~= "Vehicle" then return nil end
+    if unitType ~= "Creature" and unitType ~= "Vehicle" then return nil, "invalid" end
     return tonumber(npcID)
 end
 
-local function FillCreatureFromTarget(card, fieldKey)
-    local cid = GetTargetCreatureID()
-    if not cid then FillMsg("TRACKER_FILL_NO_TARGET"); return end
+local function FillCreatureFromTarget(card, fieldKey, isKill)
+    local cid, reason = GetTargetCreatureID()
+    if not cid then
+        if reason == "restricted" then
+            FillMsg("TRACKER_FILL_TARGET_RESTRICTED")
+            if isKill then FillMsg("TRACKER_FILL_KILL_USE_ENCOUNTER") end
+        else
+            FillMsg("TRACKER_FILL_NO_TARGET")
+        end
+        return
+    end
     local box = card["_field_" .. fieldKey]
     if box then box:SetText(tostring(cid)) end
 end
 
 local function UpdateTitleFromTarget(nameBox)
     local name = UnitName("target")
-    if not name or OneWoW.Restriction.IsSecret(name) then FillMsg("TRACKER_FILL_NO_TARGET"); return end
+    if not name then FillMsg("TRACKER_FILL_NO_TARGET"); return end
+    if OneWoW.Restriction.IsSecret(name) then FillMsg("TRACKER_FILL_TARGET_RESTRICTED"); return end
     nameBox:SetText(format(L["TRACKER_TALK_TO_FORMAT"], name))
+end
+
+local function IsDungeonOrRaid()
+    local _, instanceType = GetInstanceInfo()
+    return instanceType == "party" or instanceType == "raid"
+end
+
+local function FillEncounterFromCurrent(card, nameBox)
+    local info = ns.TrackerEncounter.GetFillable()
+    if not info or not info.dungeonEncounterID then
+        FillMsg("TRACKER_FILL_NO_ENCOUNTER")
+        return
+    end
+    local displayID = ns.TrackerEncounter.DisplayID(info)
+    local box = card._field_encounterID
+    if box then box:SetText(tostring(displayID)) end
+    card._encounterFill = info
+    if nameBox and info.name then
+        nameBox:SetText(info.name)
+        nameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
 end
 
 local function FillCoordsFromPosition(card)
@@ -809,6 +843,9 @@ local function ReadObjectiveRow(row)
             params[field.key] = field.default
         end
     end
+    if objType == "kill_encounter" then
+        params = ns.TrackerEncounter.EnrichParams(params, row._encounterFill)
+    end
     local desc = strtrim(row._descBox:GetSearchText() or "")
     return objType, params, desc
 end
@@ -1337,12 +1374,20 @@ local STEP_CATEGORIES = {
         onFill = function(card) FillInstanceFromCurrent(card) end,
     },
     {
+        key = "kill_encounter",
+        titleKey = "TRACKER_SC_ENCOUNTER_TITLE",
+        descKey = "TRACKER_SC_ENCOUNTER_DESC",
+        trackType = "kill_encounter",
+        fillKey = "TRACKER_FILL_FROM_ENCOUNTER",
+        onFill = function(card, nameBox) FillEncounterFromCurrent(card, nameBox) end,
+    },
+    {
         key = "kill_creature",
         titleKey = "TRACKER_SC_KILL_TITLE",
         descKey = "TRACKER_SC_KILL_DESC",
         trackType = "kill_creature",
         fillKey = "TRACKER_FILL_FROM_TARGET",
-        onFill = function(card) FillCreatureFromTarget(card, "creatureID") end,
+        onFill = function(card) FillCreatureFromTarget(card, "creatureID", true) end,
     },
     { key = "loot_item",   titleKey = "TRACKER_TYPE_LOOT_ITEM",    descKey = "TRACKER_SC_LOOT_DESC",     trackType = "loot_item" },
     { key = "mount",       titleKey = "TRACKER_SC_MOUNT_TITLE",    descKey = "TRACKER_SC_MOUNT_DESC",    trackType = "mount" },
@@ -2194,7 +2239,15 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         descFS:SetPoint("RIGHT", card, "RIGHT", -10, 0)
         descFS:SetJustifyH("LEFT")
         descFS:SetWordWrap(true)
-        descFS:SetText(L[cat.descKey])
+        local descKey = cat.descKey
+        if IsDungeonOrRaid() then
+            if cat.trackType == "kill_creature" then
+                descKey = "TRACKER_SC_KILL_INSTANCE_NOTE"
+            elseif cat.trackType == "npc_interact" then
+                descKey = "TRACKER_SC_NPC_INSTANCE_NOTE"
+            end
+        end
+        descFS:SetText(L[descKey])
         descFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local descHeight = descFS:GetStringHeight() or 14
@@ -2241,7 +2294,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L[cat.fillKey], height = 22 })
                 fillBtn:SetPoint("LEFT", saveFieldBtn, "RIGHT", 8, 0)
                 fillBtn:SetScript("OnClick", function()
-                    cat.onFill(card)
+                    cat.onFill(card, nameBox)
                     if cat.trackType == "coordinates" then
                         FillSharedWaypoint(dialog)
                     end
@@ -2298,6 +2351,14 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                         end
                     end
                     if not hasRequired then return end
+                    if cat.trackType == "kill_encounter" then
+                        local prev = existing and existing.trackParams
+                        if prev and CategoryMatches(cat, existing.trackType) then
+                            trackParams.dungeonEncounterID = trackParams.dungeonEncounterID or prev.dungeonEncounterID
+                            trackParams.mapID = trackParams.mapID or prev.mapID
+                        end
+                        trackParams = ns.TrackerEncounter.EnrichParams(trackParams, card._encounterFill)
+                    end
                 end
 
                 local changes = {

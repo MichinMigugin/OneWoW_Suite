@@ -119,6 +119,9 @@ local BY_TYPE = {
     kill_creature       = {
         ID("creatureID", "TRACKER_FL_CREATURE_ID", "TRACKER_FH_CREATURE_ID", "npc"),
     },
+    kill_encounter      = {
+        ID("encounterID", "TRACKER_FL_ENCOUNTER_ID", "TRACKER_FH_ENCOUNTER_ID", "encounter"),
+    },
     loot_item           = {
         ID("itemID", "TRACKER_FL_ITEM_ID", "TRACKER_FH_ITEM_ID", "item"),
     },

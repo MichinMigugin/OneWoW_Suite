@@ -170,7 +170,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 图标浏览器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能现已包含图标浏览器。选择宏、银行标签、公会银行标签、装备方案或幻化套装图标时可搜索并筛选。",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "进度追踪至暗之夜第2赛季：烈毒之渊和潮缚石窟、新的史诗钥石地下城池、Mistcrests，以及 Nymrissa Wavecaller。/1wat status 显示本周进度正在追踪的内容。",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "步骤编辑器可编写插件提供的全部追踪类型：任务、宝库、专业、拾取、计时器、战役、探索以及嵌套目标。输入ID会显示名称。允许的地图上可设置路径点。",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "步骤编辑器可编写全部追踪类型，包括击杀地下城或团队首领。在地下城或团队副本中，从目标填充无法读取生物ID；请在战斗中或击败后填充该首领战。输入ID会显示名称。允许的地图上可设置路径点。",
     ["CMD_TOGGLE_ONEWOW"] = "切换 OneWoW",
     ["CMD_KEYWORD_HELP"] = "打开搜索关键词帮助",
     ["CMD_OPEN_ALTTRACKER"] = "打开 AltTracker",

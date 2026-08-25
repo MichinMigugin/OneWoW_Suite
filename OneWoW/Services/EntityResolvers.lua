@@ -125,3 +125,10 @@ OneWoW_GUI:RegisterEntityResolver("instance", sync(function(id)
         return name, nil, nil, link
     end
 end))
+
+OneWoW_GUI:RegisterEntityResolver("encounter", sync(function(id)
+    local name = EJ_GetEncounterInfo(id)
+    if name and name ~= "" and not ns.Restriction.IsSecret(name) then
+        return name
+    end
+end))

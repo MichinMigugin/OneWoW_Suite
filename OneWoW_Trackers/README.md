@@ -13,7 +13,7 @@
 - Bundled presets and example lists to get started quickly
 
 ### Auto-Tracking
-- Many step types auto-complete from game events: quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, custom timers, and more
+- Many step types auto-complete from game events: quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, custom timers, and more. Open-world rares use Kill a Rare or Boss; dungeon and raid bosses use Kill a Dungeon or Raid Boss (fill during the fight or just after).
 - Daily, weekly, repeating (hour interval), or one-time reset rules; optional account-wide progress
 
 ### Pinned Overlays & Map

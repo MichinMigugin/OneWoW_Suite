@@ -50,6 +50,7 @@ Core\Evaluators\Profession.lua
 Core\Evaluators\Vault.lua
 Core\Evaluators\Character.lua
 Core\Evaluators\Location.lua
+Core\Encounter.lua
 Core\TrackerEngine.lua
 Core\TrackerPresets.lua
 Core\TrackerMap.lua

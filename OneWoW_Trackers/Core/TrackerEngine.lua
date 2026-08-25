@@ -19,6 +19,7 @@ local lootIndex = {}
 local npcIndex = {}
 local instanceIndex = {}
 local killIndex = {}
+local encounterIndex = {}
 local exploreIndex = {}
 local next = next
 local lastScanTime = 0
@@ -160,6 +161,7 @@ local function BuildIndices()
     wipe(npcIndex)
     wipe(instanceIndex)
     wipe(killIndex)
+    wipe(encounterIndex)
     wipe(exploreIndex)
 
     local lists = TD:GetListsDB()
@@ -202,6 +204,16 @@ local function BuildIndices()
                     end
                 end
 
+                if tt == "kill_encounter" then
+                    local eid = ns.TrackerEncounter.DungeonIDFromParams(tp)
+                    if eid then
+                        encounterIndex[eid] = encounterIndex[eid] or {}
+                        tinsert(encounterIndex[eid], {
+                            listID = listID, sectionKey = sec.key, stepKey = step.key,
+                        })
+                    end
+                end
+
                 if tt == "exploration" and tp.areaID then
                     local aid = tonumber(tp.areaID)
                     if aid then
@@ -241,6 +253,17 @@ local function BuildIndices()
                         if cid then
                             killIndex[cid] = killIndex[cid] or {}
                             tinsert(killIndex[cid], {
+                                listID = listID, sectionKey = sec.key,
+                                stepKey = step.key, objKey = obj.key,
+                            })
+                        end
+                    end
+
+                    if ot == "kill_encounter" then
+                        local eid = ns.TrackerEncounter.DungeonIDFromParams(op)
+                        if eid then
+                            encounterIndex[eid] = encounterIndex[eid] or {}
+                            tinsert(encounterIndex[eid], {
                                 listID = listID, sectionKey = sec.key,
                                 stepKey = step.key, objKey = obj.key,
                             })
@@ -449,6 +472,18 @@ local function OnCreatureKilled(creatureID)
     DeferRefresh()
 end
 
+local function OnEncounterKilled(dungeonEncounterID)
+    dungeonEncounterID = tonumber(dungeonEncounterID)
+    if not dungeonEncounterID or not encounterIndex[dungeonEncounterID] then return end
+
+    for _, ref in ipairs(encounterIndex[dungeonEncounterID]) do
+        LatchSession(ref)
+    end
+
+    FireCallbacks("OnProgressChanged")
+    DeferRefresh()
+end
+
 -- There is no "has area X ever been explored" query, so exploration latches
 -- from the area IDs under the player's feet when fog updates (and once after
 -- login, in case the event fired before indices existed).
@@ -481,6 +516,7 @@ local function OnPlayerEnteringWorld()
     TD:CheckResets()
     TD:CheckCustomTimerResets()
     BuildIndices()
+    ns.TrackerEncounter.OnEnteringWorld()
     scanPending = true
     C_Timer.After(2, function()
         TE:FullScan()
@@ -510,6 +546,17 @@ local function OnEvent(_, event, ...)
             if npcType == "Creature" then
                 OnNPCInteract(npcID)
             end
+        end
+
+    elseif event == "ENCOUNTER_START" then
+        local encounterID, encounterName, difficultyID = ...
+        ns.TrackerEncounter.OnEncounterStart(encounterID, encounterName, difficultyID)
+
+    elseif event == "ENCOUNTER_END" then
+        local encounterID, encounterName, difficultyID, _, success = ...
+        ns.TrackerEncounter.OnEncounterEnd(encounterID, encounterName, difficultyID, success)
+        if tonumber(success) == 1 and not OneWoW.Restriction.IsSecret(encounterID) then
+            OnEncounterKilled(encounterID)
         end
 
     elseif event == "PARTY_KILL" then
@@ -567,6 +614,7 @@ function TE:Initialize()
     frame:RegisterEvent("PARTY_KILL")
     frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
     frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    frame:RegisterEvent("ENCOUNTER_START")
     frame:RegisterEvent("ENCOUNTER_END")
     frame:RegisterEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED")
     frame:RegisterEvent("UPDATE_FACTION")
@@ -678,6 +726,7 @@ function TE:GetTrackTypeDisplayName(trackType)
         npc_interact    = L["TRACKER_TYPE_NPC_INTERACT"],
         enter_instance  = L["TRACKER_TYPE_ENTER_INSTANCE"],
         kill_creature   = L["TRACKER_TYPE_KILL_CREATURE"],
+        kill_encounter  = L["TRACKER_TYPE_KILL_ENCOUNTER"],
         loot_item       = L["TRACKER_TYPE_LOOT_ITEM"],
         toy             = TOY,
         mount           = MOUNT,

@@ -4,8 +4,9 @@ local _, ns = ...
 -- TrackerEvaluators
 -- ============================================================================
 -- Live step evaluation. Family files Register(type, fn); unregistered types
--- (manual, kill, loot, enter_instance, npc_interact, exploration, custom_timer)
+-- (manual, kill_creature, loot, enter_instance, npc_interact, exploration, custom_timer)
 -- return nil so the engine uses session bumps and step.max.
+-- kill_encounter is live when a raid lock is complete, else nil (session latch).
 --
 -- Contract: Evaluate(obj) -> current, goal | nil
 --   goal is the live target (currency amount, item count, quest pick, …).

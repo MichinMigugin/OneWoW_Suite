@@ -9,6 +9,10 @@
 ---
 
 ### Trackers
+- Kill a Dungeon or Raid Boss tracks Adventure Guide encounters. Fill from current encounter during the fight or just after you win.
+- Fill from target cannot read creatures or NPCs inside a dungeon or raid. The editor tells you to use Kill a Dungeon or Raid Boss, or to fill the ID in the open world.
+- Restore Examples brings back the Dusting for Moths collection list.
+- The step editor groups optional fields into collapsible sections.
 - The step editor can build every tracker type the addon ships, including nested objectives, Great Vault and profession tasks, loot, timers, campaigns, and exploration.
 - Typing a quest, item, NPC, or collectible ID in the editor shows its name.
 - Faction, profession, and holiday gates hide steps that do not apply to you. Steps that require other steps cannot be checked off until those are done.

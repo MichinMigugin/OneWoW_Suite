@@ -26,6 +26,7 @@ Core/Resets.lua              — daily/weekly/custom-timer + weekly-reset region
 ImportExport/Serialize.lua   — OWT1 export/import (methods on TrackerData)
 ImportExport/Markup.lua      — markup parse → list CRUD (methods on TrackerData)
 Core/Evaluators/             — live step evaluation by family (registry first)
+Core/Encounter.lua           — dungeon/raid boss fill + raid-lock evaluator (`kill_encounter`)
 Core/TrackerEngine.lua       — event engine, auto-complete; pin show/destroy is thin
 Core/TrackerPresets.lua      — bundled presets and examples
 Core/TrackerMap.lua          — world-map pin provider
@@ -43,7 +44,7 @@ UI/ui-tracker-farmvalue.lua  — farm value tab UI
 
 - **Live types:** complete when `goal > 0` and `current >= goal`. Display `current/goal`.
 - **`step.noMax`:** show quantity only; do not auto-complete from a comparison.
-- **`nil` (unregistered):** session/manual types (kill, loot, enter instance, NPC, custom timer). The engine uses session bumps and `step.max`.
+- **`nil` (unregistered or incomplete live):** session/manual types (`kill_creature`, loot, enter instance, NPC, custom timer). `kill_encounter` is live `1,1` when the raid lock is complete, else `nil` so a session latch from `ENCOUNTER_END` is not wiped. The engine uses session bumps and `step.max`.
 - **`step.max`:** not the live target. The editor may copy `amount` / `level` / `ilvl` / `standing` onto `max` for export symmetry only.
 
 `FullScan` and event indices cover **pinned lists plus the hub-selected list** (`TE:SetObservedList`). Calendar-gated sections fail open until `CALENDAR_UPDATE_EVENT_LIST` has fired, then hide when the event is known-inactive.
@@ -59,7 +60,7 @@ Follows suite orchestrator hooks (no per-file `ADDON_LOADED` init) — see [ARCH
 ## Data Model
 
 - **Lists** — typed (`guide`, `daily`, `weekly`, `todo`, `repeating`, `farmvalue`). Categories are topic folders (not cadence). Repeating lists clear when `resetInterval` (seconds) elapses.
-- **Sections / steps** — markup-capable; step types drive auto-tracking predicates
+- **Sections / steps** — markup-capable; step types drive auto-tracking predicates. Open-world kills use `kill_creature` (`PARTY_KILL` + fill from target). Dungeon and raid bosses use `kill_encounter` (`ENCOUNTER_END` combat ID + `C_RaidLocks`); unit GUIDs are secret in instances so creature fill cannot work there.
 - **Farm value** — watchlist or all unbound stacks; optional session baseline snapshot
 
 ## Integration Points

@@ -170,7 +170,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Browser delle icone",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Le funzioni QoL includono il Browser delle icone. Cerca e filtra le icone di macro, schede della banca, schede della banca di gilda, set di equipaggiamento e outfit di trasmogrificazione.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Avanzamento segue Midnight Stagione 2: Abissi Velenosi e Grotta Vincolata alla Marea, il nuovo pool di spedizioni Mitiche+, Mistcrests e Nymrissa Wavecaller. /1wat status mostra cosa sta seguendo Avanzamento questa settimana.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "L'editor dei passi può creare ogni tipo di tracker incluso: missioni, gran caveau, professioni, bottino, timer, campagne, esplorazione e obiettivi nidificati. Digitando un ID ne mostra il nome. I punti mappa si piazzano sulle mappe che lo consentono.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "L'editor dei passi può creare ogni tipo di tracker, incluso Uccidi un boss di spedizione o incursione. In una spedizione o incursione, Compila dal bersaglio non legge gli ID creatura; compila l'incontro durante lo scontro o subito dopo la vittoria. Digitando un ID ne mostra il nome. I punti mappa si piazzano sulle mappe che lo consentono.",
     ["CMD_TOGGLE_ONEWOW"] = "Attiva/disattiva OneWoW",
     ["CMD_KEYWORD_HELP"] = "Apri l'aiuto sulle parole chiave di ricerca",
     ["CMD_OPEN_ALTTRACKER"] = "Apri AltTracker",

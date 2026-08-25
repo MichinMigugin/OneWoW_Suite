@@ -170,7 +170,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navegador de ícones",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Os Recursos de QoL incluem o Navegador de ícones. Pesquise e filtre ícones ao escolher o de uma macro, aba do banco, aba do banco da guilda, conjunto de equipamento ou traje de transmogrificação.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progresso acompanha a Temporada 2 de Midnight: Abismo Peçonhento e Gruta Marejante, o novo conjunto de masmorras Míticas+, Mistcrests e Nymrissa Wavecaller. /1wat status mostra o que o Progresso está acompanhando nesta semana.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "O editor de etapas pode criar cada tipo de rastreador do addon: missões, grande câmara, profissões, saque, cronômetros, campanhas, exploração e objetivos aninhados. Digitar um ID mostra o nome. Pontos de rota são colocados nos mapas que permitem.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "O editor de etapas pode criar cada tipo de rastreador, incluindo Matar um chefe de masmorra ou raide. Dentro de uma masmorra ou raide, Preencher a partir do alvo não lê IDs de criatura; preencha o encontro durante a luta ou logo após a vitória. Digitar um ID mostra o nome. Pontos de rota são colocados nos mapas que permitem.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir a ajuda de palavras-chave de busca",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",
