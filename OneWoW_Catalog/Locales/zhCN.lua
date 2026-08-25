@@ -244,6 +244,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["QUESTS_NONE_YET"] = "尚未收集任何任务。进行游戏以填充此数据库。",
     ["QUESTS_DEFAULT_EMPTY"] = "没有进行中或收藏的任务。搜索或选择筛选条件以浏览所有任务。",
     ["QUESTS_STATUS_COUNT"] = "%d 个任务",
+    ["QUESTS_STATUS_CHAIN"] = "任务链: %d",
     ["QUESTS_LOADING"] = "正在加载… %d",
     ["QUESTS_STATUS_CAPPED"] = "显示 %d / %d (上限 %d)",
     ["QUESTS_STATUS_CAPPED_TT"] = "列表在 %d 条处停止。更改筛选条件以查看更多。",

@@ -796,7 +796,8 @@ function QuestData:EnsureArchiveLoaded(expansionID, shouldYield)
             coroutine_yield()
         end
     end
-    return C_AddOns.IsAddOnLoaded(ARCHIVE_HUB)
+    local loaded = C_AddOns.IsAddOnLoaded(ARCHIVE_HUB)
+    return loaded
 end
 
 --- Load Quest Archive, then run `onReady`.
@@ -1385,6 +1386,112 @@ local function CopyQuestIDList(values)
     return ids
 end
 
+local function QuestIDListContains(ids, questID)
+    for i = 1, #ids do
+        if ids[i] == questID then
+            return true
+        end
+    end
+    return false
+end
+
+local function InsertQuestIDByNumber(ids, questID)
+    local out = {}
+    local inserted = false
+    for i = 1, #ids do
+        local id = ids[i]
+        if not inserted and questID < id then
+            tinsert(out, questID)
+            inserted = true
+        end
+        tinsert(out, id)
+    end
+    if not inserted then
+        tinsert(out, questID)
+    end
+    return out
+end
+
+--- Shipped series omits the viewed quest (Wowhead's current row is often not a
+--- link). Rebuild table order from this list plus each peer's series.
+---@param questData table
+---@param questID number
+---@param series number[]
+---@return number[]
+local function RestoreSeriesChain(questData, questID, series)
+    if QuestIDListContains(series, questID) then
+        return series
+    end
+
+    local nodes = { questID }
+    local nodeSet = { [questID] = true }
+    for i = 1, #series do
+        local id = series[i]
+        if not nodeSet[id] then
+            nodeSet[id] = true
+            tinsert(nodes, id)
+        end
+    end
+
+    local indegree = {}
+    local successors = {}
+    local succSet = {}
+    for i = 1, #nodes do
+        local id = nodes[i]
+        indegree[id] = 0
+        successors[id] = {}
+        succSet[id] = {}
+    end
+
+    local function addOrder(list)
+        for i = 1, #list - 1 do
+            local a = list[i]
+            local b = list[i + 1]
+            if nodeSet[a] and nodeSet[b] and a ~= b and not succSet[a][b] then
+                succSet[a][b] = true
+                tinsert(successors[a], b)
+                indegree[b] = indegree[b] + 1
+            end
+        end
+    end
+
+    addOrder(series)
+    for i = 1, #series do
+        local peer = questData:GetQuest(series[i])
+        if peer then
+            addOrder(CopyQuestIDList(peer.series))
+        end
+    end
+
+    local used = {}
+    local ordered = {}
+    for _ = 1, #nodes do
+        local best
+        for i = 1, #nodes do
+            local id = nodes[i]
+            if not used[id] and indegree[id] == 0 then
+                if not best or id < best then
+                    best = id
+                end
+            end
+        end
+        if not best then
+            break
+        end
+        used[best] = true
+        tinsert(ordered, best)
+        local succs = successors[best]
+        for s = 1, #succs do
+            indegree[succs[s]] = indegree[succs[s]] - 1
+        end
+    end
+
+    if #ordered < #nodes then
+        return InsertQuestIDByNumber(series, questID)
+    end
+    return ordered
+end
+
 --- Ordered quest IDs for a later Guide button. Nil when the chain has fewer than 2 quests.
 ---@param quest table|number
 ---@return number[]|nil
@@ -1411,15 +1518,7 @@ function QuestData:GetQuestGuideChain(quest)
 
     local series = CopyQuestIDList(quest.series)
     if questID then
-        local ids = { questID }
-        local seen = { [questID] = true }
-        for i = 1, #series do
-            local id = series[i]
-            if not seen[id] then
-                seen[id] = true
-                tinsert(ids, id)
-            end
-        end
+        local ids = RestoreSeriesChain(self, questID, series)
         if #ids >= 2 then
             return ids
         end

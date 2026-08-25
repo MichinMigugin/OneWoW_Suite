@@ -244,6 +244,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["QUESTS_NONE_YET"] = "Noch keine Quests gesammelt. Spielt, um diese Datenbank zu füllen.",
     ["QUESTS_DEFAULT_EMPTY"] = "Keine aktiven oder favorisierten Quests. Sucht oder wählt einen Filter, um alle Quests zu durchsuchen.",
     ["QUESTS_STATUS_COUNT"] = "%d Quests",
+    ["QUESTS_STATUS_CHAIN"] = "Questreihe: %d",
     ["QUESTS_LOADING"] = "Lade… %d",
     ["QUESTS_STATUS_CAPPED"] = "Zeige %d von %d (Limit %d)",
     ["QUESTS_STATUS_CAPPED_TT"] = "Die Liste stoppt bei %d. Ändert die Filter, um mehr zu sehen.",

@@ -244,6 +244,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["QUESTS_NONE_YET"] = "Nessuna missione ancora raccolta. Gioca per riempire questo database.",
     ["QUESTS_DEFAULT_EMPTY"] = "Nessuna missione attiva o preferita. Cerca o scegli un filtro per sfogliare tutte le missioni.",
     ["QUESTS_STATUS_COUNT"] = "%d missioni",
+    ["QUESTS_STATUS_CHAIN"] = "Catena di missioni: %d",
     ["QUESTS_LOADING"] = "Caricamento… %d",
     ["QUESTS_STATUS_CAPPED"] = "Visualizzati %d di %d (limite %d)",
     ["QUESTS_STATUS_CAPPED_TT"] = "L'elenco si ferma a %d. Cambia i filtri per vederne altri.",

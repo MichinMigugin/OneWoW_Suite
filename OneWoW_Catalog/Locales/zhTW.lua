@@ -244,6 +244,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["QUESTS_NONE_YET"] = "尚未收集任何任務。進行遊戲以填充此資料庫。",
     ["QUESTS_DEFAULT_EMPTY"] = "沒有進行中或最愛的任務。搜尋或選擇篩選條件以瀏覽所有任務。",
     ["QUESTS_STATUS_COUNT"] = "%d 個任務",
+    ["QUESTS_STATUS_CHAIN"] = "任務鏈: %d",
     ["QUESTS_LOADING"] = "正在載入… %d",
     ["QUESTS_STATUS_CAPPED"] = "顯示 %d / %d (上限 %d)",
     ["QUESTS_STATUS_CAPPED_TT"] = "列表在 %d 筆處停止。變更篩選條件以檢視更多。",

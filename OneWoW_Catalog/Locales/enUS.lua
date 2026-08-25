@@ -243,6 +243,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_NONE_YET"] = "No quests collected yet. Play the game to fill this database.",
     ["QUESTS_DEFAULT_EMPTY"] = "No active or favorited quests. Search or pick a filter to browse all quests.",
     ["QUESTS_STATUS_COUNT"] = "%d quests",
+    ["QUESTS_STATUS_CHAIN"] = "Quest Chain: %d",
     ["QUESTS_LOADING"] = "Loading… %d",
     ["QUESTS_STATUS_CAPPED"] = "Showing %d of %d (limit %d)",
     ["QUESTS_STATUS_CAPPED_TT"] = "The list stops at %d. Change filters to see more.",

@@ -13,14 +13,16 @@ local OneWoW_GUI = OneWoW_GUI
 --   * Variable when getRowHeight(index) is supplied (e.g. Vendors); prefix sums
 --     rebuild on Refresh.
 --
--- Expand-in-list is NOT engine-owned. Follow Catalog Quests: flatten child rows
--- into getEntry, keep fixed stride, Refresh.
+-- Expand-in-list is NOT engine-owned. Flatten child rows into getEntry, keep
+-- fixed stride, Refresh. Mixed lists (group/section headers + rows) stay on
+-- click-select: pass isSelectable so headers never become selectedIndex.
 --
 -- Usage:
 --   api = OneWoW_GUI:CreateVirtualizer(parent, {
 --       getCount = function() return #data end,          -- required
 --       getEntry = function(i) return data[i] end,       -- required
 --       onSelect = function(i, entry) ... end,           -- optional
+--       isSelectable = function(i, entry) return true end, -- optional; default all
 --       rowHeight = 22,                                  -- default stride
 --       getRowHeight = function(i) return heights[i] end, -- optional variable
 --       createRow = function(content, api) ... end,      -- optional factory
@@ -100,6 +102,7 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
     if selectOnClick == nil then
         selectOnClick = onSelect ~= nil
     end
+    local isSelectable = options.isSelectable
     local rowInset = options.rowInset
     if rowInset == nil then
         rowInset = DEFAULT_ROW_INSET
@@ -138,6 +141,17 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
     local prefix = {} -- prefix[i] = top Y of row i (0 for i==1); #prefix == n
     local totalHeight = 1
     local variableLayout = getRowHeight ~= nil
+
+    local function rowIsSelectable(idx)
+        if not isSelectable then
+            return true
+        end
+        if not idx or idx < 1 then
+            return false
+        end
+        local entry = getEntry(idx)
+        return entry ~= nil and isSelectable(idx, entry) and true or false
+    end
 
     local api
 
@@ -222,7 +236,9 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
                 row:SetPoint("TOPLEFT", content, "TOPLEFT", rowInset, -y)
                 row:SetPoint("RIGHT", content, "RIGHT", -rowInset, 0)
                 row.entryIndex = idx
-                local rowState = { selected = state.selectedIndex == idx }
+                local rowState = {
+                    selected = state.selectedIndex == idx and rowIsSelectable(idx),
+                }
                 -- Match legacy CreateVirtualizedList: selection font before consumer bind.
                 if row.SetNormalFontObject then
                     row:SetNormalFontObject(rowState.selected and GameFontHighlightSmall or GameFontNormalSmall)
@@ -253,6 +269,9 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         elseif state.selectedIndex and state.selectedIndex > n then
             state.selectedIndex = n
         end
+        if state.selectedIndex and not rowIsSelectable(state.selectedIndex) then
+            state.selectedIndex = nil
+        end
 
         if variableLayout then
             rebuildPrefix(n)
@@ -278,6 +297,9 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
             return
         end
         local clamped = max(1, min(idx, n))
+        if not rowIsSelectable(clamped) then
+            return
+        end
         state.selectedIndex = clamped
         Refresh()
         ensureIndexVisible(clamped)
@@ -333,7 +355,7 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
                 if button and button ~= "LeftButton" then
                     return
                 end
-                if myself.entryIndex then
+                if myself.entryIndex and rowIsSelectable(myself.entryIndex) then
                     SetSelectedIndex(myself.entryIndex)
                 end
             end)
@@ -445,11 +467,20 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
                 if n <= 0 then
                     return
                 end
+                local step = (key == "UP") and -1 or 1
                 local cur = state.selectedIndex or 0
-                if key == "UP" then
-                    SetSelectedIndex(cur > 1 and cur - 1 or 1)
+                local nextIdx
+                if cur == 0 then
+                    nextIdx = (step > 0) and 1 or n
                 else
-                    SetSelectedIndex(cur < n and cur + 1 or n)
+                    nextIdx = cur + step
+                end
+                while nextIdx >= 1 and nextIdx <= n do
+                    if rowIsSelectable(nextIdx) then
+                        SetSelectedIndex(nextIdx)
+                        return
+                    end
+                    nextIdx = nextIdx + step
                 end
             else
                 myself:SetPropagateKeyboardInput(true)

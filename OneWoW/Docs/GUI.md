@@ -1337,6 +1337,7 @@ local list = OneWoW_GUI:CreateVirtualizer(listHostFrame, {
     getCount = function() return #myData end,            -- required
     getEntry = function(index) return myData[index] end, -- required
     onSelect = function(index, entry) end,               -- optional; enables click-select
+    isSelectable = function(index, entry) return true end, -- optional; mixed lists skip headers
     createRow = function(content, api)                   -- optional factory
         local btn = CreateFrame("Button", nil, content)
         -- build child widgets once
@@ -1360,7 +1361,14 @@ list.SetSelectedIndex(1)
   Vendors is the reference consumer).
 - **Expand-in-list:** not engine-owned. Flatten child rows into `getEntry` (Catalog
   Quests pattern), then `Refresh()`. Do not use variable-height detail panels under
-  a parent row for virtualized surfaces.
+  a parent row for virtualized surfaces. If the flattened list includes headers
+  (groups, sections), pass `isSelectable(index, entry)` so click-select and
+  keyboard nav skip those rows. Do not turn `selectOnClick` off and hand-roll
+  selection; extra `OnClick` work (expand, shift-click) sits on the row and the
+  engine still hooks left-click select.
+- **Selection chrome:** `bindRow` reads `state.selected` into `_rowSelected`.
+  `OnEnter` / `OnLeave` only re-apply row chrome with that flag. Do not recolor
+  title text for hover or select (Catalog Journal / Vendors / Item Search).
 - **`createRow` / `bindRow`:** create widgets once; bind on every visible update.
   Nested controls must read `row.entryIndex` (live), not a closed-over create-time index.
 - **Tooltips:** set `row._tooltipFullText`; the engine wires `OnEnter`/`OnLeave` when

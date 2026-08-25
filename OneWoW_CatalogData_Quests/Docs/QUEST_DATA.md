@@ -48,7 +48,9 @@ OneWoW_Workspace `bin/lib/wowhead/quest_lua.py`.
 
 Quest “tracks” in Catalog are pin + chain IDs. `GetQuestGuideChain` returns an
 ordered ID list from the quest line, else storyline, else series, else
-source/next. Nil when the chain has fewer than two quests. Map blobs
+source/next. Shipped `series` rows omit the viewed quest (Wowhead's current
+row is often not a link); the guide chain puts that ID back in table order
+instead of forcing it to step 1. Nil when the chain has fewer than two quests. Map blobs
 (`QuestPOIPoint`) are not dumped; only the quest-level `QuestPOIBlob` UiMapID
 is stored as a fallback.
 

@@ -244,6 +244,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["QUESTS_NONE_YET"] = "Задания еще не собраны. Играйте, чтобы заполнить эту базу данных.",
     ["QUESTS_DEFAULT_EMPTY"] = "Нет активных или избранных заданий. Выполните поиск или выберите фильтр, чтобы просмотреть все задания.",
     ["QUESTS_STATUS_COUNT"] = "%d заданий",
+    ["QUESTS_STATUS_CHAIN"] = "Цепочка заданий: %d",
     ["QUESTS_LOADING"] = "Загрузка… %d",
     ["QUESTS_STATUS_CAPPED"] = "Показано %d из %d (лимит %d)",
     ["QUESTS_STATUS_CAPPED_TT"] = "Список останавливается на %d. Измените фильтры, чтобы увидеть больше.",

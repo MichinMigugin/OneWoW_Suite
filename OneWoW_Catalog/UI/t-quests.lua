@@ -17,6 +17,7 @@ local QUEST_CATEGORY_TAG_MAX = 8
 ns.UI = ns.UI or {}
 
 local selectedQuest    = nil
+local pinnedChainIDs   = nil -- left list locked to this chain's ordered IDs
 local questListAPI     = nil
 local detailElements   = {}
 local visibleRewardItemRows = {}
@@ -3334,19 +3335,30 @@ function ShowQuestDetail(panels, questData)
     panels.detailScrollChild:SetHeight(math.abs(yOffset) + 20)
 end
 
-local function UpdateQuestListEntry(btn, quest, _)
+-- Journal / Vendors card fill + border. Selection is chrome only; title color
+-- stays type-based (group gold, otherwise primary).
+local function ApplyQuestRowChrome(row, selected, hover)
+    ns.CardChrome.ApplyRowChrome(row, {
+        selected = selected,
+        hover = hover,
+        borderKey = row._borderKey,
+        fillTheme = row._chromeFill,
+    })
+end
+
+local function UpdateQuestListEntry(btn, entry, state)
     local addon   = GetDataAddon()
     if not addon then return end
     local tracker = addon
 
-    local entry = quest
-    quest = entry and entry.quest or entry
+    local quest = entry and entry.quest or entry
 
     btn.entry = entry
     btn.quest = quest
     btn.isGroup = entry and entry.type == "group"
     btn.isChild = entry and entry.type == "child"
     btn.isSection = entry and entry.type == "section"
+    btn._rowSelected = state and state.selected and true or false
 
     if btn.isSection then
         if btn.groupToggle then btn.groupToggle:Hide() end
@@ -3367,11 +3379,9 @@ local function UpdateQuestListEntry(btn, quest, _)
         end
 
         ns.CardChrome.ApplyBackground(btn.bgTex, nil)
-        ns.CardChrome.ApplyRowChrome(btn, {
-            selected = false,
-            borderKey = "default",
-            fillTheme = "QUEST_ROW_SECTION",
-        })
+        btn._borderKey = "default"
+        btn._chromeFill = "QUEST_ROW_SECTION"
+        ApplyQuestRowChrome(btn, false, false)
         return
     end
 
@@ -3426,9 +3436,7 @@ local function UpdateQuestListEntry(btn, quest, _)
         btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", rightGutter, -6)
         btn.nameText:SetText(nameText)
 
-        if selectedQuest and quest and selectedQuest.id == quest.id then
-            btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        elseif btn.isGroup then
+        if btn.isGroup then
             btn.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
         else
             btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -3485,11 +3493,9 @@ local function UpdateQuestListEntry(btn, quest, _)
         btn.bgTex,
         ns.CardChrome.ResolveExpansionBackground(expLevel, "level")
     )
-    ns.CardChrome.ApplyRowChrome(btn, {
-        selected = selectedQuest and quest and selectedQuest.id == quest.id,
-        borderKey = ns.CardChrome.QuestBorderKey(quest),
-        fillTheme = btn.isChild and "QUEST_ROW_CHILD" or "BG_SECONDARY",
-    })
+    btn._borderKey = ns.CardChrome.QuestBorderKey(quest)
+    btn._chromeFill = btn.isChild and "QUEST_ROW_CHILD" or "BG_SECONDARY"
+    ApplyQuestRowChrome(btn, btn._rowSelected, false)
 end
 
 local function GetQuestListGroupName(quest)
@@ -3568,6 +3574,20 @@ local function BuildQuestListEntries(quests)
     return entries
 end
 
+local function BuildPlainQuestListEntries(quests)
+    local entries = {}
+    for i = 1, #(quests or {}) do
+        local quest = quests[i]
+        if quest then
+            table.insert(entries, {
+                type = "quest",
+                quest = quest,
+            })
+        end
+    end
+    return entries
+end
+
 local function GetFavoriteQuestsOutsideActiveList(addon, activeQuests)
     if not (addon and ns.Favorites) then
         return {}
@@ -3626,41 +3646,52 @@ local function BuildQuestListDisplayEntries(quests, favoriteQuests)
     return entries
 end
 
-local function HandleQuestListEntryClick(entry, index, api)
+local function QuestListEntryIsSelectable(entry)
+    return entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest
+end
+
+local function FindSelectableQuestListIndex(entries, questID)
+    if not entries or not questID then
+        return nil
+    end
+    for i, entry in ipairs(entries) do
+        if QuestListEntryIsSelectable(entry) and entry.quest.id == questID then
+            return i
+        end
+    end
+    return nil
+end
+
+local function ToggleQuestListGroup(entry, api)
     local panels = ns.UI.questsPanels
-    if not panels or not entry or not api then
+    if not panels or not entry or entry.type ~= "group" or not api then
         return
     end
 
     panels._questKeyboardNavActive = true
+    questListGroupExpanded[entry.key] = not questListGroupExpanded[entry.key]
 
-    if entry.type == "group" then
-        questListGroupExpanded[entry.key] = not questListGroupExpanded[entry.key]
+    -- Rebuild after this click so the virtualizer select hook still sees the
+    -- group at entryIndex and isSelectable can skip it.
+    C_Timer.After(0, function()
+        if ns.UI.questsPanels ~= panels then
+            return
+        end
         panels._questListEntries = BuildQuestListDisplayEntries(
             panels._questResults or {},
             panels._favoriteQuestResults or {}
         )
         api.Refresh()
-
         if selectedQuest then
-            for i, visibleEntry in ipairs(panels._questListEntries) do
-                local q = visibleEntry.quest
-                if q and q.id == selectedQuest.id then
-                    api.SetSelectedIndex(i)
-                    return
-                end
+            local keepIndex = FindSelectableQuestListIndex(
+                panels._questListEntries,
+                selectedQuest.id
+            )
+            if keepIndex then
+                api.SetSelectedIndex(keepIndex)
             end
         end
-        return
-    end
-
-    if entry.type == "section" then
-        return
-    end
-
-    if index then
-        api.SetSelectedIndex(index)
-    end
+    end)
 end
 
 local function CreateQuestListRow(parent, api)
@@ -3669,11 +3700,10 @@ local function CreateQuestListRow(parent, api)
     btn:SetClipsChildren(true)
     btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     ns.CardChrome.Attach(btn)
-    ns.CardChrome.ApplyRowChrome(btn, {
-        selected = false,
-        borderKey = "quest.standard",
-        fillTheme = "BG_SECONDARY",
-    })
+    btn._borderKey = "quest.standard"
+    btn._chromeFill = "BG_SECONDARY"
+    btn._rowSelected = false
+    ApplyQuestRowChrome(btn, false, false)
 
     local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
@@ -3734,7 +3764,7 @@ local function CreateQuestListRow(parent, api)
     groupToggleText:SetTextColor(unpack(WOW_QUEST_GOLD))
 
     groupToggle:SetScript("OnClick", function()
-        HandleQuestListEntryClick(btn.entry, btn.entryIndex, api)
+        ToggleQuestListGroup(btn.entry, api)
     end)
     groupToggle:Hide()
     btn.groupToggle = groupToggle
@@ -3761,43 +3791,24 @@ local function CreateQuestListRow(parent, api)
         btn.favBtn = favBtn
     end
 
-    btn:SetScript("OnEnter", function(self)
-        ns.CardChrome.ApplyRowChrome(self, { hover = true })
-        if self.nameText then
-            self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        end
+    btn:SetScript("OnEnter", function(myself)
+        ApplyQuestRowChrome(myself, myself._rowSelected, true)
     end)
-    btn:SetScript("OnLeave", function(self)
-        ns.CardChrome.ApplyRowChrome(self, { hover = false })
-        if self.isSection then
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            end
-        elseif selectedQuest and self.quest and selectedQuest.id == self.quest.id then
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-        elseif self.isGroup then
-            if self.nameText then
-                self.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
-            end
-        else
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end
+    btn:SetScript("OnLeave", function(myself)
+        ApplyQuestRowChrome(myself, myself._rowSelected, false)
     end)
-    -- Selection / expand handled here; Virtualizer selectOnClick is off so groups
-    -- do not become selected indices.
-    btn:SetScript("OnClick", function(self)
-        HandleQuestListEntryClick(self.entry, self.entryIndex, api)
+    -- Groups expand here. Quest rows use the virtualizer selectOnClick hook.
+    btn:SetScript("OnClick", function(myself)
+        if myself.isGroup then
+            ToggleQuestListGroup(myself.entry, api)
+        end
     end)
 
     return btn
 end
 
-local function BindQuestListRow(row, _, entry, _)
-    UpdateQuestListEntry(row, entry)
+local function BindQuestListRow(row, _, entry, state)
+    UpdateQuestListEntry(row, entry, state)
 end
 
 local function SelectQuestFromList(panels, quest, questIndex)
@@ -3824,24 +3835,14 @@ local function MoveQuestSelection(panels, delta)
     end
 
     local selectedID = selectedQuest and selectedQuest.id
-    local selectedIndex = nil
-
-    if selectedID then
-        for i, entry in ipairs(entries) do
-            local quest = entry.quest or entry
-            if quest and quest.id == selectedID then
-                selectedIndex = i
-                break
-            end
-        end
-    end
+    local selectedIndex = FindSelectableQuestListIndex(entries, selectedID)
 
     selectedIndex = selectedIndex or (delta > 0 and 0 or #entries + 1)
 
     local nextIndex = selectedIndex + delta
     while nextIndex >= 1 and nextIndex <= #entries do
         local entry = entries[nextIndex]
-        if entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest then
+        if QuestListEntryIsSelectable(entry) then
             SelectQuestFromList(panels, entry.quest, nextIndex)
             return
         end
@@ -3852,7 +3853,7 @@ local function MoveQuestSelection(panels, delta)
     if nextIndex < 1 then
         for i = 1, #entries do
             local entry = entries[i]
-            if entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest then
+            if QuestListEntryIsSelectable(entry) then
                 SelectQuestFromList(panels, entry.quest, i)
                 return
             end
@@ -3860,7 +3861,7 @@ local function MoveQuestSelection(panels, delta)
     elseif nextIndex > #entries then
         for i = #entries, 1, -1 do
             local entry = entries[i]
-            if entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest then
+            if QuestListEntryIsSelectable(entry) then
                 SelectQuestFromList(panels, entry.quest, i)
                 return
             end
@@ -4021,13 +4022,7 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
 
     local keepIndex
     if selectedQuest then
-        for i, entry in ipairs(panels._questListEntries) do
-            local q = entry.quest
-            if q and q.id == selectedQuest.id then
-                keepIndex = i
-                break
-            end
-        end
+        keepIndex = FindSelectableQuestListIndex(panels._questListEntries, selectedQuest.id)
     end
 
     local didSelect = false
@@ -4082,6 +4077,118 @@ local function CancelCompletionFilter()
         questCompletionJob:Cancel()
         questCompletionJob = nil
     end
+end
+
+local function QuestChainIDsEqual(a, b)
+    if a == b then
+        return true
+    end
+    if not a or not b or #a ~= #b then
+        return false
+    end
+    for i = 1, #a do
+        if a[i] ~= b[i] then
+            return false
+        end
+    end
+    return true
+end
+
+local function ClearPinnedQuestChain()
+    pinnedChainIDs = nil
+end
+
+local function InvalidateQuestListQuery(panels)
+    local addon = GetDataAddon()
+    if addon then
+        addon.CancelSortedQuery()
+    end
+    CancelCompletionFilter()
+    if panels then
+        panels._questListGeneration = (panels._questListGeneration or 0) + 1
+    end
+end
+
+local function BuildPinnedChainQuests(addon, chainIDs)
+    local quests = {}
+    for i = 1, #chainIDs do
+        local quest = addon.GetQuest(chainIDs[i])
+        if quest then
+            table.insert(quests, quest)
+        else
+            table.insert(quests, { id = chainIDs[i] })
+        end
+    end
+    return quests
+end
+
+local function PublishPinnedChainList(panels, addon, chainIDs)
+    local quests = BuildPinnedChainQuests(addon, chainIDs)
+
+    if panels.emptyList then
+        panels.emptyList:Hide()
+    end
+
+    panels._questResults = quests
+    panels._favoriteQuestResults = {}
+    panels._questListEntries = BuildPlainQuestListEntries(quests)
+
+    local keepIndex
+    if selectedQuest then
+        keepIndex = FindSelectableQuestListIndex(panels._questListEntries, selectedQuest.id)
+    end
+
+    local didSelect = false
+    if questListAPI then
+        if keepIndex then
+            if questListAPI.GetSelectedIndex() == keepIndex then
+                questListAPI.Refresh()
+            else
+                questListAPI.SetSelectedIndex(keepIndex)
+                didSelect = true
+            end
+        else
+            questListAPI.Refresh()
+        end
+    end
+
+    if panels.leftStatusText then
+        panels._questListCapTip = nil
+        panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_CHAIN"], #quests))
+    end
+
+    if selectedQuest and not didSelect then
+        ShowQuestDetail(panels, addon.GetQuest(selectedQuest.id) or selectedQuest)
+    end
+end
+
+--- Pin the left list to this quest's chain. Returns true when the list was rebuilt.
+---@param panels table
+---@param quest table
+---@return boolean
+local function PinQuestChainIfNeeded(panels, quest)
+    local addon = GetDataAddon()
+    if not (panels and addon and quest) then
+        return false
+    end
+
+    local chainIDs = addon.GetQuestGuideChain(quest)
+    if not chainIDs then
+        return false
+    end
+    if QuestChainIDsEqual(pinnedChainIDs, chainIDs) then
+        return false
+    end
+
+    InvalidateQuestListQuery(panels)
+    pinnedChainIDs = chainIDs
+    PublishPinnedChainList(panels, addon, chainIDs)
+    return true
+end
+
+local function RefreshQuestListFromFilters(panels, invalidateStatus)
+    ClearPinnedQuestChain()
+    RefreshQuestList(panels, invalidateStatus)
 end
 
 local function StartCompletionFilter(panels, addon, rawQuests, previousScroll, listGeneration, refreshDetail)
@@ -4145,6 +4252,14 @@ function RefreshQuestList(panels, invalidateStatus)
     if invalidateStatus then
         wipe(questRowStatusCache)
         wipe(questGroupStatusCache)
+    end
+
+    if pinnedChainIDs then
+        local chainAddon = GetDataAddon()
+        if chainAddon then
+            PublishPinnedChainList(panels, chainAddon, pinnedChainIDs)
+        end
+        return
     end
 
     local addon = GetDataAddon()
@@ -4296,14 +4411,31 @@ function OpenQuestByID(questID, panels, fromArchive)
     end
 
     selectedQuest = quest
-    searchText = "\"" .. tostring(questID) .. "\""
-    expansionFilter = -1
-    zoneFilter = ""
-    ClearNpcFilter()
-    completionFilter = "all"
-    ResetAdvancedFilters()
 
     if panels then
+        local chainIDs = addon.GetQuestGuideChain(quest)
+        if chainIDs then
+            if not PinQuestChainIfNeeded(panels, quest) then
+                local keepIndex = FindSelectableQuestListIndex(
+                    panels._questListEntries,
+                    quest.id
+                )
+                if keepIndex and questListAPI then
+                    questListAPI.SetSelectedIndex(keepIndex)
+                else
+                    ShowQuestDetail(panels, quest)
+                end
+            end
+            return true
+        end
+
+        searchText = "\"" .. tostring(questID) .. "\""
+        expansionFilter = -1
+        zoneFilter = ""
+        ClearNpcFilter()
+        completionFilter = "all"
+        ResetAdvancedFilters()
+
         if panels.searchBox then
             panels.searchBox:SetText(searchText)
             panels.searchBox:ClearFocus()
@@ -4315,7 +4447,7 @@ function OpenQuestByID(questID, panels, fromArchive)
         if panels.UpdateAdvancedTexts then panels.UpdateAdvancedTexts() end
         UpdateNpcFilterChip(panels)
 
-        RefreshQuestList(panels)
+        RefreshQuestListFromFilters(panels)
         ShowQuestDetail(panels, quest)
     end
 
@@ -4370,7 +4502,7 @@ function ns.UI.OpenQuestsFiltered(opts)
         if panels.progText then panels.progText:SetText(L["QUESTS_PROGRESS_ALL"]) end
         if panels.UpdateAdvancedTexts then panels.UpdateAdvancedTexts() end
         UpdateNpcFilterChip(panels)
-        RefreshQuestList(panels)
+        RefreshQuestListFromFilters(panels)
         return true
     end
 
@@ -4401,7 +4533,7 @@ local PopulateZoneDropdown = function(panels)
         onSelect = function(value, text)
             zoneFilter = value
             panels.zoneText:SetText(value == "" and L["QUESTS_ZONE_ALL"] or text)
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 end
@@ -4430,7 +4562,7 @@ local function PopulateExpansionDropdown(panels)
             zoneFilter = ""
             panels.zoneText:SetText(L["QUESTS_ZONE_ALL"])
             PopulateZoneDropdown(panels)
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 end
@@ -4452,7 +4584,7 @@ local function SetupProgressDropdown(panels)
         onSelect = function(value, text)
             completionFilter = value
             panels.progText:SetText(value == "all" and L["QUESTS_PROGRESS_ALL"] or text)
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 end
@@ -4547,7 +4679,7 @@ local function SetupSimpleAdvancedDropdown(def)
             if def.panels.UpdateAdvancedTexts then
                 def.panels.UpdateAdvancedTexts()
             end
-            RefreshQuestList(def.panels)
+            RefreshQuestListFromFilters(def.panels)
         end,
     })
 end
@@ -4568,7 +4700,7 @@ local function SetupAdvancedDropdowns(panels)
             typeFilter = value
             panels.advGroup.text:SetText(value == "all" and L["QUESTS_TYPE_ALL"] or text)
             panels.UpdateAdvancedTexts()
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 
@@ -4592,7 +4724,7 @@ local function SetupAdvancedDropdowns(panels)
             questTypeFilter = value
             panels.advQuestType.text:SetText(value == "all" and L["QUESTS_QTYPE_ALL"] or text)
             panels.UpdateAdvancedTexts()
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 
@@ -4649,7 +4781,7 @@ local function SetupAdvancedDropdowns(panels)
             storyFilter = value
             panels.advStory.text:SetText(value == "all" and L["QUESTS_FILTER_STORY_ALL"] or text)
             panels.UpdateAdvancedTexts()
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 
@@ -4672,7 +4804,7 @@ local function SetupAdvancedDropdowns(panels)
             runtimeFilter = value
             panels.advRuntime.text:SetText(value == "all" and L["QUESTS_FILTER_DATA_ALL"] or text)
             panels.UpdateAdvancedTexts()
-            RefreshQuestList(panels)
+            RefreshQuestListFromFilters(panels)
         end,
     })
 end
@@ -4781,7 +4913,6 @@ function ns.UI.CreateQuestsTab(parent)
         rowHeight = QUEST_LIST_ROW_HEIGHT,
         numVisibleRows = 10,
         rowInset = 4,
-        selectOnClick = false,
         scrollFrame = panels.listScrollFrame,
         content = panels.listScrollChild,
         getCount = function()
@@ -4792,16 +4923,19 @@ function ns.UI.CreateQuestsTab(parent)
             local entries = panels._questListEntries
             return entries and entries[index]
         end,
+        isSelectable = function(_, entry)
+            return QuestListEntryIsSelectable(entry)
+        end,
         onSelect = function(_, entry)
-            if not entry or entry.type == "group" or entry.type == "section" then
+            panels._questKeyboardNavActive = true
+            if not QuestListEntryIsSelectable(entry) then
                 return
             end
-            local quest = entry.quest
-            if not quest then
+            selectedQuest = entry.quest
+            if PinQuestChainIfNeeded(panels, entry.quest) then
                 return
             end
-            selectedQuest = quest
-            ShowQuestDetail(panels, quest)
+            ShowQuestDetail(panels, entry.quest)
         end,
         createRow = CreateQuestListRow,
         bindRow = BindQuestListRow,
@@ -4881,7 +5015,7 @@ function ns.UI.CreateQuestsTab(parent)
     npcFilterBtn:SetScript("OnClick", function()
         ClearNpcFilter()
         UpdateNpcFilterChip(panels)
-        RefreshQuestList(panels)
+        RefreshQuestListFromFilters(panels)
     end)
     npcFilterBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -4898,7 +5032,7 @@ function ns.UI.CreateQuestsTab(parent)
             CancelRewardItemSearchWarmup()
             if panels._searchTimer then panels._searchTimer:Cancel() end
             panels._searchTimer = C_Timer.NewTimer(0.3, function()
-                RefreshQuestList(panels)
+                RefreshQuestListFromFilters(panels)
             end)
         end,
     })
@@ -5087,19 +5221,19 @@ function ns.UI.CreateQuestsTab(parent)
         progText:SetText(L["QUESTS_PROGRESS_ALL"])
         panels.UpdateAdvancedTexts()
         UpdateNpcFilterChip(panels)
-        RefreshQuestList(panels)
+        RefreshQuestListFromFilters(panels)
     end)
 
     favFilterBtn:SetScript("OnClick", function()
         runtimeFilter = runtimeFilter == "favorite" and "all" or "favorite"
         panels.UpdateAdvancedTexts()
-        RefreshQuestList(panels)
+        RefreshQuestListFromFilters(panels)
     end)
 
     drawerClearBtn:SetScript("OnClick", function()
         ResetAdvancedFilters()
         panels.UpdateAdvancedTexts()
-        RefreshQuestList(panels)
+        RefreshQuestListFromFilters(panels)
     end)
 
     advancedBtn:SetScript("OnClick", function()

@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["QUESTS_DATA_HAS_REWARD_CHOICES"] = "보상 선택 있음",
     ["QUESTS_DATA_FAVORITES"] = "즐겨찾기",
     ["QUESTS_STATUS_COUNT"] = "퀘스트 %d개",
+    ["QUESTS_STATUS_CHAIN"] = "퀘스트 체인: %d",
     ["QUESTS_LOADING"] = "불러오는 중… %d",
     ["QUESTS_QUESTID"] = "퀘스트 ID",
     ["QUESTS_MAPID"] = "지도 ID",
