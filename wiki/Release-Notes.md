@@ -41,7 +41,7 @@
 #### Fixes
 - Catalog no longer errors when you log in.
 - Catalog no longer errors when you browse older expansion quests.
-- Catalog no longer freezes when you move between tabs, open Journal quest items, or look at your quest log. Older expansions load one era at a time.
+- Catalog no longer freezes when you move between tabs, open Journal quest items, or look at your quest log.
 
 #### Quests
 - Quest list cards use that expansion's Adventure Guide background, with a border for Campaign, Story, Legendary, and other quest types.
@@ -49,6 +49,7 @@
 - Picking an expansion or changing completion filters no longer freezes the list. Completed and warband matches appear as they are found.
 - Quest Chain on the detail pane is a numbered list that wraps with the panel. The quest you have open is highlighted. Other steps stay clickable links; completion is not scanned for the whole chain.
 - The Quests pack is Midnight and The War Within. Classic through Dragonflight load from Quest Archive when you browse those expansions, search all quests, or look up rewards.
+- Quest Archive is one addon for Classic through Dragonflight.
 - Midnight, The War Within, Dragonflight, and Shadowlands lists have the pins and text we have. Battle for Azeroth through Classic will get that same fill soon.
 - Midnight search now includes 12.1 Coiled Isle / Ula'tek quests (about 400 new entries). Older Midnight pins and text were kept.
 - About 100 more Midnight quests now have giver pins, and more of them show quest text.

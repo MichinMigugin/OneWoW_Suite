@@ -20,7 +20,7 @@ function OneWoW_CatalogData_Quests_API.GetQuest(questID)
     return ns.QuestData:GetQuest(questID)
 end
 
---- Load Classic-Dragonflight era packs across frames, then run `callback`.
+--- Load Quest Archive, then run `callback`.
 ---@param callback function
 function OneWoW_CatalogData_Quests_API.EnsureArchiveThen(callback)
     ns.QuestData:EnsureArchiveThen(callback)

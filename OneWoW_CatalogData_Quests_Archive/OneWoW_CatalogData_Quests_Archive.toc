@@ -14,7 +14,22 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 
-# Hub only (era packs load per expansion)
+# Core
+Core\QuestDBLoader.lua
+
+# Databases (each calls ns:RegisterQuestData; loader must precede them)
+Data\QuestDB\QuestDB_classic.lua
+Data\QuestDB\QuestDB_bc.lua
+Data\QuestDB\QuestDB_wotlk.lua
+Data\QuestDB\QuestDB_cata.lua
+Data\QuestDB\QuestDB_mop.lua
+Data\QuestDB\QuestDB_wod.lua
+Data\QuestDB\QuestDB_legion.lua
+Data\QuestDB\QuestDB_bfa.lua
+Data\QuestDB\QuestDB_shadowlands.lua
+Data\QuestDB\QuestDB_dragonflight.lua
+
+# Import
 Core\Core.lua
 
 # Main

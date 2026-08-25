@@ -9,11 +9,12 @@ Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 ## Layers
 
 1. **Static shards** — Hot pack `Data/QuestDB/QuestDB_*.lua` (this expansion and
-   the previous one) plus Quest Archive era packs (Classic through Dragonflight).
-   Both merge into `ns.ExternalQuestDB` via `RegisterQuestData` / `ImportQuestData`.
+   the previous one) plus Quest Archive (`OneWoW_CatalogData_Quests_Archive`,
+   Classic through Dragonflight). Both merge into `ns.ExternalQuestDB` via
+   `RegisterQuestData` / `ImportQuestData`.
 2. **Generated overlays** — `Data/Generated/*.lua` from Wago CSVs plus the
    warehouse clone. `Apply.lua` fills holes only (never replaces a pin that
-   already has coordinates). Runs again after each Archive era import.
+   already has coordinates). Runs again after Archive import.
 3. **Live scanner** — `QuestScanner` heals text, giver, and turn-in from the
    quest log / quest frame as the player plays. It does not invent quest IDs
    for the shipped DB, and it does not persist live objective progress

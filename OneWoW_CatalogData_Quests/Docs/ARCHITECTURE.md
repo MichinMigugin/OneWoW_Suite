@@ -4,7 +4,7 @@
 
 ## Overview
 
-Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` provider. Ships static `QuestDB_*` shards for this expansion and the previous one, and pulls Classic through Dragonflight from Quest Archive era packs on demand.
+Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` provider. Ships static `QuestDB_*` shards for this expansion and the previous one, and pulls Classic through Dragonflight from `OneWoW_CatalogData_Quests_Archive` on demand.
 
 **SavedVariable:** `OneWoW_CatalogData_Quests_DB`
 
@@ -28,7 +28,7 @@ Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` pro
 
 Per-expansion Lua shards under `Data/QuestDB/`:
 
-Each expansion is one full `QuestDB_*.lua` shard. The War Within and Midnight live in this addon. Classic through Dragonflight live in Quest Archive era packs (`OneWoW_CatalogData_Quests_Archive_*`) and import through `OneWoW_CatalogData_Quests_API.ImportQuestData`. Catalog loads one era when you pick that expansion (or every era across frames when you search all quests). `quest_db2_tools.py generate` tidies shards (one quest ID per expansion), then bakes overlays into them (hole-fill only). Runtime `Apply.lua` still fills leftover holes after a Wowhead merge that has not been generated yet, including after Archive import.
+Each expansion is one full `QuestDB_*.lua` shard. The War Within and Midnight live in this addon. Classic through Dragonflight live in `OneWoW_CatalogData_Quests_Archive` and import through `OneWoW_CatalogData_Quests_API.ImportQuestData`. Catalog loads Archive when you pick an older expansion, search all quests, or look up quest rewards. `quest_db2_tools.py generate` tidies shards (one quest ID per expansion), then bakes overlays into them (hole-fill only). Runtime `Apply.lua` still fills leftover holes after a Wowhead merge that has not been generated yet, including after Archive import.
 
 ## Tools (offline / Workspace)
 

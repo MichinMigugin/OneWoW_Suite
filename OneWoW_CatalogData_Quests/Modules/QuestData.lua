@@ -766,27 +766,6 @@ end
 local ARCHIVE_HUB = "OneWoW_CatalogData_Quests_Archive"
 local ARCHIVE_EXPANSION_MAX = 9
 
-local ARCHIVE_PACK_ORDER = {
-    "OneWoW_CatalogData_Quests_Archive_Classic",
-    "OneWoW_CatalogData_Quests_Archive_Cata",
-    "OneWoW_CatalogData_Quests_Archive_Draenor",
-    "OneWoW_CatalogData_Quests_Archive_Bfa",
-    "OneWoW_CatalogData_Quests_Archive_Dragonflight",
-}
-
-local ARCHIVE_PACK_BY_EXPANSION = {
-    [0] = ARCHIVE_PACK_ORDER[1],
-    [1] = ARCHIVE_PACK_ORDER[1],
-    [2] = ARCHIVE_PACK_ORDER[2],
-    [3] = ARCHIVE_PACK_ORDER[2],
-    [4] = ARCHIVE_PACK_ORDER[3],
-    [5] = ARCHIVE_PACK_ORDER[3],
-    [6] = ARCHIVE_PACK_ORDER[4],
-    [7] = ARCHIVE_PACK_ORDER[4],
-    [8] = ARCHIVE_PACK_ORDER[5],
-    [9] = ARCHIVE_PACK_ORDER[5],
-}
-
 local function ExpansionNeedsArchive(expansionID)
     return type(expansionID) == "number"
         and expansionID >= 0
@@ -797,9 +776,8 @@ local function ArchiveHubWanted()
     return OneWoW:IsFeatureWanted(ARCHIVE_HUB)
 end
 
---- Load one era pack, or every era when expansionID is -1 / nil.
---- When `shouldYield` is set (ChunkedJob), yield after each fresh LoadAddOn so
---- Classic-Dragonflight never parse in one frame.
+--- Load Quest Archive when this expansion is Classic-Dragonflight, or when
+--- expansionID is -1 / nil (all-quest search / reward lookup).
 ---@param expansionID number|nil
 ---@param shouldYield fun(): boolean|nil
 ---@return boolean loaded
@@ -808,32 +786,20 @@ function QuestData:EnsureArchiveLoaded(expansionID, shouldYield)
         return false
     end
 
-    local packs
-    if ExpansionNeedsArchive(expansionID) then
-        packs = { ARCHIVE_PACK_BY_EXPANSION[expansionID] }
-    elseif expansionID == -1 or expansionID == nil then
-        packs = ARCHIVE_PACK_ORDER
-    else
+    if expansionID ~= nil and expansionID ~= -1 and not ExpansionNeedsArchive(expansionID) then
         return true
     end
 
-    local allLoaded = true
-    for i = 1, #packs do
-        local name = packs[i]
-        if not C_AddOns.IsAddOnLoaded(name) then
-            OneWoW:EnsureLoaded(name)
-            if shouldYield then
-                coroutine_yield()
-            end
-        end
-        if not C_AddOns.IsAddOnLoaded(name) then
-            allLoaded = false
+    if not C_AddOns.IsAddOnLoaded(ARCHIVE_HUB) then
+        OneWoW:EnsureLoaded(ARCHIVE_HUB)
+        if shouldYield then
+            coroutine_yield()
         end
     end
-    return allLoaded
+    return C_AddOns.IsAddOnLoaded(ARCHIVE_HUB)
 end
 
---- Load every Archive era across frames, then run `onReady`.
+--- Load Quest Archive, then run `onReady`.
 ---@param onReady function
 function QuestData:EnsureArchiveThen(onReady)
     OneWoW.ChunkedJob.Start({
@@ -2201,7 +2167,7 @@ end
 --- Returns a sorted array of quest IDs that reward the given item, or nil.
 --- The index is built lazily from the merged quest set and cached until quest
 --- data changes (see InvalidateQuestRewardIndex).
---- `loadArchive` true loads every Archive era (Item Search after packs are wanted).
+--- `loadArchive` true loads Quest Archive (Item Search after packs are wanted).
 ---@param itemID number
 ---@param loadArchive boolean|nil
 ---@return number[]|nil
