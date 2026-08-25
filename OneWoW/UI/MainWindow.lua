@@ -794,16 +794,16 @@ function UI:SelectSubTab(moduleName, subTabName)
 
     local key = moduleName .. ":" .. subTabName
 
-    local tabInfo = FindModuleTab(moduleName, subTabName)
-    if tabInfo then
-        EnsureSubTabAddons(tabInfo)
+    local moduleTab = FindModuleTab(moduleName, subTabName)
+    if moduleTab then
+        EnsureSubTabAddons(moduleTab)
     end
 
     -- Drop a stale placeholder so it rebuilds as real content now that its backing
     -- addon is available (e.g. after a mid-session "Load Data Addons").
     local cached = moduleContentFrames[key]
     if cached and cached._isPlaceholder then
-        if tabInfo and SubTabContentAvailable(tabInfo) then
+        if moduleTab and SubTabContentAvailable(moduleTab) then
             cached:Hide()
             cached:SetParent(nil)
             moduleContentFrames[key] = nil
@@ -822,8 +822,8 @@ function UI:SelectSubTab(moduleName, subTabName)
                     break
                 end
             end
-        elseif tabInfo and tabInfo.create then
-            moduleContentFrames[key] = BuildModuleSubTabFrame(tabInfo)
+        elseif moduleTab and moduleTab.create then
+            moduleContentFrames[key] = BuildModuleSubTabFrame(moduleTab)
         end
     end
 

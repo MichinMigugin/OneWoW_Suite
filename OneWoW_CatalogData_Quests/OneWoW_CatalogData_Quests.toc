@@ -44,6 +44,8 @@ Data\Generated\QuestLines.lua
 Data\Generated\Campaigns.lua
 Data\Generated\QuestObjectives.lua
 Data\Generated\QuestPins.lua
+Data\RemixRewardItems.lua
+Data\RemixOnlyQuests.lua
 Data\Generated\Apply.lua
 
 # Modules

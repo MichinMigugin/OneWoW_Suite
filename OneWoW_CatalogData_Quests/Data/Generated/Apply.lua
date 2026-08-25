@@ -14,11 +14,52 @@ local _, ns = ...
 
 local pairs, type = pairs, type
 
+local function FilterRemixRewardList(values)
+    if type(values) ~= "table" then
+        return values
+    end
+    local out = {}
+    for i = 1, #values do
+        local item = values[i]
+        local itemID = item
+        if type(item) == "table" then
+            itemID = item.itemID or item.id
+        end
+        if not ns.IsRemixRewardItem(itemID) then
+            out[#out + 1] = item
+        end
+    end
+    return out
+end
+
+local function FilterRemixQuestIDList(values)
+    if type(values) ~= "table" then
+        return values
+    end
+    local out = {}
+    for i = 1, #values do
+        local item = values[i]
+        local questID = item
+        if type(item) == "table" then
+            questID = item.id
+        end
+        if not ns.IsRemixOnlyQuest(questID) then
+            out[#out + 1] = item
+        end
+    end
+    return out
+end
+
 local function HasXY(pin)
     return pin and pin.x ~= nil and pin.y ~= nil
 end
 
 local function FillList(quest, key, values)
+    if key == "rewardItems" then
+        values = FilterRemixRewardList(values)
+    elseif key == "sourceQuests" or key == "nextQuests" then
+        values = FilterRemixQuestIDList(values)
+    end
     if type(values) ~= "table" or #values == 0 then
         return
     end
@@ -75,6 +116,9 @@ local function FillStart(quest, overlay)
 end
 
 local function ApplyOne(quest, questID)
+    if ns.IsRemixOnlyQuest(questID) then
+        return
+    end
     local overlay = ns.QuestGeneratedPins[questID]
     if overlay then
         if (not quest.mapID or quest.mapID == 0) and overlay.uiMapID then

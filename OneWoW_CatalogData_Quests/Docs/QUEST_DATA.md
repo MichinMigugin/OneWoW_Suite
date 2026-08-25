@@ -29,7 +29,8 @@ cross-alt via AltTracker.
 Every expansion ships a full `QuestDB_*.lua` shard (Classic through Midnight).
 The War Within and Midnight load with the hot pack. Classic through Dragonflight
 load from Quest Archive when you browse those expansions, search all quests, or
-look up quest rewards. Shards load through `ns:RegisterQuestData`.
+look up quest rewards. Shards load through `ns:RegisterQuestData`. Remix-only
+quests (MoP / Legion Timerunning lines) are not shipped.
 
 ## Schema
 
@@ -44,7 +45,7 @@ OneWoW_Workspace `bin/lib/wowhead/quest_lua.py`.
 | Giver / turn-in | `starts[]`, `ends[]` (`npcID`, `mapID`, `x`, `y`), `questGiverID/Name`, `questTurnInID/Name` | Wowhead + overlay pins + scanner. Overlay never overwrites an existing xy pin. |
 | Location | `zoneID`, `mapID`, `coords`, `mapCandidates` | Wowhead / pins / `QuestPOIBlob` UiMap fallback |
 | Chains | `storyline[]`, `series[]`, `questLines[]`, `campaigns[]`, `sourceQuests[]`, `nextQuests[]` | Wowhead storyline/series; Generated lines/campaigns; warehouse source/next |
-| Rewards | `rewardGold`, `rewardXP`, `rewardItems`, `rewardChoices`, `rewardCurrencies` | Wowhead / scanner / warehouse `qis` fill |
+| Rewards | `rewardGold`, `rewardXP`, `rewardItems`, `rewardChoices`, `rewardCurrencies` | Wowhead / scanner / pin overlay fill. Remix event caches (Cache of Infinite Treasure and related Bronze / Infinite Power caches) are stripped; they are not retail quest rewards. Timewalking caches stay. |
 
 Quest “tracks” in Catalog are pin + chain IDs. `GetQuestGuideChain` returns an
 ordered ID list from the quest line, else storyline, else series, else
@@ -55,7 +56,8 @@ instead of forcing it to step 1. Nil when the chain has fewer than two quests. M
 is stored as a fallback.
 
 `GetQuest` returns static ⊕ runtime SV. Display hygiene drops DNT / NYI /
-REMOVED rows.
+REMOVED rows and Remix-only quests (MoP / Legion Timerunning lines). Catalog is
+retail; those quests are not shipped.
 
 ## Lazy hydrate
 

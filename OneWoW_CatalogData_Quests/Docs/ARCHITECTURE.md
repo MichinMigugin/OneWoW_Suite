@@ -16,6 +16,8 @@ Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` pro
 |--------|------|
 | `Core/QuestDBLoader.lua` | Merges `Data/QuestDB/QuestDB_*.lua` into `ns.ExternalQuestDB` |
 | `Data/Generated/*.lua` | Overlay tables from `bin/quest_db2_tools.py`; generate also bakes them into QuestDB shards; `Apply.lua` fills leftover holes (again after Archive import) |
+| `Data/RemixRewardItems.lua` | Remix event cache IDs; `Apply.lua` / QuestData / scanner drop them from quest rewards |
+| `Data/RemixOnlyQuests.lua` | Remix-only quest IDs and quest lines; Catalog does not ship or capture them |
 | `Modules/QuestData.lua` | Static + runtime merged view for Catalog (lookup, expansion filter, `GetQuestGuideChain`) |
 | `Modules/QuestScanner.lua` | Live capture from quest log / quest detail events |
 | `Modules/CompletionTracker.lua` | Per-character completion; optional AltTracker cross-char |

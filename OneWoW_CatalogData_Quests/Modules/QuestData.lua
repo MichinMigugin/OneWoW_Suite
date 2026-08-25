@@ -574,6 +574,47 @@ local function GetRewardItemID(rewardItem)
     return nil
 end
 
+local function StripRemixRewardList(list)
+    local write = 1
+    local count = #list
+    for i = 1, count do
+        local item = list[i]
+        if not ns.IsRemixRewardItem(GetRewardItemID(item)) then
+            if write ~= i then
+                list[write] = item
+            end
+            write = write + 1
+        end
+    end
+    for i = write, count do
+        list[i] = nil
+    end
+end
+
+local function StripRemixOnlyQuestList(list)
+    if type(list) ~= "table" then
+        return
+    end
+    local write = 1
+    local count = #list
+    for i = 1, count do
+        local item = list[i]
+        local questID = item
+        if type(item) == "table" then
+            questID = item.id
+        end
+        if not ns.IsRemixOnlyQuest(questID) then
+            if write ~= i then
+                list[write] = item
+            end
+            write = write + 1
+        end
+    end
+    for i = write, count do
+        list[i] = nil
+    end
+end
+
 -- Catalog owns the cross-unit item-name cache; delegate to its public API so we
 -- never touch OneWoW_Catalog_DB directly. Both no-op gracefully when Catalog is
 -- not loaded.
@@ -1122,10 +1163,16 @@ local function NormalizeQuest(quest)
     quest.rewardItems = quest.rewardItems or {}
     quest.rewardChoices = quest.rewardChoices or {}
     quest.rewardCurrencies = quest.rewardCurrencies or {}
+    StripRemixRewardList(quest.rewardItems)
+    StripRemixRewardList(quest.rewardChoices)
     quest.storyline = quest.storyline or {}
     quest.series = quest.series or {}
     quest.questLines = quest.questLines or {}
     quest.campaigns = quest.campaigns or {}
+    StripRemixOnlyQuestList(quest.storyline)
+    StripRemixOnlyQuestList(quest.series)
+    StripRemixOnlyQuestList(quest.sourceQuests)
+    StripRemixOnlyQuestList(quest.nextQuests)
 
     quest.name = StripWoWTextFormatting(quest.name)
 
@@ -1218,6 +1265,10 @@ end
 
 local function IsValidQuest(quest)
     if not quest then
+        return false
+    end
+
+    if ns.IsRemixOnlyQuestRecord(quest) then
         return false
     end
 
@@ -1350,6 +1401,9 @@ local normalizedExternal = setmetatable({}, { __mode = "k" })
 ---@return table|nil
 function QuestData:GetQuest(questID)
     if not questID then
+        return nil
+    end
+    if ns.IsRemixOnlyQuest(questID) then
         return nil
     end
 
@@ -2124,6 +2178,9 @@ function QuestData:StoreQuestInfo(questID, data)
     if not questID or not data then
         return
     end
+    if ns.IsRemixOnlyQuest(questID) then
+        return
+    end
 
     local db = GetRuntimeDB()
 
@@ -2152,6 +2209,9 @@ end
 ---@param data table
 function QuestData:StoreQuestInfoQuiet(questID, data)
     if not questID or not data then
+        return
+    end
+    if ns.IsRemixOnlyQuest(questID) then
         return
     end
 

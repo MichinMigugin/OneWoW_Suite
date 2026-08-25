@@ -102,6 +102,13 @@ local function AddUnique(tbl, value)
     tinsert(tbl, value)
 end
 
+local function AddUniqueRewardItem(tbl, itemID)
+    if ns.IsRemixRewardItem(itemID) then
+        return
+    end
+    AddUnique(tbl, itemID)
+end
+
 local function EnsureList(data, field)
     data[field] = data[field] or {}
     return data[field]
@@ -398,14 +405,14 @@ local function CaptureDialogRewardItems(data)
 
     for i = 1, GetNumQuestRewards() do
         local _, _, _, _, _, itemID = GetQuestItemInfo("reward", i)
-        AddUnique(rewardItems, itemID)
+        AddUniqueRewardItem(rewardItems, itemID)
     end
 
     for i = 1, GetNumQuestChoices() do
         local _, _, _, _, _, itemID = GetQuestItemInfo("choice", i)
         if itemID then
-            AddUnique(rewardChoices, itemID)
-            AddUnique(rewardItems, itemID)
+            AddUniqueRewardItem(rewardChoices, itemID)
+            AddUniqueRewardItem(rewardItems, itemID)
         end
     end
 
@@ -418,15 +425,15 @@ local function CaptureQuestLogRewardItems(data, questID)
     local rewardItems = EnsureList(data, "rewardItems")
     for i = 1, GetNumQuestLogRewards(questID) do
         local _, _, _, _, _, itemID = GetQuestLogRewardInfo(i, questID)
-        AddUnique(rewardItems, itemID)
+        AddUniqueRewardItem(rewardItems, itemID)
     end
 
     local rewardChoices = EnsureList(data, "rewardChoices")
     for i = 1, GetNumQuestLogChoices(questID) do
         local _, _, _, _, _, itemID = GetQuestLogChoiceInfo(i, questID)
         if itemID then
-            AddUnique(rewardChoices, itemID)
-            AddUnique(rewardItems, itemID)
+            AddUniqueRewardItem(rewardChoices, itemID)
+            AddUniqueRewardItem(rewardItems, itemID)
         end
     end
 

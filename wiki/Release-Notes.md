@@ -50,6 +50,8 @@
 - Picking an expansion or changing completion filters no longer freezes the list. Completed and warband matches appear as they are found.
 - Quest Chain on the detail pane is a numbered list that wraps with the panel. The quest you have open is highlighted. Other steps stay clickable links; completion is not scanned for the whole chain.
 - Opening a quest in a chain lists the whole chain on the left, in step order. Clicking another step keeps that list. The open quest stays in its place instead of jumping to the top.
+- Remix event caches such as Cache of Infinite Treasure no longer show as quest rewards.
+- Remix-only quests such as Time Crisis and the MoP Remix intro no longer show. Catalog is retail.
 - The Quests pack is Midnight and The War Within. Classic through Dragonflight load from Quest Archive when you browse those expansions, search all quests, or look up rewards.
 - Quest Archive is one addon for Classic through Dragonflight.
 - Midnight, The War Within, Dragonflight, and Shadowlands lists have the pins and text we have. Battle for Azeroth through Classic will get that same fill soon.
