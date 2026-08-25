@@ -1,5 +1,5 @@
 ## Interface: 120007, 120100
-## Version: R6.2608.1804
+## Version: R6.2608.2507
 ## Title: OneWoW - Data: |cFFFFFFFFJournal|r
 ## Notes: OneWoW Data Addon that: provides instance and encounter journal data for the Catalog.
 ## Author: OneWoW Dev Team

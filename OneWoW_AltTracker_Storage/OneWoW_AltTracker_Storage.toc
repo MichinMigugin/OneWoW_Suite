@@ -1,5 +1,5 @@
 ## Interface: 120007, 120100
-## Version: R6.2608.1804
+## Version: R6.2608.2507
 ## Title: OneWoW - Data: |cFFFFFFFFStorage|r
 ## Notes: OneWoW Data Addon that: tracks bags, Personal Bank, Warband Bank, Guild Bank, and Mail for all your characters.
 ## Author: OneWoW Dev Team
