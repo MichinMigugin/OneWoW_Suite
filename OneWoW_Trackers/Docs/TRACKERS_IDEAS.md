@@ -336,7 +336,7 @@ MidnightRoutine’s *idea* is right: a weekly can complete on EJ `encounterIds` 
 
 - **Reuse:** `instanceID` / `encounterID` from the Journal store; valid diffs from Generated `JournalMapDifficulties` (DB2 `MapDifficulty`); combat bridge `JournalEncounter.DungeonEncounterID` → `DungeonEncounter` when a step needs kill credit. Authoring pattern is ShoppingList’s Catalog tradeskill hook: pick a row in Catalog, emit a Trackers step — `RegisterAddonLoadedWatcher("OneWoW_Catalog", …)`, not a FrameXML overlay.
 - **Build:** step params `{ instanceID, encounterID, difficultyID }` so “kill X on H this week” auto-completes (lockout skip is §3). Consume `OneWoW_CatalogData_Journal_API` the suite way: `RegisterAddonLoadedWatcher` / data-ready for sticky UI, `EnsureLoaded` / `WithAddon` only on an explicit “pick from Journal” action, call-time `_API` for one-shot reads. Never `## OptionalDeps: OneWoW_*` (Blizzard would auto-load and skip soft opt-out). Difficulty *action* (`SetDungeonDifficultyID` …) stays §5.
-- **Do not** clone Routine’s EJ overlay, walk ATT instance files for membership, or hand-maintain a boss list Trackers-side. Listing truth stays Generated + live EJ merge ([`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md)).
+- **Do not** clone Routine’s EJ overlay, walk a third-party instance dump for membership, or hand-maintain a boss list Trackers-side. Listing truth stays Generated + live EJ merge ([`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md)).
 
 ### 13. Detach a section, not a second product
 

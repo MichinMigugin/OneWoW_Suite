@@ -61,8 +61,7 @@ cross-alt (see P-2). The only missing piece is the map itself.
 
 Budget it as **data, not derivation** — same maintenance shape as the punch-list content
 groups we already accepted. Mine it rather than taking a live dependency; the Workspace repo
-already has the machinery (`bin/journal_extras.py`, `.warehouse/Sources/Wago` extracts, the ATT ingest in
-`ATTLiveExtras.lua`). Degrade gracefully when a key has no mapping.
+already has the machinery (`bin/journal_extras.py`, `.warehouse/Sources/Wago` extracts). Degrade gracefully when a key has no mapping.
 
 ### P-2 · Cross-alt quest completion — already shipped, consume it
 

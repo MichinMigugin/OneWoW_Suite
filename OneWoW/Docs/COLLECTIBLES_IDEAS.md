@@ -132,7 +132,7 @@ quested, or come from achievements/events.
   need a curated **achievementID → collectible-key** table. Worth it — it is the
   best motivator — but budget it as data, not a derivation. Keep it focused
   (only achievements whose reward is a mount/pet/toy/appearance ≈ a few hundred
-  rows), and **mine** it (ATT reward data, Wowhead achievement pages) rather than
+  rows), and **mine** it (warehouse Sources, Wowhead achievement pages) rather than
   depending on a heavy live lib.
 - **Shape check:** SecretCollectorCheck is this map in miniature (Mind-Seeker →
   17 mounts / 8 pets / 2 toys + coords + a 1–4 difficulty). Collectionist
@@ -349,7 +349,7 @@ Wowhead builder (#9).
 
 ## Out of scope (integrate, don't build)
 
-- **3D model / dressing-room preview** — ATT / Wowhead / wardrobe territory.
+- **3D model / dressing-room preview** — AllTheThings / Wowhead / wardrobe territory.
 - **Owning a drop-rate / instance-loot encyclopedia** — consume a source if needed;
   own the *tracking* (attempts/locks), not the numbers. (Collection Log packs,
   FuocoNote `droplist`, BountyHelper chances, MRP data addon.)
@@ -367,7 +367,7 @@ Wowhead builder (#9).
 ## Open questions
 
 - Achievement→reward + collectible→daily-lock-quest (+ optional instance) maps:
-  mine from ATT/Wowhead, or is there a currently-maintained lib worth a
+  mine from warehouse Sources / Wowhead, or is there a currently-maintained lib worth a
   dependency? (Prefer a small vendored, mineable table over a heavy live
   dependency.)
 - ~~Confirm which alt-multiselect component is the shared one (AltScopeSection vs. the

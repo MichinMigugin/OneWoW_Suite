@@ -548,7 +548,7 @@ end
 
 --- Boss rows still missing a name. Only boss encounters count: processOneInstance
 --- walks EJ_GetEncounterInfoByIndex, so General (0), Achievement (-2), Quest (-3)
---- and ATT extras (-4) rows are not EJ-nameable and must not keep the retry alive.
+--- and extras (-4) rows are not EJ-nameable and must not keep the retry alive.
 ---@param inst table|nil
 ---@return boolean
 local function HasUnresolvedBossNames(inst)

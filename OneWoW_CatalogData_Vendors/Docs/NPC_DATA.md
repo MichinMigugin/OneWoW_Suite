@@ -21,7 +21,7 @@ NpcDB covers those IDs. Disabling this pack must not blank quest pins.
 ## Two layers
 
 1. **Static shards** — `Data/NpcDB/NpcDB_*.lua` merged into `ns.StaticVendors`.
-   ATT `h(-58)` shops, profession/item children, CollectableSourceVendorSparse,
+   Warehouse shop groups, profession/item children, CollectableSourceVendorSparse,
    Creature identity (displayID / title → category, then specials / housing),
    and QuestDB pins on
    **vendor IDs only**. Wowhead `npcs/` is a last-fill shelf (not harvested yet).
@@ -39,7 +39,7 @@ NpcDB covers those IDs. Disabling this pack must not blank quest pins.
 
 Classic through Midnight (`NpcDB_classic.lua` … `NpcDB_midnight.lua`,
 expansions **0–11**). Expansion IDs match Quests / `LE_EXPANSION_*`
-(Classic = 0). ATT `CreateExpansion` / Journal `ZONE_SEED` are 1-based
+(Classic = 0). Warehouse expansion ids / Journal `ZONE_SEED` are 1-based
 (TWW = 11, Midnight = 12).
 
 Home expansion follows the NPC's map, not item `awp`. A Dornogal vendor with
@@ -60,9 +60,9 @@ One keyed row per creature. Field order is `NPC_KEY_ORDER` in OneWoW_Workspace
 
 | Group | Keys | Source today |
 | --- | --- | --- |
-| Identity | `npcID`, `expansion`, `displayID`, `category`, `roles` | ATT + Creature.csv. Specials (Quartermaster, Reputation, PvP, Guild, Delve) outrank housing/Decor, which outranks leftover titles. Names come from the tooltip queue at runtime (locale-safe). |
-| Location | `locations[mapID] = { x, y, source }` (0–100) | ATT coords; QuestDB start/end pins if the ID is already a vendor. Zone names fill from `C_Map` at runtime. |
-| Stock | `items[itemID] = { cost, currencies, source }` | ATT children / `sym` select itemID; CollectableSourceVendorSparse. |
+| Identity | `npcID`, `expansion`, `displayID`, `category`, `roles` | Warehouse Sources + Creature.csv. Specials (Quartermaster, Reputation, PvP, Guild, Delve) outrank housing/Decor, which outranks leftover titles. Names come from the tooltip queue at runtime (locale-safe). |
+| Location | `locations[mapID] = { x, y, source }` (0–100) | Warehouse coords; QuestDB start/end pins if the ID is already a vendor. Zone names fill from `C_Map` at runtime. |
+| Stock | `items[itemID] = { cost, currencies, source }` | Warehouse children / linked item IDs; CollectableSourceVendorSparse. |
 
 `NpcVendor` is not on Wago 12.1. Do not wait for it.
 

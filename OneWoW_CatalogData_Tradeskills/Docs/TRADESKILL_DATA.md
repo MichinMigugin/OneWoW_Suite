@@ -31,16 +31,17 @@ Pipeline:
 
 1. **DB2** creates every playable recipe on the 14 shipped professions
    (Alchemy through Tailoring, plus Housing Dyes). Archaeology is not shipped.
-2. **ATT** `db/Standard/Categories/Professions.lua` fills **empty** learn-source
+2. **Warehouse Sources** fill **empty** learn-source
    fields only (`quest`, `npc`, `taught`, `map`, `xy`, `cost`, then `learn`).
-   Never overwrite a set field. ATT `u=2` does not delete a DB2 row.
+   Never overwrite a set field. Unobtainable flags in a source shelf do not
+   delete a DB2 row.
 3. **Wowhead** leftover fill is a separate CLI
    (`python bin/wowhead/profession-spells.py`). Not part of generate. See
    **Wowhead leftover fill** below. One expansion at a time, newest first.
 
 Skip SpellName matching DNT / NYI / UNUSED / `[PH]` / TEST. Skip each
 profession's SpellBookSpellID (the "learn this profession" spell). Do not invent
-recipe IDs from ATT or Wowhead.
+recipe IDs from warehouse shelves or Wowhead leftover fill.
 
 ## Record fields
 
@@ -82,12 +83,12 @@ when known.
 `TraitDefinition` text teaches that recipe (`Learn to craft`, `Learn $@spellname`,
 `Teaches you the recipe`). Do not stamp every trait node that names a spell
 (those are often stat perks on an already-known craft). Spec runs from DB2
-before ATT / leftover fill so a later trainer guess cannot replace it.
+before warehouse / leftover fill so a later trainer guess cannot replace it.
 
 AcquireMethod `1` falls back to trainer and `2` to item. AcquireMethod `0` is
 unspecified in current DB2 — do not stamp Automatic from skill rank (`min` /
 `lo` / `hi` are craft difficulty, not a learn source).
-`taught` is the recipe scroll item when DB2 or ATT can map it. Catalog details
+`taught` is the recipe scroll item when DB2 or warehouse Sources can map it. Catalog details
 prefer `recipe.taught` over a live profession-window lookup.
 
 ## Wowhead leftover fill (backwards)

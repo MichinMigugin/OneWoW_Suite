@@ -15,7 +15,7 @@ extracts under OneWoW_Workspace `.warehouse/Sources/Wago`.
    Never unioned across expansions.
 
 Shipped extras (`OneWoWExtras_*`) stay expansion-scoped. A live overlay runs
-only if AllTheThings is already loaded (never `LoadAddOn` / `EnsureLoaded` ATT).
+only if AllTheThings is already loaded (never `LoadAddOn` / `EnsureLoaded`).
 
 `OneWoWExtras_*` is generated, not hand-written — see "Generated extras"
 below. The old `OneWoWItems_*` / `OneWoWInstances_*` / `OneWoWEncounters_*`
@@ -28,7 +28,7 @@ anyway. Nothing may read those globals or add them back to the TOC.
 - Cards come from generated **`JournalTierMembership`** (`JournalTierXInstance`).
 - Dual-list only where EJ dual-lists (Deadmines, SFK, Scholo, Scarlet Halls /
   Monastery). Onyxia is Wrath-only.
-- ATT stubs that are not in membership for that expansion do **not** create cards.
+- Instance IDs that are not in membership for that expansion do **not** create cards.
 - Optional overrides: [`Data/JournalListingOverrides.lua`](../Data/JournalListingOverrides.lua)
   (`forceHide` / `forceShow` keyed by `"expansionID:instanceID"`).
 
@@ -134,7 +134,7 @@ AreaTable ids, joined through `UiMapAssignment`. Floor UiMaps fold through
 
 Zone cards use the World encounter layout (rares, bosses when present,
 General Loot). Extras with a membership `mapID` attach to that zone key
-**and** stay on the World hub. Unknown mapIDs (for example ATT Midnight
+**and** stay on the World hub. Unknown mapIDs (for example Midnight
 `2600`) stay World-only. Zone achievements come from
 `JournalZoneAchievements` (ExploreArea overlays via WorldMapOverlay /
 AreaTable, plus English title fallback for Adventurer / Treasures / glyphs
@@ -189,17 +189,14 @@ python bin/journal_db2_tools.py report
 CSV schema / mermaid: OneWoW_Workspace `.warehouse/Sources/Wago/docs/journal.md`.
 Extract build pin: OneWoW_Workspace `.warehouse/Sources/Wago/README.md`.
 Warehouse / source order: OneWoW_Workspace `Docs/WAREHOUSE_PLAN.md`.
-Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
+Agent skill: `onewow-db2` (when to use extracts vs FrameXML).
 
 ## Generated extras
 
-Raw shelves are the Workspace clone (`.warehouse/Sources/ATT`), CSVs
-(`.warehouse/Sources/Wago`), and the rest of Sources. Generators read every
-shelf under `.warehouse/Sources/`. Today's shipped extras and Generated files
-stay as they are until a feature generator is run on purpose.
+Raw shelves live in OneWoW_Workspace `.warehouse/Sources/`. Generators read
+every shelf. Today's shipped extras and Generated files stay as they are
+until a feature generator is run on purpose.
 
-`bin/att_dump.py journal` walks compiled ATT `Instances`, `Zones`, `Delves`,
-`WorldDrops`, `ExpansionFeatures`, `WorldEvents`, and `Holidays` into staging.
 `bin/wowhead/journal-drops.py fetch` pulls dungeon and outdoor NPC drops from
 Wowhead as last-fill (never invents an instance or item ID).
 `bin/journal_extras.py emit` (from Sources) writes:
@@ -224,15 +221,14 @@ deliberately omits `link`: the visible-row fill resolves a live link through
 the store item loader, and `link` was the single heaviest field in the
 legacy tables.
 
-Duplicate `[itemID]` keys are **merged**, not last-wins. The extractor now emits one
-key per item, but older extracts repeat the same item many times (57,790 entries for
-29,174 unique items) because ATT stores an item per bucket; Lua kept only the last
-and silently dropped the earlier `locations`. Merging on read recovers 230 extras
-rows the client never saw, and keeps old extracts usable.
+Duplicate `[itemID]` keys are **merged**, not last-wins. The same item can
+appear in more than one location bucket (instance-wide vs per-encounter).
+Emit writes one keyed row per item with locations merged. Merging on read
+still recovers extras if a generated file repeats a key.
 
 Current output: 36,085 rows / 6.75 MB (diffed against `JournalLoot`; world-drop
 and outdoor rows sit on World / zone cards, instance rows on dungeon and raid
-cards). Wowhead NPC drops last-fill holes the Guide and clone extras omit.
+cards). Wowhead NPC drops last-fill holes the Guide and shipped extras omit.
 
 ### Item names and drop locations (cross-addon)
 

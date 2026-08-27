@@ -1010,7 +1010,7 @@ ShowRecipeDetail = function(recipe)
 
     yOffset = yOffset - 8
 
-    -- Recipe scroll/book (not crafted output); SetItemByID feeds TooltipEngine + ATT.
+    -- Recipe scroll/book (not crafted output); SetItemByID feeds TooltipEngine.
     local recipeItemID = recipe.taught
     if not recipeItemID or recipeItemID <= 0 then
         recipeItemID = OneWoW.RecipeKnownUtil:GetRecipeItemID(recipe.id)

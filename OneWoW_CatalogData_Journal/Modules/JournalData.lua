@@ -142,7 +142,7 @@ local function ZoneKeyForMap(expansionID, mapID)
 end
 
 -- World: World Bosses header -> bosses -> World Rares header -> rares -> leftover extras.
--- Dungeon/raid: bosses -> Achievement -> Quest -> General -> ATT extras.
+-- Dungeon/raid: bosses -> Achievement -> Quest -> General -> extras.
 local function EncounterSortRank(enc)
     if enc.sectionHeader then
         if enc.encounterID == WORLD_BOSSES_SECTION_ID then return 0 end
@@ -420,7 +420,7 @@ local function ItemDataFromClient(itemID)
     }
 end
 
---- ATT extras for one expansion+instance (or synthetic world). No cross-expansion union.
+--- Shipped extras for one expansion+instance (or synthetic world). No cross-expansion union.
 ---@param extrasByKey table
 ---@param key string
 ---@param itemID number
@@ -1307,7 +1307,7 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         entry.bossCount = 0
         entry.rareCount = 0
     elseif instanceType == "world" and (not instanceID or instanceID == 0) then
-        -- Synthetic world cards carry extras only; live ATT may add more on open.
+        -- Synthetic world cards carry extras only; live overlay may add more on open.
         entry.encountersHydrated = false
         entry.totalItems = CountExtrasLoot(expansionID, instanceID, instanceType)
         entry.bossCount = 0
@@ -1340,7 +1340,7 @@ function JournalData:BuildJournalCache()
     local overrides = ns.JournalListingOverrides or { forceHide = {}, forceShow = {} }
 
     -- Skeleton cards only: names, map, achievements, Generated loot/boss counts.
-    -- Loot rows and ATT extras hydrate in EnsureEncounters (one card at a time).
+    -- Loot rows and extras hydrate in EnsureEncounters (one card at a time).
     local function AddCard(expansionID, instanceID, orderIndex)
         local key = self.CacheKey(expansionID, instanceID)
         if overrides.forceHide and overrides.forceHide[key] then
@@ -1502,7 +1502,7 @@ function JournalData:EnsureEJItemSets()
     end
 end
 
---- Bucket ATT extras for one expansion. No C_Item. Idempotent per expansionID.
+--- Bucket shipped extras for one expansion. No C_Item. Idempotent per expansionID.
 ---@param expansionID number
 function JournalData:EnsureExtrasForExpansion(expansionID)
     self.extrasByKey = self.extrasByKey or {}

@@ -7,7 +7,7 @@ ns.JournalListingOverrides = {
     forceHide = {
         -- ["1:63"] = true,
     },
-    -- Show an ATT-only card that EJ does not list (use sparingly).
+    -- Show a card that EJ does not list (use sparingly).
     forceShow = {
         -- ["1:760"] = true, -- example: Classic Onyxia — do NOT enable; EJ is Wrath-only
     },
