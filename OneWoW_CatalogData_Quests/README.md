@@ -19,7 +19,7 @@ Players use quest data through the Catalog — this addon has no standalone UI.
 
 ## Supported Expansions
 
-This pack ships **The War Within** and **Midnight**. Classic through Dragonflight ship in **Quest Archive**. Midnight, The War Within, Dragonflight, and Shadowlands lists have the pins and text we have; Battle for Azeroth through Classic will get that same fill soon.
+This pack ships **The War Within** and **Midnight**. Classic through Dragonflight ship in **Quest Archive**. Midnight, The War Within, Dragonflight, Shadowlands, Battle for Azeroth, Legion, and Warlords of Draenor lists have the pins and text we have; Mists of Pandaria through Classic will get that same fill soon.
 
 ---
 

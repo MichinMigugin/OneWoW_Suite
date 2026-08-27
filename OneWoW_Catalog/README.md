@@ -81,7 +81,7 @@ The Catalog works with companion data addons to provide complete information:
 - Static quest database with live scanner enrichment
 - Per-character completion tracking
 - This expansion and the previous one (The War Within and Midnight)
-- Midnight through Shadowlands lists have the pins and text we have; Battle for Azeroth through Classic will get that same fill soon
+- Midnight through Warlords of Draenor lists have the pins and text we have; Mists of Pandaria through Classic will get that same fill soon
 
 ### Data: Quest Archive (OneWoW_CatalogData_Quests_Archive)
 - Classic through Dragonflight

@@ -14,8 +14,9 @@
 
 ## Quests
 - Talking to quest givers, looting, and turning in rewards no longer hitch while Catalog is on.
-- Midnight, The War Within, Dragonflight, Shadowlands, Battle for Azeroth, and Legion lists have the pins and text we have. Warlords of Draenor through Classic will get that same fill soon.
+- Midnight, The War Within, Dragonflight, Shadowlands, Battle for Azeroth, Legion, and Warlords of Draenor lists have the pins and text we have. Mists of Pandaria through Classic will get that same fill soon.
 - About 400 more Legion quests, and more of them have giver pins.
+- About 500 more Warlords of Draenor quests, and more of them have giver pins.
 
 ---
 
