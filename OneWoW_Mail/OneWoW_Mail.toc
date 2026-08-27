@@ -1,5 +1,5 @@
 ## Interface: 120007, 120100
-## Version: R6.2608.2507
+## Version: R6.2608.2707
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Mail|r
 ## Notes: OneWoW Addon that: replaces the mailbox with selective collect, address book, and logistics Shipments.
 ## Author: OneWoW Dev Team

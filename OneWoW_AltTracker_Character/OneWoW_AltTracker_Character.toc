@@ -1,5 +1,5 @@
 ## Interface: 120007, 120100
-## Version: R6.2608.2507
+## Version: R6.2608.2707
 ## Title: OneWoW - Data: |cFFFFFFFFCharacter|r
 ## Notes: OneWoW Data Addon that: tracks core character data including stats, XP, location, guild, economy, equipment, and action bars.
 ## Author: OneWoW Dev Team
