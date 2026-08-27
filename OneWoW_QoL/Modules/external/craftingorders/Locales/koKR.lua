@@ -1,0 +1,34 @@
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
+
+-- Machine-drafted — koKR, pending native review.
+OneWoW.Locale:Register(M._scope, "koKR", {
+
+    ["CRAFTORDERS_TITLE"] = "제작 주문",
+    ["CRAFTORDERS_DESC"] = "제작 주문 목록을 지금 제작 가능과 재료 부족으로 나눕니다. 부족한 재료를 쇼핑 목록에 넣고, 시작/제작/완료를 한 버튼으로 처리합니다.",
+    ["CRAFTORDERS_SECTION_READY"] = "지금 제작 가능",
+    ["CRAFTORDERS_SECTION_MISSING"] = "재료 부족",
+    ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "주간: 수락하지 않음",
+    ["CRAFTORDERS_WEEKLY_NOT_LEARNED"] = "주간: 배우지 않음",
+    ["CRAFTORDERS_WEEKLY_COMPLETE"] = "주간: 완료",
+    ["CRAFTORDERS_WEEKLY_PROGRESS"] = "주간: %d / %d 완료",
+    ["CRAFTORDERS_LOADING"] = "주문을 불러오는 중...",
+    ["CRAFTORDERS_ADD_ACTIVE"] = "%s에 추가",
+    ["CRAFTORDERS_MAKE_LIST"] = "목록 만들기",
+    ["CRAFTORDERS_ADD_MENU_HINT"] = "오른쪽 클릭으로 목록을 만들거나 다른 목록을 고릅니다.",
+    ["CRAFTORDERS_ELSEWHERE_TIP"] = "위치: %s",
+    ["CRAFTORDERS_COL_CRAFT"] = "주문",
+    ["CRAFTORDERS_COL_YOU"] = "내가 제공",
+    ["CRAFTORDERS_COL_CART"] = "목록",
+    ["CRAFTORDERS_COL_CUSTOMER"] = "고객 제공",
+    ["CRAFTORDERS_COL_REWARD"] = "받는 것",
+    ["CRAFTORDERS_USE_WOWUI"] = "WoW UI",
+    ["CRAFTORDERS_USE_ONEUI"] = "One UI",
+    ["CRAFTORDERS_TOGGLE_WOWUI"] = "WoW 목록 사용",
+    ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "지금 제작 가능 / 재료 부족 대신 블리자드 주문 표를 표시합니다.",
+    ["CRAFTORDERS_BUCKET_COUNT"] = "주문 %d개",
+    ["CRAFTORDERS_ORDER_LIST_NAME"] = "주문: %s",
+    ["CRAFTORDERS_NO_SHOPPING"] = "재료를 추가하려면 쇼핑 목록을 켜세요.",
+    ["CRAFTORDERS_KP"] = "지식 %d",
+    ["CRAFTORDERS_ACUITY"] = "예리함 x%d",
+})

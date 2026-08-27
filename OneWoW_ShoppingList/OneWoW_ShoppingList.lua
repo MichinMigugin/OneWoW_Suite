@@ -58,6 +58,7 @@ function OneWoW_ShoppingList:OnPlayerLogin()
     if OneWoW_ShoppingList.FireLoginHandlers then
         OneWoW_ShoppingList:FireLoginHandlers()
     end
+    OneWoW:SignalDataReady(ADDON_NAME)
 end
 
 -- Core-driven init: the suite loader calls _G["OneWoW_ShoppingList"]:OnAddonLoaded()
@@ -136,6 +137,7 @@ function OneWoW_ShoppingList:OnAddonLoaded()
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl", ADDON_NAME)
+    OneWoW:SignalDataReady(ADDON_NAME)
 end
 
 local function HandleSlashCommand(msg)

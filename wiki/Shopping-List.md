@@ -25,7 +25,7 @@ On the profession craft page:
 * **Make List** / **Add to Active** / **Add to List** — push recipe reagents into a list (**Shift-click** to set craft count)
 * Green **Craft** on a row creates a `Craft: …` sub-list of reagents (merges if you craft-order again)
 
-With **OneWoW_CatalogData_Tradeskills** installed, Craft can pick recipes and show which characters know them; quality-tier reagents are treated as interchangeable when scanning. Crafting **Orders** get similar “push reagents to list” buttons.
+With **OneWoW_CatalogData_Tradeskills** installed, Craft can pick recipes and show which characters know them; quality-tier reagents are treated as interchangeable when scanning. Crafting **Orders** get similar “push reagents to list” buttons. The QoL **Crafting Orders** overlay can add missing crafter reagents from the browse list (active list, Make List, or pick a list).
 
 ---
 
@@ -49,6 +49,7 @@ With **OneWoW_CatalogData_Tradeskills** installed, Craft can pick recipes and sh
 * [Bags](Bags)
 * [Catalog](Catalog)
 * [AltTracker](AltTracker)
+* [QoL](QoL)
 * [Slash commands](Slash-Commands)
 
 ### Sources

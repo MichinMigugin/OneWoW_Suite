@@ -22,7 +22,7 @@ Contributor and integrator documentation for the suite.
 |----------|----------|
 | [OneWoW_Bags/Docs/README.md](../../OneWoW_Bags/Docs/README.md) | Bags architecture, categorization, search syntax, import/export, item-button API |
 | [OneWoW_QoL/DEVELOPERS.md](../../OneWoW_QoL/DEVELOPERS.md) | External QoL module authoring (`module.lua`, `ModuleRegistry`, locale scope) |
-| [OneWoW_QoL/MODULES.md](../../OneWoW_QoL/MODULES.md) | QoL external module catalog (35 modules by category) |
+| [OneWoW_QoL/MODULES.md](../../OneWoW_QoL/MODULES.md) | QoL external module catalog (36 modules by category) |
 | [OneWoW_Trackers/Docs/ARCHITECTURE.md](../../OneWoW_Trackers/Docs/ARCHITECTURE.md) | Tracker lists, engine, presets, farm value |
 | [OneWoW_Trackers/Docs/TRACKERS_IDEAS.md](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) | Trackers direction parking lot (not committed scope) |
 | [COLLECTIBLES.md](COLLECTIBLES.md) | Collectible identity, keys, live collection state |

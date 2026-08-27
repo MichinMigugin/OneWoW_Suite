@@ -1,12 +1,38 @@
 # OneWoW Suite Changelog
 
 # Catalog
+## Tradeskills
+- Recipe lists are more complete, and names follow your game language.
+- Recipe details show skill ranks and where to learn a recipe when we know it.
+- Learned From shows the trainer or vendor name. Vendor names open that shop in Catalog Vendors.
+- Dragonflight, The War Within, and Midnight recipes from the knowledge tree say Specialization.
+
 ## Quests
 - Talking to quest givers, looting, and turning in rewards no longer hitch while Catalog is on.
+- Midnight, The War Within, Dragonflight, Shadowlands, Battle for Azeroth, and Legion lists have the pins and text we have. Warlords of Draenor through Classic will get that same fill soon.
+- About 400 more Legion quests, and more of them have giver pins.
 
 ---
 
-*No user-facing changes this release for Home, Trackers, DevTool, AltTracker, Bags, Mail, Notes, QoL, Shopping List, or Direct Deposit.*
+# QoL
+## Crafting Orders
+- The profession Crafting Orders page now lists Public, Guild, Personal, and Patron orders as Craftable now and Missing mats.
+- Patron, Guild, and Personal orders show in that list when you switch tabs. The Patron tab number is how many orders there are; the weekly line is Services Requested progress (for example 0 / 3 filled). Public orders still show claims remaining.
+- Each row is Order, You Provide, Cart, Customer Provides, You Receive, and Time Left. Missing-mat rows have their own cart; there is no add-all cart on the section header.
+- A WoW UI / One UI button on the order tabs switches back to Blizzard's table.
+- Mats in your bags, bank, or reagent bank count as on-hand. Warband bank does not (the game cannot spend it on an order). Hover a You Provide icon if Storage knows the item is on an alt, in mail, or similar.
+- You Provide vs Customer Provides now match the order: reagents already sent sit under Customer Provides; remaining required mats sit under You Provide.
+- Customer Provides and You Receive stay in their own columns, with headers lined up over those columns.
+- One button on the left of the order starts, crafts, and completes it. Concentration is an icon next to Craft when the order needs it.
+
+---
+
+# Shopping List
+- Crafting Orders browse rows can add missing crafter reagents to a list.
+
+---
+
+*No user-facing changes this release for Home, Trackers, DevTool, AltTracker, Bags, Mail, Notes, or Direct Deposit.*
 
 ---
 

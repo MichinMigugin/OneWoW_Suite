@@ -1,0 +1,33 @@
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
+
+OneWoW.Locale:Register(M._scope, "enUS", {
+
+    ["CRAFTORDERS_TITLE"] = "Crafting Orders",
+    ["CRAFTORDERS_DESC"] = "Replaces the crafting orders list with Craftable now and Missing mats. Add missing reagents to a Shopping List. Start, craft, and complete from one button.",
+    ["CRAFTORDERS_SECTION_READY"] = "Craftable now",
+    ["CRAFTORDERS_SECTION_MISSING"] = "Missing mats",
+    ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Weekly: not accepted",
+    ["CRAFTORDERS_WEEKLY_NOT_LEARNED"] = "Weekly: not learned",
+    ["CRAFTORDERS_WEEKLY_COMPLETE"] = "Weekly: completed",
+    ["CRAFTORDERS_WEEKLY_PROGRESS"] = "Weekly: %d / %d filled",
+    ["CRAFTORDERS_LOADING"] = "Loading orders...",
+    ["CRAFTORDERS_ADD_ACTIVE"] = "Add to %s",
+    ["CRAFTORDERS_MAKE_LIST"] = "Make List",
+    ["CRAFTORDERS_ADD_MENU_HINT"] = "Right-click to make a list or pick another list.",
+    ["CRAFTORDERS_ELSEWHERE_TIP"] = "Also in: %s",
+    ["CRAFTORDERS_COL_CRAFT"] = "Order",
+    ["CRAFTORDERS_COL_YOU"] = "You Provide",
+    ["CRAFTORDERS_COL_CART"] = "Cart",
+    ["CRAFTORDERS_COL_CUSTOMER"] = "Customer Provides",
+    ["CRAFTORDERS_COL_REWARD"] = "You Receive",
+    ["CRAFTORDERS_USE_WOWUI"] = "WoW UI",
+    ["CRAFTORDERS_USE_ONEUI"] = "One UI",
+    ["CRAFTORDERS_TOGGLE_WOWUI"] = "Use WoW list",
+    ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "Show Blizzard's order table instead of Craftable now and Missing mats.",
+    ["CRAFTORDERS_BUCKET_COUNT"] = "%d orders",
+    ["CRAFTORDERS_ORDER_LIST_NAME"] = "Order: %s",
+    ["CRAFTORDERS_NO_SHOPPING"] = "Enable Shopping List to add reagents.",
+    ["CRAFTORDERS_KP"] = "%d KP",
+    ["CRAFTORDERS_ACUITY"] = "Acuity x%d",
+})

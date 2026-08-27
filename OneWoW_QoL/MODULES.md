@@ -4,7 +4,7 @@ Catalog of toggleable features under `Modules/external/`. Each module is indepen
 
 Module authors: [DEVELOPERS.md](DEVELOPERS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
 
-**35 modules** across 5 categories (matches `module.lua` `category` values in the Features UI).
+**36 modules** across 5 categories (matches `module.lua` `category` values in the Features UI).
 
 ---
 
@@ -170,6 +170,12 @@ Shows a movable bar tracking your prey hunt progress (Cold > Warm > Hot > Ready)
 Shows a companion panel alongside the profession window with expansion skill breakdowns, recipe counts, and first craft tracking.
 
 - **Module id:** `professionspanel` · **Folder:** `Modules/external/professionspanel/`
+
+### Crafting Orders
+
+Replaces the right-hand crafting orders table with Craftable now and Missing mats for Public, Guild, Personal, and Patron orders. Rows show You provide / Customer mats and reward icons. A WoW UI / One UI button on the order tabs switches back to Blizzard's table. Add missing reagents to a Shopping List. Start, craft, and complete from one button.
+
+- **Module id:** `craftingorders` · **Folder:** `Modules/external/craftingorders/` — [details](Docs/Modules/craftingorders.md)
 
 ### Quest Item Bar
 

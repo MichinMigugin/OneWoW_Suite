@@ -300,6 +300,26 @@ Modules\external\professionspanel\Locales\itIT.lua
 Modules\external\professionspanel\professionspanel.lua
 Modules\external\professionspanel\professionspanel-ui.lua
 
+Modules\external\craftingorders\module.lua
+Modules\external\craftingorders\Locales\enUS.lua
+Modules\external\craftingorders\Locales\koKR.lua
+Modules\external\craftingorders\Locales\frFR.lua
+Modules\external\craftingorders\Locales\deDE.lua
+Modules\external\craftingorders\Locales\zhCN.lua
+Modules\external\craftingorders\Locales\esES.lua
+Modules\external\craftingorders\Locales\zhTW.lua
+Modules\external\craftingorders\Locales\esMX.lua
+Modules\external\craftingorders\Locales\ruRU.lua
+Modules\external\craftingorders\Locales\ptBR.lua
+Modules\external\craftingorders\Locales\itIT.lua
+Modules\external\craftingorders\rewards.lua
+Modules\external\craftingorders\classify.lua
+Modules\external\craftingorders\shopping.lua
+Modules\external\craftingorders\storage.lua
+Modules\external\craftingorders\overlay.lua
+Modules\external\craftingorders\magicbutton.lua
+Modules\external\craftingorders\craftingorders.lua
+
 Modules\external\afkpanel\module.lua
 Modules\external\afkpanel\Locales\enUS.lua
 Modules\external\afkpanel\Locales\koKR.lua

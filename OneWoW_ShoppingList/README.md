@@ -46,7 +46,7 @@ With **OneWoW_CatalogData_Tradeskills** also installed, the **Craft** button kno
 
 ### Crafting Orders Integration
 
-When the Profession Orders page is open, dedicated buttons let you push the order's reagents into a list, mirroring the crafting page workflow.
+When the Profession Orders page is open, dedicated buttons on the order details let you push the order's reagents into a list, mirroring the crafting page workflow. The QoL Crafting Orders overlay can also add missing crafter reagents from the browse list (active list, Make List, or pick a list).
 
 ### Bag Integration
 
