@@ -7,12 +7,6 @@ local C_Item, C_TradeSkillUI = C_Item, C_TradeSkillUI
 ns.ItemSearch = {}
 local ItemSearch = ns.ItemSearch
 
-local TRADESKILL_PROFS = {
-    "Alchemy", "Blacksmithing", "Cooking", "Enchanting", "Engineering",
-    "Fishing", "Herbalism", "HousingDyes", "Inscription", "Jewelcrafting",
-    "Leatherworking", "Mining", "Skinning", "Tailoring",
-}
-
 local function GetRecipeKnownByFromAltTracker(itemID)
     local profsAPI = OneWoW_AltTracker_Professions_API
     if not profsAPI then return nil end
@@ -300,21 +294,29 @@ local function BuildQueryResults(self, searchTerm, sourceFilter, results, should
     end
 
     if doCrafted then
-        for _, profName in ipairs(TRADESKILL_PROFS) do
-            local data = _G["OneWoWTradeskills_" .. profName]
-            if data and data.r then
-                for _, recipe in pairs(data.r) do
-                    local itemID = recipe.item
-                    if itemID and itemID > 0 then
-                        if resultMap[itemID] then
-                            results[resultMap[itemID]].isCrafted = true
-                        elseif not hasFilter then
-                            local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
-                            addOrAnnotate(itemID, nil, icon, nil, "isCrafted")
-                        else
-                            local itemName = C_Item.GetItemNameByID(itemID)
-                            if itemName and itemName:lower():find(term, 1, true) then
-                                addOrAnnotate(itemID, itemName, nil, nil, "isCrafted")
+        local tsAddon = OneWoW_CatalogData_Tradeskills_API
+        if tsAddon then
+            local function markCrafted(itemID)
+                if not itemID or itemID <= 0 then return end
+                if resultMap[itemID] then
+                    results[resultMap[itemID]].isCrafted = true
+                elseif not hasFilter then
+                    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                    addOrAnnotate(itemID, nil, icon, nil, "isCrafted")
+                else
+                    local itemName = C_Item.GetItemNameByID(itemID)
+                    if itemName and itemName:lower():find(term, 1, true) then
+                        addOrAnnotate(itemID, itemName, nil, nil, "isCrafted")
+                    end
+                end
+            end
+            for _, prof in ipairs(tsAddon.GetProfessions()) do
+                for _, recipe in ipairs(tsAddon.GetRecipesByProfession(prof.name)) do
+                    markCrafted(recipe.item)
+                    if recipe.items then
+                        for _, altID in ipairs(recipe.items) do
+                            if altID ~= recipe.item then
+                                markCrafted(altID)
                             end
                         end
                     end
@@ -490,24 +492,16 @@ function ItemSearch:GetDetail(itemID)
         end
     end
 
-    for _, profName in ipairs(TRADESKILL_PROFS) do
-        local data = _G["OneWoWTradeskills_" .. profName]
-        if data and data.r then
-            for recipeID, recipe in pairs(data.r) do
-                if recipe.item == itemID then
-                    local knownBy
-                    local tsAddon = OneWoW_CatalogData_Tradeskills_API
-                    if tsAddon then
-                        knownBy = tsAddon.GetRecipeKnownBy(recipeID)
-                    end
-                    tinsert(detail.crafted, {
-                        recipeID  = recipeID,
-                        profName  = recipe.prof or profName,
-                        expansion = recipe.exp,
-                        knownBy   = knownBy,
-                    })
-                end
-            end
+    local tsAddon = OneWoW_CatalogData_Tradeskills_API
+    if tsAddon then
+        local craftedRecipes = tsAddon.GetRecipesByItem(itemID)
+        for _, recipe in ipairs(craftedRecipes) do
+            tinsert(detail.crafted, {
+                recipeID  = recipe.id,
+                profName  = recipe.prof,
+                expansion = recipe.exp,
+                knownBy   = tsAddon.GetRecipeKnownBy(recipe.id),
+            })
         end
     end
 
