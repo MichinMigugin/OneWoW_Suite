@@ -65,7 +65,7 @@ The Catalog works with companion data addons to provide complete information:
 - Complete expansion coverage (Classic through Midnight)
 
 ### Data: Tradeskills (OneWoW_CatalogData_Tradeskills)
-- Complete recipe database
+- Complete recipe database for Classic through Midnight (patch 12.1)
 - Material requirements
 - Crafting costs and yields
 - Profession progression guides
@@ -81,7 +81,7 @@ The Catalog works with companion data addons to provide complete information:
 - Static quest database with live scanner enrichment
 - Per-character completion tracking
 - This expansion and the previous one (The War Within and Midnight)
-- Midnight through Warlords of Draenor lists have the pins and text we have; Mists of Pandaria through Classic will get that same fill soon
+- Classic through Midnight (patch 12.1) lists have the pins and text we have
 
 ### Data: Quest Archive (OneWoW_CatalogData_Quests_Archive)
 - Classic through Dragonflight

@@ -9,16 +9,17 @@
 
 ### Catalog
 #### Tradeskills
-- Recipe lists are more complete, and names follow your game language.
+- Profession recipes are current for Classic through Midnight (patch 12.1). Names follow your game language.
 - Recipe details show skill ranks and where to learn a recipe when we know it.
 - Learned From shows the trainer or vendor name. Vendor names open that shop in Catalog Vendors.
 - Dragonflight, The War Within, and Midnight recipes from the knowledge tree say Specialization.
 
 #### Quests
 - Talking to quest givers, looting, and turning in rewards no longer hitch while Catalog is on.
-- Midnight, The War Within, Dragonflight, Shadowlands, Battle for Azeroth, Legion, and Warlords of Draenor lists have the pins and text we have. Mists of Pandaria through Classic will get that same fill soon.
+- Classic through Midnight (patch 12.1) lists have the pins and text we have.
 - About 400 more Legion quests, and more of them have giver pins.
 - About 500 more Warlords of Draenor quests, and more of them have giver pins.
+- About 300 more Mists of Pandaria quests, and more of them have giver pins.
 
 ---
 

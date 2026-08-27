@@ -115,8 +115,7 @@ tracking names. Unnamed QuestV2 IDs are not shipped.
 
 Pull **one expansion at a time**, newest unfinished first, down to Classic.
 Do not start the next expansion until the current one has `merge` + `generate`.
-**In progress: Mists of Pandaria** (first full leftover `run`). Then: Cataclysm
-→ Wrath of the Lich King → Burning Crusade → Classic.
+**Done through Classic.** Leftover `need` is Wowhead-blank (not unfetched).
 
 Done:
 
@@ -127,26 +126,15 @@ Done:
 - Battle for Azeroth leftover; leftover `need` is Wowhead-blank
 - Legion leftover; leftover `need` is Wowhead-blank
 - Warlords of Draenor leftover; leftover `need` is Wowhead-blank
+- Mists of Pandaria leftover; leftover `need` is Wowhead-blank
+- Cataclysm leftover; leftover `need` is Wowhead-blank
+- Wrath of the Lich King leftover; leftover `need` is Wowhead-blank
+- Burning Crusade leftover; leftover `need` is Wowhead-blank
+- Classic leftover; leftover `need` is Wowhead-blank
 
 From OneWoW_Workspace. Local `quest-refresh.py` only (Grok Bot: ask first).
 
 ```bash
-# In progress: Mists of Pandaria
-python bin/wowhead/quest-refresh.py run --expansions mop
-python bin/quest_db2_tools.py generate
-
-python bin/wowhead/quest-refresh.py run --expansions cata
-python bin/quest_db2_tools.py generate
-
-python bin/wowhead/quest-refresh.py run --expansions wotlk
-python bin/quest_db2_tools.py generate
-
-python bin/wowhead/quest-refresh.py run --expansions bc
-python bin/quest_db2_tools.py generate
-
-python bin/wowhead/quest-refresh.py run --expansions classic
-python bin/quest_db2_tools.py generate
-
 python bin/catalog_data_status.py quests
 python bin/wowhead/quest-refresh.py status --expansions all
 ```
