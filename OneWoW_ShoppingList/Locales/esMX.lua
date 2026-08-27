@@ -177,7 +177,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Acceso a alts/banco",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Acceso al banco de la banda guerrera",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Fabricabilidad y datos de recetas",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Activar superposición del carrito",
     ["OWSL_SETTINGS_KEYBINDS"] = "ATAJOS",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Alternar lista de compras:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Añadir objeto a la lista predeterminada:",

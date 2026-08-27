@@ -50,10 +50,10 @@ When the Profession Orders page is open, dedicated buttons on the order details 
 
 ### Bag Integration
 
-- A small cart icon appears on bag slots holding items that are on any list.
+- A cart icon appears on bag (and other item) slots holding items that are on any list. Configure it under QoL Overlays (icon, position, vendor, Auction House). Optional: only when you still need more.
 - Toggleable Auction House quick-search button anchored to the bag UI.
 - Toggleable in-bag "open Shopping List" button.
-- All overlays / extra buttons can be turned off individually in settings.
+- Extra bag / profession / Auction House buttons can be turned off in Shopping List settings.
 
 ### Tooltip Integration
 

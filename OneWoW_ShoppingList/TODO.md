@@ -59,6 +59,3 @@ Currently alerts fire for any item on any list, gated only by a global 60-second
 
 ### Resizable / scalable window
 Window dimensions are fixed via `Constants.GUI.WINDOW_WIDTH` / `WINDOW_HEIGHT`. Add a resize handle (and/or a scale slider in settings) so users can fit the addon to their UI.
-
-### Bag overlay position / scale / alpha settings
-The data model already stores `overlay.position`, `overlay.scale`, `overlay.alpha`, but the settings panel only exposes the on/off checkbox. Surface those existing fields as sliders / a position picker.

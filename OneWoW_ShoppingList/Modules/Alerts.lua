@@ -1,10 +1,6 @@
 local _, ns = ...
 local L = ns.L
 
-local Inventory = OneWoW.Inventory
-
-local INVENTORY_OWNER = "ShoppingList_Alerts"
-
 ns.Alerts = {}
 local Alerts = ns.Alerts
 
@@ -30,24 +26,6 @@ local function ShowAlert(itemID, itemName, alertType)
     end
 
     print(string.format("%s %s: |cFFFFFFFF%s|r (%d/%d)", L["ADDON_CHAT_PREFIX"], L["OWSL_ALERT_TITLE"], itemName or tostring(itemID), status.totalOwned, status.needed))
-end
-
-local function HandleBagUpdate()
-    if not ns.ShoppingList then return end
-    local isOnList
-    for _, list in pairs(ns.ShoppingList:GetAllLists()) do
-        for _ in pairs(list.items or {}) do
-            isOnList = true
-            break
-        end
-        if isOnList then break end
-    end
-
-    if not isOnList then return end
-
-    if ns.BagOverlays and ns.BagOverlays.RefreshAll then
-        ns.BagOverlays:RefreshAll()
-    end
 end
 
 local function HandleLoot(_, message)
@@ -80,10 +58,6 @@ local function HandleAHShow()
 end
 
 function Alerts:Initialize()
-    Inventory.RegisterDelayedCallback(INVENTORY_OWNER, function()
-        C_Timer.After(0.3, HandleBagUpdate)
-    end)
-
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("CHAT_MSG_LOOT")
     frame:RegisterEvent("AUCTION_HOUSE_SHOW")

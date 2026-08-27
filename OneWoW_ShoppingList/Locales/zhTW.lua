@@ -177,7 +177,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "其他角色/銀行存取",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "戰隊銀行存取",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "物品可製作性與配方資料",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "啟用購物車覆蓋層",
     ["OWSL_SETTINGS_KEYBINDS"] = "按鍵綁定",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "切換購物清單：",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "新增物品到預設清單：",

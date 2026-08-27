@@ -539,15 +539,6 @@ function MainWindow:BuildSettingsPanel()
     wrapNamesCb:HookScript("OnLeave", function() GameTooltip:Hide() end)
     yOff = yOff - 26
 
-    local overlayCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_ENABLE_OVERLAY"] })
-    overlayCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
-    overlayCb:SetChecked(curS.overlay.enabled ~= false)
-    overlayCb:SetScript("OnClick", function(myself)
-        GetSettings().overlay.enabled = myself:GetChecked()
-        ns.BagOverlays:UpdateAllSettings()
-    end)
-    yOff = yOff - 26
-
     local bagBtnCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_SHOW_BAG_BUTTONS"] })
     bagBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     bagBtnCb:SetChecked(curS.showBagButtons ~= false)

@@ -237,6 +237,8 @@ For thresholds use properties: `haste>=200`.
 | `#sellable` / `#unsellable` | Vendor price or not |
 | `#disenchantable` (`#de`) | Can be disenchanted (no profession required) |
 | `#recent` | Same idea as Bags **Recent Items** (Bags-specific) |
+| `#shoppinglist` (`#shoplist`) | On a Shopping List (Shopping List must be enabled) |
+| `#shoppinglistneeded` | On a list and you still need more |
 | `#hearthstone` `#keystone` `#tierset` `#geartoken` `#currency` | Specials |
 
 ### Crafting and professions
@@ -351,6 +353,7 @@ SAVED(Collected Toys) & #epic
 ## Related
 
 * [Bags](Bags) — UI overview
+* [Shopping List](Shopping-List) — `#shoppinglist` / `#shoppinglistneeded`
 * Hub **Search Shortcuts** and Bags category editor for saving rules
 * In-game help: the search help icon (keyword / search-help dialog) on Bags and related search UIs
 

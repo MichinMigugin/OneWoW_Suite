@@ -1993,6 +1993,14 @@ ShowUserOverlayDetail = function(split, id, selectedRow)
                         end)
                     y = cbY
                 end
+                if preset.extras.onlyNeeded ~= nil then
+                    local _, cbY = AddCheckbox(content, y, L["OVR_SHOPPINGLIST_NEEDED_LABEL"],
+                        entry.onlyNeeded == true, function(checked)
+                            SetEntryField(id, entry, "onlyNeeded", checked)
+                            ShowUserOverlayDetail(split, id, selectedRow)
+                        end)
+                    y = cbY
+                end
                 if preset.extras.showInTooltip ~= nil then
                     local _, cbY = AddCheckbox(content, y, L["OVR_TOOLTIP_LABEL"],
                         entry.showInTooltip ~= false, function(checked)

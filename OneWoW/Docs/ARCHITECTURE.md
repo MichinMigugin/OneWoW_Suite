@@ -886,7 +886,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.SearchCatalog` | `Services/SearchCatalog.lua` | Registry of named search expressions across kinds (`token` = `#alias`, `saved` = `SAVED(Name)`, `category` = Bags rules via a registered provider). Stable ids plus former-name redirects, so renaming never rewrites stored expression text. `WithBatch` coalesces bulk mutations into one change notification |
 | `OneWoW.SearchExpand` | `Services/SearchExpand.lua` | Suite-wide `SAVED`/`CATEGORY` expand + compile wrappers over the catalog; supplies PredicateEngine's `#token` resolver so the engine holds no user state |
 | `OneWoW.TooltipScanner` | `Services/TooltipScanner.lua` | `C_TooltipInfo` routing, tooltip caches, structured line extractors — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) |
-| `OneWoW.OverlayEngine` | `Services/Overlays2/engine.lua` (definitions/renderer/surfaces siblings in `Services/Overlays2/`) | Bag integrations (core `Integrations/*`), `OneWoW_Bags`. `RequestRefresh` for surface layout; `InvalidateAndRequestRefresh` when external predicate inputs change (collection journals, recipe learned, junk/protected) so same-item `skip_same` cannot strand stale icons |
+| `OneWoW.OverlayEngine` | `Services/Overlays2/engine.lua` (definitions/renderer/surfaces siblings in `Services/Overlays2/`) | Bag integrations (core `Integrations/*`), `OneWoW_Bags`, Shopping List (`RebuildDefinitions` after PE keyword register; `InvalidateAndRequestRefresh` on list/inventory changes). `RequestRefresh` for surface layout; `InvalidateAndRequestRefresh` when external predicate inputs change (collection journals, recipe learned, junk/protected, shopping list) so same-item `skip_same` cannot strand stale icons |
 | `OneWoW.OverlayIcons` | `Services/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
 | `OneWoW.TooltipEngine` | `Services/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
 | `OneWoW.Toasts` | `Services/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
@@ -1079,7 +1079,7 @@ reg:ResetTab(tab)               reg:RegisterListener(id, fn)
 
 | Listener | Trigger | Action |
 |---|---|---|
-| `OverlayEngine` | `storageTab == "overlays"` | rebuild defs, bump `paintGeneration`, `RequestRefresh()` — coalesced repaint (50 ms debounce; `Refresh()` stays the immediate API). External collection/junk changes use `InvalidateAndRequestRefresh()` instead (props wipe + generation bump) |
+| `OverlayEngine` | `storageTab == "overlays"` | rebuild defs, bump `paintGeneration`, `RequestRefresh()` — coalesced repaint (50 ms debounce; `Refresh()` stays the immediate API). External collection/junk/shopping-list changes use `InvalidateAndRequestRefresh()` instead (props wipe + generation bump). Late PE keyword registration uses `RebuildDefinitions()`. |
 | `ExternalTooltipSync` | `("tooltips", "value")` change | `SyncAll()` — Auctionator/TSM tooltip suppression |
 
 GUI code never calls `OverlayEngine:Refresh()` or `ExternalTooltipSync:SyncAll()`

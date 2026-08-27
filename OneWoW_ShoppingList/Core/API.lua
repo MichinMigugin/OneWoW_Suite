@@ -64,3 +64,18 @@ function OneWoW_ShoppingList_API.CreateNamedList(name)
     local ok = ns.ShoppingList:CreateList(name)
     return ok == true
 end
+
+--- True when itemID is on any resolved shopping list.
+---@param itemID number|string
+---@return boolean onList
+---@return string[] listNames
+function OneWoW_ShoppingList_API.IsOnAnyList(itemID)
+    return ns.ShoppingList:IsOnAnyList(itemID)
+end
+
+--- True when at least one list still has owned < needed for this itemID.
+---@param itemID number|string
+---@return boolean
+function OneWoW_ShoppingList_API.IsStillNeeded(itemID)
+    return ns.ShoppingList:IsStillNeeded(itemID)
+end

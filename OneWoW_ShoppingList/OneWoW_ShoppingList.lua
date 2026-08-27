@@ -20,9 +20,6 @@ local function InitializeModules()
     if ns.Tooltips then
         ns.Tooltips:Initialize()
     end
-    if ns.BagOverlays then
-        ns.BagOverlays:Initialize()
-    end
     if ns.BagButton then
         ns.BagButton:Initialize()
     end

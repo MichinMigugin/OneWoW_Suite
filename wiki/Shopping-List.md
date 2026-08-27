@@ -31,9 +31,10 @@ With **OneWoW_CatalogData_Tradeskills** installed, Craft can pick recipes and sh
 
 ## Bags, tooltips, and alts
 
-* Cart icon on bag slots that are on a list; optional AH search and “open Shopping List” bag buttons (all toggleable)
+* Cart icon on items that are on a list (bags, bank, and other item buttons). Configure it under QoL >> Overlays (icon, position, vendor, Auction House). Optional: only when you still need more.
+* Optional AH search and "open Shopping List" bag buttons (toggleable in Shopping List settings)
 * Tooltips show needed vs owned when the item is listed
-* **Search Alts** (per list) counts alts’ bags/banks and known guild banks; warband bank always counts
+* **Search Alts** (per list) counts alts' bags/banks and known guild banks; warband bank always counts
 * Without AltTracker **Storage**, scanning is limited to this character’s bags + warband bank
 * Chat loot alert when a listed item drops (short per-item cooldown)
 

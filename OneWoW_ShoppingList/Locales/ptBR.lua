@@ -177,7 +177,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Acesso a outros personagens/banco",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Acesso ao banco do Bando de Guerra",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Dados de fabricabilidade e receitas de itens",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Ativar sobreposição do carrinho de compras",
     ["OWSL_SETTINGS_KEYBINDS"] = "ATALHOS DE TECLADO",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Alternar lista de compras:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Adicionar item à lista padrão:",

@@ -42,7 +42,6 @@ Modules\ShoppingList.lua
 Modules\DataAccess.lua
 Modules\Alerts.lua
 Modules\Tooltips.lua
-Modules\BagOverlays.lua
 Modules\BagButton.lua
 Modules\ProfessionUI.lua
 Modules\OrdersUI.lua

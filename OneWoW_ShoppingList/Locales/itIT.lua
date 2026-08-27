@@ -177,7 +177,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Accesso ad altri personaggi/banca",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Accesso alla banca della Brigata",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Dati di creabilità degli oggetti e ricette",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Attiva la sovrapposizione del carrello",
     ["OWSL_SETTINGS_KEYBINDS"] = "SCORCIATOIE",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Attiva/disattiva lista della spesa:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Aggiungi oggetto alla lista predefinita:",

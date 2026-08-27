@@ -18,10 +18,12 @@ local _, ns = ...
 --   RequestRefresh / Refresh — surface layout (item identity already drives
 --     paint). Same-item skip_same may no-op when paintGeneration is unchanged.
 --   InvalidateAndRequestRefresh — external predicate inputs changed
---     (collection journals, recipe learned, junk/protected). Wipes PE props,
---     bumps paintGeneration so skip_same cannot strand stale icons, then
---     coalesced Refresh. Quality Border stays flash-safe via keepQualityBorder
---     + qb_noop on same-item rebuilds.
+--     (collection journals, recipe learned, junk/protected, shopping list).
+--     Wipes PE props, bumps paintGeneration so skip_same cannot strand stale
+--     icons, then coalesced Refresh. Quality Border stays flash-safe via
+--     keepQualityBorder + qb_noop on same-item rebuilds.
+--   RebuildDefinitions — PE keyword set changed (late RegisterKeyword).
+--     Nils compiled defs then InvalidateAndRequestRefresh.
 -- ============================================================================
 
 local PE = ns.PredicateEngine
@@ -438,6 +440,15 @@ function Engine:InvalidateAndRequestRefresh()
     PE:InvalidatePropsCache()
     paintGeneration = paintGeneration + 1
     Engine:RequestRefresh()
+end
+
+--- Drop cached overlay definitions so they recompile against the current
+--- keyword set, then invalidate paint. Call after PE:RegisterKeyword when a
+--- shipped overlay preset uses that keyword (late registration otherwise
+--- leaves compiled defs stuck as always-false).
+function Engine:RebuildDefinitions()
+    activeDefs = nil
+    Engine:InvalidateAndRequestRefresh()
 end
 
 -- Rebuild definitions and repaint whenever any overlay setting changes,

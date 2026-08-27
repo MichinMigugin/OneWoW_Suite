@@ -176,7 +176,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Alt/Bank Access",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Warband Bank Access",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Item Craftability and Recipe Data",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Enable Shopping Cart Overlay",
     ["OWSL_SETTINGS_KEYBINDS"] = "KEYBINDS",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Toggle Shopping List:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Add Item to Default List:",

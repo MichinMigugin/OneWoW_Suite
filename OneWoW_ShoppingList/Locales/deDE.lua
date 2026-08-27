@@ -176,7 +176,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Twink-/Bankzugriff",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Kriegsmeutenbank-Zugriff",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Herstellbarkeit & Rezeptdaten",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Einkaufswagen-Overlay aktivieren",
     ["OWSL_SETTINGS_KEYBINDS"] = "TASTENBEFEHLE",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Einkaufsliste umschalten:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Gegenstand zur Standardliste hinzufügen:",

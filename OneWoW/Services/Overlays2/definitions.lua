@@ -156,6 +156,16 @@ local PRESETS = {
         expression = "#boe",
         defaults = { icon = "icon-flag", position = "TOPRIGHT" },
     },
+    {
+        id = "shoppinglist",
+        title = "OVR_SHOPPINGLIST_TITLE", description = "OVR_SHOPPINGLIST_DESC",
+        expression = function(entry)
+            if entry.onlyNeeded then return "#shoppinglistneeded" end
+            return "#shoppinglist"
+        end,
+        extras = { onlyNeeded = false },
+        defaults = { icon = "Perks-ShoppingCart", position = "BOTTOMRIGHT" },
+    },
 }
 
 local PRESETS_BY_ID = {}

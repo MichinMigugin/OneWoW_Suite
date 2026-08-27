@@ -182,6 +182,8 @@ Some keywords are registered at runtime by other addons via `PE:RegisterKeyword`
 | Keyword | Registered by | Effect if module missing |
 |---|---|---|
 | `#upgrade` | `OneWoW.UpgradeDetection:Initialize()` → calls `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation?)` | Keyword is unregistered; predicates using it evaluate to `false`. |
+| `#recent` | OneWoW Bags `Data/Categories.lua` | Keyword is unregistered; predicates using it evaluate to `false`. |
+| `#shoppinglist` / `#shoplist` / `#shoppinglistneeded` | OneWoW Shopping List at login (`ShoppingList:RegisterOverlayIntegration`). OverlayEngine `RebuildDefinitions` after register so shipped overlay presets recompile. | Keywords are unregistered; the Shopping List overlay preset matches nothing. |
 
 ---
 

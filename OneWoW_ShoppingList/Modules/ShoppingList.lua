@@ -9,21 +9,40 @@ local alertCooldowns = {}
 local ALERT_COOLDOWN = 60
 local craftableCache = {}
 
+local Inventory = OneWoW.Inventory
+local OverlayEngine = OneWoW.OverlayEngine
+local PredicateEngine = OneWoW.PredicateEngine
+local Registry = OneWoW.SettingsFeatureRegistry
+local wipe = wipe
+
+-- Membership / still-needed sets for overlay + bag-search keywords.
+-- Rebuilt on list mutations and inventory callbacks so per-button eval is a
+-- set lookup, not an inventory scan.
+local overlayCacheDirty = true
+local onAnyListSet = {}
+local onAnyListNames = {}
+local stillNeededSet = {}
+local overlayIntegrationWired = false
+local EMPTY_LIST_NAMES = {}
+
+local function InvalidateOverlayCache()
+    overlayCacheDirty = true
+end
+
 local refreshPending = false
 local function ScheduleRefresh()
     if refreshPending then return end
     refreshPending = true
     C_Timer.After(0.05, function()
         refreshPending = false
+        InvalidateOverlayCache()
         if ns.MainWindow and ns.MainWindow.RefreshSidebar then
             ns.MainWindow:RefreshSidebar()
         end
         if ns.MainWindow and ns.MainWindow.RefreshItemList then
             ns.MainWindow:RefreshItemList()
         end
-        if ns.BagOverlays and ns.BagOverlays.RefreshAll then
-            ns.BagOverlays:RefreshAll()
-        end
+        OverlayEngine:InvalidateAndRequestRefresh()
     end)
 end
 
@@ -35,10 +54,52 @@ local function GetDB()
     return ns.db
 end
 
+local function NeededOverlayActive()
+    local userOverlays = Registry:GetFeatureSettings("overlays", "userOverlays")
+    for _, entry in pairs(userOverlays) do
+        if type(entry) == "table" and entry.enabled then
+            if entry.preset == "shoppinglist" and entry.onlyNeeded then
+                return true
+            end
+            local expr = entry.expression
+            if type(expr) == "string" and expr:find("shoppinglistneeded", 1, true) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+--- Register PE keywords and overlay refresh hooks. Idempotent; armed from login.
+function ShoppingList:RegisterOverlayIntegration()
+    if overlayIntegrationWired then return end
+    overlayIntegrationWired = true
+
+    PredicateEngine:RegisterKeyword({ "shoppinglist", "shoplist" }, function(p)
+        if not p.id then return false end
+        return ShoppingList:IsOnAnyList(p.id)
+    end)
+    PredicateEngine:RegisterKeyword("shoppinglistneeded", function(p)
+        if not p.id then return false end
+        return ShoppingList:IsStillNeeded(p.id)
+    end)
+    OverlayEngine:RebuildDefinitions()
+
+    Inventory.RegisterDelayedCallback("ShoppingList_Overlays", function()
+        InvalidateOverlayCache()
+        if NeededOverlayActive() then
+            OverlayEngine:InvalidateAndRequestRefresh()
+        end
+    end)
+end
+
 function ShoppingList:Initialize()
     MAIN_LIST_KEY = ns.MAIN_LIST_KEY or "Main List"
     craftableCache = {}
     self.initialized = true
+    OneWoW_ShoppingList:RegisterLoginHandler("overlays", function()
+        ShoppingList:RegisterOverlayIntegration()
+    end)
     C_Timer.After(2, function()
         self:RepairOrphanedLists()
         self:FixAllCraftOrderNames()
@@ -529,6 +590,7 @@ function ShoppingList:UpdateListQuantity(listName, newQty)
         end
     end
 
+    ScheduleRefresh()
     return true
 end
 
@@ -571,18 +633,65 @@ function ShoppingList:GetCraftOrderTotalQuantity(itemID, parentListName)
     return total
 end
 
-function ShoppingList:IsOnAnyList(itemID)
-    itemID = tonumber(itemID)
-    if not itemID then return false, {} end
+local function RebuildOverlayCache()
+    wipe(onAnyListSet)
+    wipe(onAnyListNames)
+    wipe(stillNeededSet)
 
-    local found = {}
-    for listName, list in pairs(GetDB().global.shoppingLists.lists) do
-        if list.items and list.items[itemID] then
-            table.insert(found, listName)
+    local lists = GetDB().global.shoppingLists.lists
+    for listName, list in pairs(lists) do
+        for itemID in pairs(list.items or {}) do
+            onAnyListSet[itemID] = true
+            local names = onAnyListNames[itemID]
+            if not names then
+                names = {}
+                onAnyListNames[itemID] = names
+            end
+            names[#names + 1] = listName
         end
     end
+    overlayCacheDirty = false
 
-    return #found > 0, found
+    for itemID, names in pairs(onAnyListNames) do
+        for i = 1, #names do
+            local status = ShoppingList:GetItemStatus(itemID, names[i])
+            if status and status.totalOwned < status.needed then
+                stillNeededSet[itemID] = true
+                break
+            end
+        end
+    end
+end
+
+local function EnsureOverlayCache()
+    if overlayCacheDirty then
+        RebuildOverlayCache()
+    end
+end
+
+--- True when itemID is on any resolved shopping list. Second return is the
+--- list-name array (empty when not listed). Unresolved name-only imports
+--- are not included.
+---@param itemID number|string
+---@return boolean onList
+---@return string[] listNames
+function ShoppingList:IsOnAnyList(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then return false, EMPTY_LIST_NAMES end
+
+    EnsureOverlayCache()
+    if not onAnyListSet[itemID] then return false, EMPTY_LIST_NAMES end
+    return true, onAnyListNames[itemID]
+end
+
+--- True when at least one list still has owned < needed for this itemID.
+---@param itemID number|string
+---@return boolean
+function ShoppingList:IsStillNeeded(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then return false end
+    EnsureOverlayCache()
+    return stillNeededSet[itemID] == true
 end
 
 function ShoppingList:GetItemStatus(itemID, specificListName)

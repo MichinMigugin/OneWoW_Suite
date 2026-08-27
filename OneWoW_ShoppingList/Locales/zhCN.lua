@@ -177,7 +177,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "其他角色/银行访问",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "战团银行访问",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "物品可制作性与配方数据",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "启用购物车叠加层",
     ["OWSL_SETTINGS_KEYBINDS"] = "按键绑定",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "切换购物清单：",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "添加物品到默认清单：",

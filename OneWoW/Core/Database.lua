@@ -107,7 +107,7 @@ local DEFAULTS = {
             --   bg = { enabled, style, scale, color, useRarityColor, effect },
             --   applyToVendorItems, applyToAuctionHouse,
             --   plus preset extras (showInTooltip, includeGreyItems,
-            --   includeWUE) }.
+            --   includeWUE, onlyNeeded) }.
             --
             -- Built-in presets are stored as normal userOverlays entries so
             -- every 1.0 overlay option remains visible in 2.0. Users can
@@ -224,6 +224,13 @@ local DEFAULTS = {
                     position = "TOPRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
                     icon = { kind = "list", value = "icon-flag" },
                     applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_shoppinglist = {
+                    preset = "shoppinglist", enabled = true, order = 19,
+                    position = "BOTTOMRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "Perks-ShoppingCart" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                    onlyNeeded = false,
                 },
             },
             -- Detector-backed built-in (ns.UpgradeDetection). Also stores

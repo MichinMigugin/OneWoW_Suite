@@ -1,5 +1,10 @@
 # OneWoW Suite Changelog
 
+## Overlay System
+- Shopping List items can show a cart icon on bags, bank, and other item buttons. Set icon, position, vendor, and Auction House under QoL Overlays. Optional: only when you still need more.
+
+---
+
 # Catalog
 ## Tradeskills
 - Recipe lists are more complete, and names follow your game language.
@@ -29,10 +34,17 @@
 
 # Shopping List
 - Crafting Orders browse rows can add missing crafter reagents to a list.
+- The bag cart overlay now lives under QoL Overlays, so it also shows in OneWoW Bags and other bag addons. Turn on vendor or Auction House there if you want it.
 
 ---
 
-*No user-facing changes this release for Home, Trackers, DevTool, AltTracker, Bags, Mail, Notes, or Direct Deposit.*
+# Bags
+## Search
+- `#shoppinglist` and `#shoppinglistneeded` match items on a Shopping List when Shopping List is enabled.
+
+---
+
+*No user-facing changes this release for Home, Trackers, DevTool, AltTracker, Mail, Notes, or Direct Deposit.*
 
 ---
 

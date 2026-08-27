@@ -176,7 +176,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Альтернативный/банковский доступ",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Доступ к банку отряда",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Данные о возможности изготовления предметов и рецептах",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Включить наложение корзины покупок",
     ["OWSL_SETTINGS_KEYBINDS"] = "СВЯЗКИ КЛАВИШ",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Переключить список покупок:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Добавить элемент в список по умолчанию:",

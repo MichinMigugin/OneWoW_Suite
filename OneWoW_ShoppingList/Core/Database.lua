@@ -23,12 +23,6 @@ local defaults = {
             confirmItemDelete     = true,
             confirmListDelete     = true,
             wrapItemNames         = true,
-            overlay = {
-                enabled  = true,
-                position = "BOTTOMRIGHT",
-                scale    = 1.0,
-                alpha    = 1.0,
-            },
         },
         minimap = {
             hide  = false,
@@ -57,4 +51,33 @@ function ns:InitializeDatabase()
     })
     ns.db = db
     EnsureMainList(db)
+    ns:MigrateLegacyOverlaySettings()
+end
+
+--- One-shot: copy the old Shopping List bag-overlay checkbox / placement
+--- onto the Overlays 2.0 shoppinglist preset, then drop the SL-side key.
+function ns:MigrateLegacyOverlaySettings()
+    local old = ns.db.global.settings.overlay
+    if type(old) ~= "table" then return end
+
+    local Registry = OneWoW.SettingsFeatureRegistry
+    local userOverlays = Registry:GetFeatureSettings("overlays", "userOverlays")
+    local entry = userOverlays.ov_shoppinglist
+    if type(entry) == "table" then
+        local migrated = CopyTable(entry)
+        if old.enabled == false then
+            migrated.enabled = false
+        end
+        if type(old.position) == "string" then
+            migrated.position = old.position
+        end
+        if type(old.scale) == "number" then
+            migrated.scale = old.scale
+        end
+        if type(old.alpha) == "number" then
+            migrated.alpha = old.alpha
+        end
+        Registry:SetSetting("overlays", "userOverlays", "ov_shoppinglist", migrated)
+    end
+    ns.db.global.settings.overlay = nil
 end

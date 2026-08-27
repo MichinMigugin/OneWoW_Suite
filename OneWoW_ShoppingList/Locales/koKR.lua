@@ -176,7 +176,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["OWSL_SETTINGS_ALT_ACCESS"] = "대체/은행 액세스",
     ["OWSL_SETTINGS_WARBAND_ACCESS"] = "전투부대 은행 접근",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "아이템 제작 가능성 및 레시피 데이터",
-    ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "장바구니 오버레이 활성화",
     ["OWSL_SETTINGS_KEYBINDS"] = "키바인드",
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "쇼핑 목록 전환:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "기본 목록에 항목 추가:",

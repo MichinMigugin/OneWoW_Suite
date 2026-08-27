@@ -717,6 +717,13 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 |---|---|
 | `#recent` | Same rule as the **Recent Items** category: item GUID is in `db.global.recentItems` and still within **Recent item duration** (bag settings). GUIDs are stamped when a coalesced bag update sees the slot as Blizzard-new (`C_NewItems.IsNewItem`); classification does **not** use cached `BuildProps.isNew`. While the main bags window is open, expired GUIDs are also swept on a short ticker. Registered from Bags' `Data/Categories.lua`, not the shared engine (the ticker and GUID map are Bags-specific). |
 
+### Shopping List
+
+| Keyword | Aliases | What it matches |
+|---|---|---|
+| `#shoppinglist` | `#shoplist` | Item is on any resolved Shopping List (`items` table). Unresolved name-only imports do not match. Registered from Shopping List at login; unknown if that unit is disabled. |
+| `#shoppinglistneeded` | | On a Shopping List **and** at least one list still has owned < needed. Same registration as `#shoppinglist`. |
+
 ### Vendor / Value
 
 | Keyword | What it matches |
@@ -1242,8 +1249,9 @@ in this document; full API and extension notes are in
 | `PE` fields | `ParseMoney`, `BattlePetTypes`, `ClassID`, `BATTLE_PET_CAGE_ID`. |
 
 `#upgrade` is not hardcoded: it is registered at runtime (see
-`PREDICATE_ENGINE.md`). `#recent` is a OneWoW Bags–registered keyword, not
-part of the core engine file.
+`PREDICATE_ENGINE.md`). `#recent` is a OneWoW Bags–registered keyword.
+`#shoppinglist` / `#shoppinglistneeded` are registered by Shopping List.
+None of those three live in the core engine file.
 
 ---
 
@@ -1345,6 +1353,7 @@ same syntax as bag search.
 | `warbound` | `#warbound` or `#warbound and !#wue` | Optional WUE exclusion |
 | `wue` | `#wue` | |
 | `boe` | `#boe` | |
+| `shoppinglist` | `#shoppinglist` or `#shoppinglistneeded` | `#shoppinglistneeded` when “only when still needed” is on. Registered by Shopping List. |
 
 **Not expression presets:** `itemlevel` and `qualityborder` are rendered separately
 (no icon slot, no max-4 overlay cap).
