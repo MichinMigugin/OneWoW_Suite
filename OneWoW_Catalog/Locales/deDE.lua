@@ -230,6 +230,9 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Twinks unbekannt",
     ["TRADESKILLS_HAVE_MATERIALS"] = "Materialien vorhanden",
     ["TRADESKILLS_RECIPE_ITEM"] = "Rezeptgegenstand",
+    ["TRADESKILLS_LEARNED_FROM"] = "Erlernt von",
+    ["TRADESKILLS_LEARN_TRAINER"] = "Lehrer",
+    ["TRADESKILLS_LEARN_AUTO"] = "Automatisch",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Alle Erweiterungen",
 
     ["QUESTS_EMPTY"] = "Keine Quests passen zu den Filtern.",

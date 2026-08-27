@@ -3,6 +3,9 @@ local _, ns = ...
 ns.TradeskillData = {}
 local TD = ns.TradeskillData
 
+local ipairs, pairs = ipairs, pairs
+local tinsert = tinsert
+
 local PROFESSIONS = {
     {id = 171, name = "Alchemy",        icon = 136240, global = "OneWoWTradeskills_Alchemy",        type = "crafting"},
     {id = 164, name = "Blacksmithing",  icon = 136241, global = "OneWoWTradeskills_Blacksmithing",  type = "crafting"},
@@ -91,6 +94,14 @@ local function BuildReagentIndex()
     end
 end
 
+local function IndexOutput(itemID, recipeID)
+    if not itemID or itemID <= 0 then return end
+    if not itemIndex[itemID] then
+        itemIndex[itemID] = {}
+    end
+    tinsert(itemIndex[itemID], recipeID)
+end
+
 local function BuildItemIndex()
     if itemIndex then return end
     itemIndex = {}
@@ -98,11 +109,13 @@ local function BuildItemIndex()
         local data = _G[prof.global]
         if data and data.r then
             for recipeID, recipe in pairs(data.r) do
-                if recipe.item then
-                    if not itemIndex[recipe.item] then
-                        itemIndex[recipe.item] = {}
+                IndexOutput(recipe.item, recipeID)
+                if recipe.items then
+                    for _, altID in ipairs(recipe.items) do
+                        if altID ~= recipe.item then
+                            IndexOutput(altID, recipeID)
+                        end
                     end
-                    table.insert(itemIndex[recipe.item], recipeID)
                 end
             end
         end

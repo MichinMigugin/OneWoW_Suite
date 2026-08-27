@@ -229,6 +229,9 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "다른 캐릭터 미습득",
     ["TRADESKILLS_HAVE_MATERIALS"] = "재료 보유",
     ["TRADESKILLS_RECIPE_ITEM"] = "제조법 아이템",
+    ["TRADESKILLS_LEARNED_FROM"] = "습득처",
+    ["TRADESKILLS_LEARN_TRAINER"] = "상급자",
+    ["TRADESKILLS_LEARN_AUTO"] = "자동",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "모든 확장팩",
 
     ["QUESTS_EMPTY"] = "필터에 맞는 퀘스트가 없습니다.",

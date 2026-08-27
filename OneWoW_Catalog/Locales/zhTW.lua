@@ -230,6 +230,9 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "其他角色未學會",
     ["TRADESKILLS_HAVE_MATERIALS"] = "已有材料",
     ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
+    ["TRADESKILLS_LEARNED_FROM"] = "學習來源",
+    ["TRADESKILLS_LEARN_TRAINER"] = "訓練師",
+    ["TRADESKILLS_LEARN_AUTO"] = "自動",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有資料片",
 
     ["QUESTS_EMPTY"] = "沒有符合篩選條件的任務。",

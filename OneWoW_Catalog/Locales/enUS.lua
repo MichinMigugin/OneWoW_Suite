@@ -229,6 +229,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Not Known By Alts",
     ["TRADESKILLS_HAVE_MATERIALS"] = "Have Materials",
     ["TRADESKILLS_RECIPE_ITEM"] = "Recipe Item",
+    ["TRADESKILLS_LEARNED_FROM"] = "Learned From",
+    ["TRADESKILLS_LEARN_TRAINER"] = "Trainer",
+    ["TRADESKILLS_LEARN_AUTO"] = "Automatic",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "All Expansions",
 
     ["QUESTS_EMPTY"] = "No quests match filters.",

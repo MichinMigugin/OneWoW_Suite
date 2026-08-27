@@ -10,7 +10,7 @@
 
 * **Journal** — dungeons, raids, Delves, and World hubs across expansions; encounters, Adventure Guide loot, additional extras, and achievements when Journal data is installed. The pin next to the favorite star opens the map and marks the entrance.
 * **Vendors** — who sells what, where, and for which currency. Classic through Midnight shops ship with the Vendors pack; housing, Quartermaster, PvP, Guild, and Delve shops get a type when we can tell. Shops you have not opened yet show Unseen on the details pane. Opening a merchant still updates portrait, live prices, and pins. Filter by expansion, zone, currency, or type.
-* **Tradeskills** — recipes, materials, and profession requirements
+* **Tradeskills** — recipes, materials, skill ranks, and where to learn a recipe when we know it (trainer, vendor, drop, quest, or Specialization). Learned From uses the NPC name; vendor names open that shop in Vendors.
 * **Item Search** — find an item and see vendors, crafts, drops, and other sources
 * **Quests** — quest database and completion tracking (with Quests data)
 
@@ -26,7 +26,7 @@ Each pack is optional. Disable packs you do not need to save memory; Catalog its
 |------|--------|
 | **Journal** | Instances, encounters, Adventure Guide loot, additional extras, achievements, Delves, and World |
 | **Vendors** | Classic through Midnight vendor NPCs and stock (live scan fills gaps) |
-| **Tradeskills** | Recipes and materials |
+| **Tradeskills** | Recipes, materials, skill ranks, and where to learn a recipe (including Specialization) |
 | **Quests** | This expansion and the previous one (The War Within and Midnight) |
 | **Quest Archive** | Classic through Dragonflight; loads when you browse those expansions, search all quests, or look up quest rewards |
 
@@ -37,6 +37,7 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 ## Tips
 
 * For crafting lists, keep **Tradeskills** installed even if you rarely open Catalog — [Shopping List](Shopping-List) uses it for the Craft button and recipe picker.
+* On a recipe, Learned From shows the trainer or vendor name. Click a vendor name to open that shop in Vendors.
 * On Journal cards, the pin beside the star opens the world map and drops a waypoint at the instance entrance. The same pin is on the details side, opposite Difficulty. Gold pins are Wowhead locations used until Blizzard publishes an official door. Hub cards still have no pin.
 * Instance Type includes World (outdoor hubs, plus a World card for Classic through Cataclysm), Zones, Cities, and Delves (The War Within and Midnight). Loot matches the Adventure Guide. World cards split World Bosses and World Rares, each with their own loot, and show a rares count next to bosses. Extra drops include dungeon trash, outdoor rares, world drops, and holiday or world-event items that belong on a zone or World card. Extra drops with a known boss or rare sit on that encounter, including bosses or rares OneWoW did not already list. Unplaced extras stay under General Loot. A drop that comes from several rares is listed on each rare. Source icons on encounters and loot mark Adventure Guide or shipped OneWoW data. When AllTheThings is loaded, the Journal filter bar shows ATT Detected and can add anything AllTheThings has live. While Delves is selected, **Show Bountiful** sits next to Has uncollected and keeps only this week's bountiful doors. The checkbox clears when you close Catalog or press Clear.
 * Zone and City cards are a second complete view of that place. The World hub stays the full rollup. A pin on a World-hub rare, boss, or achievement opens that zone or city when we know the map. Cities and outdoor zones for every expansion ship with Journal.
@@ -57,6 +58,7 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 ### Sources
 
 * [OneWoW_Catalog/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Catalog/README.md)
+* [OneWoW_CatalogData_Tradeskills/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_CatalogData_Tradeskills/README.md)
 * [OneWoW_CatalogData_Vendors/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_CatalogData_Vendors/README.md)
 * [OneWoW_CatalogData_Quests/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_CatalogData_Quests/README.md)
 * [OneWoW_CatalogData_Quests_Archive/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_CatalogData_Quests_Archive/README.md)

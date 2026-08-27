@@ -230,6 +230,9 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Non connu par mes secondaires",
     ["TRADESKILLS_HAVE_MATERIALS"] = "Matériaux disponibles",
     ["TRADESKILLS_RECIPE_ITEM"] = "Objet de recette",
+    ["TRADESKILLS_LEARNED_FROM"] = "Appris de",
+    ["TRADESKILLS_LEARN_TRAINER"] = "Maître",
+    ["TRADESKILLS_LEARN_AUTO"] = "Automatique",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Toutes les extensions",
 
     ["QUESTS_EMPTY"] = "Aucune quête ne correspond aux filtres.",

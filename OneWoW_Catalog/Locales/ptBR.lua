@@ -230,6 +230,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Não conhecida por secundários",
     ["TRADESKILLS_HAVE_MATERIALS"] = "Tenho materiais",
     ["TRADESKILLS_RECIPE_ITEM"] = "Item de receita",
+    ["TRADESKILLS_LEARNED_FROM"] = "Aprendido de",
+    ["TRADESKILLS_LEARN_TRAINER"] = "Instrutor",
+    ["TRADESKILLS_LEARN_AUTO"] = "Automático",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Todas as expansões",
 
     ["QUESTS_EMPTY"] = "Nenhuma missão corresponde aos filtros.",

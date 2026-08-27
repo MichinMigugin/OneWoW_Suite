@@ -38,8 +38,8 @@ Complete profession and recipe database:
 - Browse recipes for all professions (Alchemy, Blacksmithing, Cooking, Enchanting, Engineering, Fishing, Herbalism, Housing Dyes, Inscription, Jewelcrafting, Leatherworking, Mining, Skinning, Tailoring)
 - Search for specific recipes or crafts
 - See what materials each recipe requires
+- See skill ranks and where to learn a recipe when we know it, including the trainer or vendor name
 - Find recipes that use specific materials
-- Look up profession skill requirements
 - Perfect for planning crafting projects
 
 ### Item Search Tab

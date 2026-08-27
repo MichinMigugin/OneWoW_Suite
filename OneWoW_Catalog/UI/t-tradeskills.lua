@@ -8,7 +8,8 @@ local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 local ipairs = ipairs
 local tinsert, sort = tinsert, sort
-local C_TradeSkillUI, C_Spell, C_Timer = C_TradeSkillUI, C_Spell, C_Timer
+local C_TradeSkillUI, C_Spell, C_Timer, C_Map, C_TooltipInfo =
+    C_TradeSkillUI, C_Spell, C_Timer, C_Map, C_TooltipInfo
 
 local L = ns.L
 ns.UI = ns.UI or {}
@@ -389,6 +390,174 @@ local function GetLocalizedProfName(profData)
     return profData.name
 end
 
+local NPC_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0 }
+
+local function IsGenericNPCName(name, npcID)
+    if not name or name == "" then
+        return true
+    end
+    if npcID and name == string.format(L["QUESTS_NPC_UNNAMED"], npcID) then
+        return true
+    end
+    return name:find("^NPC %d") ~= nil or name:find("^NPC #%d") ~= nil
+end
+
+local function ResolveCreatureName(npcID)
+    local tooltipData = C_TooltipInfo.GetHyperlink(
+        ("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID)
+    )
+    if not tooltipData or not tooltipData.lines then
+        return nil
+    end
+    for _, line in ipairs(tooltipData.lines) do
+        local text = line.leftText
+        if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
+            return text
+        end
+    end
+    return nil
+end
+
+local function GetVendorsAPI()
+    return OneWoW_CatalogData_Vendors_API
+end
+
+local function VendorRecord(npcID)
+    local api = GetVendorsAPI()
+    return api and api.GetVendor(npcID) or nil
+end
+
+local function RememberNPCName(npcID, name)
+    local api = GetVendorsAPI()
+    if api and not IsGenericNPCName(name, npcID) then
+        api.RememberNPCName(npcID, name)
+    end
+end
+
+local function PeekNPCName(npcID)
+    local api = GetVendorsAPI()
+    if api then
+        local cached = api.GetCachedNPCName(npcID)
+        if not IsGenericNPCName(cached, npcID) then
+            return cached
+        end
+        local vendor = api.GetVendor(npcID)
+        if vendor and not IsGenericNPCName(vendor.name, npcID) then
+            return vendor.name
+        end
+    end
+    local live = ResolveCreatureName(npcID)
+    if not IsGenericNPCName(live, npcID) then
+        RememberNPCName(npcID, live)
+        return live
+    end
+    return nil
+end
+
+local function FillLearnNPCName(npcID, apply, isCurrent)
+    local function accept(name)
+        if IsGenericNPCName(name, npcID) then
+            return false
+        end
+        RememberNPCName(npcID, name)
+        apply(name)
+        return true
+    end
+
+    local api = GetVendorsAPI()
+    if api then
+        if accept(api.GetCachedNPCName(npcID)) then
+            return
+        end
+        local vendor = api.GetVendor(npcID)
+        if vendor and accept(vendor.name) then
+            return
+        end
+    end
+    if accept(ResolveCreatureName(npcID)) then
+        return
+    end
+
+    local attempt = 1
+    local function retry()
+        if isCurrent and not isCurrent() then
+            return
+        end
+        api = GetVendorsAPI()
+        if api and accept(api.GetCachedNPCName(npcID)) then
+            return
+        end
+        if accept(ResolveCreatureName(npcID)) then
+            return
+        end
+        attempt = attempt + 1
+        local delay = NPC_NAME_RETRY[attempt]
+        if delay then
+            C_Timer.After(delay, retry)
+        end
+    end
+    C_Timer.After(NPC_NAME_RETRY[1], retry)
+end
+
+local function LearnKindText(recipe)
+    local learn = recipe.learn
+    if learn == "trainer" then
+        return L["TRADESKILLS_LEARN_TRAINER"]
+    elseif learn == "drop" then
+        return BATTLE_PET_SOURCE_1
+    elseif learn == "vendor" then
+        return BATTLE_PET_SOURCE_3
+    elseif learn == "auto" then
+        return L["TRADESKILLS_LEARN_AUTO"]
+    elseif learn == "spec" then
+        return PROFESSIONS_SPECIALIZATION
+    elseif learn == "quest" then
+        if recipe.quest then
+            return BATTLE_PET_SOURCE_2 .. " " .. tostring(recipe.quest)
+        end
+        return BATTLE_PET_SOURCE_2
+    elseif recipe.quest then
+        return BATTLE_PET_SOURCE_2 .. " " .. tostring(recipe.quest)
+    end
+    return nil
+end
+
+local function LearnMapText(recipe)
+    if not recipe.map then
+        return nil
+    end
+    local mapInfo = C_Map.GetMapInfo(recipe.map)
+    if mapInfo and mapInfo.name and mapInfo.name ~= "" then
+        return mapInfo.name
+    end
+    return nil
+end
+
+local function RecipeShowsLearnNPC(recipe)
+    local learn = recipe.learn
+    return recipe.npc and recipe.npc > 0
+        and learn ~= "quest"
+        and learn ~= "spec"
+        and learn ~= "item"
+end
+
+local function JoinLearnParts(kindText, npcName, mapText)
+    local parts = {}
+    if kindText then
+        tinsert(parts, kindText)
+    end
+    if npcName then
+        tinsert(parts, npcName)
+    end
+    if mapText then
+        tinsert(parts, mapText)
+    end
+    if #parts == 0 then
+        return nil
+    end
+    return table.concat(parts, " - ")
+end
+
 local function FindProfessionByName(profName)
     if not profName then return nil end
     local addon = GetDataAddon()
@@ -741,11 +910,111 @@ ShowRecipeDetail = function(recipe)
     if recipe.rank then
         AddInfoRow(L["TRADESKILLS_RANK"], string.format(L["TRADESKILLS_RANK"], recipe.rank))
     end
+    if recipe.min or recipe.hi then
+        local skillText
+        if recipe.min and recipe.hi then
+            skillText = recipe.min .. " - " .. recipe.hi
+        else
+            skillText = tostring(recipe.min or recipe.hi)
+        end
+        AddInfoRow(PROFESSIONS_CRAFTING_STAT_TT_SKILL_HEADER, skillText)
+    end
+
+    if recipe.learn ~= "item" then
+        local kindText = LearnKindText(recipe)
+        local mapText = LearnMapText(recipe)
+        local npcID = RecipeShowsLearnNPC(recipe) and recipe.npc or nil
+        if kindText or npcID or mapText then
+            local row = CreateFrame("Frame", nil, child)
+            row:SetHeight(20)
+            row:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
+            row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
+            tinsert(detailElements, row)
+
+            local lbl = OneWoW_GUI:CreateFS(row, 10)
+            lbl:SetPoint("LEFT", 0, 0)
+            lbl:SetText(L["TRADESKILLS_LEARNED_FROM"] .. ":")
+            lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            lbl:SetWidth(100)
+            lbl:SetJustifyH("LEFT")
+
+            local npcName = npcID and (PeekNPCName(npcID) or string.format(L["QUESTS_NPC_UNNAMED"], npcID)) or nil
+            local clickVendor = npcID and VendorRecord(npcID) ~= nil
+            local npcFS, npcBtn, valueFS
+
+            if clickVendor then
+                local prev = lbl
+                local gap = 4
+                if kindText then
+                    local kindFS = OneWoW_GUI:CreateFS(row, 10)
+                    kindFS:SetPoint("LEFT", prev, "RIGHT", gap, 0)
+                    kindFS:SetText(kindText .. " - ")
+                    kindFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                    kindFS:SetWordWrap(false)
+                    prev = kindFS
+                    gap = 0
+                end
+
+                npcBtn = CreateFrame("Button", nil, row)
+                npcBtn:SetHeight(20)
+                npcBtn:SetPoint("LEFT", prev, "RIGHT", gap, 0)
+                npcFS = OneWoW_GUI:CreateFS(npcBtn, 10)
+                npcFS:SetPoint("LEFT", 0, 0)
+                npcFS:SetText(npcName)
+                npcFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                npcFS:SetWordWrap(false)
+                npcBtn:SetWidth(math.max(npcFS:GetStringWidth() + 2, 8))
+                npcBtn:SetScript("OnEnter", function()
+                    npcFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
+                end)
+                npcBtn:SetScript("OnLeave", function()
+                    npcFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                end)
+                npcBtn:SetScript("OnClick", function()
+                    ns.UI.OpenToVendor(npcID)
+                end)
+
+                if mapText then
+                    local mapFS = OneWoW_GUI:CreateFS(row, 10)
+                    mapFS:SetPoint("LEFT", npcBtn, "RIGHT", 0, 0)
+                    mapFS:SetText(" - " .. mapText)
+                    mapFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                    mapFS:SetWordWrap(false)
+                end
+            else
+                valueFS = OneWoW_GUI:CreateFS(row, 10)
+                valueFS:SetPoint("LEFT", lbl, "RIGHT", 4, 0)
+                valueFS:SetText(JoinLearnParts(kindText, npcName, mapText) or "")
+                valueFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+
+            yOffset = yOffset - 20
+
+            if npcID and IsGenericNPCName(npcName, npcID) then
+                FillLearnNPCName(npcID, function(name)
+                    if selectedRecipe ~= recipe then
+                        return
+                    end
+                    if npcFS then
+                        npcFS:SetText(name)
+                        npcBtn:SetWidth(math.max(npcFS:GetStringWidth() + 2, 8))
+                    elseif valueFS then
+                        valueFS:SetText(JoinLearnParts(kindText, name, mapText) or "")
+                    end
+                end, function()
+                    return selectedRecipe == recipe
+                end)
+            end
+        end
+    end
 
     yOffset = yOffset - 8
 
     -- Recipe scroll/book (not crafted output); SetItemByID feeds TooltipEngine + ATT.
-    local recipeItemID = OneWoW.RecipeKnownUtil:GetRecipeItemID(recipe.id)
+    local recipeItemID = recipe.taught
+    if not recipeItemID or recipeItemID <= 0 then
+        recipeItemID = OneWoW.RecipeKnownUtil:GetRecipeItemID(recipe.id)
+    end
     if recipeItemID then
         local recipeItemHeader = CreateFrame("Frame", nil, child, "BackdropTemplate")
         recipeItemHeader:SetHeight(24)

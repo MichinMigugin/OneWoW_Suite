@@ -230,6 +230,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Не изучено соратниками",
     ["TRADESKILLS_HAVE_MATERIALS"] = "Есть материалы",
     ["TRADESKILLS_RECIPE_ITEM"] = "Предмет рецепта",
+    ["TRADESKILLS_LEARNED_FROM"] = "Изучается",
+    ["TRADESKILLS_LEARN_TRAINER"] = "Учитель",
+    ["TRADESKILLS_LEARN_AUTO"] = "Автоматически",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Все дополнения",
 
     ["QUESTS_EMPTY"] = "Нет заданий, соответствующих фильтрам.",
