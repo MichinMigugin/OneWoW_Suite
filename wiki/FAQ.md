@@ -36,9 +36,9 @@ The feature must be **installed and enabled**. Open [Slash commands](Slash-Comma
 
 ## The project
 
-### Is OneWoW open source?
+### Is the source public?
 
-Yes. The suite lives at [https://github.com/kellewic/OneWoW_Suite](https://github.com/kellewic/OneWoW_Suite). Anyone can read it, open an issue, or send a pull request. See [About](About).
+Yes. The suite lives at [https://github.com/kellewic/OneWoW_Suite](https://github.com/kellewic/OneWoW_Suite). Anyone can read it, open an issue, or send a pull request (including original QoL modules). That is **not** permission to republish OneWoW as your own addon. See [About](About) and [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md).
 
 ### Is OneWoW written by AI?
 
@@ -72,6 +72,7 @@ Enable only one primary bag UI you intend to use, or expect overlapping keybinds
 
 ### Sources
 
+* [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md)
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md)
 * [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md)
 * Feature READMEs linked from each wiki feature page

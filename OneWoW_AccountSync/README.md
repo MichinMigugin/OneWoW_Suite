@@ -61,4 +61,8 @@ Desktop companion for the [OneWoW Suite](../README.md) — syncs in-game addon S
 
 ---
 
-**All rights reserved.**
+**Author:** OneWoW Development Team
+
+**Website:** https://onewow.net/
+
+**License:** See [LICENSE.md](../LICENSE.md). Copyright the OneWoW Development Team. All rights reserved.

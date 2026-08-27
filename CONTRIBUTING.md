@@ -20,11 +20,12 @@ Line-ending hooks run from this repo. Lua and locale gates run through
 
 ## Before You Start
 
-1. **Fork** this repository
+1. **Fork** this repository on GitHub **to send a pull request**. Forks are for contributing back, not for publishing a modified OneWoW.
 2. Create a **feature branch** from `main` (e.g. `feature/my-improvement`)
 3. Set up the [dev environment](#dev-environment) (workspace, extensions, pre-commit)
 4. Read [OneWoW/Docs/ARCHITECTURE.md](OneWoW/Docs/ARCHITECTURE.md) for suite structure and lifecycle expectations
 5. Follow existing code style in the addon you are editing
+6. Read [LICENSE.md](LICENSE.md). Private personal tweaks are fine. Do not distribute a modified suite.
 
 ## Translation Contributions (Localizations)
 
@@ -111,9 +112,19 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 - **Issues:** GitHub Issues for bug reports
 - **Discussions:** GitHub Discussions for questions and ideas
 
+## QoL modules
+
+Original drop-in modules under `OneWoW_QoL/Modules/external/<id>/` are welcome.
+Follow [OneWoW_QoL/DEVELOPERS.md](OneWoW_QoL/DEVELOPERS.md). Submit them as a
+pull request so they can be reviewed and shipped with the suite.
+
 ## License
 
-All contributions must be compatible with the project license. By submitting, you agree your work can be included under the same terms.
+See [LICENSE.md](LICENSE.md). Copyright the OneWoW Development Team. All rights
+reserved. Third-party libraries: [THIRD_PARTY.md](THIRD_PARTY.md).
+
+All contributions must be compatible with that license. By submitting a pull
+request, you agree your work can be included under the same terms.
 
 ---
 

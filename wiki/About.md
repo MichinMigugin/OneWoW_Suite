@@ -2,9 +2,11 @@ OneWoW is a modular **World of Warcraft** addon suite for **Retail**. One shared
 
 Official site: [https://onewow.net/](https://onewow.net/). Source: [GitHub](https://github.com/kellewic/OneWoW_Suite).
 
-## Open source
+## Public source
 
-The suite is public. Anyone can read the code, open an issue, or send a pull request. If you want to know how a feature works, start in the repo rather than guessing from a screenshot.
+The suite is public so you can read the code, open an issue, or send a pull request. That is not a grant to republish OneWoW as your own addon.
+
+You may install and use the official build, tweak it privately, and contribute (including original QoL modules). You may not distribute a modified OneWoW, copy the suite into another addon, or drop credit. Details: [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md).
 
 ## Who ships it
 
@@ -39,6 +41,7 @@ For how OneWoW sits next to Altoholic, All The Things, and Bagnon, see [Compare]
 
 ### Sources
 
+* [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md)
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md)
 * [CONTRIBUTING.md](https://github.com/kellewic/OneWoW_Suite/blob/main/CONTRIBUTING.md)
 * [OneWoW/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/ARCHITECTURE.md)

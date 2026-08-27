@@ -363,7 +363,7 @@ characters.
 
 ## Author
 
-MichinMuggin / Ricky
+OneWoW Development Team
 
 ## Website
 

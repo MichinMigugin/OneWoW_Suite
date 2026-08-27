@@ -41,7 +41,7 @@ You do **not** need every folder. Companion data packs for Catalog and AltTracke
 ## Help
 
 * [FAQ](FAQ) — common install and setup questions
-* [About](About) — open source, who ships it, quality bar
+* [About](About) — who ships it, public source, quality bar
 * [Compare](Compare) — vs Altoholic, All The Things, and Bagnon
 * Support (docs, email, Discord, CurseForge, GitHub): [https://onewow.net/support/](https://onewow.net/support/)
 

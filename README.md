@@ -137,7 +137,7 @@ Companion addons for [OneWoW_AltTracker](OneWoW_AltTracker/README.md). No standa
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, locale workflow, and pull request expectations.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, locale workflow, pull requests, and original QoL modules. License: [LICENSE.md](LICENSE.md).
 
 ## Support
 
@@ -147,8 +147,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, locale workflow, and pull
 
 ---
 
-**Author:** MichinMuggin / Ricky
+**Author:** OneWoW Development Team
 
 **Website:** https://onewow.net/
 
-**All rights reserved.**
+**License:** See [LICENSE.md](LICENSE.md). Copyright the OneWoW Development Team. All rights reserved.

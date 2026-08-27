@@ -543,4 +543,4 @@ otherwise).
 
 **Current Version:** B6.2602.1600
 **Interface:** 120000, 120001, 120002 (The War Within)
-**Author:** MichinMuggin / Ricky
+**Author:** OneWoW Development Team

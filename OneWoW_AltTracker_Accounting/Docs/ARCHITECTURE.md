@@ -85,7 +85,7 @@ This data addon works with the main AltTracker:
 
 ---
 
-**Author:** MichinMuggin / Ricky
+**Author:** OneWoW Development Team
 
 **Website:** https://onewow.net/
 

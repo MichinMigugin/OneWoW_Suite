@@ -412,7 +412,7 @@ This addon is designed to work seamlessly with the main OneWoW_AltTracker addon.
 
 Current Version: B6.2602.1600
 Interface: 120000, 120001, 120002
-Author: MichinMuggin / Ricky
+Author: OneWoW Development Team
 
 ## Dependencies
 

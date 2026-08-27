@@ -206,5 +206,8 @@ Part of the [OneWoW Suite](../README.md). See the suite README for the full addo
 
 ---
 
-**Authors:** OneWoW Dev Team (ricky, kellewic)  
-**All rights reserved.**
+**Author:** OneWoW Development Team
+
+**Website:** https://onewow.net/
+
+**License:** See [LICENSE.md](../LICENSE.md). Copyright the OneWoW Development Team. All rights reserved.

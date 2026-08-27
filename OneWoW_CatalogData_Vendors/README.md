@@ -64,8 +64,8 @@ Part of the [OneWoW Suite](../README.md). See the suite README for the full addo
 
 ---
 
-**Author:** MichinMuggin / Ricky
+**Author:** OneWoW Development Team
 
 **Website:** https://onewow.net/
 
-**All rights reserved.**
+**License:** See [LICENSE.md](../LICENSE.md). Copyright the OneWoW Development Team. All rights reserved.

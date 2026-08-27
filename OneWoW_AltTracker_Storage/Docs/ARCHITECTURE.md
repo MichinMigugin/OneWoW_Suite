@@ -534,7 +534,7 @@ OneWoW_AltTracker_Storage/
 **Current Version:** B6.2602.1600
 
 ## Author
-MichinMuggin / Ricky
+OneWoW Development Team
 
 ## Website
 https://onewow.net/
