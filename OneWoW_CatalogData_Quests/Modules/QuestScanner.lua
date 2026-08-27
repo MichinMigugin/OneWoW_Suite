@@ -648,9 +648,27 @@ scanFrame:SetScript("OnEvent", function(_, event, arg1)
     end
 end)
 
+-- The event that first EnsureLoads this pack is not re-delivered to this
+-- frame. If a quest dialog is still open, capture it now.
+local function CatchUpOpenQuestDialog()
+    local questID = GetQuestID()
+    if not questID or questID == 0 then
+        return
+    end
+    if QuestFrameRewardPanel:IsShown() then
+        CaptureQuestTurnInSnapshot(questID, "QUEST_COMPLETE")
+    elseif QuestFrameProgressPanel:IsShown() then
+        CaptureQuestTurnInSnapshot(questID, "QUEST_PROGRESS")
+    elseif QuestFrameDetailPanel:IsShown() then
+        CaptureQuestDetailSnapshot()
+    end
+end
+
 function QuestScanner:Initialize()
+    CatchUpOpenQuestDialog()
     C_Timer.After(1.5, function()
         ScanActiveQuestLog()
+        ns.QuestData:EnsureRewardIndexBuilding()
         local completedIDs = C_QuestLog.GetAllCompletedQuestIDs()
         if completedIDs and #completedIDs > 0 then
             C_Timer.After(0.5, function()

@@ -85,6 +85,11 @@ local questSearchBlobCache = {}
 local mapNameCache = {}
 local refreshQueued = false
 local SORTED_QUEST_CACHE_LIMIT = 40
+-- itemID -> { [questID] = true }. buildingIndex is the in-flight fill so a live
+-- capture can patch the same table the ChunkedJob is writing.
+local questRewardIndex = nil
+local buildingIndex = nil
+local rewardIndexJob = nil
 
 ------------------------------------------------------------
 -- FILTER HELPERS
@@ -549,14 +554,24 @@ local function QueueQuestUIRefresh()
         return
     end
 
+    -- Live captures must not rebuild the Catalog list while the player is
+    -- talking to an NPC / turning in a quest. Only refresh when the window is
+    -- already open (the tab function is created the first time that tab opens).
+    local main = OneWoWMainWindow
+    if not main or not main:IsShown() then
+        return
+    end
+    if not OneWoW_Catalog_API then
+        return
+    end
+
     refreshQueued = true
 
     C_Timer.After(0.1, function()
         refreshQueued = false
 
-        -- RefreshQuestsList is created lazily when the Catalog quest tab is
-        -- first opened, so it may legitimately not exist yet.
-        if OneWoW_Catalog_API then
+        local mainFrame = OneWoWMainWindow
+        if mainFrame and mainFrame:IsShown() and OneWoW_Catalog_API then
             OneWoW_Catalog_API.RefreshQuestsList()
         end
     end)
@@ -2167,12 +2182,147 @@ function QuestData:GetAvailableZones(expansionID)
 end
 
 ------------------------------------------------------------
--- ZONES
-------------------------------------------------------------
-
-------------------------------------------------------------
 -- RUNTIME STORAGE
 ------------------------------------------------------------
+-- Live NPC talk / turn-in writes one quest. Dropping allQuestsCache and the
+-- item->quest index here used to rebuild the full merged set on the next loot
+-- or quest-reward tooltip (QoL Item Tracker). Patch those tables in place.
+
+---@param quest table|nil
+---@return table set
+local function CollectRewardItemSet(quest)
+    local set = {}
+    if not quest then
+        return set
+    end
+    local function addList(list)
+        if not list then
+            return
+        end
+        for i = 1, #list do
+            local itemID = GetRewardItemID(list[i])
+            if itemID then
+                set[itemID] = true
+            end
+        end
+    end
+    addList(quest.rewardItems)
+    addList(quest.rewardChoices)
+    return set
+end
+
+---@param quest table|nil
+---@return table set
+local function CollectNPCIdSet(quest)
+    local set = {}
+    if not quest then
+        return set
+    end
+    local function addID(npcID)
+        npcID = tonumber(npcID)
+        if npcID then
+            set[npcID] = true
+        end
+    end
+    addID(quest.questGiverID)
+    addID(quest.questTurnInID)
+    local function addList(list)
+        if not list then
+            return
+        end
+        for i = 1, #list do
+            local npc = list[i]
+            if type(npc) == "table" then
+                addID(npc.npcID)
+            end
+        end
+    end
+    addList(quest.starts)
+    addList(quest.ends)
+    return set
+end
+
+---@param index table|nil
+---@param questID number
+---@param itemSet table|nil
+local function RemoveQuestFromItemIndex(index, questID, itemSet)
+    if not index or not itemSet then
+        return
+    end
+    for itemID in pairs(itemSet) do
+        local bucket = index[itemID]
+        if bucket then
+            bucket[questID] = nil
+            if not next(bucket) then
+                index[itemID] = nil
+            end
+        end
+    end
+end
+
+---@param index table|nil
+---@param questID number
+---@param itemSet table|nil
+local function AddQuestToItemIndex(index, questID, itemSet)
+    if not index or not itemSet then
+        return
+    end
+    for itemID in pairs(itemSet) do
+        local bucket = index[itemID]
+        if not bucket then
+            bucket = {}
+            index[itemID] = bucket
+        end
+        bucket[questID] = true
+    end
+end
+
+---@param questID number
+---@param oldSet table|nil
+---@param newSet table|nil
+local function PatchNPCIndex(questID, oldSet, newSet)
+    if not questNPCIndex then
+        return
+    end
+    if oldSet then
+        for npcID in pairs(oldSet) do
+            local bucket = questNPCIndex[npcID]
+            if bucket then
+                bucket[questID] = nil
+                if not next(bucket) then
+                    questNPCIndex[npcID] = nil
+                end
+            end
+        end
+    end
+    if newSet then
+        for npcID in pairs(newSet) do
+            local bucket = questNPCIndex[npcID]
+            if not bucket then
+                bucket = {}
+                questNPCIndex[npcID] = bucket
+            end
+            bucket[questID] = true
+        end
+    end
+end
+
+local function PersistRuntimeQuest(questID, data)
+    local db = GetRuntimeDB()
+    db.quests[questID] = db.quests[questID] or {}
+    for k, v in pairs(data) do
+        db.quests[questID][k] = v
+    end
+    db.quests[questID].id = questID
+    db.quests[questID].lastUpdated = time()
+end
+
+local function DropListDerivedCaches()
+    ClearSortedQuestCache()
+    wipe(sortedQuestSourceCache)
+    wipe(questSearchBlobCache)
+    filterValuesCache = nil
+end
 
 function QuestData:StoreQuestInfo(questID, data)
     if not questID or not data then
@@ -2182,29 +2332,45 @@ function QuestData:StoreQuestInfo(questID, data)
         return
     end
 
-    local db = GetRuntimeDB()
+    local before = self:GetQuest(questID)
+    local oldExpansion = before and before.expansion
+    local oldItems = CollectRewardItemSet(before)
+    local oldNpcs = CollectNPCIdSet(before)
 
-    db.quests[questID] =
-        db.quests[questID] or {}
+    PersistRuntimeQuest(questID, data)
 
-    for k, v in pairs(data) do
-        db.quests[questID][k] = v
+    local after = self:GetQuest(questID)
+    local valid = after and IsValidQuest(after) and true or false
+
+    if allQuestsCache then
+        allQuestsCache[questID] = valid and after or nil
     end
 
-    db.quests[questID].id = questID
-    db.quests[questID].lastUpdated = time()
+    if oldExpansion and expansionQuestsCache[oldExpansion] then
+        expansionQuestsCache[oldExpansion][questID] = nil
+    end
+    local newExpansion = after and after.expansion
+    if newExpansion and expansionQuestsCache[newExpansion] then
+        expansionQuestsCache[newExpansion][questID] = valid and after or nil
+    end
 
-    allQuestsCache = nil
-    wipe(expansionQuestsCache)
-    ClearQuestDerivedCaches()
-    self:InvalidateQuestRewardIndex()
+    local liveIndex = questRewardIndex or buildingIndex
+    if liveIndex then
+        RemoveQuestFromItemIndex(liveIndex, questID, oldItems)
+        if valid then
+            AddQuestToItemIndex(liveIndex, questID, CollectRewardItemSet(after))
+        end
+    end
+
+    PatchNPCIndex(questID, oldNpcs, valid and CollectNPCIdSet(after) or nil)
+
+    DropListDerivedCaches()
     QueueQuestUIRefresh()
 end
 
---- Persist enrichment for an already-known quest WITHOUT invalidating the
---- derived caches or triggering a list refresh. Used by the detail view to fill
---- in display-only fields (mapID, classification, tagName) on click; rebuilding
---- the full sorted/source caches there would cost a 33k-quest pass per click.
+--- Persist enrichment for an already-known quest WITHOUT patching derived
+--- caches or triggering a list refresh. Catalog's quest detail view uses this
+--- for display-only fields (mapID, classification, tagName) on click.
 ---@param questID number
 ---@param data table
 function QuestData:StoreQuestInfoQuiet(questID, data)
@@ -2215,16 +2381,7 @@ function QuestData:StoreQuestInfoQuiet(questID, data)
         return
     end
 
-    local db = GetRuntimeDB()
-
-    db.quests[questID] = db.quests[questID] or {}
-
-    for k, v in pairs(data) do
-        db.quests[questID][k] = v
-    end
-
-    db.quests[questID].id = questID
-    db.quests[questID].lastUpdated = time()
+    PersistRuntimeQuest(questID, data)
 end
 
 function QuestData:RememberItemName(itemID, itemName)
@@ -2288,24 +2445,37 @@ end
 -- QUEST REWARD INDEX (itemID -> questIDs)
 ------------------------------------------------------------
 
-local questRewardIndex = nil
-
 local function BuildQuestRewardIndex(shouldYield)
     if questRewardIndex then
         return questRewardIndex
     end
 
-    questRewardIndex = {}
+    if buildingIndex then
+        if shouldYield then
+            while not questRewardIndex and buildingIndex do
+                if rewardIndexJob and not rewardIndexJob:IsActive() then
+                    buildingIndex = nil
+                    break
+                end
+                coroutine_yield()
+            end
+            return questRewardIndex
+        end
+        return questRewardIndex
+    end
+
+    local index = {}
+    buildingIndex = index
 
     local function indexList(questID, list)
         if not list then return end
         for _, rewardItem in ipairs(list) do
             local itemID = GetRewardItemID(rewardItem)
             if itemID then
-                local bucket = questRewardIndex[itemID]
+                local bucket = index[itemID]
                 if not bucket then
                     bucket = {}
-                    questRewardIndex[itemID] = bucket
+                    index[itemID] = bucket
                 end
                 bucket[questID] = true
             end
@@ -2320,13 +2490,42 @@ local function BuildQuestRewardIndex(shouldYield)
         YieldIfNeeded(yieldCheck)
     end
 
+    questRewardIndex = index
+    buildingIndex = nil
     return questRewardIndex
 end
 
+--- Start a background fill of the reward index. Tooltip lookups never wait
+--- on the full quest walk; they return nil until this (or Item Search) finishes.
+function QuestData:EnsureRewardIndexBuilding()
+    if questRewardIndex then
+        return
+    end
+    if rewardIndexJob then
+        if rewardIndexJob:IsActive() then
+            return
+        end
+        rewardIndexJob = nil
+        buildingIndex = nil
+    end
+    rewardIndexJob = OneWoW.ChunkedJob.Start({
+        run = function(shouldYield)
+            BuildQuestRewardIndex(shouldYield)
+        end,
+        onComplete = function()
+            rewardIndexJob = nil
+        end,
+        onCancel = function()
+            rewardIndexJob = nil
+            buildingIndex = nil
+            questRewardIndex = nil
+        end,
+    })
+end
+
 --- Returns a sorted array of quest IDs that reward the given item, or nil.
---- The index is built lazily from the merged quest set and cached until quest
---- data changes (see InvalidateQuestRewardIndex).
 --- `loadArchive` true loads Quest Archive (Item Search after packs are wanted).
+--- `loadArchive` false is the tooltip path: never rebuild the index on this call.
 ---@param itemID number
 ---@param loadArchive boolean|nil
 ---@return number[]|nil
@@ -2338,7 +2537,19 @@ function QuestData:GetQuestsRewardingItem(itemID, loadArchive)
         self:EnsureArchiveLoaded(-1)
     end
 
-    local bucket = BuildQuestRewardIndex()[itemID]
+    if loadArchive == false then
+        if not questRewardIndex then
+            self:EnsureRewardIndexBuilding()
+            return nil
+        end
+    else
+        BuildQuestRewardIndex()
+        if not questRewardIndex then
+            return nil
+        end
+    end
+
+    local bucket = questRewardIndex[itemID]
     if not bucket then return nil end
 
     local ids = {}
@@ -2356,6 +2567,9 @@ end
 function QuestData:GetRewardItemIDs(shouldYield)
     self:EnsureArchiveLoaded(-1, shouldYield)
     local idx = BuildQuestRewardIndex(shouldYield)
+    if not idx then
+        return {}
+    end
     local ids = {}
     for itemID in pairs(idx) do
         ids[#ids + 1] = itemID
@@ -2364,7 +2578,12 @@ function QuestData:GetRewardItemIDs(shouldYield)
 end
 
 function QuestData:InvalidateQuestRewardIndex()
+    if rewardIndexJob then
+        rewardIndexJob:Cancel()
+        rewardIndexJob = nil
+    end
     questRewardIndex = nil
+    buildingIndex = nil
 end
 
 ------------------------------------------------------------

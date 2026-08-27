@@ -1830,7 +1830,7 @@ function ShowQuestDetail(panels, questData)
             questData.mapID    = liveMapID
             questData.zoneName = mapInfo and mapInfo.name or questData.zoneName
 
-            addon.StoreQuestInfo(questData.id, {
+            addon.StoreQuestInfoQuiet(questData.id, {
                 mapID = liveMapID,
                 zoneName = questData.zoneName
             })
@@ -1843,7 +1843,7 @@ function ShowQuestDetail(panels, questData)
         if cls then
             questData.classification = cls
 
-            addon.StoreQuestInfo(questData.id, {
+            addon.StoreQuestInfoQuiet(questData.id, {
                 classification = cls
             })
         end
@@ -1856,7 +1856,7 @@ function ShowQuestDetail(panels, questData)
             questData.tagName = tagInfo.tagName
             questData.isElite = tagInfo.isElite
 
-            addon.StoreQuestInfo(questData.id, {
+            addon.StoreQuestInfoQuiet(questData.id, {
                 tagName = tagInfo.tagName,
                 isElite = tagInfo.isElite
             })

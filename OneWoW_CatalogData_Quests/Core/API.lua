@@ -111,11 +111,19 @@ function OneWoW_CatalogData_Quests_API.GetAvailableZones(expansionID)
     return ns.QuestData:GetAvailableZones(expansionID)
 end
 
---- Stores runtime quest fields and notifies consumers.
+--- Stores runtime quest fields. Live captures patch merged caches and the
+--- item/NPC indexes in place so loot and quest-reward tooltips stay cheap.
 ---@param questID number
 ---@param data table
 function OneWoW_CatalogData_Quests_API.StoreQuestInfo(questID, data)
     ns.QuestData:StoreQuestInfo(questID, data)
+end
+
+--- Persist display-only fields without touching derived caches or the list.
+---@param questID number
+---@param data table
+function OneWoW_CatalogData_Quests_API.StoreQuestInfoQuiet(questID, data)
+    ns.QuestData:StoreQuestInfoQuiet(questID, data)
 end
 
 --- Stores a resolved reward-item name.
