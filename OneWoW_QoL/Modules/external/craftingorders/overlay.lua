@@ -710,6 +710,20 @@ function M:EnsureModeButton()
     end)
     btn:SetScript("OnLeave", GameTooltip_Hide)
     M._modeBtn = btn
+
+    local settingsBtn = OneWoW_GUI:CreateIconButton(browse, {
+        iconTexture = OneWoW_GUI.Constants.MEDIA_BASE .. "icon-gears.png",
+        size = 22,
+        tooltipTitle = L["OPEN_SETTINGS"],
+        onClick = function()
+            ns.UI.SelectFeature("craftingorders")
+        end,
+    })
+    settingsBtn:SetPoint("LEFT", btn, "RIGHT", SPACING.SM, 0)
+    settingsBtn:SetFrameStrata("HIGH")
+    settingsBtn:SetFrameLevel(browse.PersonalOrdersButton:GetFrameLevel() + 2)
+    M._settingsBtn = settingsBtn
+
     OneWoW_GUI:RegisterFontRoot(btn, function()
         M:UpdateModeButton()
     end)
@@ -722,9 +736,11 @@ function M:UpdateModeButton()
     if not btn then return end
     if not ModuleOn() then
         btn:Hide()
+        M._settingsBtn:Hide()
         return
     end
     btn:Show()
+    M._settingsBtn:Show()
     if M:WantsOverlay() then
         btn:SetFitText(L["CRAFTORDERS_USE_WOWUI"])
     else

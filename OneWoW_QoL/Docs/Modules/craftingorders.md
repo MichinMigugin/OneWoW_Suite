@@ -32,7 +32,7 @@ the overlay is shown. Patron / Guild / Personal are always a flat order list.
   (Missing mats and Recipe Unlearned), in its own column.
 - **WoW UI:** a **WoW UI** / **One UI** button sits on the order-type tab row
   (and a Features toggle) to swap back to Blizzard's table without disabling
-  the module.
+  the module. A gear beside it opens this module in QoL Features.
 - **Craftable now:** recipe learned and every crafter-provided required reagent
   is in bags, bank, reagent bank, or warband bank. Fully customer-supplied
   counts as now.

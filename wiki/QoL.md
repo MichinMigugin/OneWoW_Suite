@@ -32,7 +32,7 @@ Hands-off helpers: **Auto Repair**, **Fast Loot**, **Auto Mount**, **Auto Open**
 
 ### Interface
 
-UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel** (zone notes and OneWay Pins for this map), **Bag Bar** (items matched by [search expressions](Bags-Search-Syntax)), **Quest Item Bar**, **Professions Panel**, **Crafting Orders** (Craftable now / Missing mats / Recipe Unlearned; hide unlearned in Features; WoW UI switch on the order tabs), **Character Info Sheet**, **Coords Display**, **Cursor Enhancer**, **Frame Mover**, combat-error spam filter, **Icon Browser** (searchable icon picker for macros, bank tabs, and transmog outfits), **Inspect Gear**, **LFG Lockouts**, minimap/world map tools, **Minimap Button Collector**, **Player Mounts**, **Prey Hunt Bar**, and more.
+UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel** (zone notes and OneWay Pins for this map), **Bag Bar** (items matched by [search expressions](Bags-Search-Syntax)), **Quest Item Bar**, **Professions Panel**, **Crafting Orders** (Craftable now / Missing mats / Recipe Unlearned; hide unlearned in Features; WoW UI switch and a gear to Features on the order tabs), **Character Info Sheet**, **Coords Display**, **Cursor Enhancer**, **Frame Mover**, combat-error spam filter, **Icon Browser** (searchable icon picker for macros, bank tabs, and transmog outfits), **Inspect Gear**, **LFG Lockouts**, minimap/world map tools, **Minimap Button Collector**, **Player Mounts**, **Prey Hunt Bar**, and more.
 
 ### Social
 

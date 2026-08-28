@@ -2,45 +2,47 @@
 
 - **Status**: Draft
 
-### QoL
-#### Vendor Panel
-- Opening a vendor and hovering items stays smoother. The window no longer looks up every shop in the game for each item.
-- The sell list shows the same vendor price as the item tooltip, including old scaled gear.
-
-#### Minimap Button Collector
-- The enhanced OneWoW row can add optional Mail, Settings, and Portals launchers. Turn each on or off in collector settings.
-
-#### ESC Menu Panel
-- The zone panel lists OneWay Pins for this map. Click one to set a live waypoint.
-
-#### Crafting Orders
-- Craftable now counts reagents in the Warband Bank, same as Blizzard's craft.
-- Orders you have not learned sit in Recipe Unlearned, not Missing mats. Features can hide that section.
-
----
-
-### Mail
-- Right-click the OneWoW minimap icon includes Open Mail when Mail is loaded.
-
----
-
 ### Notes
-#### OneWay Pins
-- Save banks, craft tables, vendors, and other landmarks. They stay on the world map, minimap, and a Notes tab. Click one for a live waypoint that clears when you arrive.
-- Save from Journal (right-click the pin), Vendors, Quests, NPC menus, Zone Notes, or right-click the world map. A pinned zone note can show a Show Pins list beside it.
-- Minimap pins stay on the landmark instead of following you. Each pin can use its own world-map size; Notes settings also set default world and minimap sizes.
-- The list has Go and Only This. Find Location searches vendors and NPCs in a zone. The world map has a OneWoW pin button for show/hide. Right-click your own name to add a pin at your feet.
+#### New Feature
+- **OneWay Pins** - Save custom landmarks (banks, craft tables, vendors, anything you come back to). They stay on the world map and minimap with your own icons until you delete them. Click a pin for a live waypoint that clears when you arrive.
+  - Open them from **Notes >> OneWay Pins**, or from the OneWoW pin button on the world map (next to the map filters).
+  - Right-click your own unit frame to drop a pin at your feet. Right-click any NPC's target frame to pin that NPC.
+  - **Find Location** looks up NPCs in a zone by name, type, notes, or what they sell. Catalog Journal, Vendors, and Quests can save a pin too.
+  - **Add to Zone Notes** attaches a floating zone window with a list of your pins for that map. When you enter the zone, that window can appear so every custom pin is in front of you. The ESC menu zone panel lists them as well.
 
 ---
 
 ### Catalog
-- Journal, Vendors, and Quests can save a OneWay Pin: right-click the existing pin, or use Save Pin next to Pin on a vendor.
+#### Updated Database
+- **Quests** are current for Classic through Midnight (patch 12.1). Each quest now includes the NPCs, quest text, and other information we have for it.
+
+---
+
+### QoL
+#### Crafting Orders
+- Craftable now counts reagents in the Warband Bank, same as Blizzard's craft.
+- Orders you have not learned sit in Recipe Unlearned, not Missing mats. Features can hide that section.
+
+#### Minimap Button Collector
+- The OneWoW minimap row can add Mail, Settings, and Portals buttons. Turn each on or off in collector settings.
+
+#### Fixes
+- Vendor windows stay smooth when you hover items. The list no longer looks up every shop in the game for each item.
+- The sell list shows the same vendor price as the item tooltip, including old scaled gear.
+- A gear next to the WoW UI switch opens Crafting Orders in QoL Features.
+
+---
+
+### Mail
+- Right-click the OneWoW minimap icon to Open Mail when Mail is loaded.
 
 ---
 
 ### AltTracker
 #### Progress
-- Progress Raids counts bosses from raid lockouts and the Adventure Guide for each difficulty. Tidebound Grotto includes the weekly World kill.
+- Raids count bosses from raid lockouts and the Adventure Guide for each difficulty. Tidebound Grotto includes the weekly World kill.
+
+#### Fixes
 - Mythic+ dungeon columns use this season's maps, so best runs show without matching English names.
 
 ---

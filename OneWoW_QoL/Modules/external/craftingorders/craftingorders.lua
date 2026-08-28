@@ -182,6 +182,7 @@ function M:OnDisable()
     M:HideOverlay()
     if M._modeBtn then
         M._modeBtn:Hide()
+        M._settingsBtn:Hide()
     end
 end
 
