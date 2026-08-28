@@ -19,6 +19,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
 
     ["MMBTNS_ENHANCED_MENU"] = "Enhanced OneWoW Menu",
     ["MMBTNS_ENHANCED_MENU_DESC"] = "Adds a top row of quick-launch icons for loaded OneWoW addons.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Turn extra launchers on or off below. Mail only appears when Mail is loaded.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Max Columns",
     ["MMBTNS_MAX_ROWS"] = "Max Rows",

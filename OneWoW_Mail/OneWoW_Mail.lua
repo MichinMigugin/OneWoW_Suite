@@ -54,6 +54,10 @@ function OneWoW_Mail:OnPlayerLogin()
     OneWoW:EnsureLoaded("OneWoW_AltTracker_Storage")
     OneWoW:EnsureLoaded("OneWoW_AltTracker_Character")
 
+    OneWoW:RegisterMinimap("OneWoW_Mail", ns.L["CTX_OPEN_MAIL"], nil, function()
+        if ns.Shell then ns.Shell:Toggle() end
+    end)
+
     if OneWoW_Mail.FireLoginHandlers then
         OneWoW_Mail:FireLoginHandlers()
     end

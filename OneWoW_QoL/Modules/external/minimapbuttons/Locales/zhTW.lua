@@ -20,6 +20,7 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
 
     ["MMBTNS_ENHANCED_MENU"] = "增強的 OneWoW 選單",
     ["MMBTNS_ENHANCED_MENU_DESC"] = "為已載入的 OneWoW 插件新增一排頂部快速啟動圖示。",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "在下方開啟或關閉額外的快捷啟動項。僅在已載入 Mail 時顯示 Mail。",
 
     ["MMBTNS_MAX_COLUMNS"] = "最大欄數",
     ["MMBTNS_MAX_ROWS"] = "最大列數",

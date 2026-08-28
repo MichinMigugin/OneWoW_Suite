@@ -20,6 +20,7 @@ OneWoW.Locale:Register(M._scope, "itIT", {
 
     ["MMBTNS_ENHANCED_MENU"] = "Menu OneWoW migliorato",
     ["MMBTNS_ENHANCED_MENU_DESC"] = "Aggiunge una riga superiore di icone di avvio rapido per gli addon OneWoW caricati.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Attiva o disattiva i lanciatori extra qui sotto. Mail compare solo quando Mail è caricato.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Colonne max.",
     ["MMBTNS_MAX_ROWS"] = "Righe max.",

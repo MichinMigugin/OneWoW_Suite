@@ -88,6 +88,9 @@ local function GetSettings()
     if s.closeMode       == nil then s.closeMode       = "autoclose" end
     if s.autoCloseDelay  == nil then s.autoCloseDelay  = 3           end
     if s.enhancedMenu    == nil then s.enhancedMenu    = false       end
+    if s.enhancedMail     == nil then s.enhancedMail     = true        end
+    if s.enhancedSettings == nil then s.enhancedSettings = true        end
+    if s.enhancedPortals  == nil then s.enhancedPortals  = true        end
     if s.maxColumns      == nil then s.maxColumns      = 6           end
     if s.maxRows         == nil then s.maxRows         = 0           end
     if s.buttonSize      == nil then s.buttonSize      = 34          end
@@ -1097,6 +1100,74 @@ local function ApplyCompanionIcon(tex, comp)
     end
 end
 
+local function AddEnhancedButton(comp, action)
+    action = action or GetCompanionAction(comp)
+
+    local btn = CreateFrame("Button", nil, containerFrame)
+    btn:SetSize(28, 28)
+
+    local tex = btn:CreateTexture(nil, "ARTWORK")
+    tex:SetAllPoints()
+    ApplyCompanionIcon(tex, comp)
+
+    OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
+
+    btn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine(comp.name, 1, 0.82, 0, true)
+        if comp.ver and comp.ver ~= "" then
+            GameTooltip:AddLine("v" .. comp.ver, 0.7, 0.7, 0.7)
+        end
+        if comp.cmd then
+            GameTooltip:AddLine(comp.cmd, 0.5, 0.5, 0.6)
+        end
+        GameTooltip:Show()
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    if action then
+        btn:SetScript("OnClick", function() action() end)
+    else
+        btn:SetScript("OnClick", function()
+            OneWoW.UI:Toggle()
+        end)
+    end
+
+    table.insert(enhancedRow, btn)
+end
+
+local function OpenPortalHub()
+    local global = OneWoW:GetCoreGlobal()
+    global.lastSubTabs.qol = "portals"
+    OneWoW.UI:Show("qol")
+end
+
+-- Optional extras sit behind collector checkboxes so they are not a second
+-- copy of a loaded-component tile. Mail is skipped in the companion loop.
+local function AppendExtraLaunchers(s)
+    if s.enhancedMail and C_AddOns.IsAddOnLoaded("OneWoW_Mail") then
+        AddEnhancedButton({
+            name  = MAIL_LABEL,
+            addon = "OneWoW_Mail",
+            cmd   = "/1wmail",
+        })
+    end
+    if s.enhancedSettings then
+        AddEnhancedButton({
+            name  = SETTINGS,
+            addon = "settings",
+        }, function()
+            OneWoW.UI:Show("settings")
+        end)
+    end
+    if s.enhancedPortals then
+        AddEnhancedButton({
+            name  = ns.L["PORTALS_SUBTAB"],
+            addon = "portals",
+        }, OpenPortalHub)
+    end
+end
+
 local function BuildEnhancedRow()
     if not containerFrame then return end
     for _, btn in ipairs(enhancedRow) do
@@ -1111,44 +1182,14 @@ local function BuildEnhancedRow()
     enhancedBuiltCount = #companions
 
     for _, comp in ipairs(companions) do
-        -- GUI only opens the main OneWoW window, identical to the Core tile, so
-        -- it would be a redundant duplicate launcher. Skip it.
-        if comp.name ~= "GUI" then
-            local action = GetCompanionAction(comp)
-
-            local btn = CreateFrame("Button", nil, containerFrame)
-            btn:SetSize(28, 28)
-
-            local tex = btn:CreateTexture(nil, "ARTWORK")
-            tex:SetAllPoints()
-            ApplyCompanionIcon(tex, comp)
-
-            OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
-
-            btn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:AddLine(comp.name, 1, 0.82, 0, true)
-                if comp.ver and comp.ver ~= "" then
-                    GameTooltip:AddLine("v" .. comp.ver, 0.7, 0.7, 0.7)
-                end
-                if comp.cmd then
-                    GameTooltip:AddLine(comp.cmd, 0.5, 0.5, 0.6)
-                end
-                GameTooltip:Show()
-            end)
-            btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            if action then
-                btn:SetScript("OnClick", function() action() end)
-            else
-                btn:SetScript("OnClick", function()
-                    OneWoW.UI:Toggle()
-                end)
-            end
-
-            table.insert(enhancedRow, btn)
+        -- GUI only opens the main OneWoW window, identical to the Core tile.
+        -- Mail is an optional extra (AppendExtraLaunchers), not an auto tile.
+        if comp.name ~= "GUI" and comp.addon ~= "OneWoW_Mail" then
+            AddEnhancedButton(comp)
         end
     end
+
+    AppendExtraLaunchers(GetSettings())
 end
 
 -- ─── Container Layout ───────────────────────────────────────────────────────

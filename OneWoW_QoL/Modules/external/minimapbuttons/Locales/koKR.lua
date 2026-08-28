@@ -20,6 +20,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["MMBTNS_ENHANCED_MENU"] = "향상된 OneWoW 메뉴",
     ["MMBTNS_ENHANCED_MENU_DESC"] = "불러온 OneWoW 애드온을 위한 빠른 실행 아이콘 상단 줄을 추가합니다.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "아래에서 추가 실행 아이콘을 켜거나 끕니다. Mail은 Mail이 로드된 경우에만 나타납니다.",
 
     ["MMBTNS_MAX_COLUMNS"] = "최대 열",
     ["MMBTNS_MAX_ROWS"] = "최대 행",

@@ -306,6 +306,7 @@ local function BuildContent(container, onRelayout)
             onClick = function(self)
                 s.enhancedMenu = self:GetChecked()
                 MinimapButtonsModule:Refresh()
+                MinimapButtonsModule._refreshCustomDetail()
             end,
         })
         enhCB:SetPoint("TOPLEFT", content, "TOPLEFT", 12, cy)
@@ -314,6 +315,30 @@ local function BuildContent(container, onRelayout)
         local enhDesc, descCy = AddDescription(content, cy, L["MMBTNS_ENHANCED_MENU_DESC"], contentWidth)
         cy = descCy
 
+        local extrasShown = false
+        if s.enhancedMenu then
+            extrasShown = true
+            local _, extrasCy = AddDescription(content, cy, L["MMBTNS_ENHANCED_EXTRAS_DESC"], contentWidth)
+            cy = extrasCy
+
+            local function AddExtraCB(label, key)
+                local cb = OneWoW_GUI:CreateCheckbox(content, {
+                    label   = label,
+                    checked = s[key],
+                    onClick = function(self)
+                        s[key] = self:GetChecked()
+                        MinimapButtonsModule:Refresh()
+                    end,
+                })
+                cb:SetPoint("TOPLEFT", content, "TOPLEFT", 36, cy)
+                cy = cy - ROW_HEIGHT
+            end
+
+            AddExtraCB(MAIL_LABEL, "enhancedMail")
+            AddExtraCB(SETTINGS, "enhancedSettings")
+            AddExtraCB(ns.L["PORTALS_SUBTAB"], "enhancedPortals")
+        end
+
         local lockCB = OneWoW_GUI:CreateCheckbox(content, {
             label   = L["MMBTNS_LOCK_POSITION"],
             checked = s.locked,
@@ -321,11 +346,16 @@ local function BuildContent(container, onRelayout)
                 s.locked = self:GetChecked()
             end,
         })
-        -- Relative to desc so wrap height mistakes cannot overlap the next row.
         lockCB:ClearAllPoints()
-        lockCB:SetPoint("LEFT", content, "LEFT", 12, 0)
-        lockCB:SetPoint("TOP", enhDesc, "BOTTOM", 0, -8)
-        cy = descCy - ROW_HEIGHT
+        if extrasShown then
+            lockCB:SetPoint("TOPLEFT", content, "TOPLEFT", 12, cy)
+            cy = cy - ROW_HEIGHT
+        else
+            -- Relative to desc so wrap-height mistakes cannot overlap the next row.
+            lockCB:SetPoint("LEFT", content, "LEFT", 12, 0)
+            lockCB:SetPoint("TOP", enhDesc, "BOTTOM", 0, -8)
+            cy = descCy - ROW_HEIGHT
+        end
 
         -- Also Show on Minimap: collected buttons keep their normal entry in the
         -- collector AND get a click-through copy back on the minimap edge.

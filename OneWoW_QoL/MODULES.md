@@ -150,7 +150,7 @@ World map: reveal unexplored terrain from client data, optional tints, battlefie
 
 ### Minimap Button Collector
 
-Collects minimap addon buttons into a single themed container. Uses the OneWoW brand icon and supports grid layout, auto-close, and an enhanced OneWoW quick-launch row.
+Collects minimap addon buttons into a single themed container. Uses the OneWoW brand icon and supports grid layout, auto-close, and an enhanced OneWoW quick-launch row with optional Mail, Settings, and Portals tiles.
 
 - **Module id:** `minimapbuttons` · **Folder:** `Modules/external/minimapbuttons/`
 

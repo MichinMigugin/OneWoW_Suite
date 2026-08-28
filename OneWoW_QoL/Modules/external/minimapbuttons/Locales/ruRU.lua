@@ -20,6 +20,7 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
 
     ["MMBTNS_ENHANCED_MENU"] = "Улучшенное меню OneWoW",
     ["MMBTNS_ENHANCED_MENU_DESC"] = "Добавляет верхний ряд значков быстрого запуска для загруженных аддонов OneWoW.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Включайте или отключайте дополнительные ярлыки ниже. Mail появляется только когда Mail загружен.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Макс. столбцов",
     ["MMBTNS_MAX_ROWS"] = "Макс. строк",

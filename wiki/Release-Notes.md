@@ -2,26 +2,18 @@
 
 - **Status**: Draft
 
-### AltTracker
-#### Progress
-- Hero Mistcrests on the Currencies tab now match the character Currency page. Log into each alt once so the new count stores.
-- Dawnlight Manaflux is replaced by Season 2 Venomblight Manaflux.
-- Progress shows the current season and patch under the overview. Options opens the picker for raids, Mythic+, world bosses, weeklies, and currencies.
-
----
-
-### Trackers
-- The bundled Midnight weekly tracker now counts Hero Mistcrests from the same live currency.
-
----
-
 ### QoL
-#### Crafting Orders
-- Column headers on the order list show again (Order, You Provide, Cart, and the rest).
+#### Minimap Button Collector
+- The enhanced OneWoW row can add optional Mail, Settings, and Portals launchers. Turn each on or off in collector settings.
 
 ---
 
-*No user-facing changes this release for Home, Catalog, Shopping List, Bags, DevTool, Mail, Notes, or Direct Deposit.*
+### Mail
+- Right-click the OneWoW minimap icon includes Open Mail when Mail is loaded.
+
+---
+
+*No user-facing changes this release for Home, AltTracker, Catalog, Shopping List, Bags, DevTool, Notes, Trackers, or Direct Deposit.*
 
 ---
 
