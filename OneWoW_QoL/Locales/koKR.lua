@@ -369,6 +369,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ESCPANEL_HOUSING_FORMAT"] = "주택: %d/%d",
     ["ESCPANEL_TOYS_FORMAT"] = "장난감: %d/%d",
     ["ESCPANEL_ZONE_TODOS"] = "할 일:",
+    ["ESCPANEL_WAYPINS"] = "ONEWAY PINS",
 
     ["ADDON_TITLE"] = "OneWoW - QoL",
     ["ADDON_TITLE_SHORT"] = "QoL",

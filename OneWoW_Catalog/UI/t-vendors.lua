@@ -837,7 +837,7 @@ local function ShowVendorDetail(panels, vendor)
                 infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 tinsert(detailElements, infoLine)
 
-                local capturedMapID = mapID
+                local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
                 local pinLink = OneWoW_GUI:CreateTextLink(parent, {
                     text = L["VENDORS_WAYPOINT"],
                     fontSize = 11,
@@ -849,6 +849,17 @@ local function ShowVendorDetail(panels, vendor)
                 })
                 pinLink:SetPoint("LEFT", infoLine, "RIGHT", 8, 0)
                 tinsert(detailElements, pinLink)
+                if capturedX and capturedX > 0 then
+                    local saveLink = OneWoW_GUI:CreateTextLink(parent, {
+                        text = L["VENDORS_SAVE_WAYPIN"],
+                        fontSize = 11,
+                        onClick = function()
+                            ns.Navigation:SaveOneWayPin(vendor.name, capturedMapID, capturedX, capturedY, "vendor", vendor.npcID)
+                        end,
+                    })
+                    saveLink:SetPoint("LEFT", pinLink, "RIGHT", 8, 0)
+                    tinsert(detailElements, saveLink)
+                end
                 locPinHeight = math.max(infoLine:GetStringHeight(), pinLink:GetHeight() or 12)
                 yOffset = StepRow(yOffset, locPinHeight)
             else
@@ -859,7 +870,7 @@ local function ShowVendorDetail(panels, vendor)
                 locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 tinsert(detailElements, locLine)
 
-                local capturedMapID = mapID
+                local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
                 local pinLink = OneWoW_GUI:CreateTextLink(parent, {
                     text = L["VENDORS_WAYPOINT"],
                     fontSize = 11,
@@ -871,6 +882,17 @@ local function ShowVendorDetail(panels, vendor)
                 })
                 pinLink:SetPoint("LEFT", locLine, "RIGHT", 8, 0)
                 tinsert(detailElements, pinLink)
+                if capturedX and capturedX > 0 then
+                    local saveLink = OneWoW_GUI:CreateTextLink(parent, {
+                        text = L["VENDORS_SAVE_WAYPIN"],
+                        fontSize = 11,
+                        onClick = function()
+                            ns.Navigation:SaveOneWayPin(vendor.name, capturedMapID, capturedX, capturedY, "vendor", vendor.npcID)
+                        end,
+                    })
+                    saveLink:SetPoint("LEFT", pinLink, "RIGHT", 8, 0)
+                    tinsert(detailElements, saveLink)
+                end
                 yOffset = StepRow(yOffset, math.max(locLine:GetStringHeight(), pinLink:GetHeight() or 12))
             end
         end

@@ -503,9 +503,34 @@ function ns.UI.CreateNPCsTab(parent)
             gotoBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.gotoBtn = gotoBtn
 
+            local waypinBtn = ns.UI.CreateHeaderIconButton(editorHeader, {
+                texture = "icon-pin.png",
+                relativeTo = gotoBtn,
+                tooltipTitle = L["TOOLTIP_NPC_SAVE_WAYPIN"],
+                tooltipDesc = L["TOOLTIP_NPC_SAVE_WAYPIN_DESC"],
+                onClick = function()
+                    if selectedNPC and ns.NPCs and ns.WayPins then
+                        local nd = ns.NPCs:GetNPC(selectedNPC)
+                        if nd and nd.mapID and nd.coords then
+                            ns.WayPins:Add({
+                                title     = nd.name,
+                                mapID     = nd.mapID,
+                                x         = nd.coords.x,
+                                y         = nd.coords.y,
+                                source    = "npc",
+                                sourceKey = selectedNPC,
+                            })
+                        else
+                            print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"]))
+                        end
+                    end
+                end,
+            })
+            editorHeader.waypinBtn = waypinBtn
+
             local alertBtn = CreateFrame("CheckButton", nil, editorHeader)
             alertBtn:SetSize(22, 22)
-            alertBtn:SetPoint("RIGHT", gotoBtn, "LEFT", -2, 0)
+            alertBtn:SetPoint("RIGHT", waypinBtn, "LEFT", -2, 0)
             local aN = alertBtn:CreateTexture(nil, "BACKGROUND")
             aN:SetAllPoints() aN:SetTexture(MEDIA .. "icon-alert.png")
             aN:SetDesaturated(true) aN:SetAlpha(0.3)

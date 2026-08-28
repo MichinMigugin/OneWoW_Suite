@@ -370,6 +370,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ESCPANEL_HOUSING_FORMAT"] = "Жильё: %d/%d",
     ["ESCPANEL_TOYS_FORMAT"] = "Игрушки: %d/%d",
     ["ESCPANEL_ZONE_TODOS"] = "Задачи:",
+    ["ESCPANEL_WAYPINS"] = "ONEWAY PINS",
 
     ["ADDON_TITLE"] = "OneWoW - QoL",
     ["ADDON_TITLE_SHORT"] = "QoL",

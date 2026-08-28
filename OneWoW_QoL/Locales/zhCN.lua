@@ -370,6 +370,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ESCPANEL_HOUSING_FORMAT"] = "住宅：%d/%d",
     ["ESCPANEL_TOYS_FORMAT"] = "玩具：%d/%d",
     ["ESCPANEL_ZONE_TODOS"] = "任务：",
+    ["ESCPANEL_WAYPINS"] = "ONEWAY PINS",
 
     ["ADDON_TITLE"] = "OneWoW - QoL",
     ["ADDON_TITLE_SHORT"] = "QoL",

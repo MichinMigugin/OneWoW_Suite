@@ -85,6 +85,85 @@ function ns.UI.CreateSettingsTab(parent)
     local yOffset = -20
 
     yOffset = yOffset - 20
+    local waypinsSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["TAB_WAYPINS"], yOffset = yOffset })
+    yOffset = waypinsSection.bottomY - 16
+
+    CreateDetectionRow(
+        scrollChild,
+        "WAYPINS_SHOW_WORLD",
+        "SETTINGS_WAYPINS_WORLD_DESC",
+        function() return ns.db.global.waypinShowWorld ~= false end,
+        function()
+            ns.db.global.waypinShowWorld = not (ns.db.global.waypinShowWorld ~= false)
+            if ns.WayPinsMap then ns.WayPinsMap:Refresh() end
+            return ns.db.global.waypinShowWorld ~= false
+        end,
+        yOffset
+    )
+    yOffset = yOffset - 70
+
+    CreateDetectionRow(
+        scrollChild,
+        "WAYPINS_SHOW_MINIMAP",
+        "SETTINGS_WAYPINS_MINIMAP_DESC",
+        function() return ns.db.global.waypinShowMinimap ~= false end,
+        function()
+            ns.db.global.waypinShowMinimap = not (ns.db.global.waypinShowMinimap ~= false)
+            if ns.WayPinsMap then ns.WayPinsMap:Refresh() end
+            return ns.db.global.waypinShowMinimap ~= false
+        end,
+        yOffset
+    )
+    yOffset = yOffset - 70
+
+    local sizeRow = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+    sizeRow:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  16, yOffset)
+    sizeRow:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -16, yOffset)
+    sizeRow:SetHeight(88)
+    sizeRow:SetBackdrop(backdrop)
+    sizeRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    sizeRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local worldSizeLabel = OneWoW_GUI:CreateFS(sizeRow, 11)
+    worldSizeLabel:SetPoint("TOPLEFT", 12, -10)
+    worldSizeLabel:SetText(L["WAYPINS_SIZE_WORLD"])
+    worldSizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local worldSlider = OneWoW_GUI:CreateSlider(sizeRow, {
+        minVal = 12,
+        maxVal = 48,
+        step = 1,
+        currentVal = ns.db.global.waypinWorldSize or 22,
+        width = 240,
+        fmt = "%.0f",
+        onChange = function(val)
+            ns.db.global.waypinWorldSize = val
+            if ns.WayPinsMap then ns.WayPinsMap:Refresh() end
+        end,
+    })
+    worldSlider:SetPoint("TOPLEFT", sizeRow, "TOPLEFT", 12, -28)
+
+    local miniSizeLabel = OneWoW_GUI:CreateFS(sizeRow, 11)
+    miniSizeLabel:SetPoint("TOPLEFT", 280, -10)
+    miniSizeLabel:SetText(L["WAYPINS_SIZE_MINIMAP"])
+    miniSizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local miniSlider = OneWoW_GUI:CreateSlider(sizeRow, {
+        minVal = 10,
+        maxVal = 28,
+        step = 1,
+        currentVal = ns.db.global.waypinMinimapSize or 16,
+        width = 200,
+        fmt = "%.0f",
+        onChange = function(val)
+            ns.db.global.waypinMinimapSize = val
+            if ns.WayPinsMap then ns.WayPinsMap:Refresh() end
+        end,
+    })
+    miniSlider:SetPoint("TOPLEFT", sizeRow, "TOPLEFT", 280, -28)
+    yOffset = yOffset - 100
+
+    yOffset = yOffset - 20
     local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"], yOffset = yOffset })
     yOffset = detectionSection.bottomY - 16
 

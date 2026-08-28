@@ -51,6 +51,9 @@ function ZonePins:ShowZonePin(noteId, zoneData)
         if addon.BringWindowToFront then
             addon:BringWindowToFront(pin)
         end
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:Sync()
+        end
         return pin
     end
 
@@ -63,6 +66,9 @@ function ZonePins:HideZonePin(zoneName)
     local pinFrame = ns.zonePins[zoneName]
     if pinFrame then
         pinFrame:Hide()
+    end
+    if ns.WayPinsCompanion then
+        ns.WayPinsCompanion:Sync()
     end
 end
 
@@ -549,6 +555,19 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     end
     pin.lockMoveCB = lockMoveCB
 
+    local showWayPinsCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
+        label = L["WAYPINS_SHOW_PINS"],
+        checked = zoneData.showWayPins ~= false,
+        onClick = function(myself)
+            zoneData.showWayPins = myself:GetChecked() and true or false
+            ns.Zones:SaveZone(zoneName, zoneData)
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:Sync()
+            end
+        end,
+    })
+    pin.showWayPinsCB = showWayPinsCB
+
     local function HideHoverControls()
         hoverPanel:Hide()
     end
@@ -556,6 +575,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         PinSupport.LayoutHoverPanel(hoverPanel, {
             { control = alphaSlider, fill = true },
             { control = lockMoveCB },
+            { control = showWayPinsCB },
         })
         hoverPanel:Show()
     end
@@ -616,6 +636,10 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
 
     if ns.BringWindowToFront then
         ns:BringWindowToFront(pin)
+    end
+
+    if ns.WayPinsCompanion then
+        ns.WayPinsCompanion:Sync()
     end
 
     return pin

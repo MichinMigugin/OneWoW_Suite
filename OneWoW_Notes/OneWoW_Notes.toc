@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Version: R6.2608.2800
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Notes|r
-## Notes: OneWoW Addon that: provides note-taking for characters, NPCs, zones, and items.
+## Notes: OneWoW Addon that: provides note-taking for characters, NPCs, zones, items, and OneWay Pins.
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW
@@ -46,6 +46,10 @@ Core\NotesPins.lua
 Core\ZonePins.lua
 Core\ItemsData.lua
 Core\ZonesData.lua
+Core\WayPinsData.lua
+Core\WayPinsVisual.lua
+Core\WayPinsMap.lua
+Core\WayPinsCompanion.lua
 Core\PlayersData.lua
 Core\NPCsData.lua
 Core\CollectiblesData.lua
@@ -65,10 +69,13 @@ UI\t-notes.lua
 UI\t-players.lua
 UI\t-npcs.lua
 UI\t-zones.lua
+UI\t-waypins.lua
 UI\t-items.lua
 UI\t-collectibles.lua
 UI\t-settings.lua
 
 # UI - Dialogs
 UI\ui-notes-dialogs.lua
+UI\ui-waypin-dialog.lua
+UI\ui-waypin-find.lua
 UI\ui-category-manager.lua

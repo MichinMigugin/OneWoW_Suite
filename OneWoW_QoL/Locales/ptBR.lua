@@ -370,6 +370,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ESCPANEL_HOUSING_FORMAT"] = "Moradia: %d/%d",
     ["ESCPANEL_TOYS_FORMAT"] = "Brinquedos: %d/%d",
     ["ESCPANEL_ZONE_TODOS"] = "Tarefas:",
+    ["ESCPANEL_WAYPINS"] = "ONEWAY PINS",
 
     ["ADDON_TITLE"] = "OneWoW - QoL",
     ["ADDON_TITLE_SHORT"] = "QoL",

@@ -20,6 +20,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["CATALOG_FAVORITE_TT"] = "Diesen Eintrag als Favorit markieren. Favoriten werden oben in der Liste einsortiert.",
     ["JOURNAL_MAP_PIN_TT"] = "Karte öffnen und eine Markierung am Eingang dieser Instanz setzen.",
     ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "Ungefährer Eingang von Wowhead. Offizielle Kartendaten sind noch nicht im Client.",
+    ["JOURNAL_MAP_PIN_SAVE_TT"] = "Rechtsklick, um als OneWay Pin zu speichern.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes ist nicht verfügbar (deaktiviert oder Ladefehler).",
 
@@ -147,6 +148,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["VENDORS_PRICE_UNKNOWN"] = "Preis unbekannt",
     ["VENDORS_NO_DATA"] = "Installiert OneWoW CatalogData: Vendors, um Händlerdaten zu sammeln.",
     ["VENDORS_WAYPOINT"] = "Marker",
+    ["VENDORS_SAVE_WAYPIN"] = "Markierung speichern",
     ["VENDORS_STATS"] = "%d Händler, %d einzigartige Gegenstände",
     ["VENDORS_STATS_SHOWING"] = "Zeige %d von %d Händlern",
     ["VENDORS_LOADING"] = "Lädt...",

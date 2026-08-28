@@ -20,6 +20,11 @@ local defaults = {
         players                = {},
         npcs                   = {},
         collectibles           = {},
+        waypins                = {},
+        waypinWorldSize        = 22,
+        waypinMinimapSize      = 16,
+        waypinShowWorld        = true,
+        waypinShowMinimap      = true,
         notesCustomCategories  = {},
         itemCustomCategories   = {},
         zoneCustomCategories   = {},
@@ -35,6 +40,7 @@ local defaults = {
             zones   = { by = "name",     ascending = true  },
             items   = { by = "name",     ascending = true  },
             collectibles = { by = "name", ascending = true },
+            waypins = { by = "name", ascending = true },
         },
         zoneAlertsEnabled  = true,
         sortCompletedTasks = false,
@@ -65,6 +71,7 @@ local defaults = {
         players      = {},
         npcs         = {},
         collectibles = {},
+        waypins      = {},
     },
 }
 

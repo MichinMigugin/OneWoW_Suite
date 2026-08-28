@@ -20,6 +20,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["CATALOG_FAVORITE_TT"] = "将此条目标记为收藏。收藏项会排在列表顶部。",
     ["JOURNAL_MAP_PIN_TT"] = "打开地图并在该副本入口放置一个标记。",
     ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "来自 Wowhead 的大致入口。官方地图数据尚未加入客户端。",
+    ["JOURNAL_MAP_PIN_SAVE_TT"] = "右键保存为 OneWay Pin。",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes 不可用（已禁用或加载失败）。",
 
@@ -147,6 +148,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["VENDORS_PRICE_UNKNOWN"] = "价格未知",
     ["VENDORS_NO_DATA"] = "安装 OneWoW CatalogData: Vendors 以收集商人数据。",
     ["VENDORS_WAYPOINT"] = "标记",
+    ["VENDORS_SAVE_WAYPIN"] = "保存标记",
     ["VENDORS_STATS"] = "%d 个商人，%d 件独特物品",
     ["VENDORS_STATS_SHOWING"] = "显示 %d/%d 个商人",
     ["VENDORS_LOADING"] = "加载中……",

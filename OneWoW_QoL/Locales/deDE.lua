@@ -370,6 +370,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ESCPANEL_HOUSING_FORMAT"] = "Wohnung: %d/%d",
     ["ESCPANEL_TOYS_FORMAT"] = "Spielzeuge: %d/%d",
     ["ESCPANEL_ZONE_TODOS"] = "Aufgaben:",
+    ["ESCPANEL_WAYPINS"] = "ONEWAY PINS",
 
     ["ADDON_TITLE"] = "OneWoW - QoL",
     ["ADDON_TITLE_SHORT"] = "QoL",

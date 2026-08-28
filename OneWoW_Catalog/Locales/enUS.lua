@@ -19,6 +19,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CATALOG_FAVORITE_TT"] = "Mark this entry as a favorite. Favorites sort to the top of the list.",
     ["JOURNAL_MAP_PIN_TT"] = "Open the map and place a pin at this instance's entrance.",
     ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "Approximate entrance from Wowhead. Official map data is not in the client yet.",
+    ["JOURNAL_MAP_PIN_SAVE_TT"] = "Right-click to save as a OneWay Pin.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes is unavailable (disabled or failed to load).",
 
@@ -146,6 +147,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["VENDORS_PRICE_UNKNOWN"] = "Price unknown",
     ["VENDORS_NO_DATA"] = "Install OneWoW CatalogData: Vendors to collect vendor data.",
     ["VENDORS_WAYPOINT"] = "Pin",
+    ["VENDORS_SAVE_WAYPIN"] = "Save Pin",
     ["VENDORS_STATS"] = "%d vendors, %d unique items",
     ["VENDORS_STATS_SHOWING"] = "Showing %d of %d vendors",
     ["VENDORS_LOADING"] = "Loading...",

@@ -20,6 +20,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["CATALOG_FAVORITE_TT"] = "Отметить эту запись как избранную. Избранное сортируется в начало списка.",
     ["JOURNAL_MAP_PIN_TT"] = "Открыть карту и поставить метку у входа в это подземелье.",
     ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "Приблизительный вход с Wowhead. Официальных данных карты в клиенте пока нет.",
+    ["JOURNAL_MAP_PIN_SAVE_TT"] = "ПКМ, чтобы сохранить как OneWay Pin.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes недоступен (отключен или не удалось загрузить).",
 
@@ -147,6 +148,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["VENDORS_PRICE_UNKNOWN"] = "Цена неизвестна",
     ["VENDORS_NO_DATA"] = "Установите OneWoW CatalogData: Vendors, чтобы собирать данные о торговцах.",
     ["VENDORS_WAYPOINT"] = "Метка",
+    ["VENDORS_SAVE_WAYPIN"] = "Сохранить метку",
     ["VENDORS_STATS"] = "Торговцев: %d, уникальных предметов: %d",
     ["VENDORS_STATS_SHOWING"] = "Показано %d из %d торговцев",
     ["VENDORS_LOADING"] = "Загрузка...",

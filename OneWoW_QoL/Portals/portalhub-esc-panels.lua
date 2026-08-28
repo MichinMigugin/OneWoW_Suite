@@ -55,35 +55,30 @@ end
 local function GetZoneNoteData()
 	local zoneText = GetZoneText() or ""
 	local subZoneText = GetSubZoneText() or ""
-	local fullZone = zoneText
-	if subZoneText ~= "" and subZoneText ~= zoneText then
-		fullZone = zoneText .. " - " .. subZoneText
+	if subZoneText == zoneText then
+		subZoneText = ""
 	end
 
 	OneWoW:BringUp("OneWoW_Notes")
 	local api = OneWoW_Notes_API
-	if not api or not api.GetZone then
-		return zoneText ~= "" and zoneText or nil, nil
+	local displayZone = zoneText ~= "" and zoneText or nil
+	if not api then
+		return nil, nil, displayZone
 	end
 
-	local keys = { fullZone, api.GetCurrentZoneName(), subZoneText, zoneText }
-	local seen = {}
-	for i = 1, #keys do
-		local key = keys[i]
-		if key and key ~= "" and not seen[key] then
-			seen[key] = true
-			local data = api.GetZone(key)
-			if data then
-				return key, data
-			end
+	if api.GetCurrentZoneName then
+		local currentName = api.GetCurrentZoneName()
+		if currentName and currentName ~= "" then
+			displayZone = currentName
 		end
 	end
 
-	local currentName = api.GetCurrentZoneName()
-	if currentName and currentName ~= "" then
-		return currentName, nil
+	local matches = api.FindMatchingZoneNotes and api.FindMatchingZoneNotes(zoneText, subZoneText) or {}
+	local first = matches[1]
+	if first then
+		return first.id, first.data, displayZone
 	end
-	return zoneText ~= "" and zoneText or nil, nil
+	return nil, nil, displayZone
 end
 
 local function GetCatalogData(mapID)
@@ -412,9 +407,36 @@ local function BuildAlertsPanel(container, yOffset, anchorPanel, hMode)
 	return panel, yOffset - ALERTS_HEIGHT - PANEL_GAP
 end
 
+local function AcquireEscWaypinButton(panel, index)
+	local btn = panel.waypinBtns[index]
+	if btn then
+		return btn
+	end
+	btn = CreateFrame("Button", nil, panel.scrollChild)
+	btn:SetHeight(18)
+	local fs = OneWoW_GUI:CreateFS(btn, 11)
+	fs:SetAllPoints()
+	fs:SetJustifyH("LEFT")
+	fs:SetWordWrap(false)
+	btn.label = fs
+	btn:SetScript("OnClick", function(myself)
+		if myself.pinID and OneWoW_Notes_API and OneWoW_Notes_API.TrackWayPin then
+			OneWoW_Notes_API.TrackWayPin(myself.pinID)
+		end
+	end)
+	btn:SetScript("OnEnter", function(myself)
+		myself.label:SetTextColor(unpack(HEADER_COLOR()))
+	end)
+	btn:SetScript("OnLeave", function(myself)
+		myself.label:SetTextColor(unpack(TEXT_COLOR()))
+	end)
+	panel.waypinBtns[index] = btn
+	return btn
+end
+
 local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, hMode)
-	local zoneName, zoneData = GetZoneNoteData()
-	local displayZone = zoneName or (GetZoneText() or "")
+	local noteId, zoneData, displayZone = GetZoneNoteData()
+	displayZone = displayZone or (GetZoneText() or "")
 
 	if not panelFrames.zoneNotes then
 		local panel = CreatePanel(container, "OneWoWEscPanelZoneNotes", flexHeight)
@@ -427,6 +449,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 		panel.header = header
 
 		panel.contentTexts = {}
+		panel.waypinBtns = {}
 
 		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
 		scrollFrame:ClearAllPoints()
@@ -438,25 +461,37 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 		local actionBtn = OneWoW_GUI:CreateFitTextButton(panel, { text = L["ESCPANEL_MANAGE_ZONE"], height = 22, minWidth = 100 })
 		actionBtn:SetPoint("BOTTOM", panel, "BOTTOM", 0, 8)
 		actionBtn:SetScript("OnClick", function()
-			local targetZone = panel.currentZoneName
+			local targetId = panel.currentNoteId
 			if GameMenuFrame and GameMenuFrame:IsShown() then
 				HideUIPanel(GameMenuFrame)
 			end
 			C_Timer.After(0.15, function()
-				if not targetZone or targetZone == "" then return end
 				OneWoW:BringUp("OneWoW_Notes")
 				local api = OneWoW_Notes_API
 				if not api then return end
-				if not api.GetZone(targetZone) then
-					local mapInfo = api.GetCurrentMapInfo and api.GetCurrentMapInfo() or nil
-					local noteZoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
-					if mapInfo then
-						noteZoneData.mapID = mapInfo.mapID
-						noteZoneData.parentMapID = mapInfo.parentMapID
+				if not targetId then
+					local zone, subzone, mapInfo
+					if api.GetCurrentZoneParts then
+						zone, subzone, mapInfo = api.GetCurrentZoneParts()
+					else
+						zone = GetZoneText() or ""
+						subzone = ""
+						mapInfo = api.GetCurrentMapInfo and api.GetCurrentMapInfo() or nil
 					end
-					api.AddZone(targetZone, noteZoneData)
+					if not zone or zone == "" then return end
+					targetId = api.AddZone({
+						zone         = zone,
+						subzone      = subzone or "",
+						content      = "",
+						category     = "General",
+						storage      = "account",
+						mapID        = mapInfo and mapInfo.mapID,
+						parentMapID  = mapInfo and mapInfo.parentMapID,
+					})
 				end
-				api.OpenZone(targetZone)
+				if targetId then
+					api.OpenZone(targetId)
+				end
 			end)
 		end)
 		panel.actionBtn = actionBtn
@@ -472,7 +507,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
 	end
 	panel:SetHeight(flexHeight)
-	panel.currentZoneName = zoneName or displayZone
+	panel.currentNoteId = noteId
 
 	local headerPad = PANEL_PADDING
 	local headerW = PANEL_WIDTH - 2 * headerPad
@@ -495,9 +530,15 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 	for _, fs in pairs(panel.contentTexts) do
 		fs:Hide()
 	end
+	for _, btn in ipairs(panel.waypinBtns) do
+		btn:Hide()
+	end
 
 	local contentY = -5
 	local fsIndex = 1
+	local mapID = C_Map.GetBestMapForUnit("player")
+	local pins = (OneWoW_Notes_API and OneWoW_Notes_API.GetWayPinsForMap and mapID)
+		and OneWoW_Notes_API.GetWayPinsForMap(mapID) or {}
 
 	if zoneData then
 		panel.actionBtn:SetFitText(L["ESCPANEL_MANAGE_ZONE"])
@@ -566,18 +607,49 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 	else
 		panel.actionBtn:SetFitText(L["ESCPANEL_ADD_ZONE_NOTE"])
 
-		if not panel.contentTexts[1] then
-			local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 10)
-			panel.contentTexts[1] = fs
+		if #pins == 0 then
+			if not panel.contentTexts[1] then
+				local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 10)
+				panel.contentTexts[1] = fs
+			end
+			local emptyText = panel.contentTexts[1]
+			emptyText:ClearAllPoints()
+			emptyText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 5, -5)
+			emptyText:SetWidth(PANEL_WIDTH - 50)
+			emptyText:SetJustifyH("LEFT")
+			emptyText:SetText(L["ESCPANEL_NO_ZONE_NOTES"])
+			emptyText:SetTextColor(unpack(DIM_COLOR()))
+			emptyText:Show()
+			contentY = contentY - 24
+			fsIndex = 2
 		end
-		local emptyText = panel.contentTexts[1]
-		emptyText:ClearAllPoints()
-		emptyText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 5, -5)
-		emptyText:SetWidth(PANEL_WIDTH - 50)
-		emptyText:SetJustifyH("LEFT")
-		emptyText:SetText(L["ESCPANEL_NO_ZONE_NOTES"])
-		emptyText:SetTextColor(unpack(DIM_COLOR()))
-		emptyText:Show()
+	end
+
+	if #pins > 0 then
+		if not panel.contentTexts[fsIndex] then
+			local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 12)
+			panel.contentTexts[fsIndex] = fs
+		end
+		local pinsHeader = panel.contentTexts[fsIndex]
+		pinsHeader:ClearAllPoints()
+		pinsHeader:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 5, contentY)
+		pinsHeader:SetText(L["ESCPANEL_WAYPINS"])
+		pinsHeader:SetTextColor(unpack(HEADER_COLOR()))
+		pinsHeader:Show()
+		contentY = contentY - 18
+		fsIndex = fsIndex + 1
+
+		for i, pin in ipairs(pins) do
+			local btn = AcquireEscWaypinButton(panel, i)
+			btn:ClearAllPoints()
+			btn:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 15, contentY)
+			btn:SetPoint("TOPRIGHT", panel.scrollChild, "TOPRIGHT", -5, contentY)
+			btn.pinID = pin.id
+			btn.label:SetText(pin.title or "")
+			btn.label:SetTextColor(unpack(TEXT_COLOR()))
+			btn:Show()
+			contentY = contentY - 18
+		end
 	end
 
 	panel.scrollChild:SetHeight(math.abs(contentY) + 10)
@@ -689,7 +761,11 @@ function EscPanels:Build()
 
 	local _, zoneData = GetZoneNoteData()
 	local zoneHasContent = zoneData and ((zoneData.content and zoneData.content ~= "") or (zoneData.todos and #zoneData.todos > 0))
-	local showZone = ph.escShowZoneNotes and (not ph.escHideZoneNotesWhenEmpty or zoneHasContent)
+	local mapID = C_Map.GetBestMapForUnit("player")
+	local pins = (OneWoW_Notes_API and OneWoW_Notes_API.GetWayPinsForMap and mapID)
+		and OneWoW_Notes_API.GetWayPinsForMap(mapID) or {}
+	local hasWayPins = #pins > 0
+	local showZone = ph.escShowZoneNotes and (not ph.escHideZoneNotesWhenEmpty or zoneHasContent or hasWayPins)
 
 	local availH = container:GetHeight()
 	if (not availH) or availH < 80 then

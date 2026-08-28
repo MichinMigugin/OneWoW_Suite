@@ -19,6 +19,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CATALOG_FAVORITE_TT"] = "이 항목을 즐겨찾기로 표시합니다. 즐겨찾기는 목록 상단에 정렬됩니다.",
     ["JOURNAL_MAP_PIN_TT"] = "지도를 열고 이 인스턴스 입구에 핀을 놓습니다.",
     ["JOURNAL_MAP_PIN_WOWHEAD_TT"] = "Wowhead의 대략적인 입구입니다. 공식 지도 데이터가 아직 클라이언트에 없습니다.",
+    ["JOURNAL_MAP_PIN_SAVE_TT"] = "우클릭하면 OneWay Pin으로 저장합니다.",
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes를 사용할 수 없습니다 (비활성화되었거나 불러오지 못했습니다).",
 
@@ -146,6 +147,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["VENDORS_PRICE_UNKNOWN"] = "가격 알 수 없음",
     ["VENDORS_NO_DATA"] = "상인 데이터를 수집하려면 OneWoW CatalogData: Vendors를 설치하세요.",
     ["VENDORS_WAYPOINT"] = "핀",
+    ["VENDORS_SAVE_WAYPIN"] = "핀 저장",
     ["VENDORS_STATS"] = "상인 %d명, 고유 아이템 %d개",
     ["VENDORS_STATS_SHOWING"] = "상인 %d/%d명 표시 중",
     ["VENDORS_LOADING"] = "불러오는 중...",

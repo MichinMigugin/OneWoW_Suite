@@ -38,12 +38,20 @@ Keep information about NPCs and vendors:
 
 ### Zones Tab
 Annotate your zones and locations:
-- Create map pins on zones you're in
-- Mark important locations (quest hubs, vendors, rare spawns)
+- Create a zone note for the area you are in
 - Add zone-specific notes (farming spots, quest chains)
-- Multiple pins per zone with custom colors
-- Pins stay visible on your map while playing in that zone
-- View all pins for a zone at once
+- Pin a zone note to the screen as a floating window
+- Optional Show Pins list of OneWay Pins for that map, docked beside the window
+
+### OneWay Pins Tab
+Persistent map landmarks (bank, craft tables, vendors, and anything you mark):
+- Stay on the world map and minimap until you delete them
+- Click a pin for a live waypoint that clears when you arrive; the icon stays
+- Add from this tab (Add Here or Find Location), right-click on the world map, your own player menu, NPC menus, Catalog, or an NPC note
+- Find Location searches vendors and NPC notes in a zone (filters such as banker, repair, professions)
+- Each list row has Go and Only This; the world map has a OneWoW pin button to show or hide pins
+- Edit icon, optional background, effects, and world-map size (extra layers use more memory)
+- Add to Zone Notes to show the list beside a pinned zone window
 
 ### Items Tab
 Notes about items and rewards:
@@ -76,10 +84,10 @@ Track mounts, pets, toys, transmog, and other collectibles you care about:
 - Copy item links from chat to notes automatically
 
 ### Waypoints & Map Coordinates
+- OneWay Pins are saved landmarks on the world map and minimap
+- Click a OneWay Pin to set a live waypoint; it clears when you arrive
 - Insert exact map coordinates in notes
-- Mark specific locations on zone maps
-- Navigate to waypoints with one click
-- Include coordinates when giving directions to guildmates
+- Navigate to NPC and zone coordinates with one click
 
 ### Organization
 - Create your own custom categories

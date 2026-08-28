@@ -14,6 +14,9 @@ function OneWoW_Notes:ApplyTheme()
     if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
         ns.ZonePins:RefreshSyncPins()
     end
+    if ns.WayPinsCompanion then
+        ns.WayPinsCompanion:ApplyTheme()
+    end
 end
 
 function OneWoW_Notes:ApplyLanguage()
@@ -38,6 +41,7 @@ local function RegisterWithOneWoW()
         { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] end, create = function(p) ns.UI.CreatePlayersTab(p) end },
         { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
         { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   end, create = function(p) ns.UI.CreateZonesTab(p) end },
+        { name = "waypins", displayName = function() return ns.L["TAB_WAYPINS"] end, create = function(p) ns.UI.CreateWayPinsTab(p) end },
         { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   end, create = function(p) ns.UI.CreateItemsTab(p) end },
         { name = "collectibles", displayName = function() return ns.L["TAB_COLLECTIBLES"] end, create = function(p) ns.UI.CreateCollectiblesTab(p) end },
     }
@@ -129,6 +133,9 @@ local function OnEnable()
     end
     if ns.NPCs and ns.NPCs.Initialize then
         ns.NPCs:Initialize()
+    end
+    if ns.WayPinsMap and ns.WayPinsMap.Initialize then
+        ns.WayPinsMap:Initialize()
     end
     if ns.Items and ns.Items.Initialize then
         ns.Items:Initialize()

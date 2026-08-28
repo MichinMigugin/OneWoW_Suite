@@ -557,6 +557,7 @@ local function WireJournalPinButton(btn, getInstData)
         else
             GameTooltip:AddLine(L["JOURNAL_MAP_PIN_TT"], 0.8, 0.8, 0.8, true)
         end
+        GameTooltip:AddLine(L["JOURNAL_MAP_PIN_SAVE_TT"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
 end
@@ -677,6 +678,19 @@ local function CreateInstanceListRow(parent, _)
     pinBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
     WireJournalPinButton(pinBtn, function()
         return card.instData
+    end)
+    pinBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    pinBtn:SetScript("OnClick", function(myself, button)
+        myself:SetFavorite(false)
+        local instData = card.instData
+        if not instData or not instData.instanceID then
+            return
+        end
+        if button == "RightButton" then
+            ns.Navigation:SaveInstanceEntranceWayPin(instData)
+            return
+        end
+        ns.Navigation:OpenInstanceEntrance(instData.instanceID, instData.entrances)
     end)
     card.pinBtn = pinBtn
 
@@ -2501,6 +2515,19 @@ function ns.UI.CreateJournalTab(parent)
     detailPinBtn:Hide()
     WireJournalPinButton(detailPinBtn, function()
         return selectedInstance
+    end)
+    detailPinBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    detailPinBtn:SetScript("OnClick", function(myself, button)
+        myself:SetFavorite(false)
+        local instData = selectedInstance
+        if not instData or not instData.instanceID then
+            return
+        end
+        if button == "RightButton" then
+            ns.Navigation:SaveInstanceEntranceWayPin(instData)
+            return
+        end
+        ns.Navigation:OpenInstanceEntrance(instData.instanceID, instData.entrances)
     end)
     panels.detailPinBtn = detailPinBtn
 

@@ -411,3 +411,56 @@ end
 function OneWoW_Notes_API.QuickNote()
     OneWoW_Notes_API.OpenNotes()
 end
+
+-- ---------------------------------------------------------------------------
+-- OneWay Pins
+-- ---------------------------------------------------------------------------
+
+--- Adds a OneWay Pin. Returns the opaque pin id.
+---@param fields table
+---@return string|nil pinID
+function OneWoW_Notes_API.AddWayPin(fields)
+    if not ns.WayPins then return nil end
+    return ns.WayPins:Add(fields)
+end
+
+--- Pins for a uiMapID, title-sorted.
+---@param mapID number
+---@return table[]
+function OneWoW_Notes_API.GetWayPinsForMap(mapID)
+    if not ns.WayPins then return {} end
+    return ns.WayPins:GetForMap(mapID)
+end
+
+--- Super-tracks a saved OneWay Pin (live waypoint only).
+---@param pinID string
+---@return boolean
+function OneWoW_Notes_API.TrackWayPin(pinID)
+    if not ns.WayPins then return false end
+    return ns.WayPins:Track(pinID)
+end
+
+--- Matching zone notes for the player's zone/subzone (opaque ids).
+---@param zone string
+---@param subzone string
+---@return table[]
+function OneWoW_Notes_API.FindMatchingZoneNotes(zone, subzone)
+    if not ns.Zones then return {} end
+    return ns.Zones:FindMatchingNotes(zone, subzone)
+end
+
+--- Attach a pin's map to a zone note window (create/enable pinEnabled).
+---@param pinID string
+---@return string|nil noteId
+function OneWoW_Notes_API.AttachWayPinToZoneNotes(pinID)
+    if not ns.WayPins then return nil end
+    return ns.WayPins:AttachToZoneNotes(pinID)
+end
+
+--- Open the OneWay Pin editor. `seed` is an existing pin or a coord draft.
+---@param seed table|nil
+function OneWoW_Notes_API.OpenWayPinEditor(seed)
+    if ns.UI and ns.UI.OpenWayPinDialog then
+        ns.UI.OpenWayPinDialog(seed)
+    end
+end

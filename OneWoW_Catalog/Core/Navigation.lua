@@ -167,16 +167,16 @@ local function SuperTrackDungeonEntrance(uiMapID, instanceID)
     return false
 end
 
---- Opens the world map on an instance entrance.
---- DB2 rows convert continent MapID + world XY. Fallback rows already have uiMapID + 0-100.
---- Super-tracks the official dungeon/raid pin when the client exposes it on that map.
 ---@param instanceID number
----@param entrances table|nil
----@return boolean opened
-function Navigation:OpenInstanceEntrance(instanceID, entrances)
+---@param entrances table
+---@return number|nil uiMapID
+---@return number|nil x
+---@return number|nil y
+---@return number|nil areaPoiID
+local function ResolveInstanceEntrance(instanceID, entrances)
     instanceID = tonumber(instanceID)
     if not instanceID or not entrances or not entrances[1] then
-        return false
+        return nil
     end
 
     local candidates = FactionCandidates(entrances)
@@ -201,12 +201,24 @@ function Navigation:OpenInstanceEntrance(instanceID, entrances)
             if row.areaPoiID then
                 local uiMapID, x, y = ResolveAreaPoiPin(row.areaPoiID)
                 if uiMapID then
-                    self:OpenMapPin(uiMapID, x, y)
+                    return uiMapID, x, y, row.areaPoiID
                 end
-                C_SuperTrack.SetSuperTrackedMapPin(Enum.SuperTrackingMapPinType.AreaPOI, row.areaPoiID)
-                return true
             end
         end
+        return nil
+    end
+    return bestMapID, bestX, bestY, bestPoiID
+end
+
+--- Opens the world map on an instance entrance.
+--- DB2 rows convert continent MapID + world XY. Fallback rows already have uiMapID + 0-100.
+--- Super-tracks the official dungeon/raid pin when the client exposes it on that map.
+---@param instanceID number
+---@param entrances table|nil
+---@return boolean opened
+function Navigation:OpenInstanceEntrance(instanceID, entrances)
+    local bestMapID, bestX, bestY, bestPoiID = ResolveInstanceEntrance(instanceID, entrances)
+    if not bestMapID then
         return false
     end
 
@@ -225,6 +237,42 @@ function Navigation:OpenInstanceEntrance(instanceID, entrances)
         C_SuperTrack.SetSuperTrackedMapPin(Enum.SuperTrackingMapPinType.AreaPOI, bestPoiID)
     end
     return true
+end
+
+--- Saves an instance entrance as a OneWay Pin landmark (Notes).
+---@param instData table
+---@return string|nil pinID
+function Navigation:SaveInstanceEntranceWayPin(instData)
+    if not instData or not instData.instanceID then return nil end
+    local mapID, x, y = ResolveInstanceEntrance(instData.instanceID, instData.entrances)
+    if not mapID then return nil end
+    return self:SaveOneWayPin(instData.name, mapID, x, y, "journal", instData.instanceID)
+end
+
+--- Persist a landmark in Notes OneWay Pins. Coordinates may be 0-1 or 0-100.
+---@param title string
+---@param mapID number
+---@param x number
+---@param y number
+---@param source string|nil
+---@param sourceKey any
+---@return string|nil pinID
+function Navigation:SaveOneWayPin(title, mapID, x, y, source, sourceKey)
+    OneWoW:BringUp("OneWoW_Notes")
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.AddWayPin then
+        return nil
+    end
+    local fx = OneWoW.Location.ToFraction(x)
+    local fy = OneWoW.Location.ToFraction(y)
+    if not fx or not fy then return nil end
+    return OneWoW_Notes_API.AddWayPin({
+        title     = title,
+        mapID     = mapID,
+        x         = fx * 100,
+        y         = fy * 100,
+        source    = source or "manual",
+        sourceKey = sourceKey,
+    })
 end
 
 local function NotesHasCoords(coords)

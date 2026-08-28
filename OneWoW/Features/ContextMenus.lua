@@ -255,26 +255,66 @@ local function HandleMatchMount(unit)
     end)
 end
 
+local function HandleSelfWayPin()
+    OneWoW:BringUp("OneWoW_Notes")
+    local mapID, x, y = Location.GetPlayerLocation()
+    if not mapID or not x then
+        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NPC_LOC_FAILED"])
+        return
+    end
+    if OneWoW_Notes_API and OneWoW_Notes_API.OpenWayPinEditor then
+        OneWoW_Notes_API.OpenWayPinEditor({
+            title  = UnitName("player"),
+            mapID  = mapID,
+            x      = x,
+            y      = y,
+            source = "self",
+        })
+        return
+    end
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.AddWayPin then
+        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
+        return
+    end
+    OneWoW_Notes_API.AddWayPin({
+        title  = UnitName("player"),
+        mapID  = mapID,
+        x      = x,
+        y      = y,
+        source = "self",
+    })
+end
+
 local function PlayerContextMenuHandler(_, rootDescription, contextData)
     if not contextData or not contextData.unit then return end
     if not UnitIsPlayer(contextData.unit) then return end
 
-    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer then return end
+    local isSelf = UnitIsUnit(contextData.unit, "player")
+    local hasNotesPlayer = OneWoW_Notes_API and OneWoW_Notes_API.GetPlayer
+    if not isSelf and not hasNotesPlayer then return end
 
     rootDescription:CreateDivider()
     rootDescription:CreateTitle(L["UNIT_CTX_HEADER"])
 
-    local playerName, realm = UnitName(contextData.unit)
-    if playerName then
-        local fullName = OneWoW_GUI:GetCharacterKey(playerName, realm ~= "" and realm or nil)
-        if fullName then
-            local buttonText = L["UNIT_CTX_ADD_PLAYER_NOTE"]
-            if OneWoW_Notes_API.GetPlayer(fullName) then
-                buttonText = L["UNIT_CTX_EDIT_NPC_NOTE"]
+    if isSelf then
+        rootDescription:CreateButton(L["UNIT_CTX_ADD_WAYPIN_HERE"], function()
+            HandleSelfWayPin()
+        end)
+    end
+
+    if hasNotesPlayer then
+        local playerName, realm = UnitName(contextData.unit)
+        if playerName then
+            local fullName = OneWoW_GUI:GetCharacterKey(playerName, realm ~= "" and realm or nil)
+            if fullName then
+                local buttonText = L["UNIT_CTX_ADD_PLAYER_NOTE"]
+                if OneWoW_Notes_API.GetPlayer(fullName) then
+                    buttonText = L["UNIT_CTX_EDIT_NPC_NOTE"]
+                end
+                rootDescription:CreateButton(buttonText, function()
+                    HandlePlayerAdd(contextData.unit)
+                end)
             end
-            rootDescription:CreateButton(buttonText, function()
-                HandlePlayerAdd(contextData.unit)
-            end)
         end
     end
 
@@ -361,6 +401,36 @@ local function HandleNPCUpdateLocation(_, npcIDNum)
     end
 end
 
+local function HandleNPCWayPin(unit, npcIDNum)
+    OneWoW:BringUp("OneWoW_Notes")
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.AddWayPin then
+        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
+        return
+    end
+
+    local name = UnitName(unit)
+    local mapID, x, y
+    local existing = OneWoW_Notes_API.GetNPC and OneWoW_Notes_API.GetNPC(npcIDNum)
+    if existing and existing.mapID and existing.coords then
+        mapID, x, y = existing.mapID, existing.coords.x, existing.coords.y
+    else
+        mapID, x, y = Location.GetPlayerLocation()
+    end
+    if not mapID or not x then
+        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NPC_LOC_FAILED"])
+        return
+    end
+
+    OneWoW_Notes_API.AddWayPin({
+        title     = name or ("NPC " .. tostring(npcIDNum)),
+        mapID     = mapID,
+        x         = x,
+        y         = y,
+        source    = "npc",
+        sourceKey = npcIDNum,
+    })
+end
+
 local function NPCContextMenuHandler(_, rootDescription, contextData)
     if not contextData or not contextData.unit then return end
     if UnitIsPlayer(contextData.unit) then return end
@@ -377,8 +447,6 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
 
     local hasNotesMenu = OneWoW_Notes_API and OneWoW_Notes_API.GetNPC
     local hasVendor = CatalogHasVendor(npcIDNum)
-
-    if not hasNotesMenu and not hasVendor then return end
 
     rootDescription:CreateDivider()
     rootDescription:CreateTitle(L["UNIT_CTX_HEADER"])
@@ -398,6 +466,10 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
         end
     end
 
+    rootDescription:CreateButton(L["UNIT_CTX_ADD_WAYPIN"], function()
+        HandleNPCWayPin(contextData.unit, npcIDNum)
+    end)
+
     if hasVendor then
         rootDescription:CreateButton(L["UNIT_CTX_OPEN_VENDOR_DETAILS"], function()
             HandleOpenVendorDetails(npcIDNum)
@@ -413,6 +485,7 @@ function ns:InitializeContextMenus()
     if not Menu or not Menu.ModifyMenu then return end
 
     Menu.ModifyMenu("MENU_UNIT_PLAYER",                   PlayerContextMenuHandler)
+    Menu.ModifyMenu("MENU_UNIT_SELF",                     PlayerContextMenuHandler)
     Menu.ModifyMenu("MENU_UNIT_ENEMY_PLAYER",             PlayerContextMenuHandler)
     Menu.ModifyMenu("MENU_UNIT_FRIEND",                   PlayerContextMenuHandler)
     Menu.ModifyMenu("MENU_UNIT_COMMUNITIES_GUILD_MEMBER", PlayerContextMenuHandler)
