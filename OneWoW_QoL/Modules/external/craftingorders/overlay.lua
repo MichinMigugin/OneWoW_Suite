@@ -53,8 +53,10 @@ local COL_ORDER_RIGHT = COL_YOU_RIGHT + YOU_W + COL_GAP
 
 local function PlaceColLabel(fs, parent, rightInset, width, justifyH)
     fs:ClearAllPoints()
-    fs:SetPoint("TOPLEFT", parent, "RIGHT", -(rightInset + width), 0)
-    fs:SetPoint("BOTTOMRIGHT", parent, "RIGHT", -rightInset, 0)
+    -- TOPRIGHT/BOTTOMRIGHT give the label the parent's height. RIGHT is a
+    -- single midpoint, so TOP+BOTTOM on it would collapse the fontstring.
+    fs:SetPoint("TOPLEFT", parent, "TOPRIGHT", -(rightInset + width), 0)
+    fs:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -rightInset, 0)
     fs:SetJustifyH(justifyH or "LEFT")
     fs:SetJustifyV("MIDDLE")
     fs:SetWordWrap(true)

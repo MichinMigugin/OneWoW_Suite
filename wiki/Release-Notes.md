@@ -15,7 +15,13 @@
 
 ---
 
-*No user-facing changes this release for Home, Catalog, QoL, Shopping List, Bags, DevTool, Mail, Notes, or Direct Deposit.*
+### QoL
+#### Crafting Orders
+- Column headers on the order list show again (Order, You Provide, Cart, and the rest).
+
+---
+
+*No user-facing changes this release for Home, Catalog, Shopping List, Bags, DevTool, Mail, Notes, or Direct Deposit.*
 
 ---
 
