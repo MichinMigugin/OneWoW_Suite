@@ -734,7 +734,9 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
     btn:SetScript("OnClick", function()
         if isEnabled ~= true or not onValueChange then return end
         local newVal = not currentValue
-        onValueChange(newVal)
+        if onValueChange(newVal) == false then
+            return
+        end
         refresh(isEnabled, newVal)
         C_Timer.After(0, function()
             if btn:GetParent() and btn:IsMouseOver() and isEnabled == true then

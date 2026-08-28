@@ -32,4 +32,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["CRAFTORDERS_NO_SHOPPING"] = "Enable Shopping List to add reagents.",
     ["CRAFTORDERS_KP"] = "%d KP",
     ["CRAFTORDERS_ACUITY"] = "Acuity x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "Other order-list addons",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s is enabled. Those addons stay loaded. Turn this on for One UI, or off to use them.",
 })

@@ -1,16 +1,115 @@
 local _, ns = ...
-local M = ns.ModuleRegistry:Current()
+local M, L = ns.ModuleRegistry:Current()
 if not M then return end
 
 local OneWoW_GUI = OneWoW_GUI
+local C_AddOns = C_AddOns
 
 local OWNER = "QoL_craftingorders"
+
+local INCOMPATIBLE_ADDONS = {
+    "PatronOffers",
+    "PublicOrdersReagentsColumn",
+}
 
 local function ModuleOn()
     return ns.ModuleRegistry:IsEnabled("craftingorders")
 end
 
+local function AddonIsEnabled(name)
+    if not C_AddOns.DoesAddOnExist(name) then
+        return false
+    end
+    if C_AddOns.IsAddOnLoaded(name) then
+        return true
+    end
+    return C_AddOns.GetAddOnEnableState(name) > Enum.AddOnEnableState.None
+end
+
+local function CollectIncompatibleTitles()
+    local titles = {}
+    for i = 1, #INCOMPATIBLE_ADDONS do
+        local name = INCOMPATIBLE_ADDONS[i]
+        if AddonIsEnabled(name) then
+            local _, title = C_AddOns.GetAddOnInfo(name)
+            if not title or title == "" then
+                title = name
+            end
+            tinsert(titles, title)
+        end
+    end
+    return titles
+end
+
+local function HasIncompatibleAddons()
+    return #CollectIncompatibleTitles() > 0
+end
+
+function M:ShowIncompatibleDialog()
+    local titles = CollectIncompatibleTitles()
+    if #titles == 0 then
+        return
+    end
+    if M._incompatDialog and M._incompatDialog:IsShown() then
+        M._incompatDialog:Raise()
+        return
+    end
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        name = "OneWoWQoLCraftOrdersIncompatible",
+        addonTitle = L["CRAFTORDERS_TITLE"],
+        title = L["CRAFTORDERS_INCOMPATIBLE_TITLE"],
+        message = L["CRAFTORDERS_INCOMPATIBLE_BODY"]:format(table.concat(titles, ", ")),
+        width = 480,
+        showBrand = true,
+        buttons = {
+            {
+                text = CLOSE,
+                onClick = function(dialog)
+                    dialog:Hide()
+                end,
+            },
+        },
+        onClose = function()
+            M._incompatDialog = nil
+        end,
+    })
+    result.frame:HookScript("OnHide", function()
+        M._incompatDialog = nil
+    end)
+    M._incompatDialog = result.frame
+    result.frame:Show()
+    result.frame:Raise()
+end
+
+function M:CanEnable()
+    if HasIncompatibleAddons() then
+        M:ShowIncompatibleDialog()
+        ns.ModuleRegistry:GetModuleBucket("craftingorders").userChoseOn = true
+    end
+    return true
+end
+
+function M:CreateCustomDetail(parent, yOffset)
+    local titles = CollectIncompatibleTitles()
+    if #titles == 0 then
+        return yOffset
+    end
+    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+    fs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
+    fs:SetJustifyH("LEFT")
+    fs:SetWordWrap(true)
+    local width = parent:GetWidth() or 0
+    if width >= 1 then
+        fs:SetWidth(width)
+    end
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+    fs:SetText(L["CRAFTORDERS_INCOMPATIBLE_BODY"]:format(table.concat(titles, ", ")))
+    return yOffset - fs:GetStringHeight() - 8
+end
+
 function M:WireProfessions()
+    if not ModuleOn() then return end
     local page = ProfessionsFrame and ProfessionsFrame.OrdersPage
     if not page then return end
 
@@ -34,7 +133,9 @@ function M:WireProfessions()
             end
         end)
         page:HookScript("OnHide", function()
-            M:HideOverlay()
+            if ModuleOn() then
+                M:HideOverlay()
+            end
         end)
         local browse = page.BrowseFrame
         if browse then
@@ -107,8 +208,15 @@ function M:EnsureEventFrame()
 end
 
 function M:OnEnable()
+    if HasIncompatibleAddons() and not ns.ModuleRegistry:GetModuleBucket("craftingorders").userChoseOn then
+        ns.ModuleRegistry:SetEnabled("craftingorders", false)
+        return
+    end
+
     OneWoW:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
-        M:WireProfessions()
+        if ModuleOn() then
+            M:WireProfessions()
+        end
     end)
     OneWoW.ProfessionRecipe.RegisterShowCallback(OWNER, function()
         M:OnProfessionShown()
@@ -156,10 +264,12 @@ function M:OnEnable()
     end)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", M, function()
+        if not ModuleOn() then return end
         M:ApplyOverlayTheme()
         M:ValidateMagicButton()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", M, function()
+        if not ModuleOn() then return end
         M:RefreshOverlay()
         M:ValidateMagicButton()
     end)
@@ -170,6 +280,7 @@ function M:OnEnable()
 end
 
 function M:OnDisable()
+    ns.ModuleRegistry:GetModuleBucket("craftingorders").userChoseOn = nil
     OneWoW.ProfessionRecipe.UnregisterCallback(OWNER)
     OneWoW.Inventory.UnregisterCallback(OWNER)
     OneWoW.Restriction.UnregisterStateCallback(OWNER)
@@ -182,6 +293,8 @@ function M:OnDisable()
     M:HideOverlay()
     if M._modeBtn then
         M._modeBtn:Hide()
+    end
+    if M._settingsBtn then
         M._settingsBtn:Hide()
     end
 end

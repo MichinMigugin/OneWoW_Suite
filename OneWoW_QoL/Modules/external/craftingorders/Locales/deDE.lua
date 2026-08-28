@@ -33,4 +33,6 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["CRAFTORDERS_NO_SHOPPING"] = "Einkaufsliste aktivieren, um Reagenzien hinzuzufugen.",
     ["CRAFTORDERS_KP"] = "%d WP",
     ["CRAFTORDERS_ACUITY"] = "Scharfe x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "Andere Auftragslisten-Addons",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s ist aktiv. Diese Addons bleiben geladen. Schaltet dies ein fuer One UI, oder aus, um sie zu nutzen.",
 })

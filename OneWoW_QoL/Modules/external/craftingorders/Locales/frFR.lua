@@ -33,4 +33,6 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["CRAFTORDERS_NO_SHOPPING"] = "Activez la liste de courses pour ajouter des reactifs.",
     ["CRAFTORDERS_KP"] = "%d PC",
     ["CRAFTORDERS_ACUITY"] = "Acuite x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "Autres addons de liste de commandes",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s est active. Ces addons restent charges. Activez ceci pour One UI, ou desactivez-le pour les utiliser.",
 })

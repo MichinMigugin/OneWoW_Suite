@@ -33,4 +33,6 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["CRAFTORDERS_NO_SHOPPING"] = "Attiva la Lista della spesa per aggiungere reagenti.",
     ["CRAFTORDERS_KP"] = "%d PC",
     ["CRAFTORDERS_ACUITY"] = "Acuita x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "Altri addon dell'elenco ordini",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s e attivo. Quegli addon restano caricati. Attiva questa opzione per One UI, o disattivala per usarli.",
 })

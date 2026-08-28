@@ -30,6 +30,12 @@ the overlay is shown. Patron / Guild / Personal are always a flat order list.
   item/currency/gold icons with counts.
 - **Cart:** one shopping-cart control per row that still needs crafter mats
   (Missing mats and Recipe Unlearned), in its own column.
+- **Default off:** the overlay is off until you turn the module on in QoL
+  Features. That On/Off is account-wide (every character).
+- **Incompatible addons:** if PatronOffers or PublicOrdersReagentsColumn
+  (No Mats No Make) is enabled, the overlay starts off so those addons can
+  run. Features still lets you turn One UI on; it warns first. Off fully
+  restores Blizzard's list.
 - **WoW UI:** a **WoW UI** / **One UI** button sits on the order-type tab row
   (and a Features toggle) to swap back to Blizzard's table without disabling
   the module. A gear beside it opens this module in QoL Features.

@@ -257,6 +257,9 @@ local function ShowModuleDetail(split, module)
         onLabel = L["FEATURES_ON"],
         offLabel = L["FEATURES_OFF"],
         onValueChange = function(newVal)
+            if newVal and module.CanEnable and not module:CanEnable() then
+                return false
+            end
             ns.ModuleRegistry:SetEnabled(module.id, newVal)
             if module.id == "playmounts" then
                 OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "playermounts", newVal)

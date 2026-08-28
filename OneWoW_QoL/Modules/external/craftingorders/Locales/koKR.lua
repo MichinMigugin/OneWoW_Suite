@@ -33,4 +33,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["CRAFTORDERS_NO_SHOPPING"] = "재료를 추가하려면 쇼핑 목록을 켜세요.",
     ["CRAFTORDERS_KP"] = "지식 %d",
     ["CRAFTORDERS_ACUITY"] = "예리함 x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "다른 주문 목록 애드온",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s가 켜져 있습니다. 해당 애드온은 그대로 둡니다. One UI를 쓰려면 이것을 켜고, 그 목록을 쓰려면 끄세요.",
 })

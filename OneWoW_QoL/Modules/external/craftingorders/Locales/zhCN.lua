@@ -33,4 +33,6 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["CRAFTORDERS_NO_SHOPPING"] = "启用购物清单才能加入材料。",
     ["CRAFTORDERS_KP"] = "知识 %d",
     ["CRAFTORDERS_ACUITY"] = "敏锐 x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "其他订单列表插件",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s 已启用。那些插件仍会加载。打开此项使用 One UI，关闭则使用那些插件。",
 })

@@ -736,7 +736,9 @@ function M:UpdateModeButton()
     if not btn then return end
     if not ModuleOn() then
         btn:Hide()
-        M._settingsBtn:Hide()
+        if M._settingsBtn then
+            M._settingsBtn:Hide()
+        end
         return
     end
     btn:Show()

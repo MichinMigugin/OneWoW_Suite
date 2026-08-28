@@ -122,6 +122,7 @@ function M:InstallCastBarNoop()
     local view = GetOrderView()
     if view and not M._viewCastBarNoop then
         M._viewCastBarNoop = true
+        M._castBarView = view
         M._origViewSetOverrideCastBarActive = view.SetOverrideCastBarActive
         view.SetOverrideCastBarActive = NoopCastBar
     end
@@ -132,15 +133,14 @@ function M:RestoreCastBar()
         ProfessionsCrafterOrderViewMixin.SetOverrideCastBarActive = M._origSetOverrideCastBarActive
     end
     M._origSetOverrideCastBarActive = nil
-    local view = GetOrderView()
-    if view and M._viewCastBarNoop and M._origViewSetOverrideCastBarActive then
+    local view = M._castBarView or GetOrderView()
+    if view and M._origViewSetOverrideCastBarActive then
         view.SetOverrideCastBarActive = M._origViewSetOverrideCastBarActive
-    end
-    M._viewCastBarNoop = nil
-    M._origViewSetOverrideCastBarActive = nil
-    if view then
         view.isOverrideCastBarActive = false
     end
+    M._castBarView = nil
+    M._viewCastBarNoop = nil
+    M._origViewSetOverrideCastBarActive = nil
 end
 
 local function UpdateCastBar(bar, view)

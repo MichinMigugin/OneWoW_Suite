@@ -33,4 +33,6 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["CRAFTORDERS_NO_SHOPPING"] = "Включите список покупок, чтобы добавлять реагенты.",
     ["CRAFTORDERS_KP"] = "%d знания",
     ["CRAFTORDERS_ACUITY"] = "Острота x%d",
+    ["CRAFTORDERS_INCOMPATIBLE_TITLE"] = "Другие аддоны списка заказов",
+    ["CRAFTORDERS_INCOMPATIBLE_BODY"] = "%s включен. Эти аддоны остаются загруженными. Включите это для One UI или выключите, чтобы пользоваться ими.",
 })
