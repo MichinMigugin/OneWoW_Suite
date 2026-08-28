@@ -42,7 +42,7 @@ Yes. The suite lives at [https://github.com/kellewic/OneWoW_Suite](https://githu
 
 ### Who wrote a QoL module?
 
-Open the module in QoL and use **Details**. The name there is the credit line. Community-authored modules keep that person's name; the list is [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md). Empty credit means the OneWoW Development Team.
+Open the module in QoL and use **Details**. That name is the credit line. The OneWoW team may edit shipped modules; credit stays with the original author until a complete rewrite, then they keep concept credit. Community list: [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md). Empty credit means the OneWoW Development Team.
 
 ### Is OneWoW written by AI?
 

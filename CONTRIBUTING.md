@@ -123,20 +123,26 @@ Set `author` in `module.lua` to **your name** (plain text). Players see it in
 the module's Details dialog. Leave it empty only if the module is OneWoW team
 work — empty means the OneWoW Development Team.
 
-Community modules keep your copyright in that folder. By opening a pull
-request you grant the OneWoW Development Team a license to ship and maintain
-the module as part of official OneWoW ([LICENSE.md](LICENSE.md)). We add your
-row to [MODULE_CREDITS.md](MODULE_CREDITS.md) and we do not strip your credit.
+Submitting does **not** give OneWoW exclusive ownership. The OneWoW
+Development Team may change, modify, or edit the shipped module at any time.
+Your name stays on Details until a complete rewrite; then you keep
+**concept** credit in [MODULE_CREDITS.md](MODULE_CREDITS.md).
+
+If you want your own terms, put a `LICENSE` in the module folder (must still
+be compatible with official OneWoW). If you do not, the module is a
+contribution to the OneWoW Development Team and that copy becomes OneWoW
+codebase ([LICENSE.md](LICENSE.md)).
 
 ## License
 
 See [LICENSE.md](LICENSE.md). Copyright the OneWoW Development Team except
-community QoL modules in [MODULE_CREDITS.md](MODULE_CREDITS.md). All rights
-reserved. Third-party libraries: [THIRD_PARTY.md](THIRD_PARTY.md).
+third-party files in [THIRD_PARTY.md](THIRD_PARTY.md) and community modules
+in [MODULE_CREDITS.md](MODULE_CREDITS.md) that name their own license.
 
-All contributions must be compatible with that license. By submitting a pull
-request, you agree your work can be included under the same terms (QoL
-modules: you keep credit; the team may ship the module with the suite).
+By submitting a pull request you grant the team the right to include,
+modify, and ship your work as part of official OneWoW. A named license is
+**non-exclusive** (you keep your rights elsewhere). Unlicensed
+contributions become part of the OneWoW codebase under LICENSE.md.
 
 ---
 

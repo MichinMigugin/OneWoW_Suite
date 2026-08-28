@@ -4,10 +4,10 @@ Copyright (c) 2026 OneWoW Development Team
 https://onewow.net/
 
 The contents of this repository, excluding third-party resources listed in
-[THIRD_PARTY.md](THIRD_PARTY.md) and community QoL modules listed in
-[MODULE_CREDITS.md](MODULE_CREDITS.md), are copyrighted to the OneWoW
-Development Team (the authors who maintain this project) with all rights
-reserved.
+[THIRD_PARTY.md](THIRD_PARTY.md) and community QoL modules in
+[MODULE_CREDITS.md](MODULE_CREDITS.md) that name their own license, are
+copyrighted to the OneWoW Development Team (the authors who maintain this
+project) with all rights reserved.
 
 This is not an OSI open-source license. The source is public so you can
 inspect it and contribute.
@@ -19,26 +19,43 @@ original arrangement of shipped tables, not in Blizzard's underlying game
 data.
 
 Third-party libraries and fonts remain under their own licenses. See
-[THIRD_PARTY.md](THIRD_PARTY.md). Community QoL module credit and copyright
-follow the rules below and [MODULE_CREDITS.md](MODULE_CREDITS.md).
+[THIRD_PARTY.md](THIRD_PARTY.md). Contribution, credit, and community module
+terms follow the sections below and [MODULE_CREDITS.md](MODULE_CREDITS.md).
+
+## Contributions
+
+Submitting a pull request does **not**, by itself, make the OneWoW
+Development Team the exclusive owner of your work.
+
+By submitting, you grant the OneWoW Development Team a right to include,
+change, modify, and ship that work as part of official OneWoW at any time.
+
+- If you **name a license** (for a module: a `LICENSE` file in that folder,
+  recorded in MODULE_CREDITS.md), that license controls your work. OneWoW's
+  right to the copy in this repo is **non-exclusive**; you keep your rights
+  elsewhere. A named license must still be compatible with shipping inside
+  official OneWoW.
+- If you **do not name a license**, the submission is a contribution to the
+  OneWoW Development Team. That copy becomes part of the OneWoW codebase
+  under this LICENSE.md.
 
 ## QoL modules
 
 Each module under `OneWoW_QoL/Modules/external/<id>/` is credited by the
 `author` string in that folder's `module.lua` (shown in the in-game Details
-dialog).
+dialog). List community modules in [MODULE_CREDITS.md](MODULE_CREDITS.md).
 
-- If `author` is omitted or empty, credit and copyright are the OneWoW
-  Development Team.
+- If `author` is omitted or empty, credit is the OneWoW Development Team.
 - If `author` is a team credit (for example `OneWoW`, `OneWoW Development
   Team`, or a Development Team member's name on a team-written module), that
-  is in-game credit. Copyright in that folder stays with the OneWoW
-  Development Team unless the module is listed in MODULE_CREDITS.md.
-- If `author` names a **community** contributor, that person keeps copyright
-  in that module folder. By submitting a pull request they grant the OneWoW
-  Development Team a license to include, maintain, and distribute the module
-  as part of official OneWoW under this LICENSE.md. Keep their `author`
-  string. List the module in [MODULE_CREDITS.md](MODULE_CREDITS.md).
+  is in-game credit. Those folders are OneWoW codebase unless listed in
+  MODULE_CREDITS.md with a named license.
+- A **community** `author` keeps credit while we maintain and edit the
+  shipped module. Giving it to OneWoW is not exclusive ownership; see
+  **Contributions** above.
+- If the team later **rewrites** the module (the shipped code is no longer
+  that author's work), Details credit becomes the OneWoW Development Team.
+  The original author keeps **concept** credit in MODULE_CREDITS.md.
 
 ## You may
 
@@ -55,8 +72,10 @@ dialog).
    `OneWoW_QoL/Modules/external/<id>/` (see
    [OneWoW_QoL/DEVELOPERS.md](OneWoW_QoL/DEVELOPERS.md)) and submit them as
    pull requests. Put your name in `author` so players see it in Details.
-   That folder remains your original work; the grant in **QoL modules** above
-   lets us ship it with the suite. We keep your credit.
+   Name a license in the module folder if you want to keep your own terms;
+   otherwise it is a contribution to the OneWoW codebase. The team may edit
+   the shipped copy at any time. Credit stays with you until a complete
+   rewrite (then concept credit). See **Contributions** and **QoL modules**.
 6. Call published `_API` surfaces from other addons (for example OneWoW
    Bags overlays). Integrate; do not copy OneWoW source. Credit OneWoW if
    you depend on it.

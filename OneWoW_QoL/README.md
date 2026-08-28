@@ -135,4 +135,4 @@ Part of the [OneWoW Suite](../README.md). See the suite README for the full addo
 
 **Website:** https://onewow.net/
 
-**License:** See [LICENSE.md](../LICENSE.md). Copyright the OneWoW Development Team except community QoL modules in [MODULE_CREDITS.md](../MODULE_CREDITS.md). All rights reserved.
+**License:** See [LICENSE.md](../LICENSE.md). Copyright the OneWoW Development Team except third-party files and community modules that name their own license ([MODULE_CREDITS.md](../MODULE_CREDITS.md)). All rights reserved.

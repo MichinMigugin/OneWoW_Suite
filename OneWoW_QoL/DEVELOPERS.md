@@ -145,17 +145,19 @@ If you are not supporting Korean, skip the `koKR.lua` line.
 
 | Field | Type | Description |
 |---|---|---|
-| `author` | string | Credit line, plain text, shown in Details. **Community modules must set this to the author's name.** Empty or omitted means the OneWoW Development Team (copyright and credit). The hub fills that default at load if the field is missing. |
+| `author` | string | Credit line, plain text, shown in Details. **Community modules must set this to the author's name.** Empty or omitted means the OneWoW Development Team. The hub fills that default at load if the field is missing. After a complete rewrite, set this to the team and keep **concept** credit in MODULE_CREDITS.md. |
 | `contact` | string | Email/Discord. Shown as a copyable text box. |
 | `link` | string | Website URL. Shown as a copyable text box. |
 
 If none of `author`, `contact`, or `link` are set in source, the hub still
 shows Details once `author` defaults to the OneWoW Development Team.
 
-Community authors keep copyright in their module folder and grant the team a
-license to ship it ([LICENSE.md](../LICENSE.md)). Maintainers add a row to
-[MODULE_CREDITS.md](../MODULE_CREDITS.md) when merging. Do not replace a
-community `author` string with a team name.
+Community authors keep Details credit while we maintain the module. Submitting
+is not exclusive ownership; the team may edit the shipped copy at any time.
+Name a `LICENSE` in the module folder if you want your own terms (must still
+be compatible with official OneWoW); otherwise the copy is a contribution to
+the OneWoW codebase. Record the row in [MODULE_CREDITS.md](../MODULE_CREDITS.md).
+See [LICENSE.md](../LICENSE.md) (**Contributions** and **QoL modules**).
 
 ---
 
