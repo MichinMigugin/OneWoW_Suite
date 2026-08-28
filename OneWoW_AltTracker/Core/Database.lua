@@ -109,4 +109,28 @@ function ns:InitializeDatabase()
         end
         global.weeklyActivityQuestsV2 = true
     end
+
+    -- Hero Mistcrest 3440 and Dawnlight Manaflux 3378 were Hidden-category
+    -- twins. Live Currency-tab IDs are 3445 and 3465. Remap any customized
+    -- override list once; skip a target that is already in the list.
+    if not global.progressCurrencyIDsV2 then
+        local list = global.overrides and global.overrides.progress and global.overrides.progress.trackedCurrencyIDs
+        if type(list) == "table" then
+            local remap = { [3440] = 3445, [3378] = 3465 }
+            local seen = {}
+            local write = 1
+            for read = 1, #list do
+                local id = remap[list[read]] or list[read]
+                if id and id > 0 and not seen[id] then
+                    seen[id] = true
+                    list[write] = id
+                    write = write + 1
+                end
+            end
+            for i = write, #list do
+                list[i] = nil
+            end
+        end
+        global.progressCurrencyIDsV2 = true
+    end
 end

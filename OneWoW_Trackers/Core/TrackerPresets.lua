@@ -522,7 +522,7 @@ local BUNDLED_GUIDES = {
     },
     {
         id = "bundled_midnight_routine",
-        version = 3,
+        version = 4,
         data = {
             title = "Campaign Weekly Tracker: Midnight",
             description = "Comprehensive weekly checklist for Midnight expansion content. Tracks weekly quests, Great Vault, crests, hunts, delves, PvP, and renown.",
@@ -564,7 +564,7 @@ local BUNDLED_GUIDES = {
                         { label = "Adventurer Mistcrest", trackType = "currency", trackParams = { currencyID = 3442 }, max = 0, noMax = true },
                         { label = "Veteran Mistcrest", trackType = "currency", trackParams = { currencyID = 3443 }, max = 0, noMax = true },
                         { label = "Champion Mistcrest", trackType = "currency", trackParams = { currencyID = 3444 }, max = 0, noMax = true },
-                        { label = "Hero Mistcrest", trackType = "currency", trackParams = { currencyID = 3440 }, max = 0, noMax = true },
+                        { label = "Hero Mistcrest", trackType = "currency", trackParams = { currencyID = 3445 }, max = 0, noMax = true },
                         { label = "Myth Mistcrest", trackType = "currency", trackParams = { currencyID = 3446 }, max = 0, noMax = true },
                         { label = "Coffer Key Shards", trackType = "currency", trackParams = { currencyID = 3310 }, max = 0, noMax = true },
                     },
