@@ -39,21 +39,31 @@ local function GetRaidDifficulties()
     return (sd and sd.raidDifficulties) or {}
 end
 
-local SEASON_CURRENCIES = {
-    {key = "cur_3442", currencyID = 3442, name = "Adventurer Mistcrest", width = 45},
-    {key = "cur_3443", currencyID = 3443, name = "Veteran Mistcrest",    width = 45},
-    {key = "cur_3444", currencyID = 3444, name = "Champion Mistcrest",   width = 45},
-    {key = "cur_3445", currencyID = 3445, name = "Hero Mistcrest",       width = 45},
-    {key = "cur_3446", currencyID = 3446, name = "Myth Mistcrest",       width = 45},
-    {key = "cur_3303", currencyID = 3303, name = "Untethered Coin",      width = 50},
-    {key = "cur_3309", currencyID = 3309, name = "Hellstone Shard",      width = 45},
-    {key = "cur_3465", currencyID = 3465, name = "Venomblight Manaflux", width = 50},
-    {key = "cur_3379", currencyID = 3379, name = "Brimming Arcana",      width = 45},
-    {key = "cur_3385", currencyID = 3385, name = "Luminous Dust",        width = 45},
-    {key = "cur_3316", currencyID = 3316, name = "Voidlight Marl",       width = 45},
-    {key = "cur_3310", currencyID = 3310, name = "Coffer Key Shards",    width = 45},
-    {key = "cur_3405", currencyID = 3405, name = "Field Accolade",       width = 50},
-}
+local CURRENCY_COL_WIDTH = 45
+
+local function CurrencyDisplayName(id)
+    local info = C_CurrencyInfo.GetCurrencyInfo(id)
+    if info and info.name and info.name ~= "" then
+        return info.name
+    end
+    return CURRENCY .. " " .. id
+end
+
+--- Progress Currencies columns follow the same effective list as collection.
+local function GetCurrencyColumnDefs()
+    local cols = {}
+    local ids = ns:GetProgressList("trackedCurrencyIDs")
+    for i = 1, #ids do
+        local id = ids[i]
+        table.insert(cols, {
+            key = "cur_" .. id,
+            currencyID = id,
+            name = CurrencyDisplayName(id),
+            width = CURRENCY_COL_WIDTH,
+        })
+    end
+    return cols
+end
 
 local subTabState = {
     mythicplus = { sortColumn = nil, sortAscending = true, rows = {}, columns = {} },
@@ -1109,7 +1119,7 @@ end
 
 local function CreateCurrenciesColumns()
     local cols = BuildCommonColumns()
-    for _, cur in ipairs(SEASON_CURRENCIES) do
+    for _, cur in ipairs(GetCurrencyColumnDefs()) do
         table.insert(cols, {
             key          = cur.key,
             label        = "",
@@ -1123,6 +1133,41 @@ local function CreateCurrenciesColumns()
         })
     end
     return cols
+end
+
+--- Rebuild Currencies headers and rows after Override on/off or add/remove.
+function ns.UI.NotifyTrackedCurrenciesChanged()
+    local progressTab = ns.UI.progressTabFrame
+    if not progressTab then return end
+
+    local newCols = CreateCurrenciesColumns()
+    local state = subTabState.currencies
+    state.columns = newCols
+    local sortCol = state.sortColumn
+    if sortCol and sortCol:sub(1, 4) == "cur_" then
+        local found = false
+        for i = 1, #newCols do
+            if newCols[i].key == sortCol then
+                found = true
+                break
+            end
+        end
+        if not found then
+            state.sortColumn = nil
+        end
+    end
+
+    local frame = progressTab.subTabFrames and progressTab.subTabFrames.currencies
+    if frame and frame.dataTable then
+        frame.dataTable:SetColumns(newCols)
+        if not state.sortColumn then
+            frame.dataTable:SetSortState(nil, true)
+        end
+        if currentSubTab == "currencies" and frame.refreshFunc then
+            frame.refreshFunc(frame)
+        end
+    end
+    ns.UI.RefreshTrackingBar(progressTab)
 end
 
 local function BuildMythicPlusCells(charRow, _, _, endgameData, _)
@@ -1316,7 +1361,7 @@ local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
 end
 
 local function BuildCurrenciesCells(charRow, _, _, endgameData, _)
-    for _, cur in ipairs(SEASON_CURRENCIES) do
+    for _, cur in ipairs(GetCurrencyColumnDefs()) do
         local curText = OneWoW_GUI:CreateFS(charRow, 12)
         local qty = 0
         local maxQty = 0
@@ -1357,10 +1402,7 @@ local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
         if chd.guild and chd.guild.name then GameTooltip:AddLine("<" .. chd.guild.name .. ">", 0.8, 0.8, 0.8) end
     elseif colKey:sub(1, 4) == "cur_" then
         local cid = tonumber(colKey:sub(5))
-        local curName = colKey
-        for _, cur in ipairs(SEASON_CURRENCIES) do
-            if cur.currencyID == cid then curName = cur.name; break end
-        end
+        local curName = cid and CurrencyDisplayName(cid) or colKey
         GameTooltip:SetText(curName, 1, 1, 1)
         if edg and edg.currencies and edg.currencies.tracked then
             local cData = edg.currencies.tracked[cid]
@@ -1563,23 +1605,43 @@ function ns.UI.CreateProgressTab(parent)
     local trackingBar = OneWoW_GUI:CreateFrame(parent, { bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     trackingBar:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -4)
     trackingBar:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -4)
+    trackingBar:SetHeight(36)
 
-    local trackingText = OneWoW_GUI:CreateFS(trackingBar, 10)
-    trackingText:SetPoint("TOPLEFT", trackingBar, "TOPLEFT", 10, -4)
-    trackingText:SetPoint("TOPRIGHT", trackingBar, "TOPRIGHT", -10, -4)
-    trackingText:SetJustifyH("LEFT")
-    trackingText:SetWordWrap(true)
-    trackingText:SetText("")
-    trackingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    trackingBar:SetScript("OnShow", function(self)
-        C_Timer.After(0.05, function()
-            if trackingText and trackingText:GetStringHeight() then
-                self:SetHeight(trackingText:GetStringHeight() + 8)
-            end
-        end)
+    local trackingPad = OneWoW_GUI:GetSpacing("SM")
+    local trackingConfigBtn = OneWoW_GUI:CreateFitTextButton(trackingBar, { text = OPTIONS, height = 24 })
+    trackingConfigBtn:SetPoint("RIGHT", trackingBar, "RIGHT", -trackingPad, 0)
+    trackingConfigBtn:SetScript("OnClick", function()
+        ns.UI.ShowProgressTrackingDialog()
     end)
-    trackingBar:SetHeight(22)
+
+    local seasonTitle = OneWoW_GUI:CreateFS(trackingBar, 13)
+    seasonTitle:SetJustifyH("LEFT")
+    seasonTitle:SetWordWrap(false)
+    seasonTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local seasonVersion = OneWoW_GUI:CreateFS(trackingBar, 11)
+    seasonVersion:SetJustifyH("RIGHT")
+    seasonVersion:SetWordWrap(false)
+    seasonVersion:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local function LayoutTrackingBar()
+        local verW = math.max(seasonVersion:GetStringWidth() or 0, 1)
+        seasonVersion:ClearAllPoints()
+        seasonVersion:SetPoint("RIGHT", trackingConfigBtn, "LEFT", -trackingPad, 0)
+        seasonVersion:SetWidth(verW)
+        seasonTitle:ClearAllPoints()
+        seasonTitle:SetPoint("LEFT", trackingBar, "LEFT", trackingPad, 0)
+        seasonTitle:SetPoint("RIGHT", seasonVersion, "LEFT", -trackingPad, 0)
+    end
+
+    trackingBar:SetScript("OnSizeChanged", LayoutTrackingBar)
+    C_Timer.After(0.05, LayoutTrackingBar)
+
+    parent.trackingBar = trackingBar
+    parent.seasonTitleText = seasonTitle
+    parent.seasonVersionText = seasonVersion
+    parent.LayoutTrackingBar = LayoutTrackingBar
+    ns.UI.RefreshTrackingBar(parent)
 
     local subTabBar = OneWoW_GUI:CreateFrame(parent, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     subTabBar:SetPoint("TOPLEFT", trackingBar, "BOTTOMLEFT", 0, -4)
@@ -1698,7 +1760,6 @@ function ns.UI.CreateProgressTab(parent)
     parent.statsContainer = overview.statsContainer
     parent.statBoxes = overview.statBoxes
     parent.trackingBar = trackingBar
-    parent.trackingText = trackingText
     parent.subTabBar = subTabBar
     parent.subTabButtons = subTabButtons
     parent.subTabFrames = subTabFrames
@@ -1725,6 +1786,7 @@ function ns.UI.CreateProgressTab(parent)
     if ns.UI.RegisterRosterTabFrame then
         ns.UI.RegisterRosterTabFrame("progress", parent)
     end
+    ns.UI.progressTabFrame = parent
 end
 
 function ns.UI.RefreshProgressTab(progressTab)
@@ -1878,93 +1940,15 @@ function ns.UI.RefreshProgressStats(progressTab)
 end
 
 function ns.UI.RefreshTrackingBar(progressTab)
-    if not progressTab or not progressTab.trackingText then return end
-    local charDB = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetAllCharacters()
-    local endgameDB = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetAllCharacters()
-
-    local raidName = ""
-    local bossName = ""
-    local raidAuto = false
-    local bossAuto = false
-
-    if charDB and endgameDB then
-        local counts = {}
-        for charKey in pairs(charDB) do
-            local edg = endgameDB[charKey]
-            if edg and edg.raids and edg.raids.lockouts then
-                for _, l in ipairs(edg.raids.lockouts) do
-                    local nm = l.name or ""
-                    if nm ~= "" then counts[nm] = (counts[nm] or 0) + 1 end
-                end
-            end
-        end
-        local best, bestCount = "", 0
-        for nm, c in pairs(counts) do
-            if c > bestCount then bestCount = c; best = nm end
-        end
-        if best ~= "" then raidName = best; raidAuto = true end
+    if not progressTab then return end
+    local title, version = ns.UI.GetSeasonIdentity()
+    if progressTab.seasonTitleText then
+        progressTab.seasonTitleText:SetText(title)
     end
-
-    if bossName == "" and charDB and endgameDB then
-        for charKey in pairs(charDB) do
-            local edg = endgameDB[charKey]
-            if edg and edg.worldBoss then
-                local killed, nm = GetWorldBossKilled(edg)
-                if killed and nm and nm ~= "" then
-                    bossName = nm; bossAuto = true; break
-                end
-            end
-        end
+    if progressTab.seasonVersionText then
+        progressTab.seasonVersionText:SetText(version)
     end
-    if bossName == "" then
-        local questIDs = ns:GetProgressList("worldBossQuestIDs")
-        local names = {}
-        for _, qid in ipairs(questIDs) do
-            local nm = KNOWN_BOSS_NAMES[qid]
-            if nm then table.insert(names, nm) end
-        end
-        if #names > 0 then
-            bossName = table.concat(names, " / ")
-        end
-    end
-
-    local currencyNames = {}
-    if charDB and endgameDB then
-        for charKey in pairs(charDB) do
-            local edg = endgameDB[charKey]
-            if edg and edg.currencies and edg.currencies.tracked then
-                local order = {}
-                for id, info in pairs(edg.currencies.tracked) do
-                    if info and info.name then table.insert(order, {id = id, name = info.name}) end
-                end
-                table.sort(order, function(a, b) return a.id < b.id end)
-                for _, entry in ipairs(order) do
-                    table.insert(currencyNames, entry.name)
-                end
-                break
-            end
-        end
-    end
-
-    local raidStr = raidName ~= "" and (raidName .. (raidAuto and " " .. L["TRACKING_BAR_AUTO"] or "")) or L["TRACKING_BAR_NOT_SET"]
-    local bossStr = bossName ~= "" and (bossName .. (bossAuto and " " .. L["TRACKING_BAR_AUTO"] or "")) or L["TRACKING_BAR_NOT_SET"]
-    local currStr = #currencyNames > 0 and table.concat(currencyNames, "  |  ") or L["TRACKING_BAR_NOT_SET"]
-
-    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
-    local sep = offset >= 2 and "\n" or "     "
-    progressTab.trackingText:SetText(
-        L["TRACKING_BAR_RAID"] .. " " .. raidStr .. sep ..
-        L["TRACKING_BAR_BOSS"] .. " " .. bossStr .. sep ..
-        L["TRACKING_BAR_CURRENCIES"] .. " " .. currStr
-    )
-
-    local bar = progressTab.trackingBar
-    if bar and progressTab.trackingText then
-        C_Timer.After(0.05, function()
-            local h = progressTab.trackingText:GetStringHeight()
-            if h and h > 0 then
-                bar:SetHeight(h + 8)
-            end
-        end)
+    if progressTab.LayoutTrackingBar then
+        progressTab.LayoutTrackingBar()
     end
 end

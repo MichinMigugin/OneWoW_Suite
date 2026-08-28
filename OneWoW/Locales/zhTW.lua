@@ -176,7 +176,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_CRAFTORDERS_BODY"] = "專業技能製造訂單頁把公開、公會、個人和主顧清單分成「現在可製造」和「缺少材料」。可以把缺少的材料加入購物清單。一個按鈕即可開始、製造並完成訂單。",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 圖示瀏覽器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能現已包含圖示瀏覽器。選擇巨集、銀行分頁、公會銀行分頁、裝備設定或塑形套裝圖示時可搜尋並篩選。",
-    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "進度追蹤至暗之夜賽季2：劇毒深淵和浪縛岩窟、新的傳奇鑰石地城池、Mistcrests，以及 Nymrissa Wavecaller。/1wat status 顯示本週進度正在追蹤的內容。",
+    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "進度追蹤至暗之夜賽季2：劇毒深淵和浪縛岩窟、新的傳奇鑰石地城池、Mistcrests，以及 Nymrissa Wavecaller。總覽下方的列顯示目前賽季和版本。在那裡的選項中選擇貨幣和世界首領。/1wat status 顯示本週進度正在追蹤的內容。",
     ["WHATS_NEW_H_TRACKERS_BODY"] = "步驟編輯器可編寫全部追蹤類型，包括擊殺地城或團隊首領。在地城或團隊副本中，從目標填入無法讀取生物ID；請在戰鬥中或擊敗後填入該首領戰。輸入ID會顯示名稱。允許的地圖上可設定路徑點。",
     ["CMD_TOGGLE_ONEWOW"] = "切換 OneWoW",
     ["CMD_KEYWORD_HELP"] = "開啟搜尋關鍵字說明",

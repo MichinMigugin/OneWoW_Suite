@@ -176,7 +176,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_CRAFTORDERS_BODY"] = "Die Auftragsseite trennt Offentlich, Gilde, Persoenlich und Gönner in Jetzt herstellbar und Fehlende Materialien. Fehlende Reagenzien kommen auf eine Einkaufsliste. Eine Schaltflache startet, stellt her und schliesst ab.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Symbolbrowser",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Unter QoL-Funktionen gibt es den Symbolbrowser. Damit lassen sich Symbole für Makros, Banktabs, Gildenbanktabs, Ausrüstungssets und Transmog-Outfits suchen und filtern.",
-    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Fortschritt verfolgt Saison 2 von Midnight: Der Giftige Abgrund und Die Gezeitengebundene Grotte, den neuen Mythisch+-Dungeonpool, Mistcrests und Nymrissa Wavecaller. /1wat status zeigt, was Fortschritt in dieser Woche verfolgt.",
+    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Fortschritt verfolgt Saison 2 von Midnight: Der Giftige Abgrund und Die Gezeitengebundene Grotte, den neuen Mythisch+-Dungeonpool, Mistcrests und Nymrissa Wavecaller. Die Leiste unter der Übersicht zeigt Saison und Patch. Über Optionen dort wählt ihr Währungen und Weltbosse. /1wat status zeigt, was Fortschritt in dieser Woche verfolgt.",
     ["WHATS_NEW_H_TRACKERS_BODY"] = "Der Schritt-Editor kann jeden Tracker-Typ erstellen, einschließlich Dungeon- oder Schlachtzugboss töten. In einem Dungeon oder Schlachtzug kann Aus Ziel füllen keine Kreatur-IDs lesen; fülle die Begegnung während des Kampfes oder direkt nach dem Sieg. Eine ID zeigt den Namen beim Tippen. Kartenwegpunkte werden auf Karten gesetzt, die das erlauben.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW umschalten",
     ["CMD_KEYWORD_HELP"] = "Hilfe zu Suchbegriffen öffnen",

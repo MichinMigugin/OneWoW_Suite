@@ -176,7 +176,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_CRAFTORDERS_BODY"] = "전문 기술 제작 주문 페이지가 공개, 길드, 개인, 후원자 목록을 지금 제작 가능과 재료 부족으로 나눕니다. 부족한 재료를 쇼핑 목록에 넣을 수 있습니다. 한 버튼으로 시작, 제작, 완료합니다.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 아이콘 브라우저",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 기능에 아이콘 브라우저가 있습니다. 매크로, 은행 탭, 길드 은행 탭, 장비 구성, 형상변환 복장 아이콘을 고를 때 검색하고 필터할 수 있습니다.",
-    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "진행도는 한밤 2 시즌을 추적합니다: 맹독 심연과 해일결속 동굴, 새로운 신화+ 던전 목록, Mistcrests, Nymrissa Wavecaller. /1wat status는 이번 주 진행도가 추적하는 내용을 보여 줍니다.",
+    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "진행도는 한밤 2 시즌을 추적합니다: 맹독 심연과 해일결속 동굴, 새로운 신화+ 던전 목록, Mistcrests, Nymrissa Wavecaller. 개요 아래 표시줄에 현재 시즌과 패치가 나옵니다. 그곳의 옵션에서 화폐와 야외 우두머리를 고릅니다. /1wat status는 이번 주 진행도가 추적하는 내용을 보여 줍니다.",
     ["WHATS_NEW_H_TRACKERS_BODY"] = "단계 편집기로 던전 또는 공격대 우두머리 처치를 포함한 모든 추적 유형을 작성할 수 있습니다. 던전이나 공격대 안에서는 대상에서 채우기가 생물 ID를 읽지 못합니다. 전투 중 또는 처치 직후에 우두머리전을 채우세요. ID를 입력하면 이름이 표시됩니다. 허용하는 지도에 위치 표시가 지정됩니다.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",

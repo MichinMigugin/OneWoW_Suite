@@ -176,7 +176,7 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["WHATS_NEW_H_CRAFTORDERS_BODY"] = "La pagina de Pedidos de fabricacion separa Publicos, Hermandad, Personales y Mecenas en Se puede fabricar ahora y Faltan materiales. Anade los componentes que faltan a una lista de la compra. Un boton empieza, fabrica y completa el pedido.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navegador de iconos",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Funciones de QoL incluye el módulo Navegador de iconos. Busca y filtra iconos al elegir el de una macro, pestaña de banco, pestaña de banco de hermandad, conjunto de equipo o atuendo de transfiguración.",
-    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progreso sigue Midnight temporada 2: Abismo Venenoso y La Gruta Mareal, el nuevo conjunto de mazmorras míticas+, Mistcrests y Nymrissa Wavecaller. /1wat status muestra lo que Progreso sigue esta semana.",
+    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progreso sigue Midnight temporada 2: Abismo Venenoso y La Gruta Mareal, el nuevo conjunto de mazmorras míticas+, Mistcrests y Nymrissa Wavecaller. La barra bajo el resumen muestra la temporada y el parche. Opciones allí elige monedas y jefes de mundo. /1wat status muestra lo que Progreso sigue esta semana.",
     ["WHATS_NEW_H_TRACKERS_BODY"] = "El editor de pasos puede crear cada tipo de rastreador, incluido Matar un jefe de mazmorra o banda. Dentro de una mazmorra o banda, Rellenar desde el objetivo no puede leer ID de criatura; rellena el encuentro durante el combate o justo después de la victoria. Al escribir un ID se muestra su nombre. Los puntos de ruta se colocan en los mapas que lo permiten.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir la ayuda de palabras clave de búsqueda",

@@ -62,6 +62,7 @@ Modules\alttracker\actionbars-compat.lua
 UI\Framework.lua
 UI\MailDetail.lua
 # Tab UI Files
+UI\ProgressTracking.lua
 UI\t-summary.lua
 UI\t-progress.lua
 UI\t-bank.lua

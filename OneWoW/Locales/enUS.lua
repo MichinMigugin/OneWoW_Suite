@@ -176,7 +176,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_CRAFTORDERS_BODY"] = "The profession Crafting Orders page splits Public, Guild, Personal, and Patron lists into Craftable now and Missing mats. Add missing reagents to a Shopping List. One button starts, crafts, and completes the order.",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Icon Browser",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL Features includes Icon Browser. Search and filter icons when you pick a macro, bank tab, guild bank tab, equipment set, or transmog outfit icon.",
-    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progress tracks Midnight Season 2: The Venomous Abyss and The Tidebound Grotto, the new Mythic+ dungeon pool, Mistcrests, and Nymrissa Wavecaller. /1wat status shows what Progress is tracking this week.",
+    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progress tracks Midnight Season 2: The Venomous Abyss and The Tidebound Grotto, the new Mythic+ dungeon pool, Mistcrests, and Nymrissa Wavecaller. The bar under overview shows the current season and patch. Options there picks currencies and world bosses. /1wat status shows what Progress is tracking this week.",
     ["WHATS_NEW_H_TRACKERS_BODY"] = "The step editor can author every tracker type, including Kill a Dungeon or Raid Boss. Inside a dungeon or raid, Fill from target cannot read creature IDs; fill the encounter during the fight or just after the kill. Typing an ID shows its name. Map waypoints set on maps that allow them.",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",
     ["CMD_KEYWORD_HELP"] = "Open Search Keywords help",

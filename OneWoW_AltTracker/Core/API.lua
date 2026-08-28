@@ -5,7 +5,9 @@ local _, ns = ...
 -- Most other AltTracker stores no longer TOC-depend on this hub.
 OneWoW_AltTracker_API = {}
 
---- Effective progress override list (user customization when non-empty, else baseline).
+--- Effective progress override list. trackedCurrencyIDs is season defaults
+--- minus player offs, plus extras (empty is allowed). Other keys: user copy
+--- when non-empty, else the static baseline.
 ---@param key string "trackedCurrencyIDs" | "worldBossQuestIDs" | "weeklyActivityQuests"
 ---@return table|nil list
 function OneWoW_AltTracker_API.GetProgressList(key)

@@ -118,7 +118,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     yOffset = yOffset - 10
 
-    local overrideSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["OVERRIDE_BTN"], yOffset = yOffset })
+    local overrideSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["STATUS_TITLE"], yOffset = yOffset })
     yOffset = overrideSection.bottomY - 8
 
     local overrideDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
@@ -129,286 +129,17 @@ function ns.UI.CreateSettingsTab(parent)
     overrideDesc:SetText(L["OVERRIDE_SYSTEM_DESC"])
     overrideDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     overrideDesc:SetSpacing(3)
+    overrideDesc:SetWidth(wrapWidth)
+    local overrideDescHeight = math.max(overrideDesc:GetStringHeight() or 12, 12)
+    yOffset = yOffset - overrideDescHeight - 16
 
-    C_Timer.After(0.01, function()
-        local textHeight = overrideDesc:GetStringHeight()
-        yOffset = yOffset - textHeight - 12
-    end)
-    yOffset = yOffset - 50
-
-    local overrideBtn = OneWoW_GUI:CreateFitTextButton(scrollContent, { text = L["OVERRIDE_BTN"], height = 35 })
+    local overrideBtn = OneWoW_GUI:CreateFitTextButton(scrollContent, { text = OPTIONS, height = 35 })
     overrideBtn:SetPoint("TOPLEFT", 25, yOffset)
     overrideBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     if overrideBtn.text then overrideBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")) end
-
-    local overrideDialog = nil
-
-    local KNOWN_BOSS_NAMES = {}
-
-    -- Copy-on-write: editing the list materializes a SavedVariables copy seeded
-    -- from the static baseline, so add/remove mutations persist (and never touch
-    -- ns.OverrideDefaults).
-    local function GetCurrencyIDs()
-        return ns:EnsureProgressList("trackedCurrencyIDs")
-    end
-
-    local function GetBossQuestIDs()
-        return ns:EnsureProgressList("worldBossQuestIDs")
-    end
-
-    local function GetOrCreateOverrideDialog()
-        if overrideDialog and overrideDialog:IsShown() then
-            overrideDialog:Raise()
-            return
-        end
-
-        if overrideDialog then
-            OneWoW_GUI:ApplyFontToFrame(overrideDialog)
-            overrideDialog:Show()
-            overrideDialog:Raise()
-            return
-        end
-
-        local result = OneWoW_GUI:CreateDialog({
-            name = "OneWoWOverrideDialog",
-            showBrand = true,
-            title = L["OVERRIDE_BTN"],
-            width = 600,
-            height = 660,
-            titleHeight = 26,
-            showScrollFrame = true,
-        })
-        overrideDialog = result.frame
-        local sc = result.scrollContent
-
-        local dy = -8
-
-        local descText = OneWoW_GUI:CreateFS(sc, 12)
-        descText:SetPoint("TOPLEFT", 10, dy)
-        descText:SetPoint("TOPRIGHT", -10, dy)
-        descText:SetJustifyH("LEFT")
-        descText:SetWordWrap(true)
-        descText:SetText(L["OVERRIDE_SYSTEM_DESC"])
-        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        descText:SetSpacing(3)
-        dy = dy - 55
-
-        local function MakeListRow(listParent, col1, col2, yPos)
-            local row = OneWoW_GUI:CreateFrame(listParent, { height = 28, bgColor = "BG_TERTIARY", borderColor = "BORDER_SUBTLE" })
-            row:SetPoint("TOPLEFT", 8, yPos)
-            row:SetPoint("TOPRIGHT", -8, yPos)
-
-            local t1 = OneWoW_GUI:CreateFS(row, 10)
-            t1:SetPoint("LEFT", row, "LEFT", 8, 0)
-            t1:SetWidth(80)
-            t1:SetText(col1)
-            t1:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-            local t2 = OneWoW_GUI:CreateFS(row, 12)
-            t2:SetPoint("LEFT", row, "LEFT", 92, 0)
-            t2:SetPoint("RIGHT", row, "RIGHT", -90, 0)
-            t2:SetJustifyH("LEFT")
-            t2:SetText(col2)
-            t2:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            row.nameText = t2
-
-            return row
-        end
-
-        local function MakeRemoveBtn(row, onClick)
-            local btn = OneWoW_GUI:CreateFitTextButton(row, { text = L["OVERRIDE_REMOVE"] .. " Remove", height = 20 })
-            btn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-            if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER")) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")) end)
-            btn:SetScript("OnClick", onClick)
-            return btn
-        end
-
-        local currencyListFrames = {}
-        local bossListFrames = {}
-
-        local function RebuildBossList()
-            for _, f in ipairs(bossListFrames) do f:Hide(); f:SetParent(nil) end
-            wipe(bossListFrames)
-
-            local ids = GetBossQuestIDs()
-            local startDY = sc.bossListStartDY or (sc.currencyListEndDY or dy) - 80
-            local ldY = startDY
-            for i, id in ipairs(ids) do
-                local nm = KNOWN_BOSS_NAMES[id] or C_QuestLog.GetTitleForQuestID(id) or ("Quest ID: " .. id)
-                local done = C_QuestLog.IsQuestFlaggedCompleted(id)
-                local row = MakeListRow(sc, "Quest: " .. id, nm, ldY)
-                if done then
-                    local doneTag = OneWoW_GUI:CreateFS(row, 10)
-                    doneTag:SetPoint("RIGHT", row, "RIGHT", -70, 0)
-                    doneTag:SetText("Done")
-                    doneTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-                end
-                MakeRemoveBtn(row, function()
-                    table.remove(ids, i)
-                    RebuildBossList()
-                end)
-                ldY = ldY - 32
-                table.insert(bossListFrames, row)
-            end
-            if sc.bossAddRow then
-                sc.bossAddRow:ClearAllPoints()
-                sc.bossAddRow:SetPoint("TOPLEFT", 8, ldY)
-                sc.bossAddRow:SetPoint("TOPRIGHT", -8, ldY)
-                ldY = ldY - 36
-            end
-            local noteText = sc.noteText
-            if noteText then
-                noteText:ClearAllPoints()
-                noteText:SetPoint("TOPLEFT", 12, ldY - 4)
-                ldY = ldY - 26
-            end
-            sc:SetHeight(math.abs(ldY) + 20)
-        end
-
-        local function RebuildCurrencyList()
-            for _, f in ipairs(currencyListFrames) do f:Hide(); f:SetParent(nil) end
-            wipe(currencyListFrames)
-
-            local ids = GetCurrencyIDs()
-            local startDY = sc.currencyListStartDY or dy
-            local ldY = startDY
-            for i, id in ipairs(ids) do
-                local info = C_CurrencyInfo.GetCurrencyInfo(id)
-                local nm = (info and info.name) or ("Currency ID: " .. id)
-                local row = MakeListRow(sc, "ID: " .. id, nm, ldY)
-                MakeRemoveBtn(row, function()
-                    table.remove(ids, i)
-                    RebuildCurrencyList()
-                end)
-                ldY = ldY - 32
-                table.insert(currencyListFrames, row)
-            end
-            if sc.currencyAddRow then
-                sc.currencyAddRow:ClearAllPoints()
-                sc.currencyAddRow:SetPoint("TOPLEFT", 8, ldY)
-                sc.currencyAddRow:SetPoint("TOPRIGHT", -8, ldY)
-                ldY = ldY - 36
-            end
-            sc.currencyListEndDY = ldY
-            if sc.bossListStartDY then
-                local bossStartDY = ldY - 8
-                sc.bossListStartDY = bossStartDY
-                RebuildBossList()
-            end
-        end
-
-        local sec1 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_SECTION_SUMMARY"], yOffset = dy })
-        dy = sec1.bottomY - 6
-        local noneText = OneWoW_GUI:CreateFS(sc, 12)
-        noneText:SetPoint("TOPLEFT", 15, dy)
-        noneText:SetText(L["OVERRIDE_NO_SETTINGS"])
-        noneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        dy = dy - 26
-
-        local sec2 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_TRACKED_CURRENCIES"], yOffset = dy })
-        dy = sec2.bottomY - 6
-        sc.currencyListStartDY = dy
-
-        local addCurrRow = OneWoW_GUI:CreateFrame(sc, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
-        local addCurrLabel = OneWoW_GUI:CreateFS(addCurrRow, 10)
-        addCurrLabel:SetPoint("LEFT", 8, 0)
-        addCurrLabel:SetText("Add Currency ID:")
-        addCurrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        local addCurrBox = OneWoW_GUI:CreateEditBox(addCurrRow, { width = 90, height = 22 })
-        addCurrBox:SetPoint("LEFT", addCurrLabel, "RIGHT", 8, 0)
-        addCurrBox:SetNumeric(true)
-        addCurrBox:SetMaxLetters(8)
-        local addCurrBtn = OneWoW_GUI:CreateFitTextButton(addCurrRow, { text = "Add", height = 22 })
-        addCurrBtn:SetPoint("LEFT", addCurrBox, "RIGHT", 6, 0)
-        addCurrBtn:SetScript("OnClick", function()
-            local val = tonumber(addCurrBox:GetText()) or 0
-            if val > 0 then
-                local ids = GetCurrencyIDs()
-                local exists = false
-                for _, v in ipairs(ids) do if v == val then exists = true; break end end
-                if not exists then
-                    table.insert(ids, val)
-                    addCurrBox:SetText("")
-                    RebuildCurrencyList()
-                end
-            end
-        end)
-        addCurrBox:SetScript("OnEnterPressed", function() addCurrBtn:Click() end)
-        sc.currencyAddRow = addCurrRow
-
-        RebuildCurrencyList()
-
-        local sec3DY = (sc.currencyListEndDY or dy) - 12
-        local sec3 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_WORLD_BOSS_QUEST"], yOffset = sec3DY })
-        sc.bossListStartDY = sec3.bottomY - 6
-        sc.bossSecHeader = sec3
-
-        local addBossRow = OneWoW_GUI:CreateFrame(sc, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
-        local addBossLabel = OneWoW_GUI:CreateFS(addBossRow, 10)
-        addBossLabel:SetPoint("LEFT", 8, 0)
-        addBossLabel:SetText("Add Quest ID:")
-        addBossLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        local addBossBox = OneWoW_GUI:CreateEditBox(addBossRow, { width = 90, height = 22 })
-        addBossBox:SetPoint("LEFT", addBossLabel, "RIGHT", 8, 0)
-        addBossBox:SetNumeric(true)
-        addBossBox:SetMaxLetters(8)
-        local addBossBtn = OneWoW_GUI:CreateFitTextButton(addBossRow, { text = "Add", height = 22 })
-        addBossBtn:SetPoint("LEFT", addBossBox, "RIGHT", 6, 0)
-        addBossBtn:SetScript("OnClick", function()
-            local val = tonumber(addBossBox:GetText()) or 0
-            if val > 0 then
-                local ids = GetBossQuestIDs()
-                local exists = false
-                for _, v in ipairs(ids) do if v == val then exists = true; break end end
-                if not exists then
-                    table.insert(ids, val)
-                    addBossBox:SetText("")
-                    RebuildBossList()
-                end
-            end
-        end)
-        addBossBox:SetScript("OnEnterPressed", function() addBossBtn:Click() end)
-        sc.bossAddRow = addBossRow
-
-        local noteText = OneWoW_GUI:CreateFS(sc, 10)
-        noteText:SetWidth(540)
-        noteText:SetJustifyH("LEFT")
-        noteText:SetWordWrap(true)
-        noteText:SetText(L["OVERRIDE_CURRENCY_LOGIN_NOTE"])
-        noteText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        sc.noteText = noteText
-
-        RebuildBossList()
-
-        local resetBtn = OneWoW_GUI:CreateFitTextButton(overrideDialog, { text = L["OVERRIDE_RESET_DEFAULTS"], height = 30 })
-        resetBtn:ClearAllPoints()
-        resetBtn:SetPoint("BOTTOMLEFT", overrideDialog, "BOTTOMLEFT", 10, 10)
-        resetBtn:SetScript("OnClick", function()
-            -- Drop user customizations so the lists fall back to the static
-            -- baseline; the rebuilds below re-materialize editable copies of it.
-            local progress = ns.db.global.overrides.progress
-            progress.trackedCurrencyIDs = nil
-            progress.worldBossQuestIDs = nil
-            progress.weeklyActivityQuests = nil
-            RebuildCurrencyList()
-            RebuildBossList()
-        end)
-
-        local closeBtn2 = OneWoW_GUI:CreateFitTextButton(overrideDialog, { text = CLOSE, height = 30 })
-        closeBtn2:ClearAllPoints()
-        closeBtn2:SetPoint("BOTTOMRIGHT", overrideDialog, "BOTTOMRIGHT", -10, 10)
-        closeBtn2:SetScript("OnClick", function() overrideDialog:Hide() end)
-
-        OneWoW_GUI:ApplyFontToFrame(overrideDialog)
-        overrideDialog:Show()
-        overrideDialog:Raise()
-    end
-
-    overrideBtn:SetScript("OnClick", GetOrCreateOverrideDialog)
+    overrideBtn:SetScript("OnClick", function()
+        ns.UI.ShowProgressTrackingDialog()
+    end)
 
     yOffset = yOffset - 50
 
@@ -470,7 +201,7 @@ function ns.UI.CreateSettingsTab(parent)
             end
             return #parts > 0 and table.concat(parts, ", ") or "None"
         end, file = "OneWoW_AltTracker/Data/d-season.lua (mapIDs also resolve via C_ChallengeMode.GetMapTable)"},
-        {key = "p_currencies", label = "Verify tracked crest/currency IDs and SEASON_CURRENCIES sync", auto = false, value = GetCurrencyIDsDisplay, file = "OneWoW_AltTracker/Data/d-overrides.lua + UI/t-progress.lua"},
+        {key = "p_currencies", label = "Verify season currency IDs in OverrideDefaults (Progress columns follow Settings overrides)", auto = false, value = GetCurrencyIDsDisplay, file = "OneWoW_AltTracker/Data/d-overrides.lua"},
         {key = "p_bosses",    label = "Verify world boss / lair quest IDs",                auto = false, value = GetBossQuestIDsDisplay, file = "OneWoW_AltTracker/Data/d-overrides.lua"},
         {key = "p_boss_names",label = "Update KNOWN_BOSS_NAMES in both files",       auto = false, value = function() return "WorldBoss.lua and t-progress.lua must stay in sync" end, file = "OneWoW_AltTracker_Endgame/Modules/WorldBoss.lua, OneWoW_AltTracker/UI/t-progress.lua"},
         {key = "p_weeklies",  label = "Verify weekly activity quest IDs", auto = false, value = function()

@@ -178,3 +178,17 @@ function ns.SeasonData:GetCurrentSeasonLabel()
     end
     return EXPANSION_SEASON_NAME:format(expName, seasonNum)
 end
+
+--- Client patch for display, e.g. "12.1" or "12.1.5".
+---@return string
+function ns.SeasonData:GetClientPatchDisplay()
+    local version = GetBuildInfo()
+    local major, minor, rev = version:match("^(%d+)%.(%d+)%.(%d+)")
+    if not major then
+        return version
+    end
+    if rev ~= "0" then
+        return major .. "." .. minor .. "." .. rev
+    end
+    return major .. "." .. minor
+end
