@@ -224,21 +224,36 @@ function VendorData:SearchVendors(searchTerm)
     return results
 end
 
+--- Vendors that sell `itemID`. Uses the shipped item→NPC index, then only
+--- live-scanned rows for extras the index does not have. Do not call
+--- GetAllVendors here: that overlays every NPC (thousands) and hitches item
+--- hover / Item Search.
+---@param itemID number
+---@return table vendors
 function VendorData:GetVendorsByItem(itemID)
+    itemID = tonumber(itemID)
     local results = {}
+    if not itemID then return results end
+
     local seen = {}
 
-    for npcID, vendor in pairs(self:GetAllVendors()) do
-        if vendor.items and vendor.items[itemID] then
-            tinsert(results, vendor)
-            seen[npcID] = true
+    local staticHit = ns.StaticVendorItems and ns.StaticVendorItems[itemID]
+    if staticHit then
+        for npcID in pairs(staticHit.vendors) do
+            local vendor = self:GetVendor(npcID)
+            if vendor then
+                tinsert(results, vendor)
+                seen[npcID] = true
+            end
         end
     end
 
-    if ns.StaticVendorItems and ns.StaticVendorItems[itemID] then
-        for npcID in pairs(ns.StaticVendorItems[itemID].vendors) do
-            if not seen[npcID] then
-                local vendor = self:GetVendor(npcID)
+    -- Live merchant scans can add items the static index does not list yet.
+    local db = ns:GetDB()
+    if db.vendors then
+        for npcID, live in pairs(db.vendors) do
+            if not seen[npcID] and live.items and live.items[itemID] then
+                local vendor = OverlayVendor(npcID, live)
                 if vendor then
                     tinsert(results, vendor)
                 end
