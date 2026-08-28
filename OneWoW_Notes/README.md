@@ -47,11 +47,12 @@ Annotate your zones and locations:
 Persistent map landmarks (bank, craft tables, vendors, and anything you mark):
 - Stay on the world map and minimap until you delete them
 - Click a pin for a live waypoint that clears when you arrive; the icon stays
-- Add from this tab (Add Here or Find Location), right-click on the world map, your own player menu, NPC menus, Catalog, or an NPC note
-- Find Location searches vendors and NPC notes in a zone (filters such as banker, repair, professions)
-- Each list row has Go and Only This; the world map has a OneWoW pin button to show or hide pins
-- Edit icon, optional background, effects, and world-map size (extra layers use more memory)
-- Add to Zone Notes to show the list beside a pinned zone window
+- Add from this tab (Add Here or Find Location), right-click the world map, your own unit frame, any NPC's target frame, Catalog, or an NPC note
+- Find Location searches as you type by NPC name, ID, type, notes, tooltips, vendor items, or a custom category. Zone accepts a name or map ID (Current Zone / Verify Zone)
+- Each list row has Go and Show Map (opens that pin's zone and sets a live waypoint). The world map button uses the OneWoW icon. Add Pin, then click the map (ghost pin and live coordinates). Add Here saves at your feet. Find Location is on that button too
+- The world map Map Legend can list pins for the map you are viewing (Notes settings or the map button). Hover a name to highlight that pin. Pinned zone notes hide until you close the map
+- Edit icon, world-map and minimap size, optional background, Effect (None / Zooming / Spinning / Both), and Background Scale (relative to the icon so map, minimap, and list match). Extra layers use more memory
+- Add to Zone Notes to show the list beside a pinned zone window when you enter that zone. Left-click to go, Ctrl-click to open the tab, right-click for more
 
 ### Items Tab
 Notes about items and rewards:
@@ -86,6 +87,7 @@ Track mounts, pets, toys, transmog, and other collectibles you care about:
 ### Waypoints & Map Coordinates
 - OneWay Pins are saved landmarks on the world map and minimap
 - Click a OneWay Pin to set a live waypoint; it clears when you arrive
+- Per-pin world map and minimap size; Notes settings can turn off minimap animation
 - Insert exact map coordinates in notes
 - Navigate to NPC and zone coordinates with one click
 

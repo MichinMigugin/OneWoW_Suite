@@ -13,8 +13,8 @@
 | **Notes** | General journal - categories, tags, todos, favorites, login notes, pin-to-screen, rich text |
 | **Players** | Guildmates and friends - realm, guild, class, personal comments; collectible sightings |
 | **NPCs** | Vendors and important NPCs - location, stock, quests |
-| **Zones** | Zone tips and a floating window for the area you are in |
-| **OneWay Pins** | Landmarks on the world map and minimap (bank, craft tables, vendors) |
+| **Zones** | Zone tips, a floating window when you enter the area, and your OneWay Pins for that map |
+| **OneWay Pins** | Custom landmarks on the world map and minimap (banks, craft tables, vendors, anything you mark) |
 | **Items** | Item sources, farming routes, rewards - link items and search notes about them |
 | **Collectibles** | Want / spotted / farming lists for mounts, pets, toys, transmog, and more |
 
@@ -22,16 +22,34 @@
 
 ## OneWay Pins
 
-OneWay Pins are saved map landmarks. A pinned note is a floating window; the live map pin is a temporary track. OneWay Pins keep the icon until you delete them.
+OneWay Pins are custom map landmarks: banks, craft tables, vendors, and anything you come back to. They stay on the world map and minimap with your own icons until you delete them. Click a pin for a **live waypoint** that clears when you arrive; the icon stays.
 
-* They stay on the world map, minimap, and the OneWay Pins tab until you delete them.
-* Click a pin to set a **live waypoint** (breadcrumb). That live track clears when you arrive; the icon stays.
-* Add one from the tab (**Add Here** or **Find Location**), by right-clicking the world map, from an NPC's menu, from your own player menu, from Catalog (Journal / Vendors / Quests), or from an NPC note.
-* **Find Location** searches Catalog vendors and your NPC notes in a zone. Filter with words like Vendors, banker, repair, professions, or Eng. A leading ! hides matches (`!repair`).
-* Each row has **Go** (live waypoint) and **Only This** (hide other pins on the maps).
-* The world map has a OneWoW pin button to show or hide pins on the world map and minimap.
-* Edit a pin to set icon, optional background, effects, and world-map size. Extra layers use more memory. Notes settings set the default world and minimap sizes.
-* **Add to Zone Notes** creates or opens a zone note window for that map and can show a **Show Pins** list beside it. Creating a pin does not create a zone note by itself.
+### Where to find them
+
+* The **OneWay Pins** tab in Notes (`/1wn`)
+* The OneWoW pin button on the world map, next to the map filters
+* The QoL **ESC Menu Panel** lists pins for the map you are in
+
+### How to add a pin
+
+* Right-click **your own unit frame** to drop a pin at your feet
+* Right-click **any NPC's target frame** to pin that NPC
+* **Find Location** looks up NPCs in a zone by name, type, notes, tooltip lines, or what they sell (Catalog Vendors for shop search). Type a zone name or map ID (**Current Zone** fills where you are; **Verify Zone** checks it). A leading ! hides matches. Results update after a short pause
+* Catalog **Journal**, **Vendors**, and **Quests** can save a pin: right-click the existing map pin, or use Save Pin next to Pin on a vendor
+* On the world map: **Add Pin**, then click the map (a pin ghost and live coordinates follow the cursor). **Add Here** saves at your feet. **Find Location** is on that button too
+
+### Zone notes
+
+**Add to Zone Notes** creates or opens a floating zone window for that map and can show a **Show Pins** list beside it. When you enter the zone, that window can appear so every custom pin for the area is in front of you.
+
+Left-click a listed pin to go, Ctrl-click to open the OneWay Pins tab, right-click for Go / Track, Show on Map, Edit, Open Pin Tab, or Delete. Creating a pin does not create a zone note by itself.
+
+### Maps and the list
+
+* Pins stay on the world map, minimap, and the OneWay Pins tab until you delete them
+* Each row has **Go** (live waypoint) and **Show Map** (open that pin's zone and set a live waypoint; other pins stay visible)
+* The world map **Map Legend** can list OneWay Pins for the map you are viewing (Notes settings or the map button). Hover a name to highlight that pin. Opening the map hides pinned zone notes until you close it
+* Edit a pin to set icon, world-map and minimap size, optional background (including New Item and other glows), **Effect** (None, Zooming, Spinning, or Both), and **Background Scale**. Scale is relative to the icon, so the same pin looks the same on the world map, minimap, and list. Backgrounds stay still unless you pick an effect. The Notes tab details preview plays that effect. Changes show on the maps and the Notes tab after a short pause; Save writes them. Extra layers use more memory. Notes settings set the default sizes and can turn off minimap animation if the minimap feels slow.
 
 ---
 
@@ -67,6 +85,7 @@ QoL **Inspect Gear** can save inspect notes into Notes when that module is enabl
 
 * Use account storage for guild/raid knowledge you want on every alt; character storage for private alts-only notes.
 * Pin a short checklist note while doing a long questline. Use **OneWay Pins** for banks and tables you come back to.
+* **Add to Zone Notes** so a floating list of your pins can appear when you enter that zone.
 * From Catalog Quests, click a giver or turn-in name to open that NPC here with its zone, map, and coordinates filled in. Right-click the map ID to save a OneWay Pin.
 * Turn on vendor collectible capture (Prompt or Automatic) when shopping for mounts/toys you still need.
 
