@@ -34,6 +34,9 @@ end
 function ZonePins:ShowZonePin(noteId, zoneData)
     local addon = ns
     if not noteId or not zoneData then return end
+    if ns.WayPinsCompanion and ns.WayPinsCompanion:IsPausedForMap() then
+        return
+    end
     if not addon.zonePins then addon.zonePins = {} end
 
     if addon.zonePins[noteId] then

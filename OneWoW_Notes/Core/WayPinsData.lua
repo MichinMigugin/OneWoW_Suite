@@ -69,6 +69,9 @@ local function NotifyChanged()
     if ns.WayPinsCompanion then
         ns.WayPinsCompanion:Sync()
     end
+    if ns.WayPinsMapPanel then
+        ns.WayPinsMapPanel:Sync()
+    end
     if ns.UI and ns.UI.RefreshWayPinsTab then
         ns.UI.RefreshWayPinsTab()
     end
@@ -140,7 +143,8 @@ function WayPins:Add(fields)
         icon      = CopyIcon(fields.icon),
         bg        = CopyBg(fields.bg),
         effect    = CopyEffect(fields.effect),
-        mapSize   = tonumber(fields.mapSize),
+        mapSize      = tonumber(fields.mapSize),
+        minimapSize  = tonumber(fields.minimapSize),
         source    = fields.source or "manual",
         sourceKey = fields.sourceKey,
         storage   = storage,
@@ -164,6 +168,7 @@ function WayPins:Save(pinID, pin)
     pin.bg = CopyBg(pin.bg)
     pin.effect = CopyEffect(pin.effect)
     pin.mapSize = tonumber(pin.mapSize)
+    pin.minimapSize = tonumber(pin.minimapSize)
     pin.storage = pin.storage == "character" and "character" or "account"
     pin.modified = GetServerTime()
 

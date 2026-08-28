@@ -17,6 +17,9 @@ function OneWoW_Notes:ApplyTheme()
     if ns.WayPinsCompanion then
         ns.WayPinsCompanion:ApplyTheme()
     end
+    if ns.WayPinsMap then
+        ns.WayPinsMap:ApplyTheme()
+    end
 end
 
 function OneWoW_Notes:ApplyLanguage()
@@ -78,6 +81,11 @@ local function OnInitialize()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_Notes, function()
         ns.ApplyLanguage()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", OneWoW_Notes, function()
+        if ns.WayPinsMap then
+            ns.WayPinsMap:ApplyTheme()
+        end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Notes, function()
         if ns.NotesPins and ns.NotesPins.RefreshAllPinFonts then

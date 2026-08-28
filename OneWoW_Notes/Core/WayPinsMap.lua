@@ -11,6 +11,9 @@ local C_Map, C_Timer, C_Navigation, C_Minimap = C_Map, C_Timer, C_Navigation, C_
 local GetCVar, GetPlayerFacing = GetCVar, GetPlayerFacing
 local MenuUtil, GameTooltip = MenuUtil, GameTooltip
 local CreateVector2D = CreateVector2D
+local GetCursorPosition, UIParent = GetCursorPosition, UIParent
+local OpenWorldMap = OpenWorldMap
+local LibStub = LibStub
 
 -- ============================================================================
 -- WayPinsMap
@@ -20,6 +23,8 @@ local CreateVector2D = CreateVector2D
 -- walk; map-percent used to be treated as the whole minimap radius, which
 -- glued every pin to the player. Clicking a pin sets the Blizzard user
 -- waypoint. Arrival clears that live track only.
+-- The map-chrome button parents to GetCanvasContainer like ATT and sits under
+-- ATT's button when that addon is loaded; otherwise it uses ATT's Retail slot.
 -- ============================================================================
 
 local WayPinsMap = {}
@@ -36,10 +41,19 @@ local minimapPins = {}
 local minimapPinPool = {}
 local livePinID = nil
 local soloPinID = nil
+local hoverPinID = nil
 local arrivalTicker = nil
 local minimapTicker = nil
 local mapHooked = false
 local mapButton
+local placingPin = false
+local placeCatcher
+local placeGhost
+
+-- ATT's retail world-map button: parent GetCanvasContainer(), TOPRIGHT (-1, -65), 36x36.
+local ATT_MAP_BTN_X = -1
+local ATT_MAP_BTN_Y = -65
+local ATT_MAP_BTN_GAP = -2
 
 local scratchA = CreateVector2D(0, 0)
 local scratchB = CreateVector2D(0, 0)
@@ -62,6 +76,51 @@ local function PinVisible(data)
         return false
     end
     return true
+end
+
+local previewDraft
+
+local function PinsForMap(mapID)
+    local pins = ns.WayPins:GetForMap(mapID)
+    if not previewDraft or tonumber(previewDraft.mapID) ~= tonumber(mapID) then
+        return pins
+    end
+    if previewDraft.id then
+        for i, data in ipairs(pins) do
+            if data.id == previewDraft.id then
+                pins[i] = previewDraft
+                return pins
+            end
+        end
+    end
+    tinsert(pins, previewDraft)
+    return pins
+end
+
+--- Overlay the pin editor draft onto the maps without writing SavedVariables.
+---@param draft table|nil
+function WayPinsMap:SetPreviewDraft(draft)
+    previewDraft = draft
+    self:RefreshWorldMap()
+    self:UpdateMinimapPins()
+    if ns.UI and ns.UI.RefreshWayPinsTab then
+        ns.UI.RefreshWayPinsTab()
+    end
+end
+
+function WayPinsMap:ClearPreviewDraft()
+    if not previewDraft then return end
+    previewDraft = nil
+    self:RefreshWorldMap()
+    self:UpdateMinimapPins()
+    if ns.UI and ns.UI.RefreshWayPinsTab then
+        ns.UI.RefreshWayPinsTab()
+    end
+end
+
+---@return table|nil
+function WayPinsMap:GetPreviewDraft()
+    return previewDraft
 end
 
 local function StopArrivalWatch()
@@ -128,6 +187,37 @@ function WayPinsMap:GetLivePinID()
     return livePinID
 end
 
+local function WorldPinPaintOpts(data)
+    local hover = hoverPinID == data.id
+    local size = Visual.WorldSize(data)
+    if hover then
+        size = size * 1.2
+    end
+    return {
+        size = size,
+        tracked = livePinID == data.id or hover,
+    }
+end
+
+--- Glow / enlarge a world-map pin (Map Legend hover). Nil clears.
+---@param pinID string|nil
+function WayPinsMap:SetHoverPin(pinID)
+    if hoverPinID == pinID then
+        return
+    end
+    hoverPinID = pinID
+    for _, pin in ipairs(worldPins) do
+        local data = pin.pinData
+        if data then
+            Visual.Apply(pin, data, WorldPinPaintOpts(data))
+        end
+    end
+end
+
+function WayPinsMap:ClearHoverPin()
+    self:SetHoverPin(nil)
+end
+
 function WayPinsMap:GetSoloPinID()
     return soloPinID
 end
@@ -168,16 +258,93 @@ function WayPinsMap:TrackPin(pin)
     if ns.WayPinsCompanion then
         ns.WayPinsCompanion:RefreshRows()
     end
+    if ns.WayPinsMapPanel then
+        ns.WayPinsMapPanel:RefreshRows()
+    end
     return true
 end
 
-local function PinMenu(owner, data)
+function WayPinsMap:ConfirmDelete(pin)
+    if type(pin) ~= "table" or not pin.id then return end
+    local pinID = pin.id
+    local title = pin.title or L["WAYPINS_UNTITLED"]
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        name = "OneWoW_NotesDeleteWayPinConfirm",
+        title = L["DIALOG_CONFIRM_DELETE"],
+        message = string.format(L["POPUP_DELETE_WAYPIN"], title),
+        buttons = {
+            {
+                text = DELETE,
+                color = { 0.8, 0.2, 0.2 },
+                onClick = function(dlg)
+                    ns.WayPins:Remove(pinID)
+                    dlg:Hide()
+                end,
+            },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
+        },
+    })
+    result.frame:Show()
+end
+
+--- Open the world map on this pin's zone, switch to Map Legend, and set a live waypoint.
+--- Does not hide other pins.
+---@param pin table
+function WayPinsMap:ShowOnMap(pin)
+    if type(pin) ~= "table" or not pin.mapID then return end
+    OpenWorldMap(pin.mapID)
+    WorldMapFrame:SetMapID(pin.mapID)
+    QuestMapFrame:SetDisplayMode(QuestLogDisplayMode.MapLegend)
+    self:TrackPin(pin)
+end
+
+function WayPinsMap:OpenPinTab(pinID)
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "waypins")
+    if pinID and ns.UI.SelectWayPin then
+        ns.UI.SelectWayPin(pinID)
+    end
+end
+
+---@param owner Frame
+---@param data table
+function WayPinsMap:ShowListMenu(owner, data)
+    if not data then return end
     MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
-        rootDescription:CreateButton(L["WAYPINS_GO"], function()
+        rootDescription:CreateButton(L["WAYPINS_MENU_GO"], function()
             WayPinsMap:TrackPin(data)
+        end)
+        rootDescription:CreateButton(SHOW_MAP, function()
+            WayPinsMap:ShowOnMap(data)
         end)
         rootDescription:CreateButton(EDIT, function()
             ns.UI.OpenWayPinDialog(data)
+        end)
+        rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
+            WayPinsMap:OpenPinTab(data.id)
+        end)
+        rootDescription:CreateButton(DELETE, function()
+            WayPinsMap:ConfirmDelete(data)
+        end)
+    end)
+end
+
+---@param owner Frame
+---@param data table
+function WayPinsMap:ShowPinMenu(owner, data)
+    if not data then return end
+    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+        rootDescription:CreateButton(L["WAYPINS_MENU_GO"], function()
+            WayPinsMap:TrackPin(data)
+        end)
+        rootDescription:CreateButton(SHOW_MAP, function()
+            WayPinsMap:ShowOnMap(data)
+        end)
+        rootDescription:CreateButton(EDIT, function()
+            ns.UI.OpenWayPinDialog(data)
+        end)
+        rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
+            WayPinsMap:OpenPinTab(data.id)
         end)
         rootDescription:CreateButton(L["WAYPINS_ADD_TO_ZONE"], function()
             ns.WayPins:AttachToZoneNotes(data.id)
@@ -192,7 +359,7 @@ local function PinMenu(owner, data)
             end)
         end
         rootDescription:CreateButton(DELETE, function()
-            ns.WayPins:Remove(data.id)
+            WayPinsMap:ConfirmDelete(data)
         end)
     end)
 end
@@ -221,7 +388,7 @@ local function AcquireWorldPin()
         local data = myself.pinData
         if not data then return end
         if button == "RightButton" then
-            PinMenu(myself, data)
+            WayPinsMap:ShowPinMenu(myself, data)
             return
         end
         WayPinsMap:TrackPin(data)
@@ -246,7 +413,7 @@ function WayPinsMap:RefreshWorldMap()
     if not canvas then return end
 
     local mapID = WorldMapFrame:GetMapID()
-    local pins = ns.WayPins:GetForMap(mapID)
+    local pins = PinsForMap(mapID)
     local cw, ch = canvas:GetWidth(), canvas:GetHeight()
     if cw == 0 or ch == 0 then return end
 
@@ -260,11 +427,8 @@ function WayPinsMap:RefreshWorldMap()
                 pin:ClearAllPoints()
                 pin:SetPoint("CENTER", canvas, "TOPLEFT", x * cw, -y * ch)
                 pin.pinData = data
+                Visual.Apply(pin, data, WorldPinPaintOpts(data))
                 pin._inUse = true
-                Visual.Apply(pin, data, {
-                    size = Visual.WorldSize(data),
-                    tracked = livePinID == data.id,
-                })
                 pin:Show()
                 tinsert(worldPins, pin)
             end
@@ -312,7 +476,7 @@ function WayPinsMap:UpdateMinimapPins()
     local mapID, px, py = Location.GetPlayerLocation()
     if not mapID or not px then return end
 
-    local pins = ns.WayPins:GetForMap(mapID)
+    local pins = PinsForMap(mapID)
     if #pins == 0 then return end
 
     local view = C_Minimap.GetViewRadius()
@@ -322,7 +486,7 @@ function WayPinsMap:UpdateMinimapPins()
     local rotate = GetCVar("rotateMinimap") == "1"
     local facing = rotate and (GetPlayerFacing() or 0) or 0
     local radiusPx = Minimap:GetWidth() / 2 - 4
-    local pinSize = Visual.MinimapDefault()
+    local animate = Visual.MinimapAnimate()
 
     for _, data in ipairs(pins) do
         if PinVisible(data) then
@@ -359,11 +523,12 @@ function WayPinsMap:UpdateMinimapPins()
                 pin:ClearAllPoints()
                 pin:SetPoint("CENTER", Minimap, "CENTER", ux * mag * radiusPx, uy * mag * radiusPx)
                 pin.pinData = data
-                pin._inUse = true
                 Visual.Apply(pin, data, {
-                    size = pinSize,
+                    size = Visual.MinimapSize(data),
                     tracked = livePinID == data.id,
+                    animate = animate,
                 })
+                pin._inUse = true
                 pin:SetAlpha(1.0 - (mag * 0.35))
                 pin:Show()
                 tinsert(minimapPins, pin)
@@ -380,24 +545,113 @@ local function EnsureMinimapTicker()
 end
 
 local function PlacePinAtCursor()
-    if not WorldMapFrame then return end
+    if not WorldMapFrame then return false end
     local sc = WorldMapFrame.ScrollContainer
-    if not sc or not sc.GetNormalizedCursorPosition then return end
+    if not sc then return false end
     local x, y = sc:GetNormalizedCursorPosition()
     local mapID = WorldMapFrame:GetMapID()
-    if not mapID or not x or not y then return end
-    if x <= 0 or x >= 1 or y <= 0 or y >= 1 then return end
+    if not mapID or not x or not y then return false end
+    if x <= 0 or x >= 1 or y <= 0 or y >= 1 then return false end
     ns.UI.OpenWayPinDialog({
         mapID  = mapID,
         x      = x * 100,
         y      = y * 100,
         source = "map",
     })
+    return true
 end
 
-local function OpenWayPinsTab()
-    OneWoW.UI:Show("notes")
-    OneWoW.UI:SelectSubTab("notes", "waypins")
+local function StopPlaceMode()
+    placingPin = false
+    if placeCatcher then
+        placeCatcher:Hide()
+        placeCatcher:EnableMouse(false)
+        placeCatcher:EnableKeyboard(false)
+    end
+    if placeGhost then
+        placeGhost:Hide()
+    end
+end
+
+local function EnsurePlaceChrome()
+    if placeGhost then return end
+    placeGhost = CreateFrame("Frame", nil, UIParent)
+    placeGhost:SetSize(28, 44)
+    placeGhost:SetFrameStrata("TOOLTIP")
+    placeGhost:EnableMouse(false)
+    local gtex = placeGhost:CreateTexture(nil, "OVERLAY")
+    gtex:SetSize(24, 24)
+    gtex:SetPoint("TOP", 0, 0)
+    OneWoW.OverlayIcons:ApplyToTexture(gtex, "icon-pin")
+    placeGhost.icon = gtex
+    local coords = OneWoW_GUI:CreateFS(placeGhost, 11)
+    coords:SetPoint("TOP", gtex, "BOTTOM", 0, -2)
+    coords:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    placeGhost.coords = coords
+    placeGhost:Hide()
+
+    local sc = WorldMapFrame and WorldMapFrame.ScrollContainer
+    placeCatcher = CreateFrame("Button", nil, sc or UIParent)
+    placeCatcher:Hide()
+    placeCatcher:SetAllPoints()
+    placeCatcher:SetFrameStrata("HIGH")
+    placeCatcher:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    placeCatcher:EnableMouse(false)
+    placeCatcher:SetScript("OnUpdate", function()
+        if not placingPin then return end
+        local cx, cy = GetCursorPosition()
+        local scale = UIParent:GetEffectiveScale()
+        placeGhost:ClearAllPoints()
+        placeGhost:SetPoint("BOTTOM", UIParent, "BOTTOMLEFT", cx / scale, cy / scale + 8)
+        local mapSC = WorldMapFrame and WorldMapFrame.ScrollContainer
+        local mapID = WorldMapFrame and WorldMapFrame:GetMapID()
+        if mapSC and mapID then
+            local x, y = mapSC:GetNormalizedCursorPosition()
+            if x and y and x > 0 and x < 1 and y > 0 and y < 1 then
+                placeGhost.coords:SetText(string.format("%d  %.1f, %.1f", mapID, x * 100, y * 100))
+            else
+                placeGhost.coords:SetText("")
+            end
+        end
+    end)
+    placeCatcher:SetScript("OnClick", function(_, button)
+        if button == "RightButton" then
+            StopPlaceMode()
+            return
+        end
+        if PlacePinAtCursor() then
+            StopPlaceMode()
+        end
+    end)
+    placeCatcher:SetScript("OnKeyDown", function(myself, key)
+        if key == "ESCAPE" then
+            myself:SetPropagateKeyboardInput(false)
+            StopPlaceMode()
+            return
+        end
+        myself:SetPropagateKeyboardInput(true)
+    end)
+end
+
+local function StartPlaceMode()
+    if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
+    EnsurePlaceChrome()
+    local sc = WorldMapFrame.ScrollContainer
+    if sc and placeCatcher:GetParent() ~= sc then
+        placeCatcher:SetParent(sc)
+        placeCatcher:SetAllPoints()
+    end
+    placingPin = true
+    placeCatcher:SetFrameLevel((sc and sc:GetFrameLevel() or 0) + 50)
+    placeCatcher:EnableMouse(true)
+    placeCatcher:EnableKeyboard(true)
+    placeCatcher:Show()
+    placeGhost:Show()
+end
+
+local function PaintMapButtonIcon()
+    if not mapButton then return end
+    mapButton.icon:SetTexture(OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme")))
 end
 
 local function MapButtonMenu(owner)
@@ -415,12 +669,23 @@ local function MapButtonMenu(owner)
             ns.db.global.waypinShowMinimap = not Visual.ShowMinimap()
             WayPinsMap:Refresh()
         end)
+        rootDescription:CreateCheckbox(L["WAYPINS_SHOW_MAP_PANEL"], function()
+            return ns.db.global.waypinShowMapPanel ~= false
+        end, function()
+            ns.db.global.waypinShowMapPanel = not (ns.db.global.waypinShowMapPanel ~= false)
+            if ns.WayPinsMapPanel then
+                ns.WayPinsMapPanel:Sync()
+            end
+        end)
         if soloPinID then
             rootDescription:CreateButton(L["WAYPINS_SHOW_ALL"], function()
                 WayPinsMap:ClearSolo()
             end)
         end
         rootDescription:CreateDivider()
+        rootDescription:CreateButton(L["WAYPINS_ADD_PIN"], function()
+            C_Timer.After(0, StartPlaceMode)
+        end)
         rootDescription:CreateButton(L["WAYPINS_ADD_HERE"], function()
             local mapID, x, y = Location.GetPlayerLocation()
             if mapID and x then
@@ -432,27 +697,102 @@ local function MapButtonMenu(owner)
                 })
             end
         end)
+        rootDescription:CreateButton(L["WAYPINS_FIND_LOCATION"], function()
+            ns.UI.OpenWayPinFindDialog()
+        end)
         rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
-            OpenWayPinsTab()
+            WayPinsMap:OpenPinTab()
         end)
     end)
 end
 
+local function MapButtonParent()
+    return WorldMapFrame:GetCanvasContainer() or WorldMapFrame
+end
+
+local function IsATTMapButton(frame)
+    if not frame or not frame:IsShown() then
+        return false
+    end
+    local name = frame:GetName()
+    if type(name) == "string" and name:find("AllTheThings", 1, true) then
+        return true
+    end
+    local tex = frame.texture
+    if tex then
+        local path = tex:GetTexture()
+        if type(path) == "string" and path:find("AllTheThings", 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function ScanChildrenForATT(parent)
+    if not parent then
+        return nil
+    end
+    local children = { parent:GetChildren() }
+    for i = 1, #children do
+        if IsATTMapButton(children[i]) then
+            return children[i]
+        end
+    end
+    return nil
+end
+
+local function FindATTWorldMapButton()
+    local named = _G["AllTheThings-WorldMap"]
+    if IsATTMapButton(named) then
+        return named
+    end
+    local krowi = LibStub("Krowi_WorldMapButtons-1.4", true)
+    if krowi and krowi.Buttons then
+        for _, btn in ipairs(krowi.Buttons) do
+            if IsATTMapButton(btn) then
+                return btn
+            end
+        end
+    end
+    return ScanChildrenForATT(WorldMapFrame)
+        or ScanChildrenForATT(WorldMapFrame:GetCanvasContainer())
+end
+
+local function AnchorMapButton()
+    if not mapButton or not WorldMapFrame then return end
+    local parent = MapButtonParent()
+    if mapButton:GetParent() ~= parent then
+        mapButton:SetParent(parent)
+    end
+    mapButton:ClearAllPoints()
+    local att = FindATTWorldMapButton()
+    if att then
+        mapButton:SetPoint("TOP", att, "BOTTOM", 0, ATT_MAP_BTN_GAP)
+    else
+        mapButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", ATT_MAP_BTN_X, ATT_MAP_BTN_Y)
+    end
+    mapButton:SetFrameStrata("HIGH")
+    mapButton:SetFrameLevel(parent:GetFrameLevel() + 20)
+end
+
 local function EnsureMapButton()
     if mapButton or not WorldMapFrame then return end
-    mapButton = CreateFrame("Button", "OneWoW_WayPinsMapButton", WorldMapFrame)
-    mapButton:SetSize(28, 28)
-    mapButton:SetPoint("TOPRIGHT", WorldMapFrame, "TOPRIGHT", -12, -64)
-    mapButton:SetFrameStrata("HIGH")
-    mapButton:SetFrameLevel(WorldMapFrame:GetFrameLevel() + 20)
+    local size = ns.Constants.GUI.WAYPIN_MAP_BUTTON_SIZE
+    mapButton = CreateFrame("Button", "OneWoW_WayPinsMapButton", MapButtonParent())
+    mapButton:SetSize(size, size)
     mapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     local tex = mapButton:CreateTexture(nil, "ARTWORK")
     tex:SetAllPoints()
-    OneWoW.OverlayIcons:ApplyToTexture(tex, "icon-pin")
     mapButton.icon = tex
+    PaintMapButtonIcon()
+
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", mapButton, function()
+        PaintMapButtonIcon()
+    end)
 
     mapButton:SetScript("OnEnter", function(myself)
+        PaintMapButtonIcon()
         GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
         GameTooltip:SetText(L["TAB_WAYPINS"], 1, 1, 1)
         GameTooltip:AddLine(L["WAYPINS_MAP_BTN_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -460,8 +800,12 @@ local function EnsureMapButton()
     end)
     mapButton:SetScript("OnLeave", GameTooltip_Hide)
     mapButton:SetScript("OnClick", function(myself)
+        if placingPin then
+            StopPlaceMode()
+        end
         MapButtonMenu(myself)
     end)
+    AnchorMapButton()
 end
 
 local function WireWorldMap()
@@ -470,14 +814,34 @@ local function WireWorldMap()
     EnsureMapButton()
 
     hooksecurefunc(WorldMapFrame, "OnMapChanged", function()
+        AnchorMapButton()
         WayPinsMap:RefreshWorldMap()
+        if ns.WayPinsMapPanel then
+            ns.WayPinsMapPanel:Sync()
+        end
     end)
     WorldMapFrame:HookScript("OnShow", function()
+        C_Timer.After(0, AnchorMapButton)
+        PaintMapButtonIcon()
         WayPinsMap:RefreshWorldMap()
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:PauseForMap()
+        end
+        if ns.WayPinsMapPanel then
+            ns.WayPinsMapPanel:Sync()
+        end
     end)
     WorldMapFrame:HookScript("OnHide", function()
+        StopPlaceMode()
+        hoverPinID = nil
         for _, pin in ipairs(worldPins) do
             Visual.Hide(pin)
+        end
+        if ns.WayPinsMapPanel then
+            ns.WayPinsMapPanel:Hide()
+        end
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:ResumeAfterMap()
         end
     end)
 
@@ -492,10 +856,12 @@ local function WireWorldMap()
     if sc then
         local downX, downY
         sc:HookScript("OnMouseDown", function(myself, button)
+            if placingPin then return end
             if button ~= "RightButton" then return end
             downX, downY = myself:GetNormalizedCursorPosition()
         end)
         sc:HookScript("OnMouseUp", function(myself, button)
+            if placingPin then return end
             if button ~= "RightButton" then return end
             local x, y = myself:GetNormalizedCursorPosition()
             if not x or not y then return end
@@ -503,17 +869,32 @@ local function WireWorldMap()
                 return
             end
             MenuUtil.CreateContextMenu(myself, function(_, rootDescription)
-                rootDescription:CreateButton(L["WAYPINS_ADD_HERE"], function()
+                rootDescription:CreateButton(L["WAYPINS_ADD_PIN"], function()
                     PlacePinAtCursor()
                 end)
             end)
         end)
     end
+
+    OneWoW_Notes:RegisterAddonLoadedWatcher("AllTheThings", function()
+        AnchorMapButton()
+    end)
 end
 
 function WayPinsMap:Refresh()
     self:RefreshWorldMap()
     self:UpdateMinimapPins()
+    if ns.WayPinsMapPanel then
+        ns.WayPinsMapPanel:RefreshRows()
+    end
+end
+
+function WayPinsMap:ApplyTheme()
+    PaintMapButtonIcon()
+    self:Refresh()
+    if ns.WayPinsMapPanel then
+        ns.WayPinsMapPanel:ApplyTheme()
+    end
 end
 
 function WayPinsMap:Initialize()
@@ -522,8 +903,20 @@ function WayPinsMap:Initialize()
 
     local function Arm()
         WireWorldMap()
+        if ns.WayPinsMapPanel then
+            ns.WayPinsMapPanel:Initialize()
+        end
         EnsureMinimapTicker()
         self:Refresh()
+        if WorldMapFrame:IsShown() then
+            PaintMapButtonIcon()
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:PauseForMap()
+            end
+            if ns.WayPinsMapPanel then
+                ns.WayPinsMapPanel:Sync()
+            end
+        end
     end
 
     if WorldMapFrame then

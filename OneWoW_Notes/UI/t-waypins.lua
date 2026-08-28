@@ -4,6 +4,7 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 local Location = OneWoW.Location
 local C = OneWoW_GUI.Constants
+local Visual = ns.WayPinsVisual
 
 ns.UI = ns.UI or {}
 
@@ -12,6 +13,7 @@ local listRows = {}
 local mapFilter = "current"
 local storageFilter = "All"
 local searchFilter = ""
+local mapDropdown
 local scrollChild
 local emptyMessage
 local leftStatusText
@@ -56,10 +58,22 @@ local function FilteredList()
     return out
 end
 
+local function PinForPaint(pin)
+    local draft = ns.WayPinsMap and ns.WayPinsMap:GetPreviewDraft()
+    if draft and pin and draft.id and draft.id == pin.id then
+        return draft
+    end
+    return pin
+end
+
 local function HideDetail()
     emptyMessage:Show()
-    for _, w in pairs(detailWidgets) do
-        if w.Hide then w:Hide() end
+    for key, w in pairs(detailWidgets) do
+        if key == "preview" then
+            Visual.Hide(w)
+        elseif w.Hide then
+            w:Hide()
+        end
     end
 end
 
@@ -73,10 +87,11 @@ local function PaintDetail()
     for _, w in pairs(detailWidgets) do
         if w.Show then w:Show() end
     end
-    OneWoW.OverlayIcons:ApplyIconSpec(detailWidgets.icon, pin.icon)
-    detailWidgets.title:SetText(pin.title or L["WAYPINS_UNTITLED"])
-    detailWidgets.zone:SetText(string.format("%s (%d)", ns.WayPins:MapDisplayName(pin.mapID), pin.mapID))
-    detailWidgets.coords:SetText(string.format("%.1f, %.1f", pin.x or 0, pin.y or 0))
+    local paint = PinForPaint(pin)
+    Visual.Apply(detailWidgets.preview, paint, { size = 40 })
+    detailWidgets.title:SetText(paint.title or L["WAYPINS_UNTITLED"])
+    detailWidgets.zone:SetText(string.format("%s (%d)", ns.WayPins:MapDisplayName(paint.mapID), paint.mapID))
+    detailWidgets.coords:SetText(string.format("%.1f, %.1f", paint.x or 0, paint.y or 0))
     local stor = pin.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"]
     detailWidgets.storage:SetText(string.format(L["UI_STORAGE_WITH_VALUE"], stor))
 end
@@ -88,7 +103,6 @@ function ns.UI.RefreshWayPinsTab()
         row:Hide()
     end
     local y = 0
-    local soloID = ns.WayPinsMap and ns.WayPinsMap:GetSoloPinID()
     for i, pin in ipairs(list) do
         local row = listRows[i]
         if not row then
@@ -97,10 +111,12 @@ function ns.UI.RefreshWayPinsTab()
             row:SetBackdrop(C.BACKDROP_INNER_NO_INSETS)
             row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
-            local icon = row:CreateTexture(nil, "ARTWORK")
-            icon:SetSize(22, 22)
-            icon:SetPoint("LEFT", 8, 0)
-            row.icon = icon
+            local preview = CreateFrame("Button", nil, row)
+            preview:SetSize(22, 22)
+            preview:SetPoint("LEFT", 8, 0)
+            preview:EnableMouse(false)
+            Visual.Attach(preview)
+            row.preview = preview
 
             local goBtn = OneWoW_GUI:CreateFitTextButton(row, { text = L["WAYPINS_GO"], height = 22, minWidth = 36 })
             goBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
@@ -112,33 +128,34 @@ function ns.UI.RefreshWayPinsTab()
             end)
             row.goBtn = goBtn
 
-            local onlyBtn = OneWoW_GUI:CreateFitTextButton(row, { text = L["WAYPINS_ONLY_THIS"], height = 22, minWidth = 58 })
-            onlyBtn:SetPoint("RIGHT", goBtn, "LEFT", -4, 0)
-            onlyBtn:SetScript("OnClick", function(myself)
+            local showMapBtn = OneWoW_GUI:CreateFitTextButton(row, { text = SHOW_MAP, height = 22, minWidth = 72 })
+            showMapBtn:SetPoint("RIGHT", goBtn, "LEFT", -4, 0)
+            showMapBtn:SetScript("OnClick", function(myself)
                 local id = myself:GetParent().pinID
-                if id and ns.WayPinsMap then
-                    ns.WayPinsMap:ToggleSolo(id)
+                local data = id and ns.WayPins:GetPin(id)
+                if data then
+                    ns.WayPinsMap:ShowOnMap(data)
                 end
             end)
-            onlyBtn:SetScript("OnEnter", function(myself)
+            showMapBtn:SetScript("OnEnter", function(myself)
                 GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["WAYPINS_ONLY_THIS"], 1, 1, 1)
-                GameTooltip:AddLine(L["WAYPINS_ONLY_THIS_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                GameTooltip:SetText(SHOW_MAP, 1, 1, 1)
+                GameTooltip:AddLine(L["WAYPINS_SHOW_ON_MAP_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 GameTooltip:Show()
             end)
-            onlyBtn:SetScript("OnLeave", GameTooltip_Hide)
-            row.onlyBtn = onlyBtn
+            showMapBtn:SetScript("OnLeave", GameTooltip_Hide)
+            row.showMapBtn = showMapBtn
 
             local title = OneWoW_GUI:CreateFS(row, 12)
-            title:SetPoint("TOPLEFT", icon, "TOPRIGHT", 8, 2)
-            title:SetPoint("RIGHT", onlyBtn, "LEFT", -6, 0)
+            title:SetPoint("TOPLEFT", preview, "TOPRIGHT", 8, 2)
+            title:SetPoint("RIGHT", showMapBtn, "LEFT", -6, 0)
             title:SetJustifyH("LEFT")
             title:SetWordWrap(false)
             row.title = title
 
             local sub = OneWoW_GUI:CreateFS(row, 10)
             sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -2)
-            sub:SetPoint("RIGHT", onlyBtn, "LEFT", -6, 0)
+            sub:SetPoint("RIGHT", showMapBtn, "LEFT", -6, 0)
             sub:SetJustifyH("LEFT")
             sub:SetWordWrap(false)
             row.sub = sub
@@ -147,31 +164,9 @@ function ns.UI.RefreshWayPinsTab()
                 selectedID = myself.pinID
                 if button == "RightButton" then
                     local data = ns.WayPins:GetPin(myself.pinID)
-                    MenuUtil.CreateContextMenu(myself, function(_, rootDescription)
-                        rootDescription:CreateButton(L["WAYPINS_GO"], function()
-                            ns.WayPins:Track(myself.pinID)
-                        end)
-                        rootDescription:CreateButton(EDIT, function()
-                            ns.UI.OpenWayPinDialog(data)
-                        end)
-                        rootDescription:CreateButton(L["WAYPINS_ADD_TO_ZONE"], function()
-                            ns.WayPins:AttachToZoneNotes(myself.pinID)
-                        end)
-                        if ns.WayPinsMap and ns.WayPinsMap:GetSoloPinID() == myself.pinID then
-                            rootDescription:CreateButton(L["WAYPINS_SHOW_ALL"], function()
-                                ns.WayPinsMap:ClearSolo()
-                            end)
-                        else
-                            rootDescription:CreateButton(L["WAYPINS_ONLY_THIS"], function()
-                                ns.WayPinsMap:ToggleSolo(myself.pinID)
-                            end)
-                        end
-                        rootDescription:CreateButton(DELETE, function()
-                            ns.WayPins:Remove(myself.pinID)
-                            selectedID = nil
-                            ns.UI.RefreshWayPinsTab()
-                        end)
-                    end)
+                    if data then
+                        ns.WayPinsMap:ShowPinMenu(myself, data)
+                    end
                 end
                 ns.UI.RefreshWayPinsTab()
             end)
@@ -183,7 +178,7 @@ function ns.UI.RefreshWayPinsTab()
         row.pinID = pin.id
         row.title:SetText(pin.title or L["WAYPINS_UNTITLED"])
         row.sub:SetText(string.format("%s (%d)", ns.WayPins:MapDisplayName(pin.mapID), pin.mapID))
-        OneWoW.OverlayIcons:ApplyIconSpec(row.icon, pin.icon)
+        Visual.Apply(row.preview, PinForPaint(pin), { size = 22, animate = false })
         local selected = selectedID == pin.id
         if selected then
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
@@ -195,11 +190,6 @@ function ns.UI.RefreshWayPinsTab()
             row.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         row.sub:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        if soloID == pin.id then
-            row.onlyBtn:SetText(L["WAYPINS_SHOW_ALL"])
-        else
-            row.onlyBtn:SetText(L["WAYPINS_ONLY_THIS"])
-        end
         row:Show()
         y = y + ROW_H + 2
     end
@@ -208,6 +198,15 @@ function ns.UI.RefreshWayPinsTab()
         leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_WAYPINS"], #list))
     end
     PaintDetail()
+end
+
+function ns.UI.SelectWayPin(pinID)
+    selectedID = pinID
+    mapFilter = "all"
+    if mapDropdown then
+        mapDropdown:SetSelected("all")
+    end
+    ns.UI.RefreshWayPinsTab()
 end
 
 function ns.UI.CreateWayPinsTab(parent)
@@ -248,6 +247,7 @@ function ns.UI.CreateWayPinsTab(parent)
 
     local mapDD = ns.UI.CreateThemedDropdown(controlPanel, ZONE, 140, 25)
     mapDD:SetPoint("LEFT", findBtn, "RIGHT", 8, 0)
+    mapDropdown = mapDD
     mapDD:SetOptions({
         { text = L["WAYPINS_FILTER_CURRENT"], value = "current" },
         { text = ALL, value = "all" },
@@ -302,13 +302,15 @@ function ns.UI.CreateWayPinsTab(parent)
     local header = ns.UI.CreateDetailHeader(panels.detailPanel)
     detailWidgets.header = header
 
-    local icon = header:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(28, 28)
-    icon:SetPoint("LEFT", 10, 8)
-    detailWidgets.icon = icon
+    local preview = CreateFrame("Button", nil, header)
+    preview:SetSize(40, 40)
+    preview:SetPoint("LEFT", 10, 8)
+    preview:EnableMouse(false)
+    Visual.Attach(preview)
+    detailWidgets.preview = preview
 
     local title = OneWoW_GUI:CreateFS(header, 14)
-    title:SetPoint("LEFT", icon, "RIGHT", 10, 8)
+    title:SetPoint("LEFT", preview, "RIGHT", 10, 8)
     title:SetPoint("RIGHT", header, "RIGHT", -10, 8)
     title:SetJustifyH("LEFT")
     title:SetWordWrap(false)
@@ -346,10 +348,10 @@ function ns.UI.CreateWayPinsTab(parent)
     local delBtn = OneWoW_GUI:CreateFitTextButton(header, { text = DELETE, height = 24 })
     delBtn:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 10, 8)
     delBtn:SetScript("OnClick", function()
-        if not selectedID then return end
-        ns.WayPins:Remove(selectedID)
-        selectedID = nil
-        ns.UI.RefreshWayPinsTab()
+        local pin = selectedID and ns.WayPins:GetPin(selectedID)
+        if pin then
+            ns.WayPinsMap:ConfirmDelete(pin)
+        end
     end)
     detailWidgets.delBtn = delBtn
 

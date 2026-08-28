@@ -49,6 +49,7 @@ Core\ZonesData.lua
 Core\WayPinsData.lua
 Core\WayPinsVisual.lua
 Core\WayPinsMap.lua
+Core\WayPinsMapPanel.lua
 Core\WayPinsCompanion.lua
 Core\PlayersData.lua
 Core\NPCsData.lua

@@ -4,26 +4,33 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 local Location = OneWoW.Location
 local C = OneWoW_GUI.Constants
+local C_Timer = C_Timer
+local C_Item = C_Item
+local C_Map = C_Map
+local ipairs, pairs, next, tinsert, sort = ipairs, pairs, next, tinsert, sort
 
 -- ============================================================================
 -- Find Location
 -- ============================================================================
--- Search Catalog vendor NPCs (and Notes NPC records) in a named zone. Filter
--- tokens are AND-matched against name, type, roles, and subtitle. A leading
--- ! excludes. Catalog Vendors is loaded on demand; Notes NPCs still search
--- if that pack is off.
+-- Search Catalog vendor NPCs and Notes NPC records. Filter tokens are
+-- AND-matched against name, ID, type, notes, tooltips, custom category, and
+-- items a vendor sells. A leading ! excludes. Zone accepts a name or map ID.
+-- Typing waits one second so a few characters can land before search.
 -- ============================================================================
 
 ns.UI = ns.UI or {}
 
 local MAX_RESULTS = 80
 local ROW_H = 36
+local SEARCH_DELAY = 1
+local COSMIC_MAP = 946
 
 local dialog
 local fields = {}
 local resultRows = {}
 local resultChild
 local resultStatus
+local searchTimer
 
 local function ParseTokens(text)
     local include, exclude = {}, {}
@@ -77,25 +84,80 @@ local function BuildHay(name, subtitle, category, roles, zone, subzone, extra)
     return table.concat(parts, " "):lower()
 end
 
+local function ZoneNeedleParts(needle)
+    local parenID = tonumber(needle:match("%((%d+)%)%s*$"))
+    local asID = tonumber(needle)
+    local namePart = needle:gsub("%s*%(%d+%)%s*$", "")
+    return asID or parenID, namePart
+end
+
 local function ZoneHit(loc, mapID, needle, currentMapID)
     mapID = tonumber(mapID)
     if needle == "" then
         return mapID == currentMapID
     end
-    if loc.zone and loc.zone:lower():find(needle, 1, true) then
+    local wantID, namePart = ZoneNeedleParts(needle)
+    if wantID and wantID == mapID then
         return true
     end
-    if loc.subzone and loc.subzone:lower():find(needle, 1, true) then
-        return true
-    end
-    local info = mapID and C_Map.GetMapInfo(mapID)
-    if info and info.name and info.name:lower():find(needle, 1, true) then
-        return true
-    end
-    if tonumber(needle) and tonumber(needle) == mapID then
-        return true
+    if namePart ~= "" then
+        if loc.zone and loc.zone:lower():find(namePart, 1, true) then
+            return true
+        end
+        if loc.subzone and loc.subzone:lower():find(namePart, 1, true) then
+            return true
+        end
+        local info = mapID and C_Map.GetMapInfo(mapID)
+        if info and info.name and info.name:lower():find(namePart, 1, true) then
+            return true
+        end
     end
     return false
+end
+
+local function ResolveZone(text)
+    text = (text or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if text == "" then
+        return nil
+    end
+    local parenID = tonumber(text:match("%((%d+)%)%s*$"))
+    if parenID then
+        local info = C_Map.GetMapInfo(parenID)
+        if info then
+            return parenID, info.name
+        end
+    end
+    local asID = tonumber(text)
+    if asID then
+        local info = C_Map.GetMapInfo(asID)
+        if info then
+            return asID, info.name
+        end
+    end
+    local needle = text:gsub("%s*%(%d+%)%s*$", ""):lower()
+    if needle == "" then
+        return nil
+    end
+    local current = Location.GetPlayerMapID()
+    if current then
+        local info = C_Map.GetMapInfo(current)
+        if info and info.name and info.name:lower() == needle then
+            return current, info.name
+        end
+    end
+    local children = C_Map.GetMapChildrenInfo(COSMIC_MAP, nil, true)
+    local fuzzyID, fuzzyName
+    if children then
+        for _, info in ipairs(children) do
+            if info.name and info.name:lower() == needle then
+                return info.mapID, info.name
+            end
+            if not fuzzyID and info.name and info.name:lower():find(needle, 1, true) then
+                fuzzyID, fuzzyName = info.mapID, info.name
+            end
+        end
+    end
+    return fuzzyID, fuzzyName
 end
 
 local function EnsureVendorsAPI()
@@ -107,6 +169,33 @@ local function EnsureVendorsAPI()
         return OneWoW_CatalogData_Vendors_API
     end
     return nil
+end
+
+local function VendorItemsMatch(vendor, include, exclude)
+    if type(vendor.items) ~= "table" or not next(vendor.items) then
+        return false
+    end
+    if #include == 0 then
+        return false
+    end
+    for itemID in pairs(vendor.items) do
+        local name = C_Item.GetItemNameByID(itemID) or ""
+        local hay = (tostring(itemID) .. " " .. name):lower()
+        if HayMatches(hay, include, exclude) then
+            return true
+        end
+    end
+    return false
+end
+
+local function TooltipExtra(record)
+    local extra = record.content or ""
+    if type(record.tooltipLines) == "table" then
+        for i = 1, #record.tooltipLines do
+            extra = extra .. " " .. (record.tooltipLines[i] or "")
+        end
+    end
+    return extra
 end
 
 local function CollectResults(zoneText, filterText)
@@ -122,7 +211,7 @@ local function CollectResults(zoneText, filterText)
             if type(vendor) == "table" and vendor.locations then
                 for mapID, loc in pairs(vendor.locations) do
                     if type(loc) == "table" and loc.x and loc.y and ZoneHit(loc, mapID, zoneNeedle, currentMapID) then
-                        local extra = ""
+                        local extra = tostring(npcID)
                         if vendor.items and next(vendor.items) then
                             extra = extra .. " sells vendor"
                         end
@@ -136,6 +225,7 @@ local function CollectResults(zoneText, filterText)
                         if cat == "banker" then
                             extra = extra .. " banker bank"
                         end
+                        extra = extra .. " " .. TooltipExtra(vendor)
                         local hay = BuildHay(
                             vendor.name,
                             vendor.subtitle,
@@ -145,7 +235,11 @@ local function CollectResults(zoneText, filterText)
                             loc.subzone,
                             extra
                         )
-                        if HayMatches(hay, include, exclude) then
+                        local matched = HayMatches(hay, include, exclude)
+                        if not matched then
+                            matched = VendorItemsMatch(vendor, include, exclude)
+                        end
+                        if matched then
                             local key = tostring(npcID) .. ":" .. tostring(mapID)
                             if not seen[key] then
                                 seen[key] = true
@@ -177,7 +271,8 @@ local function CollectResults(zoneText, filterText)
             if loc.x and loc.y and ZoneHit(loc, npc.mapID, zoneNeedle, currentMapID) then
                 local key = tostring(npcID) .. ":" .. tostring(npc.mapID)
                 if not seen[key] then
-                    local hay = BuildHay(npc.name, npc.category, npc.category, nil, npc.zone, npc.subzone, "npc")
+                    local extra = tostring(npcID) .. " npc " .. TooltipExtra(npc)
+                    local hay = BuildHay(npc.name, npc.category, npc.category, nil, npc.zone, npc.subzone, extra)
                     if HayMatches(hay, include, exclude) then
                         seen[key] = true
                         tinsert(out, {
@@ -298,11 +393,59 @@ local function PaintResults(list, catalogOk, total)
     end
 end
 
+local function CancelSearchTimer()
+    if searchTimer then
+        searchTimer:Cancel()
+        searchTimer = nil
+    end
+end
+
 local function RunSearch()
+    CancelSearchTimer()
     local zoneText = fields.zone:GetSearchText()
     local filterText = fields.filters:GetSearchText()
     local list, catalogOk, total = CollectResults(zoneText, filterText)
     PaintResults(list, catalogOk, total)
+end
+
+local function ScheduleSearch()
+    CancelSearchTimer()
+    searchTimer = C_Timer.NewTimer(SEARCH_DELAY, function()
+        searchTimer = nil
+        RunSearch()
+    end)
+end
+
+local function FillCurrentZone()
+    local mapID = Location.GetPlayerMapID()
+    local info = mapID and C_Map.GetMapInfo(mapID)
+    if info then
+        fields.zone:SetText(string.format("%s (%d)", info.name, mapID))
+        fields.zone:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    else
+        fields.zone:SetText("")
+    end
+end
+
+local function VerifyZone()
+    local mapID, name = ResolveZone(fields.zone:GetSearchText())
+    if mapID and name then
+        fields.zone:SetText(string.format("%s (%d)", name, mapID))
+        fields.zone:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        resultStatus:SetText(string.format("%s (%d)", name, mapID))
+        RunSearch()
+        return
+    end
+    resultStatus:SetText(L["WAYPINS_FIND_ZONE_FAIL"])
+end
+
+local function AttachFieldTooltip(box, text)
+    box:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(text, 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    box:HookScript("OnLeave", GameTooltip_Hide)
 end
 
 local function EnsureDialog()
@@ -311,8 +454,8 @@ local function EnsureDialog()
     dialog = OneWoW_GUI:CreateDialog({
         name   = "OneWoW_NotesWayPinFindDialog",
         title  = L["WAYPINS_FIND_LOCATION"],
-        width  = 520,
-        height = 520,
+        width  = 560,
+        height = 560,
         buttons = {
             { text = SEARCH, onClick = function() RunSearch() end },
             { text = CANCEL, onClick = function(f) f:Hide() end },
@@ -328,28 +471,59 @@ local function EnsureDialog()
     zoneLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     y = y - 18
 
+    local currentBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["WAYPINS_FIND_CURRENT"], height = 24 })
+    currentBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, y)
+    currentBtn:SetScript("OnClick", function()
+        FillCurrentZone()
+        RunSearch()
+    end)
+    currentBtn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(L["WAYPINS_FIND_ZONE_TT"], 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    currentBtn:HookScript("OnLeave", GameTooltip_Hide)
+
+    local verifyBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["WAYPINS_FIND_VERIFY"], height = 24 })
+    verifyBtn:SetPoint("RIGHT", currentBtn, "LEFT", -4, 0)
+    verifyBtn:SetScript("OnClick", VerifyZone)
+    verifyBtn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(L["WAYPINS_FIND_ZONE_TT"], 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    verifyBtn:HookScript("OnLeave", GameTooltip_Hide)
+
     fields.zone = OneWoW_GUI:CreateEditBox(content, {
         placeholderText = ZONE,
         maxLetters = 80,
+        onTextChanged = function()
+            ScheduleSearch()
+        end,
     })
     fields.zone:SetPoint("TOPLEFT", content, "TOPLEFT", 14, y)
-    fields.zone:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, y)
+    fields.zone:SetPoint("RIGHT", verifyBtn, "LEFT", -8, 0)
+    AttachFieldTooltip(fields.zone, L["WAYPINS_FIND_ZONE_TT"])
     y = y - 32
 
     local filterLabel = OneWoW_GUI:CreateFS(content, 12)
     filterLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 14, y)
-    filterLabel:SetText(FILTERS)
+    filterLabel:SetText(SEARCH)
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     y = y - 18
 
     fields.filters = OneWoW_GUI:CreateEditBox(content, {
         placeholderText = L["WAYPINS_FIND_FILTERS_PH"],
         maxLetters = 120,
+        onTextChanged = function()
+            ScheduleSearch()
+        end,
     })
     fields.filters:SetPoint("TOPLEFT", content, "TOPLEFT", 14, y)
     fields.filters:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, y)
     fields.filters:HookScript("OnEnterPressed", RunSearch)
     fields.zone:HookScript("OnEnterPressed", RunSearch)
+    AttachFieldTooltip(fields.filters, L["WAYPINS_FIND_SEARCH_TT"])
     y = y - 32
 
     local hint = OneWoW_GUI:CreateFS(content, 10)
@@ -359,7 +533,7 @@ local function EnsureDialog()
     hint:SetWordWrap(true)
     hint:SetText(L["WAYPINS_FIND_HINT"])
     hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    y = y - 32
+    y = y - 48
 
     resultStatus = OneWoW_GUI:CreateFS(content, 11)
     resultStatus:SetPoint("TOPLEFT", content, "TOPLEFT", 14, y)
@@ -377,9 +551,7 @@ end
 
 function ns.UI.OpenWayPinFindDialog()
     EnsureDialog()
-    local mapID = Location.GetPlayerMapID()
-    local info = mapID and C_Map.GetMapInfo(mapID)
-    fields.zone:SetText((info and info.name) or "")
+    FillCurrentZone()
     fields.filters:SetText("")
     RunSearch()
     dialog.frame:Show()

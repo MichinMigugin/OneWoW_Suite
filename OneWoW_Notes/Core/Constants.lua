@@ -3,7 +3,9 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 
 ns.Constants = {
-    GUI = OneWoW_GUI:RegisterGUIConstants({}),
+    GUI = OneWoW_GUI:RegisterGUIConstants({
+        WAYPIN_MAP_BUTTON_SIZE = 36,
+    }),
     -- Detail editor chrome shared across Notes / Zones / Players / NPCs / Items / Collectibles.
     Detail = {
         HEADER_HEIGHT = 95,

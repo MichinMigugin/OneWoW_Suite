@@ -116,6 +116,20 @@ function ns.UI.CreateSettingsTab(parent)
     )
     yOffset = yOffset - 70
 
+    CreateDetectionRow(
+        scrollChild,
+        "WAYPINS_SHOW_MAP_PANEL",
+        "SETTINGS_WAYPINS_MAP_PANEL_DESC",
+        function() return ns.db.global.waypinShowMapPanel ~= false end,
+        function()
+            ns.db.global.waypinShowMapPanel = not (ns.db.global.waypinShowMapPanel ~= false)
+            if ns.WayPinsMapPanel then ns.WayPinsMapPanel:Sync() end
+            return ns.db.global.waypinShowMapPanel ~= false
+        end,
+        yOffset
+    )
+    yOffset = yOffset - 70
+
     local sizeRow = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
     sizeRow:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  16, yOffset)
     sizeRow:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -16, yOffset)
@@ -131,7 +145,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     local worldSlider = OneWoW_GUI:CreateSlider(sizeRow, {
         minVal = 12,
-        maxVal = 48,
+        maxVal = ns.WayPinsVisual.WorldSizeMax(),
         step = 1,
         currentVal = ns.db.global.waypinWorldSize or 22,
         width = 240,
@@ -150,7 +164,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     local miniSlider = OneWoW_GUI:CreateSlider(sizeRow, {
         minVal = 10,
-        maxVal = 28,
+        maxVal = ns.WayPinsVisual.MinimapSizeMax(),
         step = 1,
         currentVal = ns.db.global.waypinMinimapSize or 16,
         width = 200,
@@ -162,6 +176,20 @@ function ns.UI.CreateSettingsTab(parent)
     })
     miniSlider:SetPoint("TOPLEFT", sizeRow, "TOPLEFT", 280, -28)
     yOffset = yOffset - 100
+
+    CreateDetectionRow(
+        scrollChild,
+        "WAYPINS_MINIMAP_ANIM",
+        "SETTINGS_WAYPINS_MINIMAP_ANIM_DESC",
+        function() return ns.db.global.waypinMinimapAnimate ~= false end,
+        function()
+            ns.db.global.waypinMinimapAnimate = not (ns.db.global.waypinMinimapAnimate ~= false)
+            if ns.WayPinsMap then ns.WayPinsMap:Refresh() end
+            return ns.db.global.waypinMinimapAnimate ~= false
+        end,
+        yOffset
+    )
+    yOffset = yOffset - 70
 
     yOffset = yOffset - 20
     local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"], yOffset = yOffset })

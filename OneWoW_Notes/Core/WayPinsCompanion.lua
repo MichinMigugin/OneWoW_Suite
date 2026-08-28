@@ -4,14 +4,15 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 local Location = OneWoW.Location
 
-local ipairs, wipe, tinsert = ipairs, wipe, tinsert
+local ipairs, wipe, tinsert, pairs = ipairs, wipe, tinsert, pairs
+local IsControlKeyDown = IsControlKeyDown
 
 -- ============================================================================
 -- WayPinsCompanion
 -- ============================================================================
 -- List of OneWay Pins for the current map, docked to the right of a Zone Notes
--- pinned window. One companion per map (not per zone note). Gated by the host
--- note's pinEnabled window being shown and showWayPins ~= false.
+-- pinned window. Chrome copies the host note (tooltip border, pin colors,
+-- strata) so the two boxes read as one. One companion per map.
 -- ============================================================================
 
 local Companion = {}
@@ -19,37 +20,48 @@ ns.WayPinsCompanion = Companion
 
 local ROW_HEIGHT = 26
 local COMPANION_WIDTH = 220
-local C = OneWoW_GUI.Constants
+
+local PIN_BACKDROP = {
+    bgFile   = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = false, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 },
+}
+
+local TITLE_BACKDROP = {
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    insets = { left = 0, right = 0, top = 0, bottom = 0 },
+}
 
 local frame
 local hostFrame
 local rowPool = {}
 local activeRows = {}
+local pausedForMap = false
+local restoreHosts = {}
 
 local function EnsureFrame()
     if frame then return frame end
 
-    frame = OneWoW_GUI:CreateFrame(UIParent, {
-        name = "OneWoW_WayPinsCompanion",
-        width = COMPANION_WIDTH,
-        height = 200,
-        backdrop = C.BACKDROP_SOFT,
-    })
-    frame:SetFrameStrata("HIGH")
+    frame = CreateFrame("Frame", "OneWoW_WayPinsCompanion", UIParent, "BackdropTemplate")
+    frame:SetWidth(COMPANION_WIDTH)
+    frame:SetHeight(200)
+    frame:SetBackdrop(PIN_BACKDROP)
     frame:EnableMouse(true)
     frame:Hide()
     OneWoW_GUI:RegisterFontRoot(frame, function()
         Companion:RefreshRows()
     end)
 
-    local titleBar = CreateFrame("Frame", nil, frame)
-    titleBar:SetPoint("TOPLEFT", 8, -6)
-    titleBar:SetPoint("TOPRIGHT", -8, -6)
+    local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    titleBar:SetPoint("TOPLEFT", 4, -4)
+    titleBar:SetPoint("TOPRIGHT", -4, -4)
     titleBar:SetHeight(20)
+    titleBar:SetBackdrop(TITLE_BACKDROP)
     frame.titleBar = titleBar
 
     local title = OneWoW_GUI:CreateFS(titleBar, 12)
-    title:SetPoint("LEFT", 0, 0)
+    title:SetPoint("LEFT", 5, 0)
     title:SetPoint("RIGHT", -20, 0)
     title:SetJustifyH("LEFT")
     title:SetText(L["TAB_WAYPINS"])
@@ -58,7 +70,7 @@ local function EnsureFrame()
 
     local closeBtn = CreateFrame("Button", nil, titleBar)
     closeBtn:SetSize(16, 16)
-    closeBtn:SetPoint("RIGHT", 0, 0)
+    closeBtn:SetPoint("RIGHT", -2, 0)
     closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
     closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
     closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
@@ -76,11 +88,27 @@ local function EnsureFrame()
     return frame
 end
 
-local function ApplyChrome()
-    if not frame then return end
-    frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+local function ApplyHostChrome(host)
+    if not frame or not host then return end
+    local bd = host:GetBackdrop()
+    if bd then
+        frame:SetBackdrop(bd)
+    else
+        frame:SetBackdrop(PIN_BACKDROP)
+    end
+    frame:SetBackdropColor(host:GetBackdropColor())
+    frame:SetBackdropBorderColor(host:GetBackdropBorderColor())
+    if host.titleBar then
+        local tbd = host.titleBar:GetBackdrop()
+        if tbd then
+            frame.titleBar:SetBackdrop(tbd)
+        end
+        frame.titleBar:SetBackdropColor(host.titleBar:GetBackdropColor())
+    end
     frame.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    frame:SetParent(host)
+    frame:SetFrameStrata(host:GetFrameStrata())
+    frame:SetFrameLevel(host:GetFrameLevel())
 end
 
 local function AcquireRow(parent)
@@ -93,6 +121,7 @@ local function AcquireRow(parent)
     local row = CreateFrame("Button", nil, parent)
     row:SetHeight(ROW_HEIGHT)
     row:EnableMouse(true)
+    row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     local icon = row:CreateTexture(nil, "ARTWORK")
     icon:SetSize(18, 18)
@@ -112,7 +141,7 @@ local function AcquireRow(parent)
         if pin then
             GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(pin.title or L["WAYPINS_UNTITLED"], 1, 1, 1)
-            GameTooltip:AddLine(L["WAYPINS_GO_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            GameTooltip:AddLine(L["WAYPINS_COMPANION_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             GameTooltip:Show()
         end
     end)
@@ -120,10 +149,18 @@ local function AcquireRow(parent)
         Companion:PaintRow(myself)
         GameTooltip:Hide()
     end)
-    row:SetScript("OnClick", function(myself)
-        if myself.pinData then
-            ns.WayPins:Track(myself.pinData.id)
+    row:SetScript("OnClick", function(myself, button)
+        local pin = myself.pinData
+        if not pin then return end
+        if button == "RightButton" then
+            ns.WayPinsMap:ShowListMenu(myself, pin)
+            return
         end
+        if IsControlKeyDown() then
+            ns.WayPinsMap:OpenPinTab(pin.id)
+            return
+        end
+        ns.WayPins:Track(pin.id)
     end)
 
     tinsert(rowPool, row)
@@ -183,7 +220,9 @@ function Companion:CollapseHost()
 end
 
 function Companion:ApplyTheme()
-    ApplyChrome()
+    if frame and hostFrame then
+        ApplyHostChrome(hostFrame)
+    end
     if frame and frame:IsShown() then
         self:RefreshRows()
     end
@@ -196,10 +235,42 @@ function Companion:Hide()
     end
 end
 
+function Companion:IsPausedForMap()
+    return pausedForMap
+end
+
+function Companion:PauseForMap()
+    pausedForMap = true
+    wipe(restoreHosts)
+    if ns.zonePins then
+        for id, pinFrame in pairs(ns.zonePins) do
+            if pinFrame and pinFrame:IsShown() then
+                restoreHosts[id] = true
+                pinFrame:Hide()
+            end
+        end
+    end
+    if frame then
+        frame:Hide()
+    end
+end
+
+function Companion:ResumeAfterMap()
+    pausedForMap = false
+    for id in pairs(restoreHosts) do
+        local pinFrame = ns.zonePins and ns.zonePins[id]
+        if pinFrame then
+            pinFrame:Show()
+        end
+    end
+    wipe(restoreHosts)
+    self:Sync()
+end
+
 function Companion:ShowDocked(host, _)
     EnsureFrame()
-    ApplyChrome()
     hostFrame = host
+    ApplyHostChrome(host)
     frame:ClearAllPoints()
     frame:SetPoint("TOPLEFT", host, "TOPRIGHT", 4, 0)
     frame:SetPoint("BOTTOMLEFT", host, "BOTTOMRIGHT", 4, 0)
@@ -209,6 +280,7 @@ function Companion:ShowDocked(host, _)
 end
 
 function Companion:Sync()
+    if pausedForMap then return end
     local mapID = Location.GetPlayerMapID()
     local pins = ns.WayPins:GetForMap(mapID)
     if #pins == 0 then
