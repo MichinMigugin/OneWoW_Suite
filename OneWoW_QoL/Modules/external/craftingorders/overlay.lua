@@ -284,6 +284,8 @@ local function BindHeader(row, entry)
     row.nameText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
     if entry.section == "ready" then
         row.nameText:SetText(L["CRAFTORDERS_SECTION_READY"] .. " (" .. entry.count .. ")")
+    elseif entry.section == "unknown" then
+        row.nameText:SetText(PROFESSIONS_RECIPE_UNLEARNED .. " (" .. entry.count .. ")")
     else
         row.nameText:SetText(L["CRAFTORDERS_SECTION_MISSING"] .. " (" .. entry.count .. ")")
     end
@@ -330,7 +332,7 @@ local function BindRow(row, entry)
     BindStrip(row.customerMats, entry.customerReagents, "customer")
     BindStrip(row.rewards, entry.rewardIcons, "reward")
 
-    local showAdd = entry.kind == "order" and entry.section == "missing"
+    local showAdd = entry.kind == "order" and entry.section ~= "ready"
         and entry.missingReagents and #entry.missingReagents > 0
     row.addBtn._entry = entry
     row.addBtn:SetShown(showAdd)

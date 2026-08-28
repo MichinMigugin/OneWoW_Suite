@@ -25,6 +25,8 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "Use WoW list",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "Show Blizzard's order table instead of Craftable now and Missing mats.",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "Hide unlearned recipes",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "Hide orders whose recipe you have not learned.",
     ["CRAFTORDERS_BUCKET_COUNT"] = "%d orders",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "Order: %s",
     ["CRAFTORDERS_NO_SHOPPING"] = "Enable Shopping List to add reagents.",

@@ -3,13 +3,13 @@ local M, L = ns.ModuleRegistry:Current()
 if not M then return end
 
 -- ============================================================================
--- Classify crafter orders into Craftable now vs Missing mats.
+-- Classify crafter orders into Craftable now, Missing mats, and Recipe Unlearned.
 -- ============================================================================
 -- Craftable now: recipe learned and every required crafter-provided reagent is
--- in bags, character bank, or reagent bank. Warband bank does not count
--- (Blizzard cannot consume it on an order). Fully customer-supplied counts as
--- now. Unlearned is never now. Public buckets are learned -> now, unlearned ->
--- missing (mats unknown).
+-- in bags, character bank, reagent bank, or warband bank (same bags Blizzard
+-- crafts from). Fully customer-supplied counts as now. Unlearned is never now
+-- or missing: it is Recipe Unlearned. Public buckets are learned -> now,
+-- unlearned -> Recipe Unlearned (mats unknown).
 --
 -- Reagent split (same rule Blizzard OrderView uses when filling the form):
 --   order.reagents is the set already allocated on the order. Every entry
@@ -38,7 +38,8 @@ end
 
 local function OwnedCount(itemID)
     if not itemID then return 0 end
-    return GetItemCount(itemID, true, false, true, false)
+    -- includeBank, includeUses, includeReagentBank, includeAccountBank
+    return GetItemCount(itemID, true, false, true, true)
 end
 
 local function SlotIconItem(slot)
@@ -172,7 +173,7 @@ function M:ClassifyBucket(bucket)
     local gold = bucket.tipAmountMax or 0
     return {
         kind = "bucket",
-        section = learned and "ready" or "missing",
+        section = learned and "ready" or "unknown",
         raw = bucket,
         spellID = bucket.spellID,
         skillLineAbilityID = bucket.skillLineAbilityID,
@@ -203,7 +204,10 @@ function M:ClassifyOrder(order)
     local info = RecipeInfo(order.spellID, order.skillLineAbilityID)
     local learned = info and info.learned == true
     local youReagents, customerReagents, missing, allCovered = ClassifyReagents(order)
-    local ready = learned and allCovered
+    local section = "unknown"
+    if learned then
+        section = allCovered and "ready" or "missing"
+    end
     local kp, acuity, gold = 0, 0, order.tipAmount or 0
     if order.orderType == Enum.CraftingOrderType.Npc then
         kp, acuity, gold = M:ScoreNpcRewards(order)
@@ -214,7 +218,7 @@ function M:ClassifyOrder(order)
     end
     return {
         kind = "order",
-        section = ready and "ready" or "missing",
+        section = section,
         raw = order,
         orderID = order.orderID,
         spellID = order.spellID,
@@ -263,8 +267,17 @@ local function SortBuckets(a, b)
     return (a.name or "") < (b.name or "")
 end
 
+local function AppendSection(entries, list, section)
+    if #list == 0 then return end
+    entries[#entries + 1] = { kind = "header", section = section, count = #list }
+    for i = 1, #list do
+        entries[#entries + 1] = list[i]
+    end
+end
+
 function M:BuildOverlayEntries(rawList, isBucket, orderType)
-    local ready, missing = {}, {}
+    local ready, missing, unknown = {}, {}, {}
+    local hideUnlearned = ns.ModuleRegistry:GetToggleValue("craftingorders", "hideUnlearned")
     if rawList then
         for i = 1, #rawList do
             local raw = rawList[i]
@@ -276,6 +289,10 @@ function M:BuildOverlayEntries(rawList, isBucket, orderType)
             end
             if entry.section == "ready" then
                 ready[#ready + 1] = entry
+            elseif entry.section == "unknown" then
+                if not hideUnlearned then
+                    unknown[#unknown + 1] = entry
+                end
             else
                 missing[#missing + 1] = entry
             end
@@ -292,21 +309,13 @@ function M:BuildOverlayEntries(rawList, isBucket, orderType)
     end
     sort(ready, sorter)
     sort(missing, sorter)
+    sort(unknown, sorter)
 
     local entries = {}
-    if #ready > 0 then
-        entries[#entries + 1] = { kind = "header", section = "ready", count = #ready }
-        for i = 1, #ready do
-            entries[#entries + 1] = ready[i]
-        end
-    end
-    if #missing > 0 then
-        entries[#entries + 1] = { kind = "header", section = "missing", count = #missing }
-        for i = 1, #missing do
-            entries[#entries + 1] = missing[i]
-        end
-    end
-    return entries, #ready, #missing
+    AppendSection(entries, ready, "ready")
+    AppendSection(entries, missing, "missing")
+    AppendSection(entries, unknown, "unknown")
+    return entries, #ready, #missing, #unknown
 end
 
 function M:GetWeeklyStatus(profession)

@@ -26,6 +26,8 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "WoW-Liste verwenden",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "Blizzards Auftragstabelle statt Jetzt herstellbar und Fehlende Materialien anzeigen.",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "Nicht erlernte Rezepte ausblenden",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "Auftrage ausblenden, deren Rezept ihr nicht erlernt habt.",
     ["CRAFTORDERS_BUCKET_COUNT"] = "%d Auftrage",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "Auftrag: %s",
     ["CRAFTORDERS_NO_SHOPPING"] = "Einkaufsliste aktivieren, um Reagenzien hinzuzufugen.",

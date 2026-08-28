@@ -26,6 +26,8 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "Список WoW",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "Показывать таблицу заказов Blizzard вместо «Можно сделать сейчас» и «Не хватает материалов».",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "Скрыть неизученные рецепты",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "Скрыть заказы, рецепт которых вы не изучили.",
     ["CRAFTORDERS_BUCKET_COUNT"] = "%d заказов",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "Заказ: %s",
     ["CRAFTORDERS_NO_SHOPPING"] = "Включите список покупок, чтобы добавлять реагенты.",

@@ -26,6 +26,8 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "WoW 목록 사용",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "지금 제작 가능 / 재료 부족 대신 블리자드 주문 표를 표시합니다.",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "배우지 않은 제작법 숨기기",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "아직 배우지 않은 제작법의 주문을 숨깁니다.",
     ["CRAFTORDERS_BUCKET_COUNT"] = "주문 %d개",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "주문: %s",
     ["CRAFTORDERS_NO_SHOPPING"] = "재료를 추가하려면 쇼핑 목록을 켜세요.",

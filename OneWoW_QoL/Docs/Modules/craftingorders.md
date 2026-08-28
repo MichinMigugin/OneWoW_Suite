@@ -14,8 +14,10 @@ Hook `SetCraftingOrderType`, `ShowGeneric`, and `SendOrderRequest` on the
 the overlay is shown. Patron / Guild / Personal are always a flat order list.
 
 - **Tabs:** Public, Guild, Personal, Patron (`Enum.CraftingOrderType`).
-- **Buckets:** Craftable now vs Missing mats only. Public search results stay
-  bucketed until you drill into a recipe; Ready/Missing is exact on flat lists.
+- **Buckets:** Craftable now, Missing mats, and Recipe Unlearned. Public search
+  results stay bucketed until you drill into a recipe; Ready/Missing is exact on
+  flat lists. Unlearned never sits in Missing mats. Features can hide the
+  Recipe Unlearned section.
   Rows use the same striped `BACKDROP_INNER` chrome as Catalog lists.
   Column headers share the same right-edge lanes as the row widgets.
   Each You Provide / Customer Provides / You Receive cluster is a fixed-width
@@ -24,14 +26,16 @@ the overlay is shown. Patron / Guild / Personal are always a flat order list.
 - **Mats:** You Provide vs Customer Provides icon columns. Customer Provides is
   every reagent already allocated on the order (`order.reagents` covers that
   slot). You Provide is required recipe slots with no allocation. Owned count
-  is bags + character bank + reagent bank (not warband). Rewards are
+  is bags + character bank + reagent bank + warband bank. Rewards are
   item/currency/gold icons with counts.
-- **Cart:** one shopping-cart control per missing-mat row, in its own column.
+- **Cart:** one shopping-cart control per row that still needs crafter mats
+  (Missing mats and Recipe Unlearned), in its own column.
 - **WoW UI:** a **WoW UI** / **One UI** button sits on the order-type tab row
   (and a Features toggle) to swap back to Blizzard's table without disabling
   the module.
 - **Craftable now:** recipe learned and every crafter-provided required reagent
-  is in bags, bank, or reagent bank. Fully customer-supplied counts as now.
+  is in bags, bank, reagent bank, or warband bank. Fully customer-supplied
+  counts as now.
 - **Patron sort:** knowledge points, then Artisan's Acuity, then gold.
 - **Personal:** right-click Decline matches Blizzard (`RejectOrder`).
 

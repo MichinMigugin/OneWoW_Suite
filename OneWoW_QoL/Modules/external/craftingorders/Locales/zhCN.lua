@@ -26,6 +26,8 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "使用 WoW 列表",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "显示暴雪订单表，而不是“现在可制造”和“缺少材料”。",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "隐藏未学习的配方",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "隐藏你尚未学会配方的订单。",
     ["CRAFTORDERS_BUCKET_COUNT"] = "%d份订单",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "订单：%s",
     ["CRAFTORDERS_NO_SHOPPING"] = "启用购物清单才能加入材料。",

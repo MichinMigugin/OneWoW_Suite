@@ -7,6 +7,10 @@
 ## ESC Menu Panel
 - The zone panel lists OneWay Pins for this map. Click one to set a live waypoint.
 
+## Crafting Orders
+- Craftable now counts reagents in the Warband Bank, same as Blizzard's craft.
+- Orders you have not learned sit in Recipe Unlearned, not Missing mats. Features can hide that section.
+
 ---
 
 # Mail

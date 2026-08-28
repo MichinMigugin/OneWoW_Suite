@@ -26,6 +26,8 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "Liste WoW",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "Afficher le tableau des commandes de Blizzard a la place de Faisable maintenant et Materiaux manquants.",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "Masquer les recettes non apprises",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "Masquer les commandes dont vous n'avez pas appris la recette.",
     ["CRAFTORDERS_BUCKET_COUNT"] = "%d commandes",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "Commande : %s",
     ["CRAFTORDERS_NO_SHOPPING"] = "Activez la liste de courses pour ajouter des reactifs.",

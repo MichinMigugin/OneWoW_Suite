@@ -5,7 +5,7 @@ if not M then return end
 local OneWoW_GUI = OneWoW_GUI
 
 -- Elsewhere = Storage locations this character cannot spend on an order
--- (alts, mail, guild, warband). This character's bags / bank / reagent bank
+-- (alts, mail, guild). Bags, character bank, reagent bank, and warband
 -- are owned via GetItemCount, not this path.
 
 function M:GetPlayerCharKey()
@@ -13,6 +13,9 @@ function M:GetPlayerCharKey()
 end
 
 local function IsElsewhere(loc, playerKey)
+    if loc.locationType == "warband" then
+        return false
+    end
     local sameChar = not playerKey or not loc.charKey or loc.charKey == playerKey
     if sameChar and (loc.locationType == "bags" or loc.locationType == "bank") then
         return false

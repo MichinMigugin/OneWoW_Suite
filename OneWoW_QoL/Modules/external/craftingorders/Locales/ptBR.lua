@@ -26,6 +26,8 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["CRAFTORDERS_USE_ONEUI"] = "One UI",
     ["CRAFTORDERS_TOGGLE_WOWUI"] = "Usar lista do WoW",
     ["CRAFTORDERS_TOGGLE_WOWUI_DESC"] = "Mostrar a tabela de pedidos da Blizzard em vez de Pode criar agora e Faltam materiais.",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED"] = "Ocultar receitas nao aprendidas",
+    ["CRAFTORDERS_TOGGLE_HIDE_UNLEARNED_DESC"] = "Ocultar pedidos cuja receita voce ainda nao aprendeu.",
     ["CRAFTORDERS_BUCKET_COUNT"] = "%d pedidos",
     ["CRAFTORDERS_ORDER_LIST_NAME"] = "Pedido: %s",
     ["CRAFTORDERS_NO_SHOPPING"] = "Ative a Lista de Compras para adicionar reagentes.",
