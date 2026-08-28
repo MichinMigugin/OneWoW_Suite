@@ -21,6 +21,7 @@ function DataManager:RegisterEvents()
         "CHALLENGE_MODE_MAPS_UPDATE",
         "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
         "UPDATE_INSTANCE_INFO",
+        "ENCOUNTER_END",
         "WEEKLY_REWARDS_UPDATE",
         "CURRENCY_DISPLAY_UPDATE",
         "PVP_RATED_STATS_UPDATE",
@@ -63,6 +64,13 @@ function DataManager:HandleEvent(event)
     elseif event == "UPDATE_INSTANCE_INFO" then
         C_Timer.After(0.5, function()
             self:UpdateRaids()
+        end)
+
+    elseif event == "ENCOUNTER_END" then
+        RequestRaidInfo()
+        C_Timer.After(0.5, function()
+            self:UpdateRaids()
+            self:UpdateWorldBoss()
         end)
 
     elseif event == "WEEKLY_REWARDS_UPDATE" then

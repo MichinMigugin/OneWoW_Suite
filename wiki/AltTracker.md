@@ -46,6 +46,7 @@ Log into each character periodically so their data stays fresh. Open banks/AH wh
 * You do not need the AltTracker hub open for other suite features that only need Storage (for example [Shopping List](Shopping-List) alt scanning).
 * Themes follow suite-wide OneWoW settings.
 * Progress shows the current season and patch under the overview. **Options** on that bar is the picker: raids, Mythic+, and weeklies follow the season; turn currencies on or off, add extras by ID, and edit world-boss quests. Log into each alt once after you add a currency so quantities store.
+* Progress Raids counts bosses from raid lockouts and the Adventure Guide for each difficulty. Tidebound Grotto includes the weekly World kill. Log into each alt once so those kills store.
 
 ## Related
 

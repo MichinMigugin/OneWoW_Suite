@@ -34,9 +34,34 @@ local function GetSeasonRaids()
     return (sd and sd.raids) or {}
 end
 
-local function GetRaidDifficulties()
+local function GetRaidDifficulties(raid)
     local sd = GetSeasonData()
-    return (sd and sd.raidDifficulties) or {}
+    if not sd then
+        return {}
+    end
+    return sd:GetRaidDifficulties(raid)
+end
+
+local function RaidDisplayName(raid)
+    local sd = GetSeasonData()
+    if sd then
+        local journalInstanceID = sd:ResolveRaid(raid)
+        if journalInstanceID then
+            local name = EJ_GetInstanceInfo(journalInstanceID)
+            if name then
+                return name
+            end
+        end
+    end
+    return raid.label
+end
+
+local function DifficultyDisplayName(diff)
+    local name = GetDifficultyInfo(diff.id)
+    if name and name ~= "" then
+        return name
+    end
+    return diff.label
 end
 
 local CURRENCY_COL_WIDTH = 45
@@ -412,10 +437,9 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
             local tex = nil
             local sd = GetSeasonData()
             if sd then
-                local cache = sd:GetRaidCache()
-                local info = cache[raid.label]
-                if info and info.buttonImage and info.buttonImage > 0 then
-                    tex = info.buttonImage
+                local _, _, buttonImage = sd:ResolveRaid(raid)
+                if buttonImage and buttonImage > 0 then
+                    tex = buttonImage
                 end
             end
             if tex then
@@ -741,8 +765,8 @@ local function BuildExpandedPanels(ef, endgameData, _, subTabKey)
         end
 
     elseif subTabKey == "raids" then
-        local difficulties = GetRaidDifficulties()
         for _, raid in ipairs(GetSeasonRaids()) do
+            local difficulties = GetRaidDifficulties(raid)
             local raidBlock = endgameData and endgameData.raids and endgameData.raids.bosses and endgameData.raids.bosses[raid.key]
             local total = (raidBlock and raidBlock.numEncounters) or 0
             local bestKilled = 0
@@ -752,7 +776,7 @@ local function BuildExpandedPanels(ef, endgameData, _, subTabKey)
                     if k > bestKilled then bestKilled = k end
                 end
             end
-            local header = raid.label .. "  " .. bestKilled .. "/" .. total
+            local header = RaidDisplayName(raid) .. "  " .. bestKilled .. "/" .. total
             local panel = grid:AddPanel(header)
 
             AddRaidExpandDifficultyHeader(panel, difficulties)
@@ -999,8 +1023,8 @@ local function CreateRaidsColumns()
             minWidth   = 80,
             flexWeight = 1,
             align      = "center",
-            ttTitle    = raid.label,
-            ttDesc     = raid.label,
+            ttTitle    = RaidDisplayName(raid),
+            ttDesc     = RaidDisplayName(raid),
             raidData   = raid,
         })
     end
@@ -1298,8 +1322,8 @@ local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
 end
 
 local function BuildRaidsCells(charRow, _, _, endgameData, _)
-    local difficulties = GetRaidDifficulties()
     for _, raid in ipairs(GetSeasonRaids()) do
+        local difficulties = GetRaidDifficulties(raid)
         local raidBlock = GetRaidProgressSummary(endgameData, raid.key)
         local cell = CreateRaidDotCell(charRow, raidBlock, difficulties)
         table.insert(charRow.cells, cell)
@@ -1334,15 +1358,15 @@ local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
             if r.key == raidKey then raidEntry = r; break end
         end
         if raidEntry then
-            GameTooltip:SetText(raidEntry.label, 1, 1, 1)
+            GameTooltip:SetText(RaidDisplayName(raidEntry), 1, 1, 1)
             local raidBlock = GetRaidProgressSummary(edg, raidKey)
             local total = raidBlock and raidBlock.numEncounters or 0
             GameTooltip:AddLine(total .. " bosses", 0.7, 0.7, 0.7)
             GameTooltip:AddLine(" ")
-            local difficulties = GetRaidDifficulties()
+            local difficulties = GetRaidDifficulties(raidEntry)
             for _, diff in ipairs(difficulties) do
                 local killed = (raidBlock and raidBlock.progress and raidBlock.progress[diff.id]) or 0
-                local line = diff.label .. ": " .. killed .. "/" .. total
+                local line = DifficultyDisplayName(diff) .. ": " .. killed .. "/" .. total
                 if total > 0 and killed >= total then
                     GameTooltip:AddLine(line, 0.2, 0.9, 0.2)
                 elseif killed > 0 then

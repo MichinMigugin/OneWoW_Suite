@@ -1,10 +1,50 @@
 local _, ns = ...
 
+local tinsert = tinsert
+local C_EncounterJournal = C_EncounterJournal
+local C_ChallengeMode = C_ChallengeMode
+local C_MythicPlus = C_MythicPlus
+local C_SeasonInfo = C_SeasonInfo
+local EJ_GetCurrentTier = EJ_GetCurrentTier
+local EJ_SelectTier = EJ_SelectTier
+local EJ_GetInstanceByIndex = EJ_GetInstanceByIndex
+local EJ_GetInstanceInfo = EJ_GetInstanceInfo
+local EJ_SelectInstance = EJ_SelectInstance
+local EJ_GetEncounterInfoByIndex = EJ_GetEncounterInfoByIndex
+
 ns.SeasonData = ns.SeasonData or {}
 
+-- journalInstanceID / mapID from JournalInstance. Per-raid difficulties from
+-- MapDifficulty (Story/Lorewalking omitted). Tidebound has no LFR or 20-man
+-- Mythic; weekly outdoor lock is World (250).
 ns.SeasonData.raids = {
-    {key = "venomous",   label = "The Venomous Abyss",   short = "Abyss"},
-    {key = "tidebound",  label = "The Tidebound Grotto", short = "Tide"},
+    {
+        key = "venomous",
+        label = "The Venomous Abyss",
+        short = "Abyss",
+        journalInstanceID = 1320,
+        mapID = 3004,
+        difficulties = {
+            {id = 17, key = "LFR", label = "L"},
+            {id = 14, key = "NOR", label = "N"},
+            {id = 15, key = "HER", label = "H"},
+            {id = 16, key = "MYT", label = "M"},
+        },
+    },
+    {
+        key = "tidebound",
+        label = "The Tidebound Grotto",
+        short = "Tide",
+        journalInstanceID = 1317,
+        mapID = 2987,
+        worldBossQuestID = 97128,
+        difficulties = {
+            {id = 14, key = "NOR", label = "N"},
+            {id = 15, key = "HER", label = "H"},
+            {id = 233, key = "MYT", label = "M"},
+            {id = 250, key = "WORLD", label = "W"},
+        },
+    },
 }
 
 ns.SeasonData.raidDifficulties = {
@@ -14,12 +54,13 @@ ns.SeasonData.raidDifficulties = {
     {id = 16, key = "MYT", label = "M"},
 }
 
+-- mapID is MapChallengeMode ID (C_ChallengeMode / C_MythicPlus), not uiMapID.
 ns.SeasonData.dungeons = {
-    {key = "sd1", name = "Altar of Fangs",          short = "FANG",  mapID = 0},
-    {key = "sd2", name = "Murder Row",              short = "MURD",  mapID = 0},
-    {key = "sd3", name = "Den of Nalorakk",         short = "NALO",  mapID = 0},
-    {key = "sd4", name = "The Blinding Vale",       short = "VALE",  mapID = 0},
-    {key = "sd5", name = "Voidscar Arena",          short = "VOID",  mapID = 0},
+    {key = "sd1", name = "Altar of Fangs",          short = "FANG",  mapID = 588},
+    {key = "sd2", name = "Murder Row",              short = "MURD",  mapID = 587},
+    {key = "sd3", name = "Den of Nalorakk",         short = "NALO",  mapID = 586},
+    {key = "sd4", name = "The Blinding Vale",       short = "VALE",  mapID = 584},
+    {key = "sd5", name = "Voidscar Arena",          short = "VOID",  mapID = 585},
     {key = "sd6", name = "Ruby Life Pools",         short = "RLP",   mapID = 399},
     {key = "sd7", name = "Kings' Rest",             short = "KR",    mapID = 249},
     {key = "sd8", name = "Temple of Sethraliss",    short = "TOS",   mapID = 250},
@@ -37,12 +78,10 @@ local function BuildRaidCache()
         local instanceID, name, _, _, buttonImage = EJ_GetInstanceByIndex(index, true)
         if not instanceID then break end
 
+        local _, _, _, _, _, _, _, _, _, instanceMapID = EJ_GetInstanceInfo(instanceID)
         local mapID = nil
-        if EJ_GetInstanceInfo then
-            local _, _, _, _, _, _, _, _, _, instanceMapID = EJ_GetInstanceInfo(instanceID)
-            if type(instanceMapID) == "number" then
-                mapID = instanceMapID
-            end
+        if type(instanceMapID) == "number" then
+            mapID = instanceMapID
         end
 
         cache[name] = {
@@ -97,13 +136,54 @@ function ns.SeasonData:RefreshRaidCache()
     return raidCache
 end
 
+--- Journal instance, game map, and EJ button art. Prefers shipped IDs, then
+--- `GetInstanceForGameMap`, then the current-tier name cache.
+---@param raidEntry table
+---@return number|nil journalInstanceID
+---@return number|nil mapID
+---@return number|nil buttonImage
 function ns.SeasonData:ResolveRaid(raidEntry)
+    local journalInstanceID = raidEntry.journalInstanceID
+    local mapID = raidEntry.mapID
+    local buttonImage
+
+    if not journalInstanceID and type(mapID) == "number" then
+        journalInstanceID = C_EncounterJournal.GetInstanceForGameMap(mapID)
+    end
+
+    if journalInstanceID then
+        local _, _, _, _, btn, _, _, _, _, instanceMapID = EJ_GetInstanceInfo(journalInstanceID)
+        buttonImage = btn
+        if type(instanceMapID) == "number" then
+            mapID = mapID or instanceMapID
+        end
+        return journalInstanceID, mapID, buttonImage
+    end
+
     local cache = self:GetRaidCache()
     local info = cache[raidEntry.label]
-    if info then
-        return info.journalInstanceID, info.mapID, info.buttonImage
+    if not info then
+        for cacheName, cacheInfo in pairs(cache) do
+            if ChallengeNamesMatch(cacheName, raidEntry.label) then
+                info = cacheInfo
+                break
+            end
+        end
     end
-    return nil, nil, nil
+    if info then
+        return info.journalInstanceID, mapID or info.mapID, info.buttonImage
+    end
+    return nil, mapID, nil
+end
+
+--- Difficulty columns for this raid, or the shared L/N/H/M list.
+---@param raidEntry table|nil
+---@return table difficulties
+function ns.SeasonData:GetRaidDifficulties(raidEntry)
+    if raidEntry and raidEntry.difficulties then
+        return raidEntry.difficulties
+    end
+    return self.raidDifficulties
 end
 
 function ns.SeasonData:GetRaidEncounters(raidEntry)
@@ -119,7 +199,7 @@ function ns.SeasonData:GetRaidEncounters(raidEntry)
     while true do
         local name, _, journalEncounterID, _, _, _, dungeonEncounterID = EJ_GetEncounterInfoByIndex(index, journalInstanceID)
         if not name then break end
-        table.insert(encounters, {
+        tinsert(encounters, {
             name = name,
             journalEncounterID = journalEncounterID,
             dungeonEncounterID = dungeonEncounterID,

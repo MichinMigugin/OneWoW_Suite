@@ -176,7 +176,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_CRAFTORDERS_BODY"] = "专业技能制造订单页把公开、公会、个人和主顾列表分成“现在可制造”和“缺少材料”。可以把缺少的材料加入购物清单。一个按钮即可开始、制造并完成订单。",
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 图标浏览器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能现已包含图标浏览器。选择宏、银行标签、公会银行标签、装备方案或幻化套装图标时可搜索并筛选。",
-    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "进度追踪至暗之夜第2赛季：烈毒之渊和潮缚石窟、新的史诗钥石地下城池、Mistcrests，以及 Nymrissa Wavecaller。总览下方的栏显示当前赛季和版本。在那里的选项中选择货币和世界首领。/1wat status 显示本周进度正在追踪的内容。",
+    ["WHATS_NEW_H_ALTTRACKER_BODY"] = "进度追踪至暗之夜第2赛季：烈毒之渊和潮缚石窟、新的史诗钥石地下城池、Mistcrests，以及 Nymrissa Wavecaller。团队击杀按团队副本锁定和冒险指南统计；潮缚石窟包含每周世界击杀。总览下方的栏显示当前赛季和版本。在那里的选项中选择货币和世界首领。/1wat status 显示本周进度正在追踪的内容。",
     ["WHATS_NEW_H_TRACKERS_BODY"] = "步骤编辑器可编写全部追踪类型，包括击杀地下城或团队首领。在地下城或团队副本中，从目标填充无法读取生物ID；请在战斗中或击败后填充该首领战。输入ID会显示名称。允许的地图上可设置路径点。",
     ["WHATS_NEW_H_WAYPINS_TITLE"] = "OneWay Pins",
     ["WHATS_NEW_H_WAYPINS_BODY"] = "在笔记中保存银行、制作台等地点。它们留在世界地图和微缩地图上。点击可获得到达后清除的实时路径点。可从地下城手册、商人、任务、NPC 菜单或地图保存。",
