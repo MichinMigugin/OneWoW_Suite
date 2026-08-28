@@ -4,6 +4,10 @@ OneWoW's license in [LICENSE.md](LICENSE.md) covers original OneWoW code
 only. These bundled files keep their own licenses. Do not treat them as
 OneWoW-owned.
 
+When adding a library, font, or other third-party blob: record it here (and
+fonts in `FONT_LICENSES.txt`) **in the same change**. Community QoL modules
+are not listed here — use [MODULE_CREDITS.md](MODULE_CREDITS.md).
+
 ## Embedded libraries
 
 | Component | Path | License |

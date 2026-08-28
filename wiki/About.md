@@ -6,7 +6,7 @@ Official site: [https://onewow.net/](https://onewow.net/). Source: [GitHub](http
 
 The suite is public so you can read the code, open an issue, or send a pull request. That is not a grant to republish OneWoW as your own addon.
 
-You may install and use the official build, tweak it privately, and contribute (including original QoL modules). You may not distribute a modified OneWoW, copy the suite into another addon, or drop credit. Details: [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md).
+You may install and use the official build, tweak it privately, and contribute (including original QoL modules). You may not distribute a modified OneWoW, copy the suite into another addon, or drop credit. QoL modules show their author in the in-game Details dialog; community modules keep that person's name. License: [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md).
 
 ## Who ships it
 
@@ -42,6 +42,7 @@ For how OneWoW sits next to Altoholic, All The Things, and Bagnon, see [Compare]
 ### Sources
 
 * [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md)
+* [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md)
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md)
 * [CONTRIBUTING.md](https://github.com/kellewic/OneWoW_Suite/blob/main/CONTRIBUTING.md)
 * [OneWoW/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/ARCHITECTURE.md)

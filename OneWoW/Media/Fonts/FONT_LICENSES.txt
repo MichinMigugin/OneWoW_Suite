@@ -1,9 +1,9 @@
 OneWoW Suite - Bundled Fonts
 ============================
 
-The following fonts are included in the OneWoW addon suite. All fonts are
-free to use and redistribute in non-commercial software. Full license texts
-are available at the sources listed below.
+The following fonts are included in the OneWoW addon suite. Record every
+bundled .ttf/.otf filename here. Do not treat these files as OneWoW-owned.
+Full license texts are at the sources listed below.
 
 
 Adventure.ttf
@@ -134,3 +134,70 @@ yellow.ttf
   Name:    Yellowjacket
   License: Iconian Freeware License (free for personal/freeware use)
   Source:  http://www.iconian.com/
+
+ActionMan.ttf
+  Name:    Action Man
+  License: Iconian / ShyFoundry freeware EULA (personal/freeware use;
+           original terms restrict bundling in another product)
+  Source:  http://www.iconian.com/  (also ShyFoundry SF Action Man family)
+
+AtkinsonHyperlegibleNext-Regular.otf
+  Name:    Atkinson Hyperlegible Next
+  License: SIL Open Font License 1.1
+  Source:  https://www.brailleinstitute.org/freefont/
+           https://github.com/googlefonts/atkinson-hyperlegible-next
+
+ContinuumMedium.ttf
+  Name:    Continuum Medium
+  License: Redistribution license not confirmed (often attributed to
+           Broderbund ClickArt collections). Review before treating as
+           freely redistributable.
+  Source:  unknown
+
+DiabloHeavy.ttf
+  Name:    Diablo Heavy
+  License: Not a confirmed redistributable license. Name/style is associated
+           with Diablo / Exocet (Emigre commercial). Review for replacement
+           or removal.
+  Source:  unknown
+
+DieDieDie.ttf
+  Name:    Diediedie
+  License: Free for personal use only (Static Type / Mike Emory); not
+           licensed for commercial work without the author's permission
+  Source:  designer contact historically statictype@yahoo.com
+
+Expressway.ttf
+  Name:    Expressway (Expressway Free)
+  License: Ray Larabie / Typodermic. Older Expressway Free was labeled
+           freeware; current Typodermic Desktop EULA does not include
+           embedding in applications. Confirm which package this file is.
+  Source:  https://typodermicfonts.com/expressway/
+
+Homespun.ttf
+  Name:    Homespun
+  License: Redistribution license not confirmed. Review before treating as
+           freely redistributable.
+  Source:  unknown
+
+Lato-Regular.ttf
+  Name:    Lato
+  License: SIL Open Font License 1.1
+  Source:  https://www.latofonts.com/
+           https://github.com/google/fonts/tree/main/ofl/lato
+
+Poppins-SemiBold.ttf
+  Name:    Poppins SemiBold
+  License: SIL Open Font License 1.1
+  Source:  https://github.com/itfoundry/Poppins
+
+PTSansNarrow.ttf
+  Name:    PT Sans Narrow
+  License: SIL Open Font License 1.1
+  Source:  https://www.paratype.com/  (Google Fonts OFL cut)
+
+RobotoCondensed-Bold.ttf
+  Name:    Roboto Condensed Bold
+  License: Apache License 2.0
+  Source:  https://github.com/googlefonts/roboto
+           https://fonts.google.com/specimen/Roboto+Condensed

@@ -55,7 +55,8 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     description = "MY_MODULE_DESC",
     version     = "1.0",
 
-    -- Optional contact info (shown in the Details dialog)
+    -- Credit (shown in the Details dialog). Community modules: your name.
+    -- Empty / omitted = OneWoW Development Team. See LICENSE.md.
     author  = "Your Name",
     contact = "your@email.com",
     link    = "https://yoursite.com",
@@ -144,11 +145,17 @@ If you are not supporting Korean, skip the `koKR.lua` line.
 
 | Field | Type | Description |
 |---|---|---|
-| `author` | string | Your name. Shown as plain text in the Details dialog. |
+| `author` | string | Credit line, plain text, shown in Details. **Community modules must set this to the author's name.** Empty or omitted means the OneWoW Development Team (copyright and credit). The hub fills that default at load if the field is missing. |
 | `contact` | string | Email/Discord. Shown as a copyable text box. |
 | `link` | string | Website URL. Shown as a copyable text box. |
 
-If none of `author`, `contact`, or `link` are set, the `Details` button does not appear.
+If none of `author`, `contact`, or `link` are set in source, the hub still
+shows Details once `author` defaults to the OneWoW Development Team.
+
+Community authors keep copyright in their module folder and grant the team a
+license to ship it ([LICENSE.md](../LICENSE.md)). Maintainers add a row to
+[MODULE_CREDITS.md](../MODULE_CREDITS.md) when merging. Do not replace a
+community `author` string with a team name.
 
 ---
 

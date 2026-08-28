@@ -14,6 +14,8 @@ Clone the repo (or browse on GitHub) and start with **CONTRIBUTING** + **ARCHITE
 | Topic | Doc |
 |-------|-----|
 | How to contribute (PRs, locales) | [CONTRIBUTING.md](https://github.com/kellewic/OneWoW_Suite/blob/main/CONTRIBUTING.md) |
+| QoL module authoring | [OneWoW_QoL/DEVELOPERS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/DEVELOPERS.md) |
+| Community QoL module credits | [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md) |
 | Docs index | [OneWoW/Docs/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/README.md) |
 | Load units, lifecycle, enable model, hub | [ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/ARCHITECTURE.md) |
 | SavedVariables / `OneWoW_GUI.DB` | [DATABASE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/DATABASE.md) |
@@ -52,4 +54,5 @@ Clone the repo (or browse on GitHub) and start with **CONTRIBUTING** + **ARCHITE
 
 * [OneWoW/Docs/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/README.md)
 * [CONTRIBUTING.md](https://github.com/kellewic/OneWoW_Suite/blob/main/CONTRIBUTING.md)
+* [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md)
 * [OneWoW/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/Docs/ARCHITECTURE.md)

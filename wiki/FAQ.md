@@ -40,6 +40,10 @@ The feature must be **installed and enabled**. Open [Slash commands](Slash-Comma
 
 Yes. The suite lives at [https://github.com/kellewic/OneWoW_Suite](https://github.com/kellewic/OneWoW_Suite). Anyone can read it, open an issue, or send a pull request (including original QoL modules). That is **not** permission to republish OneWoW as your own addon. See [About](About) and [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md).
 
+### Who wrote a QoL module?
+
+Open the module in QoL and use **Details**. The name there is the credit line. Community-authored modules keep that person's name; the list is [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md). Empty credit means the OneWoW Development Team.
+
 ### Is OneWoW written by AI?
 
 The suite is **AI-assisted** and shipped by two full-time developers. Humans set the architecture, review what ships, and stand behind it. If you want to judge the code, read the repo. See [About](About).
@@ -73,6 +77,7 @@ Enable only one primary bag UI you intend to use, or expect overlapping keybinds
 ### Sources
 
 * [LICENSE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/LICENSE.md)
+* [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md)
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md)
 * [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md)
 * Feature READMEs linked from each wiki feature page

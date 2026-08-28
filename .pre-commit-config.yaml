@@ -289,6 +289,27 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: third-party-licenses
+        name: Vendored Libs and fonts have license rows
+        description: |
+          Every Libs/<name>/ path must appear in THIRD_PARTY.md; every
+          bundled font filename in FONT_LICENSES.txt. See
+          .cursor/rules/OneWoW-Third-Party-Licenses.mdc.
+        entry: python bin/run_devs.py check_third_party_licenses.py
+        language: python
+        pass_filenames: false
+        always_run: true
+
+      - id: module-credits
+        name: Community QoL module authors are in MODULE_CREDITS.md
+        description: |
+          Non-team author strings in Modules/external/<id>/module.lua
+          must have a matching MODULE_CREDITS.md row. See LICENSE.md.
+        entry: python bin/run_devs.py check_module_credits.py
+        language: python
+        pass_filenames: false
+        always_run: true
+
       - id: locale-parity
         name: Locale key parity, format specifiers, and duplicate keys
         description: |

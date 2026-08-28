@@ -55,6 +55,7 @@ There are **36** external modules. The full labeled catalog lives in the repo ([
 ## Tips
 
 * Start with a few modules (Repair, Fast Loot, Quest Tools) before enabling everything.
+* Open **Details** on a module to see who wrote it.
 * Bag Bar and similar tools use the same expression language as Bags — see [Search syntax](Bags-Search-Syntax).
 * Hold **Shift** on quest/gossip dialogs when Quest Tools is on and you want to handle the dialog yourself.
 
@@ -69,4 +70,5 @@ There are **36** external modules. The full labeled catalog lives in the repo ([
 
 * [OneWoW_QoL/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/README.md)
 * [OneWoW_QoL/MODULES.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/MODULES.md)
+* [MODULE_CREDITS.md](https://github.com/kellewic/OneWoW_Suite/blob/main/MODULE_CREDITS.md)
 * [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md)

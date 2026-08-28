@@ -3,6 +3,7 @@
 Catalog of toggleable features under `Modules/external/`. Each module is independent — enable only what you want in the QoL Features UI (`/1wqol`).
 
 Module authors: [DEVELOPERS.md](DEVELOPERS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
+Community credit: [MODULE_CREDITS.md](../MODULE_CREDITS.md) (in-game: each module's Details dialog).
 
 **36 modules** across 5 categories (matches `module.lua` `category` values in the Features UI).
 
@@ -182,6 +183,7 @@ Replaces the right-hand crafting orders table with Craftable now and Missing mat
 Displays a movable bar with clickable buttons for special quest items from your quest log. Shows cooldowns, charges, and supports sorting by quest or item name.
 
 - **Module id:** `questitembar` · **Folder:** `Modules/external/questitembar/` — [details](Modules/external/questitembar/README.md)
+- **Author:** Clew
 
 ## Social
 

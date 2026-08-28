@@ -76,7 +76,8 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 
 - Hard-coded English user-facing text (must use locale strings or Blizzard globals)
 - Breaking changes to shared suite APIs without discussion
-- New external library dependencies without discussion
+- New external library dependencies without discussion **and** a
+  [THIRD_PARTY.md](THIRD_PARTY.md) (or font license) row in the same change
 - Edits inside embedded `Libs/` folders (third-party vendored code)
 
 ### Before submitting
@@ -118,13 +119,24 @@ Original drop-in modules under `OneWoW_QoL/Modules/external/<id>/` are welcome.
 Follow [OneWoW_QoL/DEVELOPERS.md](OneWoW_QoL/DEVELOPERS.md). Submit them as a
 pull request so they can be reviewed and shipped with the suite.
 
+Set `author` in `module.lua` to **your name** (plain text). Players see it in
+the module's Details dialog. Leave it empty only if the module is OneWoW team
+work — empty means the OneWoW Development Team.
+
+Community modules keep your copyright in that folder. By opening a pull
+request you grant the OneWoW Development Team a license to ship and maintain
+the module as part of official OneWoW ([LICENSE.md](LICENSE.md)). We add your
+row to [MODULE_CREDITS.md](MODULE_CREDITS.md) and we do not strip your credit.
+
 ## License
 
-See [LICENSE.md](LICENSE.md). Copyright the OneWoW Development Team. All rights
+See [LICENSE.md](LICENSE.md). Copyright the OneWoW Development Team except
+community QoL modules in [MODULE_CREDITS.md](MODULE_CREDITS.md). All rights
 reserved. Third-party libraries: [THIRD_PARTY.md](THIRD_PARTY.md).
 
 All contributions must be compatible with that license. By submitting a pull
-request, you agree your work can be included under the same terms.
+request, you agree your work can be included under the same terms (QoL
+modules: you keep credit; the team may ship the module with the suite).
 
 ---
 

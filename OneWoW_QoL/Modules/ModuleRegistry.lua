@@ -24,6 +24,9 @@ local VALID_CATEGORIES = {
 
 local CATEGORY_ORDER = { "AUTOMATION", "INTERFACE", "SOCIAL", "COMBAT", "ECONOMY", "UTILITY" }
 
+-- Empty module.lua author = team credit and copyright (LICENSE.md).
+local TEAM_AUTHOR = "OneWoW Development Team"
+
 -- Module SDK entry point. Called from <module>/module.lua (the FIRST file in the
 -- module's TOC block). Derives the module's locale scope (ADDON_NAME .. "." .. id),
 -- caches its read-only locale view, marks it as the currently-loading module, and
@@ -47,6 +50,9 @@ function Registry:Register(moduleData)
     if not moduleData or not moduleData.id then return end
     if not moduleData.category or not VALID_CATEGORIES[moduleData.category] then
         moduleData.category = "UTILITY"
+    end
+    if type(moduleData.author) ~= "string" or moduleData.author == "" then
+        moduleData.author = TEAM_AUTHOR
     end
     if modules[moduleData.id] then return end
     modules[moduleData.id] = moduleData
