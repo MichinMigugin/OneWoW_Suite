@@ -1712,7 +1712,7 @@ function VendorPanel:GetJunkItemsDetailed()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, itemLink, quality, _, _, _, _, _, _, itemTexture, sellPrice, classID, subclassID = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, itemLink, quality, _, _, _, _, _, _, itemTexture, sellPrice, classID, subclassID = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if not itemName then
                         allCached = false
                         C_Item.RequestLoadItemDataByID(itemInfo.itemID)
@@ -1725,6 +1725,10 @@ function VendorPanel:GetJunkItemsDetailed()
                                 itemLevel = item:GetCurrentItemLevel() or 0
                                 actualItemLink = item:GetItemLink() or itemLink
                             end
+                        end
+                        if actualItemLink then
+                            local instanceSell = select(11, C_Item.GetItemInfo(actualItemLink))
+                            if instanceSell ~= nil then sellPrice = instanceSell end
                         end
 
                         if not self:IsItemInNeverSellList(itemInfo.itemID) then

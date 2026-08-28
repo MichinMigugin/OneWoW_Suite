@@ -382,6 +382,27 @@ function VPFilters.FormatMoney(amount)
     return formatted
 end
 
+--- C_Item.GetItemInfo for a live bag slot.
+--- Prefer the instance hyperlink so sell price matches OneWoW tooltips.
+--- GetItemInfo(itemID) is the unscaled template (old gear often shows copper
+--- here while the tooltip is gold).
+---@param itemInfo table
+---@param bag number|nil
+---@param slot number|nil
+function VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
+    local lookup = itemInfo.hyperlink
+    if not lookup and bag and slot then
+        lookup = C_Container.GetContainerItemLink(bag, slot)
+    end
+    if lookup then
+        local itemName, itemLink, quality, itemLevel, minLevel, itemType, itemSubType, stackCount, equipLoc, texture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent, itemDescription = C_Item.GetItemInfo(lookup)
+        if itemName then
+            return itemName, itemLink, quality, itemLevel, minLevel, itemType, itemSubType, stackCount, equipLoc, texture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent, itemDescription
+        end
+    end
+    return C_Item.GetItemInfo(itemInfo.itemID)
+end
+
 -- ============================================================
 -- Global exclusions + merchant-grid filtering
 -- ============================================================
@@ -941,7 +962,7 @@ function VendorPanel:SellJunkItems()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if itemName and sellPrice and sellPrice > 0 then
                         local isGray = quality == 0
                         local isMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
@@ -1113,12 +1134,11 @@ function VendorPanel:DestroyNextJunkItem()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if not self:IsItemInNeverSellList(itemInfo.itemID) and
                        not GetItemStatus():IsItemProtected(itemInfo.itemID) then
                         local isUserMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
                         local isGray = quality and quality == 0
-                        local classID, subclassID = select(12, C_Item.GetItemInfo(itemInfo.itemID))
                         local isGameJunk = (classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Junk)
                         local isIlvlGear = state.oneTimeItems.ilvlGear[itemInfo.itemID]
                         local isReagent = state.oneTimeItems.reagents[itemInfo.itemID]
@@ -1161,7 +1181,7 @@ function VendorPanel:DeleteAllNoValueJunk()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if not self:IsItemInNeverSellList(itemInfo.itemID) and
                        not GetItemStatus():IsItemProtected(itemInfo.itemID) then
                         local isUserMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
@@ -1215,7 +1235,7 @@ function VendorPanel:AddNonSoulboundReagents()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if itemName and sellPrice and sellPrice > 0 then
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
                         if not GetItemStatus():IsItemProtected(itemInfo.itemID) then
@@ -1253,7 +1273,7 @@ function VendorPanel:AddConsumables()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if itemName and sellPrice and sellPrice > 0 then
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
                         if not GetItemStatus():IsItemProtected(itemInfo.itemID) then
@@ -1288,7 +1308,7 @@ function VendorPanel:AddWhiteQuality()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if itemName and sellPrice and sellPrice > 0 then
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
                         if not GetItemStatus():IsItemProtected(itemInfo.itemID) then
@@ -1328,7 +1348,7 @@ function VendorPanel:AddGearBelowIlvl(targetIlvl)
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                     if itemName and sellPrice and sellPrice > 0 then
                         local itemLevel = 0
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
@@ -1399,7 +1419,7 @@ function VendorPanel:GetSearchMatches(expr, collectDetails)
                         itemIDs[itemInfo.itemID] = true
                         if detailLimit > 0 and #items < detailLimit then
                             local itemName, itemLink, _, _, _, _, _, _, _, itemTexture, sellPrice =
-                                C_Item.GetItemInfo(itemInfo.itemID)
+                                VPFilters.GetItemInfoForSlot(itemInfo, bag, slot)
                             if not itemName then
                                 C_Item.RequestLoadItemDataByID(itemInfo.itemID)
                                 itemName = "Item " .. itemInfo.itemID
@@ -1412,6 +1432,10 @@ function VendorPanel:GetSearchMatches(expr, collectDetails)
                                     itemLevel = item:GetCurrentItemLevel() or 0
                                     actualItemLink = item:GetItemLink() or itemLink
                                 end
+                            end
+                            if actualItemLink then
+                                local instanceSell = select(11, C_Item.GetItemInfo(actualItemLink))
+                                if instanceSell ~= nil then sellPrice = instanceSell end
                             end
                             items[#items + 1] = {
                                 itemID = itemInfo.itemID,
@@ -1518,7 +1542,7 @@ function VendorPanel:AddSoulboundEquipment()
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID and not inSet[itemInfo.itemID]
                    and not GetItemStatus():IsItemProtected(itemInfo.itemID) then
-                    local classID = select(12, C_Item.GetItemInfo(itemInfo.itemID))
+                    local classID = select(12, VPFilters.GetItemInfoForSlot(itemInfo, bag, slot))
                     local isEquipment = (classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor)
                     if isEquipment then
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)

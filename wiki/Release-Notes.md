@@ -5,6 +5,7 @@
 ### QoL
 #### Vendor Panel
 - Opening a vendor and hovering items stays smoother. The window no longer looks up every shop in the game for each item.
+- The sell list shows the same vendor price as the item tooltip, including old scaled gear.
 
 #### Minimap Button Collector
 - The enhanced OneWoW row can add optional Mail, Settings, and Portals launchers. Turn each on or off in collector settings.
