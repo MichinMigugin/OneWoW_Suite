@@ -26,8 +26,12 @@
 ---
 
 # Catalog
+## Lists
+- The card you have selected shows a blue bar on the left, so it stays obvious next to type colors.
+
 ## Journal
 - Instance cards show Transmog, Toy, Housing, and the rest of those tags when the list first appears. Opening a card no longer takes two clicks to fill the tags or the boss and item counts.
+- Quest loot rows show Completed or Not Completed. They no longer print the locale key name over the Type column.
 
 ---
 

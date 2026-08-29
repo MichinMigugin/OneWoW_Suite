@@ -25,6 +25,10 @@ local tinsert = tinsert
 --   vendor.quartermaster, ...). Today that drives the 1px edge color.
 --   Set atlas or texture on BORDER_DEFS[key] when custom frames ship under
 --   OneWoW/Media/OneWoW_Catalog/.
+-- Selection:
+--   Same 4px ACCENT_PRIMARY left bar as OneWoW_GUI:CreateSelectableCard.
+--   Type colors stay on the 1px edge; the bar is the cue that cannot be
+--   a raid green or city gold.
 --
 -- Expansion IDs:
 --   Journal cards use 1 = Classic ... 12 = Midnight.
@@ -389,6 +393,15 @@ function CardChrome.Attach(card, opts)
         borderTex:Hide()
         card.borderTex = borderTex
     end
+    if not card.selectedAccent then
+        local accent = card:CreateTexture(nil, "OVERLAY")
+        accent:SetPoint("TOPLEFT", card, "TOPLEFT", 0, 0)
+        accent:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 0, 0)
+        accent:SetWidth(4)
+        accent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        accent:Hide()
+        card.selectedAccent = accent
+    end
 end
 
 --- Fill, 1px edge, optional overlay. Persists borderKey / fill on the card
@@ -434,10 +447,14 @@ function CardChrome.ApplyRowChrome(card, state)
 
     if selected then
         card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        card.selectedAccent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        card.selectedAccent:Show()
     elseif hover then
         card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        card.selectedAccent:Hide()
     else
         ApplyBorderColor(card, card._borderKey)
+        card.selectedAccent:Hide()
     end
 
     if card.bgTex and card.bgTex:IsShown() then

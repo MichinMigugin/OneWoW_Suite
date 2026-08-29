@@ -370,7 +370,7 @@ function JournalData:DetermineItemStatus(itemID, itemData, specialType)
     end
 
     if specialType == "Quest" then
-        return collected and L["JOURNAL_QUEST_COMPLETED"] or L["JOURNAL_QUEST_NOT_COMPLETED"]
+        return collected and L["JOURNAL_STATUS_COMPLETED"] or L["JOURNAL_STATUS_NOT_COMPLETED"]
     end
 
     if specialType == "Mount" or specialType == "Pet" or specialType == "Toy"
