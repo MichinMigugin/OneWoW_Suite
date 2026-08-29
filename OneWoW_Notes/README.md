@@ -51,6 +51,7 @@ Annotate your zones and locations:
 ### OneWay Pins Tab
 Persistent map landmarks (bank, craft tables, vendors, and anything you mark):
 - Stay on the world map and minimap until you delete them
+- The tab defaults to This Map. The count under the list is Showing X of Y pins, so an empty list does not look like you have no pins. Switch Zone to All to see every pin.
 - Minimap pins stay on the landmark as you walk; pins outside the current zoom sit on the rim
 - Click a pin for a live waypoint that clears when you arrive; the icon stays
 - Add from this tab (Add Here or Find Location), Ctrl-Right on the world map by default (turn Map Click Menu off, or pick Ctrl-Right / Right, in OneWay Pins settings), your own unit frame, any NPC's target frame, Catalog, or an NPC note

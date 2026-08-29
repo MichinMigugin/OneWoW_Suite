@@ -37,6 +37,7 @@
 - Minimap pins stay on the landmark while you walk. Pins outside the current zoom sit on the rim.
 - Saving the same vendor, quest, or instance again does not create a second pin. Deleting that pin also removes leftover copies of the same location.
 - Opening the world map (Pin on a vendor, or the map with pins on it) no longer errors.
+- Zone defaults to This Map. The count under the list is Showing X of Y pins, so an empty list does not look like you have no pins. The list says No pins on this map when none match this zone.
 
 ---
 

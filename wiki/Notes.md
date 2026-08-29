@@ -55,6 +55,7 @@ Use the **minimize** button on the title bar (or double-click / Shift-click the 
 ### Maps and the list
 
 * Pins stay on the world map, minimap, and the OneWay Pins tab until you delete them
+* The tab defaults to **This Map**. The count under the list is **Showing X of Y pins**. An empty list means none on this zone, not that you have no pins. Switch Zone to **All** to see every pin. Search or storage filters that match nothing say No matching pins.
 * Minimap pins stay on the landmark as you walk. Pins outside the current zoom sit on the rim
 * Each row has **Go** (live waypoint) and **Show Map** (open that pin's zone and set a live waypoint; other pins stay visible)
 * The world map **Map Legend** can list OneWay Pins for the map you are viewing (OneWay Pins settings or the map button). Hover a name to highlight that pin. Opening the map hides pinned zone notes until you close it

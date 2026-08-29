@@ -16,6 +16,7 @@ local searchFilter = ""
 local mapDropdown
 local scrollChild
 local emptyMessage
+local listEmptyMessage
 local leftStatusText
 local detailWidgets = {}
 
@@ -42,9 +43,13 @@ end
 
 local function FilteredList()
     local out = {}
+    local total = 0
     for _, pin in pairs(ns.WayPins:GetAll()) do
-        if type(pin) == "table" and MatchesFilters(pin) then
-            tinsert(out, pin)
+        if type(pin) == "table" then
+            total = total + 1
+            if MatchesFilters(pin) then
+                tinsert(out, pin)
+            end
         end
     end
     sort(out, function(a, b)
@@ -55,7 +60,17 @@ local function FilteredList()
         end
         return za < zb
     end)
-    return out
+    return out, total
+end
+
+local function EmptyListCopy()
+    if searchFilter ~= "" or storageFilter ~= "All" then
+        return L["WAYPINS_NO_MATCH"]
+    end
+    if mapFilter == "current" then
+        return L["WAYPINS_MAP_PANEL_EMPTY"]
+    end
+    return L["WAYPINS_EMPTY"]
 end
 
 local function PinForPaint(pin)
@@ -109,7 +124,7 @@ end
 
 function ns.UI.RefreshWayPinsTab()
     if not scrollChild then return end
-    local list = FilteredList()
+    local list, total = FilteredList()
     for _, row in ipairs(listRows) do
         row:Hide()
     end
@@ -206,7 +221,19 @@ function ns.UI.RefreshWayPinsTab()
     end
     scrollChild:SetHeight(math.max(y, 1))
     if leftStatusText then
-        leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_WAYPINS"], #list))
+        leftStatusText:SetText(string.format(L["WAYPINS_SHOWING"], #list, total))
+    end
+    local emptyCopy = EmptyListCopy()
+    if listEmptyMessage then
+        listEmptyMessage:SetText(emptyCopy)
+        listEmptyMessage:SetShown(#list == 0)
+    end
+    if emptyMessage then
+        if #list == 0 then
+            emptyMessage:SetText(emptyCopy)
+        else
+            emptyMessage:SetText(L["WAYPINS_SELECT"])
+        end
     end
     PaintDetail()
 end
@@ -307,8 +334,17 @@ function ns.UI.CreateWayPinsTab(parent)
 
     emptyMessage = OneWoW_GUI:CreateFS(panels.detailPanel, 12)
     emptyMessage:SetPoint("CENTER")
+    emptyMessage:SetJustifyH("CENTER")
+    emptyMessage:SetWordWrap(true)
     emptyMessage:SetText(L["WAYPINS_SELECT"])
     emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    listEmptyMessage = OneWoW_GUI:CreateFS(panels.listScrollFrame, 12)
+    listEmptyMessage:SetPoint("CENTER")
+    listEmptyMessage:SetJustifyH("CENTER")
+    listEmptyMessage:SetWordWrap(true)
+    listEmptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    listEmptyMessage:Hide()
 
     local header = ns.UI.CreateDetailHeader(panels.detailPanel)
     detailWidgets.header = header
