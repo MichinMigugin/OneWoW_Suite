@@ -435,7 +435,6 @@ end
 -- Dev-only lifecycle trace command. Hardcoded English, mirroring the Bags
 -- /owblayout precedent; this is a developer chat tool, not user-facing UI.
 SLASH_ONEWOW_TRACE1 = "/1wtrace"
-SLASH_ONEWOW_TRACE2 = "/owtrace"
 SlashCmdList["ONEWOW_TRACE"] = function(msg)
     msg = (type(msg) == "string") and msg:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
     if msg == "on" then

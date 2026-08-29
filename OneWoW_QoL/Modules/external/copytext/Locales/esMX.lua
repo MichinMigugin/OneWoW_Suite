@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "esMX", {
 
     ["COPYTEXT_TITLE"] = "Copiar texto",
-    ["COPYTEXT_DESC"] = "Copia el texto visible de la información o de los elementos de interfaz a tu portapapeles. Usa /copytext (o /ct) para copiar lo que está bajo tu cursor.",
+    ["COPYTEXT_DESC"] = "Copia el texto visible de la información o de los elementos de interfaz a tu portapapeles. Usa /1wcopytext (o /1wct) para copiar lo que está bajo tu cursor.",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "Modo información",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "Al copiar, captura el texto de cualquier información visible bajo tu cursor.",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "Modo todo",

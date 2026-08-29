@@ -215,7 +215,7 @@ function LD:Dump()
     end
 
     if count == 0 then
-        print("    (no events — run /owblayout on before reproducing)")
+        print("    (no events — run /1wblayout on before reproducing)")
     end
 end
 
@@ -225,22 +225,22 @@ function LD:Clear()
     self.head = 0
 end
 
-SLASH_OWBLAYOUT1 = "/owblayout"
+SLASH_OWBLAYOUT1 = "/1wblayout"
 SlashCmdList["OWBLAYOUT"] = function(msg)
     msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
     if msg == "on" then
         LD:Clear()
         LD.enabled = true
-        print(PREFIX .. ": |cff00ff00enabled|r (ring cleared). Reproduce bug, then /owblayout dump")
+        print(PREFIX .. ": |cff00ff00enabled|r (ring cleared). Reproduce bug, then /1wblayout dump")
     elseif msg == "off" then
         LD.enabled = false
-        print(PREFIX .. ": disabled. /owblayout dump still works.")
+        print(PREFIX .. ": disabled. /1wblayout dump still works.")
     elseif msg == "clear" or msg == "reset" then
         LD:Clear()
         print(PREFIX .. ": ring cleared.")
     elseif msg == "dump" then
         LD:Dump()
     else
-        print(PREFIX .. ": usage: /owblayout on | off | clear | dump")
+        print(PREFIX .. ": usage: /1wblayout on | off | clear | dump")
     end
 end

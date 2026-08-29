@@ -4,7 +4,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "enUS", {
 
     ["COPYTEXT_TITLE"] = "Copy Text",
-    ["COPYTEXT_DESC"] = "Copies visible text from tooltips or UI elements to your clipboard. Use /copytext (or /ct) to copy what is under your cursor.",
+    ["COPYTEXT_DESC"] = "Copies visible text from tooltips or UI elements to your clipboard. Use /1wcopytext (or /1wct) to copy what is under your cursor.",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "Tooltip Mode",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "When copying, capture text from any visible tooltips under your cursor.",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "Anything Mode",

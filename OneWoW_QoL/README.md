@@ -64,7 +64,7 @@ Auction House and vendor convenience.
 
 Clipboard and text tools.
 
-- **Copy Text** — copy tooltip or UI text under the cursor (`/copytext`, `/ct`)
+- **Copy Text** — copy tooltip or UI text under the cursor (`/1wcopytext`, `/1wct`)
 
 ## Built-in (always available)
 

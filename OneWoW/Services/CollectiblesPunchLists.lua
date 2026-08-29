@@ -500,7 +500,7 @@ end
 function Collectibles.DumpPunchListDebug(cacheItemID)
     cacheItemID = tonumber(cacheItemID)
     if not cacheItemID then
-        PunchDebugPrint("hover a cache/chest tooltip, or pass itemID (e.g. /owpunch 257026)")
+        PunchDebugPrint("hover a cache/chest tooltip, or pass itemID (e.g. /1wpunch 257026)")
         return
     end
 
@@ -603,8 +603,8 @@ function Collectibles.DumpPunchListDebug(cacheItemID)
     end
 end
 
-SLASH_OW_PUNCH_DUMP1 = "/owpunch"
-SLASH_OW_PUNCH_DUMP2 = "/owpunchlist"
+SLASH_OW_PUNCH_DUMP1 = "/1wpunch"
+SLASH_OW_PUNCH_DUMP2 = "/1wpunchlist"
 SlashCmdList["OW_PUNCH_DUMP"] = function(msg)
     Collectibles.DumpPunchListDebug(ResolvePunchDumpTarget(msg))
 end

@@ -182,7 +182,7 @@ function OFD:Dump()
 	print(PREFIX .. " dump @ " .. format("%.2f", GetTime())
 		.. (self.enabled and " (recording on)" or " (recording off)"))
 	if self.head == 0 then
-		print("    (no events — run /owboverlay on, open guild bank, flash, then dump)")
+		print("    (no events — run /1wboverlay on, open guild bank, flash, then dump)")
 		return
 	end
 	-- Ring is circular; walk oldest→newest.
@@ -214,7 +214,7 @@ function OFD:Dump()
 	print(PREFIX .. " " .. count .. " events")
 end
 
-SLASH_OWBOVERLAY1 = "/owboverlay"
+SLASH_OWBOVERLAY1 = "/1wboverlay"
 SlashCmdList["OWBOVERLAY"] = function(msg)
 	msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
 	if msg == "on" then
@@ -222,17 +222,17 @@ SlashCmdList["OWBOVERLAY"] = function(msg)
 		OFD.live = true
 		OFD:Clear()
 		OFD:MarkEpoch("enable")
-		print(PREFIX .. ": |cff00ff00enabled|r (live + ring). Open guild bank, note flash time vs +offsets, then /owboverlay dump")
+		print(PREFIX .. ": |cff00ff00enabled|r (live + ring). Open guild bank, note flash time vs +offsets, then /1wboverlay dump")
 	elseif msg == "quiet" then
 		OFD.enabled = true
 		OFD.live = false
 		OFD:Clear()
 		OFD:MarkEpoch("enable")
-		print(PREFIX .. ": |cff00ff00enabled|r (ring only, no live spam). /owboverlay dump after repro")
+		print(PREFIX .. ": |cff00ff00enabled|r (ring only, no live spam). /1wboverlay dump after repro")
 	elseif msg == "off" then
 		OFD.enabled = false
 		OFD:RemoveSink()
-		print(PREFIX .. ": disabled. /owboverlay dump still works.")
+		print(PREFIX .. ": disabled. /1wboverlay dump still works.")
 	elseif msg == "mark" then
 		OFD:MarkEpoch("manual")
 		print(PREFIX .. ": epoch reset to now")
@@ -242,6 +242,6 @@ SlashCmdList["OWBOVERLAY"] = function(msg)
 	elseif msg == "dump" then
 		OFD:Dump()
 	else
-		print(PREFIX .. ": usage: /owboverlay on | quiet | off | mark | clear | dump")
+		print(PREFIX .. ": usage: /1wboverlay on | quiet | off | mark | clear | dump")
 	end
 end

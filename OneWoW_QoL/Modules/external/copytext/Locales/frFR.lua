@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "frFR", {
 
     ["COPYTEXT_TITLE"] = "Copier le texte",
-    ["COPYTEXT_DESC"] = "Copie le texte visible des infobulles ou des éléments d'interface dans votre presse-papiers. Utilisez /copytext (ou /ct) pour copier ce qui se trouve sous votre curseur.",
+    ["COPYTEXT_DESC"] = "Copie le texte visible des infobulles ou des éléments d'interface dans votre presse-papiers. Utilisez /1wcopytext (ou /1wct) pour copier ce qui se trouve sous votre curseur.",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "Mode infobulle",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "Lors de la copie, capture le texte de toutes les infobulles visibles sous votre curseur.",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "Mode tout",

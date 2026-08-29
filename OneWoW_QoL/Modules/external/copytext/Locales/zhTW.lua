@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "zhTW", {
 
     ["COPYTEXT_TITLE"] = "複製文字",
-    ["COPYTEXT_DESC"] = "將提示資訊或介面元素中的可見文字複製到剪貼簿。使用 /copytext（或 /ct）複製游標下的內容。",
+    ["COPYTEXT_DESC"] = "將提示資訊或介面元素中的可見文字複製到剪貼簿。使用 /1wcopytext（或 /1wct）複製游標下的內容。",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "提示資訊模式",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "複製時，從游標下任何可見的提示資訊中擷取文字。",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "任意模式",

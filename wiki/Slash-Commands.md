@@ -19,7 +19,6 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | [Bags](Bags) | `/1wbags` | Toggle the Bags UI |
 | [Notes](Notes) | `/1wn` | Open Notes in the hub |
 | [AltTracker](AltTracker) | `/1wat` | Open AltTracker in the hub |
-| [AltTracker](AltTracker) | `/1wat status` | Show the current season and lists Progress is tracking |
 | [Catalog](Catalog) | `/1wcat` | Open Catalog in the hub |
 | [Trackers](Trackers) | `/1wt` | Open Trackers in the hub |
 | [QoL](QoL) | `/1wqol` | Open QoL in the hub |
@@ -34,7 +33,7 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | Feature | Command | What it does |
 |---------|---------|----------------|
 | [DevTools](DevTool) | `/1wdt` | Toggle the DevTools window |
-| [DevTools](DevTool) | `/1wdt devmode` | Toggle the floating error list (Copy All dumps this session) |
+| [DevTools](DevTool) | `/1wdev` | Toggle DEVMODE (floating error list; Copy All dumps this session) |
 
 ### Shopping List extras
 
@@ -51,8 +50,8 @@ These require **QoL** loaded. Some only exist while that module is enabled.
 
 | Command | Module | What it does |
 |---------|--------|----------------|
-| `/bagbar` `/owbb` | Bag Bar | Toggle the Bag Bar module on or off |
-| `/copytext` `/ct` | Copy Text | Capture UI text under the cursor into the copy dialog (only while CopyText is enabled) |
+| `/1wbb` | Bag Bar | Toggle the Bag Bar module on or off |
+| `/1wcopytext` `/1wct` | Copy Text | Capture UI text under the cursor into the copy dialog (only while CopyText is enabled) |
 
 ## Related
 

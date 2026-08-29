@@ -14,12 +14,6 @@ local _, ns = ...
 
 ns.WhatsNewData = {
     highlights = {
-        { titleKey = "WHATS_NEW_H_VERSIONCHECK_TITLE", bodyKey = "WHATS_NEW_H_VERSIONCHECK_BODY" },
-        { titleKey = "WHATS_NEW_H_NAV_TITLE",          bodyKey = "WHATS_NEW_H_NAV_BODY" },
-        { titleKey = "WHATS_NEW_H_WAYPINS_TITLE",      bodyKey = "WHATS_NEW_H_WAYPINS_BODY" },
-        { titleKey = "WHATS_NEW_H_DATABASE_TITLE",     bodyKey = "WHATS_NEW_H_DATABASE_BODY" },
-        { titleKey = "WHATS_NEW_H_CRAFTORDERS_TITLE",  bodyKey = "WHATS_NEW_H_CRAFTORDERS_BODY" },
-        { titleKey = "WHATS_NEW_H_COLLECTOR_TITLE",    bodyKey = "WHATS_NEW_H_COLLECTOR_BODY" },
-        { titleKey = "MODULE_ALTTRACKER",              bodyKey = "WHATS_NEW_H_ALTTRACKER_BODY" },
+        { titleKey = "WHATS_NEW_H_SLASH_TITLE", bodyKey = "WHATS_NEW_H_SLASH_BODY" },
     },
 }

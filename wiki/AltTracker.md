@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **AltTracker** under [Manage Features](Getting-Started). Install the companion `OneWoW_AltTracker_*` data folders for full coverage.
 
-**Open:** `/1wat` (see [Slash commands](Slash-Commands)). `/1wat status` shows the current season and the raids, Mythic+ dungeons, world bosses, weeklies, and currencies Progress is tracking.
+**Open:** `/1wat` (see [Slash commands](Slash-Commands)).
 
 ---
 

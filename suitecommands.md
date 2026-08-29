@@ -5,7 +5,7 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 `OneWoW_GUI.DB:RegisterSlashCommand(...)` calls (excluding `Libs/` and
 `.wow_docs/`).
 
-**Last audited:** 2026-08-09
+**Last audited:** 2026-08-29
 
 > When you add, rename, or remove a slash command (or a subcommand), update
 > this file in the same change. See **Keeping this file current** at the bottom.
@@ -21,17 +21,17 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 
 | Addon / unit | Aliases |
 |---|---|
-| OneWoW (core) | `/1w` · debug: `/1wtrace` `/owtrace` · `/owlocale` · `/petooltip` `/owpetooltip` · `/owsc` `/1wsc` · `/owpunch` `/owpunchlist` |
+| OneWoW (core) | `/1w` · debug: `/1wtrace` · `/1wlocale` · `/1wpetooltip` · `/1wsc` · `/1wpunch` `/1wpunchlist` |
 | OneWoW_Notes | `/1wn` |
 | OneWoW_AltTracker | `/1wat` |
 | OneWoW_Catalog | `/1wcat` |
 | OneWoW_Trackers | `/1wt` |
-| OneWoW_QoL | `/1wqol` · BagBar: `/bagbar` `/owbb` · CopyText: `/copytext` `/ct` |
+| OneWoW_QoL | `/1wqol` · BagBar: `/1wbb` · CopyText: `/1wcopytext` `/1wct` |
 | OneWoW_DirectDeposit | `/1wdd` (`deposit` / `pause` / `stop`) |
 | OneWoW_ShoppingList | `/1wsl` |
-| OneWoW_Mail | `/1wmail` · debug: `/owmailtrace` `/1wmailtrace` |
-| OneWoW_Bags | `/1wbags` · debug: `/owbprof` `/owblayout` `/owboverlay` |
-| OneWoW_Utility_DevTool | `/1wdt` |
+| OneWoW_Mail | `/1wmail` · debug: `/1wmailtrace` |
+| OneWoW_Bags | `/1wbags` · debug: `/1wbprof` `/1wblayout` `/1wboverlay` |
+| OneWoW_Utility_DevTool | `/1wdt` · `/1wdev` |
 
 Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 `OneWoW_CatalogData_*` data packs.
@@ -48,13 +48,13 @@ Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 | Command | Kind | Description |
 |---|---|---|
 | `/1w` | User | Toggle the OneWoW hub window |
-| `/1wtrace` `/owtrace` | Debug | Lifecycle trace ring buffer |
-| `/owlocale` | Debug | Print locale coverage report to chat |
-| `/petooltip` `/owpetooltip` | Debug | Dump PredicateEngine tooltip debug for hovered / cursor / linked item |
-| `/owsc` `/1wsc` | Debug | Search catalog: reference lint, registered sources, former-name prune |
-| `/owpunch` `/owpunchlist` | Debug | Collectibles punch-list dump |
+| `/1wtrace` | Debug | Lifecycle trace ring buffer |
+| `/1wlocale` | Debug | Print locale coverage report to chat |
+| `/1wpetooltip` | Debug | Dump PredicateEngine tooltip debug for hovered / cursor / linked item |
+| `/1wsc` | Debug | Search catalog: reference lint, registered sources, former-name prune |
+| `/1wpunch` `/1wpunchlist` | Debug | Collectibles punch-list dump |
 
-### `/owsc` subcommands
+### `/1wsc` subcommands
 
 Named for the **search** catalog (`#token`, `SAVED(...)`, `CATEGORY(...)`), not
 the OneWoW_Catalog addon — that one owns `/1wcat`.
@@ -78,7 +78,7 @@ the OneWoW_Catalog addon — that one owns `/1wcat`.
 | `dump` | Print ring to chat |
 | _(none / other)_ | Print usage |
 
-### `/petooltip` args
+### `/1wpetooltip` args
 
 Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 `itemID` / item link.
@@ -142,7 +142,7 @@ Registered at file load (always available once QoL is loaded).
 
 | Command | Kind | Description |
 |---|---|---|
-| `/bagbar` `/owbb` | User | Toggle the BagBar module on/off |
+| `/1wbb` | User | Toggle the BagBar module on/off |
 
 ### Module: CopyText (`copytext/copytext.lua`)
 
@@ -150,7 +150,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/copytext` `/ct` | User | Capture UI text under the cursor into the copy dialog |
+| `/1wcopytext` `/1wct` | User | Capture UI text under the cursor into the copy dialog |
 
 ---
 
@@ -199,9 +199,9 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | Command | Kind | Description |
 |---|---|---|
 | `/1wmail` | User | Toggle the OneWoW Mail UI shell |
-| `/owmailtrace` `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring (on by default, ring 2048, session-only) |
+| `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring (on by default, ring 2048, session-only) |
 
-### `/owmailtrace` subcommands
+### `/1wmailtrace` subcommands
 
 | Args | Effect |
 |---|---|
@@ -221,11 +221,11 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | Command | Kind | Description |
 |---|---|---|
 | `/1wbags` | User | Toggle bags UI |
-| `/owbprof` | Debug | Bags performance profiler |
-| `/owblayout` | Debug | Layout refresh debug ring |
-| `/owboverlay` | Debug | Overlay-flash debug ring (guild bank, etc.) |
+| `/1wbprof` | Debug | Bags performance profiler |
+| `/1wblayout` | Debug | Layout refresh debug ring |
+| `/1wboverlay` | Debug | Overlay-flash debug ring (guild bank, etc.) |
 
-### `/owbprof` subcommands
+### `/1wbprof` subcommands
 
 | Args | Effect |
 |---|---|
@@ -235,7 +235,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | `dump` | Print profile table |
 | _(none / other)_ | Print usage |
 
-### `/owblayout` subcommands
+### `/1wblayout` subcommands
 
 | Args | Effect |
 |---|---|
@@ -245,7 +245,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | `dump` | Print ring |
 | _(none / other)_ | Print usage |
 
-### `/owboverlay` subcommands
+### `/1wboverlay` subcommands
 
 | Args | Effect |
 |---|---|
@@ -266,8 +266,9 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | Command | Kind | Description |
 |---|---|---|
 | `/1wdt` | Dev | Toggle DevTools main window |
+| `/1wdev` | Dev | Toggle DEVMODE (floating error list) |
 
-### Subcommands
+### `/1wdt` subcommands
 
 | Args | Effect |
 |---|---|

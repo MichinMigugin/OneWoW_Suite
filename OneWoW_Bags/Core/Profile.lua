@@ -96,22 +96,22 @@ function P:Dump()
     end
 end
 
-SLASH_OWBPROF1 = "/owbprof"
+SLASH_OWBPROF1 = "/1wbprof"
 SlashCmdList["OWBPROF"] = function(msg)
     msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
     if msg == "on" then
         P:Reset()
         P.enabled = true
-        print("|cff80c0ffOneWoW_Bags Profile:|r enabled (counters reset). Open the bank, then run /owbprof dump.")
+        print("|cff80c0ffOneWoW_Bags Profile:|r enabled (counters reset). Open the bank, then run /1wbprof dump.")
     elseif msg == "off" then
         P.enabled = false
-        print("|cff80c0ffOneWoW_Bags Profile:|r disabled. /owbprof dump still works.")
+        print("|cff80c0ffOneWoW_Bags Profile:|r disabled. /1wbprof dump still works.")
     elseif msg == "reset" then
         P:Reset()
         print("|cff80c0ffOneWoW_Bags Profile:|r counters reset.")
     elseif msg == "dump" then
         P:Dump()
     else
-        print("|cff80c0ffOneWoW_Bags Profile:|r usage: /owbprof on | off | reset | dump")
+        print("|cff80c0ffOneWoW_Bags Profile:|r usage: /1wbprof on | off | reset | dump")
     end
 end

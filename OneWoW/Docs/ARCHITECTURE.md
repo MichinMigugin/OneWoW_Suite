@@ -446,8 +446,7 @@ in-game — there is otherwise no visibility into the success path of dispatch.
 | `/1wtrace dump` | Print the buffer, oldest-first, as a `[+Δs] phase unit detail` timeline |
 | `/1wtrace` | Usage + current recording state |
 
-`/owtrace` is an alias. Strings are hardcoded English (dev tool, not user-facing
-UI — same precedent as Bags' `/owblayout`).
+Strings are hardcoded English (dev tool, not user-facing UI).
 
 **Capturing startup is the design constraint.** The whole orchestration
 (`RunStartupPhase` → `BringUp` → `LoadAddOn` hook → `RunManifestLoginPhase` →

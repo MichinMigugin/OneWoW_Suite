@@ -30,7 +30,7 @@ lifecycle root `OneWoW_Utility_DevTool` exposes colon hooks only (`OnAddonLoaded
 | Command | Description              |
 |---------|--------------------------|
 | `/1wdt` | Toggle DevTool window    |
-| `/1wdt devmode` | Toggle DEVMODE (floating error list) |
+| `/1wdev` | Toggle DEVMODE (floating error list) |
 
 The addon also registers in the **Addon Compartment** (game menu) for quick access.
 
@@ -73,7 +73,7 @@ Track and debug addon errors:
 - **Copy Error** — Copy selected error to clipboard
 - **Copy All** — Copy every distinct error from this session (repeats collapsed with a count) into one copy dialog
 - **Play Alert** — Optional sound on new errors
-- **DEVMODE** — Optional floating error list (including in combat) that appears when there are stored errors, including leftover ones. Left-click a row for details; right-click opens that error in this tab. **Copy All** is on the title bar. New errors highlight and can flash. Clear errors to hide it. Toggle from the Errors tab or `/1wdt devmode`.
+- **DEVMODE** — Optional floating error list (including in combat) that appears when there are stored errors, including leftover ones. Left-click a row for details; right-click opens that error in this tab. **Copy All** is on the title bar. New errors highlight and can flash. Clear errors to hide it. Toggle from the Errors tab or `/1wdev`.
 - **!BugGrabber** — When the standalone !BugGrabber addon is loaded, DevTool subscribes to its capture pipeline and shows the same errors here (with an in-tab notice). Disable !BugGrabber if you only want DevTool's own capture.
 
 ### Textures Tab

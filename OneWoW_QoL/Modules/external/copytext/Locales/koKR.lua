@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["COPYTEXT_TITLE"] = "텍스트 복사",
-    ["COPYTEXT_DESC"] = "툴팁이나 UI 요소의 보이는 텍스트를 클립보드로 복사합니다. /copytext(또는 /ct)를 사용하여 커서 아래에 있는 것을 복사하세요.",
+    ["COPYTEXT_DESC"] = "툴팁이나 UI 요소의 보이는 텍스트를 클립보드로 복사합니다. /1wcopytext(또는 /1wct)를 사용하여 커서 아래에 있는 것을 복사하세요.",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "툴팁 모드",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "복사할 때 커서 아래의 모든 보이는 툴팁에서 텍스트를 가져옵니다.",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "전체 모드",

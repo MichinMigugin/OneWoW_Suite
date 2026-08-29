@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "itIT", {
 
     ["COPYTEXT_TITLE"] = "Copia testo",
-    ["COPYTEXT_DESC"] = "Copia il testo visibile dalle descrizioni o dagli elementi dell'interfaccia negli appunti. Usa /copytext (o /ct) per copiare ciò che si trova sotto il cursore.",
+    ["COPYTEXT_DESC"] = "Copia il testo visibile dalle descrizioni o dagli elementi dell'interfaccia negli appunti. Usa /1wcopytext (o /1wct) per copiare ciò che si trova sotto il cursore.",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "Modalità descrizione",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "Durante la copia, cattura il testo da tutte le descrizioni visibili sotto il cursore.",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "Modalità tutto",

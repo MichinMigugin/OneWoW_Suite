@@ -533,6 +533,18 @@ function OneWoW_Utility_DevTool:OnPlayerLogin()
     end
 end
 
+function ns:ToggleDevMode()
+    local db = ns.db.global.errorDB
+    db.devMode = not db.devMode
+    ns:Print(db.devMode and L["ERR_DEVMODE_ON"] or L["ERR_DEVMODE_OFF"])
+    if db.devMode then
+        ns.ErrorFloat:ShowNow()
+    else
+        ns.ErrorFloat:Hide()
+    end
+    ns.ErrorFloat:SyncSettingsFromDB()
+end
+
 SLASH_ONEWOW_DEVTOOL1 = "/1wdt"
 SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     msg = (type(msg) == "string") and msg:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
@@ -545,23 +557,15 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
         return
     end
 
-    if msg == "devmode" then
-        local db = ns.db.global.errorDB
-        db.devMode = not db.devMode
-        ns:Print(db.devMode and L["ERR_DEVMODE_ON"] or L["ERR_DEVMODE_OFF"])
-        if db.devMode then
-            ns.ErrorFloat:ShowNow()
-        else
-            ns.ErrorFloat:Hide()
-        end
-        ns.ErrorFloat:SyncSettingsFromDB()
-        return
-    end
-
     if not ns.UI then
         ns:Print(L["MSG_UI_NOT_LOADED"])
         return
     end
 
     ns:ToggleMainWindow()
+end
+
+SLASH_ONEWOW_DEVMODE1 = "/1wdev"
+SlashCmdList["ONEWOW_DEVMODE"] = function()
+    ns:ToggleDevMode()
 end

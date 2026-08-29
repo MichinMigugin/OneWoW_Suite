@@ -222,7 +222,7 @@ function ns.UI.CreateSettingsTab(parent)
         {key = "po_toggles", label = "ESC settings: showSeason1 and showSeason2 toggles", auto = false, value = function() return "Portals settings card" end, file = "OneWoW/Core/Database.lua + OneWoW_QoL/UI/t-portals.lua"},
 
         {section = "Bags / Search"},
-        {key = "ba_bonus", label = "Update CURRENT_SEASON_BONUS_IDS for crafted/voidforged gear", auto = false, value = function() return "Dump bonus IDs from an S2 crafted or voidforged item via /petooltip" end, file = "OneWoW/Services/PredicateEngine.lua"},
+        {key = "ba_bonus", label = "Update CURRENT_SEASON_BONUS_IDS for crafted/voidforged gear", auto = false, value = function() return "Dump bonus IDs from an S2 crafted or voidforged item via /1wpetooltip" end, file = "OneWoW/Services/PredicateEngine.lua"},
         {key = "ba_label", label = "Season tooltip label (Midnight Season N)", auto = true, value = function() return "C_MythicPlus + EXPANSION_SEASON_NAME" end, file = "OneWoW/Services/PredicateEngine.lua"},
 
         {section = "Trackers"},

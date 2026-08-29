@@ -138,23 +138,22 @@ function MT:Dump()
     end
 end
 
-SLASH_OWMAILTRACE1 = "/owmailtrace"
-SLASH_OWMAILTRACE2 = "/1wmailtrace"
+SLASH_OWMAILTRACE1 = "/1wmailtrace"
 SlashCmdList["OWMAILTRACE"] = function(msg)
     msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
     if msg == "on" then
         MT:SetEnabled(true)
-        print(PREFIX .. ": |cff00ff00enabled|r (ring cleared). Reproduce, then /owmailtrace dump")
+        print(PREFIX .. ": |cff00ff00enabled|r (ring cleared). Reproduce, then /1wmailtrace dump")
     elseif msg == "off" then
         MT.enabled = false
-        print(PREFIX .. ": disabled. /owmailtrace dump still works.")
+        print(PREFIX .. ": disabled. /1wmailtrace dump still works.")
     elseif msg == "clear" or msg == "reset" then
         MT:Clear()
         print(PREFIX .. ": ring cleared.")
     elseif msg == "dump" then
         MT:Dump()
     else
-        print(PREFIX .. ": usage: /owmailtrace on | off | clear | dump  (recording "
+        print(PREFIX .. ": usage: /1wmailtrace on | off | clear | dump  (recording "
             .. (MT.enabled and "ON" or "OFF") .. ", default ON)")
     end
 end

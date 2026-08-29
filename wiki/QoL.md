@@ -15,8 +15,8 @@
 
 Module shortcuts (when QoL is loaded):
 
-* `/bagbar` / `/owbb` — toggle **Bag Bar**
-* `/copytext` / `/ct` — **Copy Text** (only while that module is enabled)
+* `/1wbb` — toggle **Bag Bar**
+* `/1wcopytext` / `/1wct` — **Copy Text** (only while that module is enabled)
 
 ## Tooltips
 

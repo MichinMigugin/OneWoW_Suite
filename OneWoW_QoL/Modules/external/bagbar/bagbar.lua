@@ -782,7 +782,7 @@ function BagBarModule:ShowContextMenu(anchor)
 end
 
 -- ============================================================================
--- Slash command: /bagbar  /owbb
+-- Slash command: /1wbb
 -- ============================================================================
 -- Toggles the BagBar module's enabled state. Registered at file-load time
 -- (outside OnEnable/OnDisable) so the command can always re-show a hidden bar.
@@ -804,6 +804,5 @@ local function ToggleBagBarModule()
     end
 end
 
-_G["SLASH_OWBAGBAR1"] = "/bagbar"
-_G["SLASH_OWBAGBAR2"] = "/owbb"
+_G["SLASH_OWBAGBAR1"] = "/1wbb"
 SlashCmdList["OWBAGBAR"] = ToggleBagBarModule

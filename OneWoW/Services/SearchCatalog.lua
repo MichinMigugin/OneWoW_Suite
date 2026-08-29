@@ -1425,7 +1425,7 @@ local function PrintPrune(apply, force)
     if not count then
         print(CMD_PREFIX .. ": |cFFFF5555prune skipped|r — these own expressions but are not loaded: "
             .. tconcat(blocked or {}, ", "))
-        print(CMD_PREFIX .. ": load them, or use |cFFFFFFFF/owsc prune apply force|r to prune anyway.")
+        print(CMD_PREFIX .. ": load them, or use |cFFFFFFFF/1wsc prune apply force|r to prune anyway.")
         return
     end
 
@@ -1440,7 +1440,7 @@ local function PrintPrune(apply, force)
         print(format("  %s(%s) |cFF888888— former name of '%s'|r", d.kind, d.name, d.owner or "?"))
     end
     if not apply then
-        print(CMD_PREFIX .. ": run |cFFFFFFFF/owsc prune apply|r to remove them.")
+        print(CMD_PREFIX .. ": run |cFFFFFFFF/1wsc prune apply|r to remove them.")
     end
 end
 
@@ -1450,8 +1450,7 @@ end
 -- SLASH_ONEWOW_<UPPER>1, so registering that addon as "catalog" would produce
 -- SLASH_ONEWOW_CATALOG1 and SlashCmdList["ONEWOW_CATALOG"] — exactly what this
 -- used to define, and one would have silently won.
-SLASH_ONEWOW_SEARCHCATALOG1 = "/owsc"
-SLASH_ONEWOW_SEARCHCATALOG2 = "/1wsc"
+SLASH_ONEWOW_SEARCHCATALOG1 = "/1wsc"
 SlashCmdList["ONEWOW_SEARCHCATALOG"] = function(msg)
     msg = strlower(strtrim(msg or ""))
 
@@ -1467,10 +1466,10 @@ SlashCmdList["ONEWOW_SEARCHCATALOG"] = function(msg)
         PrintPrune(true, true)
     else
         print(CMD_PREFIX .. ": usage:")
-        print("  |cFFFFFFFF/owsc lint|r — list broken, stale, and rule-less references")
-        print("  |cFFFFFFFF/owsc sources|r — list registered stores and how many expressions each sees")
-        print("  |cFFFFFFFF/owsc prune|r — show which former names are no longer referenced")
-        print("  |cFFFFFFFF/owsc prune apply|r — actually remove them")
-        print("  |cFFFFFFFF/owsc prune apply force|r — ignore the not-loaded-addon safety gate")
+        print("  |cFFFFFFFF/1wsc lint|r — list broken, stale, and rule-less references")
+        print("  |cFFFFFFFF/1wsc sources|r — list registered stores and how many expressions each sees")
+        print("  |cFFFFFFFF/1wsc prune|r — show which former names are no longer referenced")
+        print("  |cFFFFFFFF/1wsc prune apply|r — actually remove them")
+        print("  |cFFFFFFFF/1wsc prune apply force|r — ignore the not-loaded-addon safety gate")
     end
 end

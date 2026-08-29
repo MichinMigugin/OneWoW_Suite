@@ -235,6 +235,6 @@ Adds a junk management panel to vendor windows with item filtering and quick-sel
 
 ### Copy Text
 
-Copies visible text from tooltips or UI elements to your clipboard. Use /copytext (or /ct) to copy what is under your cursor.
+Copies visible text from tooltips or UI elements to your clipboard. Use /1wcopytext (or /1wct) to copy what is under your cursor.
 
 - **Module id:** `copytext` · **Folder:** `Modules/external/copytext/`

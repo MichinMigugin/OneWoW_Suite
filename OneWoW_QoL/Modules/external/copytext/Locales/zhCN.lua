@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "zhCN", {
 
     ["COPYTEXT_TITLE"] = "复制文本",
-    ["COPYTEXT_DESC"] = "将工具提示或界面元素中的可见文本复制到剪贴板。使用 /copytext（或 /ct）复制光标下的内容。",
+    ["COPYTEXT_DESC"] = "将工具提示或界面元素中的可见文本复制到剪贴板。使用 /1wcopytext（或 /1wct）复制光标下的内容。",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "工具提示模式",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "复制时，从光标下任何可见的工具提示中获取文本。",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "任意模式",

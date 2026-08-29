@@ -327,7 +327,7 @@ function Locale:PrintReport()
     end
 end
 
-SLASH_OWLOCALE1 = "/owlocale"
+SLASH_OWLOCALE1 = "/1wlocale"
 SlashCmdList["OWLOCALE"] = function()
     Locale:PrintReport()
 end

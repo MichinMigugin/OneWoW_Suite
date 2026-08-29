@@ -91,8 +91,8 @@ function CopyTextModule:ShowCopyDialog(title, text)
 end
 
 function CopyTextModule:OnEnable()
-    _G["SLASH_OWCOPYTEXT1"] = "/copytext"
-    _G["SLASH_OWCOPYTEXT2"] = "/ct"
+    _G["SLASH_OWCOPYTEXT1"] = "/1wcopytext"
+    _G["SLASH_OWCOPYTEXT2"] = "/1wct"
     SlashCmdList["OWCOPYTEXT"] = function()
         self:Capture()
     end

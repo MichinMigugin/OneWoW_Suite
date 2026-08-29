@@ -4196,8 +4196,7 @@ local function ResolveTooltipDumpTarget(msg)
     end
 end
 
-SLASH_PE_TOOLTIP_DUMP1 = "/petooltip"
-SLASH_PE_TOOLTIP_DUMP2 = "/owpetooltip"
+SLASH_PE_TOOLTIP_DUMP1 = "/1wpetooltip"
 SlashCmdList["PE_TOOLTIP_DUMP"] = function(msg)
     local itemID, bagID, slotID, hyperlink = ResolveTooltipDumpTarget(msg)
     if not itemID then

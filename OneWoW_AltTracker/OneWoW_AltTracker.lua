@@ -45,7 +45,7 @@ local function OnInitialize()
         ns.ApplyLanguage()
     end
 
-    local function slashHandler(msg) OneWoW_AltTracker:SlashCommandHandler(msg) end
+    local function slashHandler() OneWoW_AltTracker:SlashCommandHandler() end
     DB:RegisterSlashCommand("1wat", slashHandler)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_AltTracker, function(self)
@@ -95,12 +95,7 @@ local function OnEnable()
     OneWoW:RegisterMinimap("OneWoW_AltTracker", ns.L["CTX_OPEN_ALTTRACKER"], "alttracker", nil)
 end
 
-function OneWoW_AltTracker:SlashCommandHandler(msg)
-    local cmd = strtrim(msg or ""):lower()
-    if cmd == "status" then
-        ns.SeasonStatus:Show()
-        return
-    end
+function OneWoW_AltTracker:SlashCommandHandler()
     OneWoW.UI:Show("alttracker")
 end
 

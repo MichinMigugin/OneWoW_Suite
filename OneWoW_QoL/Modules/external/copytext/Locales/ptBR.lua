@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "ptBR", {
 
     ["COPYTEXT_TITLE"] = "Copiar texto",
-    ["COPYTEXT_DESC"] = "Copia o texto visível de dicas ou elementos da interface para a sua área de transferência. Use /copytext (ou /ct) para copiar o que está sob o seu cursor.",
+    ["COPYTEXT_DESC"] = "Copia o texto visível de dicas ou elementos da interface para a sua área de transferência. Use /1wcopytext (ou /1wct) para copiar o que está sob o seu cursor.",
     ["COPYTEXT_TOGGLE_TOOLTIPS"] = "Modo dica",
     ["COPYTEXT_TOGGLE_TOOLTIPS_DESC"] = "Ao copiar, captura o texto de quaisquer dicas visíveis sob o seu cursor.",
     ["COPYTEXT_TOGGLE_ANYTHING"] = "Modo tudo",
