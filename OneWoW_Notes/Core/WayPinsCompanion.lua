@@ -13,7 +13,7 @@ local IsControlKeyDown = IsControlKeyDown
 -- WayPinsCompanion
 -- ============================================================================
 -- List of OneWay Pins for the current map, docked to the right of a Zone Notes
--- pinned window (or filling it when Hide Zone Notes is on). Chrome copies the
+-- pinned window (or filling it when Show Zone Notes is off). Chrome copies the
 -- host note so the two boxes read as one. One companion per map.
 -- ============================================================================
 
@@ -41,6 +41,38 @@ local function HostHidesNote(host)
     end
     local zd = ns.Zones:GetZone(host.noteId)
     return Visual.Enabled() and zd and zd.hideZoneNote == true and zd.showWayPins ~= false
+end
+
+local function HostHidesScrollBar(host)
+    host = host or hostFrame
+    if not host or not host.noteId or not ns.Zones then
+        return false
+    end
+    local zd = ns.Zones:GetZone(host.noteId)
+    return zd and zd.hideScrollBar == true
+end
+
+local function ApplyScrollBarVisibility(host)
+    if not frame or not frame.scroll then
+        return
+    end
+    local bar = frame.scroll.ScrollBar
+    if not bar then
+        return
+    end
+    host = host or hostFrame
+    if host and hostFrame and host ~= hostFrame then
+        return
+    end
+    if HostHidesScrollBar(host or hostFrame) then
+        bar:Hide()
+        bar:SetAlpha(0)
+        bar:EnableMouse(false)
+    else
+        bar:SetAlpha(1)
+        bar:EnableMouse(true)
+        bar:Show()
+    end
 end
 
 local function EnsureFrame()
@@ -184,6 +216,16 @@ local function EnsureFrame()
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 8)
     frame.scroll = scroll
     frame.child = child
+    local bar = scroll.ScrollBar
+    if bar then
+        bar:HookScript("OnShow", function(myself)
+            if HostHidesScrollBar(hostFrame) then
+                myself:Hide()
+                myself:SetAlpha(0)
+                myself:EnableMouse(false)
+            end
+        end)
+    end
     child:EnableMouse(true)
     child:SetScript("OnMouseUp", function(myself, button)
         if button == "RightButton" then
@@ -318,6 +360,8 @@ function Companion:ApplyClusterLayout(host)
             hover:SetPoint("TOPRIGHT", host, "BOTTOMRIGHT", 0, 0)
         end
     end
+
+    ApplyScrollBarVisibility(host)
 end
 
 local function AcquireRow(parent)
@@ -417,6 +461,7 @@ function Companion:RefreshRows()
         y = y + ROW_HEIGHT
     end
     frame.child:SetHeight(math.max(y, 1))
+    ApplyScrollBarVisibility(hostFrame)
 end
 
 function Companion:CollapseHost()
@@ -504,6 +549,12 @@ function Companion:ResumeAfterMap()
     end
     wipe(restoreHosts)
     self:Sync()
+end
+
+--- Hide or show the pin-list scrollbar. Wheel scrolling still works when hidden.
+---@param host Frame|nil
+function Companion:ApplyScrollBarVisibility(host)
+    ApplyScrollBarVisibility(host)
 end
 
 function Companion:ShowDocked(host)

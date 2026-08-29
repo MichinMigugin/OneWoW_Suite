@@ -46,7 +46,7 @@ Turn **OneWay Pins** off in **Manage Features** (Settings) under Notes to hide t
 
 **Add to Zone Notes** creates or opens a floating zone window for that map and can show a **Show Pins** list beside it. When you enter the zone, that window can appear so every custom pin for the area is in front of you.
 
-Hover the window for **Show Pins** and **Hide Zone Notes**. Hide Zone Notes leaves only the pin list, so you do not need a blank notes pane. The hover bar sits under both boxes and sizes to what is showing. Opacity on the note, hover bar, and pin list stay in step.
+Hover the window for **Show Pins** and **Show Zone Notes**. Both are checked to show that pane. Uncheck Show Zone Notes to leave only the pin list, so you do not need a blank notes pane. **Hide Scrollbar** hides the pin list bar; the list still scrolls with the mouse wheel. The hover bar sits under both boxes and sizes to what is showing. Opacity on the note, hover bar, and pin list stay in step.
 
 Use the **minimize** button on the title bar (or double-click / Shift-click the bar) to shrink the window to the name only. The pin list hides with it. That setting is remembered the next time you enter the zone. The X still hides the window for 30 minutes.
 
@@ -94,7 +94,7 @@ QoL **Inspect Gear** can save inspect notes into Notes when that module is enabl
 
 * Use account storage for guild/raid knowledge you want on every alt; character storage for private alts-only notes.
 * Pin a short checklist note while doing a long questline. Use **OneWay Pins** for banks and tables you come back to.
-* **Add to Zone Notes** so a floating list of your pins can appear when you enter that zone. **Hide Zone Notes** if you only want that list.
+* **Add to Zone Notes** so a floating list of your pins can appear when you enter that zone. Uncheck **Show Zone Notes** if you only want that list. Check **Hide Scrollbar** if you want that list without the bar.
 * From Catalog Quests, click a giver or turn-in name to open that NPC here with its zone, map, and coordinates filled in. Right-click the map ID to save a OneWay Pin.
 * Turn on vendor collectible capture (Prompt or Automatic) when shopping for mounts/toys you still need.
 

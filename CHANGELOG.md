@@ -25,6 +25,8 @@
 
 ## Zone notes
 - Pinned zone windows have a minimize button on the title bar. The window shrinks to the name only, and it stays that way the next time you enter the zone. Double-click or Shift-click the title bar does the same.
+- Hover checkboxes are both "show" now: Show Pins and Show Zone Notes. Checked means that pane is visible. Uncheck Show Zone Notes to keep only the pin list.
+- Hide Scrollbar on that hover bar hides the pin list bar. The list still scrolls with the mouse wheel.
 
 ## OneWay Pins
 - Pins can have an optional description. Hover a pin in the zone list or map legend to see title, description, and coordinates. Pins saved from Catalog Journal, Vendors, or Quests mention Catalog on the tooltip.

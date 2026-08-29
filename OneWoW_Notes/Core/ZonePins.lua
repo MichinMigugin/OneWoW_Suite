@@ -391,7 +391,9 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             return
         end
 
-        if zd.hideZoneNote == true and zd.showWayPins ~= false then
+        if zd.hideZoneNote == true then
+            myself.contentFrame:Hide()
+            myself.todoMainFrame:Hide()
             if PinSupport.IsLayoutBlocked() then
                 PinSupport.RegisterDeferredPin(myself)
             else
@@ -642,24 +644,38 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     })
     pin.showWayPinsCB = showWayPinsCB
 
-    local hideNoteCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
-        label = L["WAYPINS_HIDE_NOTE"],
-        checked = zoneData.hideZoneNote == true,
+    local showNoteCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
+        label = L["WAYPINS_SHOW_NOTE"],
+        checked = zoneData.hideZoneNote ~= true,
         onClick = function(myself)
-            zoneData.hideZoneNote = myself:GetChecked() and true or false
+            zoneData.hideZoneNote = not myself:GetChecked()
             ns.Zones:SaveZone(zoneName, zoneData)
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:Sync()
+            end
             if pin.RefreshLayout then
                 pin:RefreshLayout()
-            elseif ns.WayPinsCompanion then
-                ns.WayPinsCompanion:ApplyClusterLayout(pin)
             end
         end,
     })
-    pin.hideNoteCB = hideNoteCB
+    pin.showNoteCB = showNoteCB
     if not ns.WayPinsVisual.Enabled() then
         showWayPinsCB:Hide()
-        hideNoteCB:Hide()
+        showNoteCB:Hide()
     end
+
+    local hideScrollCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
+        label = L["WAYPINS_HIDE_SCROLLBAR"],
+        checked = zoneData.hideScrollBar == true,
+        onClick = function(myself)
+            zoneData.hideScrollBar = myself:GetChecked() and true or false
+            ns.Zones:SaveZone(zoneName, zoneData)
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:ApplyScrollBarVisibility(pin)
+            end
+        end,
+    })
+    pin.hideScrollCB = hideScrollCB
 
     pin.ApplyClusterLayout = function(myself)
         if ns.WayPinsCompanion then
@@ -690,8 +706,9 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         }
         if ns.WayPinsVisual.Enabled() then
             tinsert(items, { control = showWayPinsCB })
-            tinsert(items, { control = hideNoteCB })
+            tinsert(items, { control = showNoteCB })
         end
+        tinsert(items, { control = hideScrollCB })
         PinSupport.LayoutHoverPanel(hoverPanel, items)
         hoverPanel:Show()
     end
@@ -992,11 +1009,11 @@ function ZonePins:ApplyWayPinsEnabled()
                 pin.showWayPinsCB:Hide()
             end
         end
-        if pin.hideNoteCB then
+        if pin.showNoteCB then
             if on then
-                pin.hideNoteCB:Show()
+                pin.showNoteCB:Show()
             else
-                pin.hideNoteCB:Hide()
+                pin.showNoteCB:Hide()
             end
         end
         if pin.RefreshLayout then
