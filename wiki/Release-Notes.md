@@ -53,6 +53,11 @@
 - Long achievement names stop before Difficulty. They no longer sit on top of H, M, or M+.
 - ATT Detected is a shield on the lower right of the Journal filter bar. Hover it for the extra-data note.
 
+#### Locations
+- Vendors lists 93 more shops, and 358 extra map pins on shops Catalog already had.
+- 212 more quests have a start pin.
+- Journal extras now include map coordinates on 5956 rows.
+
 ---
 
 *No user-facing changes this release for Home, QoL, Bags, Shopping List, Direct Deposit, or Mail.*

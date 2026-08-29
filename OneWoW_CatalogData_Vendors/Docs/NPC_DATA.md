@@ -24,7 +24,9 @@ NpcDB covers those IDs. Disabling this pack must not blank quest pins.
    Warehouse shop groups, profession/item children, CollectableSourceVendorSparse,
    Creature identity (displayID / title → category, then specials / housing),
    and QuestDB pins on
-   **vendor IDs only**. Wowhead `npcs/` is a last-fill shelf (not harvested yet).
+   **vendor IDs only**. Other HandyNotes extract gap-fills missing pins and can
+   add a shop row we do not already have. Wowhead `npcs/` is a last-fill shelf
+   (not harvested yet).
 2. **Live scan** — `VendorScanner` via `OneWoW.Merchant` gap-fills the vendor
    the player is standing at. It unions stock (never deletes static items a
    filtered window hid), writes the current map pin, and applies type rules:
@@ -61,7 +63,7 @@ One keyed row per creature. Field order is `NPC_KEY_ORDER` in OneWoW_Workspace
 | Group | Keys | Source today |
 | --- | --- | --- |
 | Identity | `npcID`, `expansion`, `displayID`, `category`, `roles` | Warehouse Sources + Creature.csv. Specials (Quartermaster, Reputation, PvP, Guild, Delve) outrank housing/Decor, which outranks leftover titles. Names come from the tooltip queue at runtime (locale-safe). |
-| Location | `locations[mapID] = { x, y, source }` (0–100) | Warehouse coords; QuestDB start/end pins if the ID is already a vendor. Zone names fill from `C_Map` at runtime. |
+| Location | `locations[mapID] = { x, y, source }` (0–100) | Warehouse coords; QuestDB start/end pins if the ID is already a vendor; Other HandyNotes extract fills a missing map pin only. Zone names fill from `C_Map` at runtime. Other-filled pins omit `source`. |
 | Stock | `items[itemID] = { cost, currencies, source }` | Warehouse children / linked item IDs; CollectableSourceVendorSparse. |
 
 `NpcVendor` is not on Wago 12.1. Do not wait for it.
@@ -71,5 +73,6 @@ One keyed row per creature. Field order is `NPC_KEY_ORDER` in OneWoW_Workspace
 ```bash
 # from OneWoW_Workspace
 python bin/catalog_data_status.py npcs
+python bin/other_addon_ingest.py extract
 python bin/npc_split.py emit
 ```

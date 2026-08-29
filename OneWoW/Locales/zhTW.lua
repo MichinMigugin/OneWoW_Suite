@@ -183,7 +183,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_WAYPINS_TITLE"] = "新功能 - OneWay Pins",
     ["WHATS_NEW_H_WAYPINS_BODY"] = "儲存銀行、製作台、商人以及任何你還會再去的地標。圖釘用你自己的圖示留在世界地圖與小地圖上。打開 Notes >> OneWay Pins，或世界地圖上的 OneWoW 圖釘按鈕。右鍵自己的單位框架可在腳下插針，右鍵任何 NPC 的目標框架可釘住該 NPC。尋找地點可搜尋區域內的 NPC。新增至區域筆記可在你進入該區域時彈出圖釘清單。隱藏區域筆記則只留下該清單。小地圖圖釘動畫預設關閉。在功能管理的 Notes 下開關 OneWay Pins。地圖、點擊與大小選項在 OneWay Pins 設定面板中。可在該面板關閉地圖點擊選單。開啟時，從世界地圖新增預設為 Ctrl-右鍵。",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "資料庫已更新",
-    ["WHATS_NEW_H_DATABASE_BODY"] = "Catalog 任務已更新到艾澤拉斯至至暗之夜（更新檔 12.1）。每個任務都包含我們現有的 NPC、任務文字和其他資訊。",
+    ["WHATS_NEW_H_DATABASE_BODY"] = "Catalog 內容更多了。Vendors 新增 93 間商店和 358 個地圖標記。又有 212 個任務有了起始標記。Journal 額外條目中現有 5956 行帶地圖座標。",
     ["WHATS_NEW_H_COLLECTOR_TITLE"] = "QoL - 小地圖按鈕收集器",
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "OneWoW 小地圖列可加入 Mail、Settings 和 Portals 按鈕。在收集器設定中分別開關。已載入 Mail 時，右鍵 OneWoW 圖示也可開啟 Mail。",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "更新提示",

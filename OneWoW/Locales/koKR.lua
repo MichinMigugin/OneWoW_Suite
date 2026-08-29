@@ -183,7 +183,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_WAYPINS_TITLE"] = "신규 기능 - OneWay Pins",
     ["WHATS_NEW_H_WAYPINS_BODY"] = "은행, 제작대, 상인 등 다시 찾을 장소를 저장합니다. 핀은 직접 고른 아이콘으로 세계 지도와 미니맵에 남습니다. Notes >> OneWay Pins 탭이나 세계 지도의 OneWoW 핀 단추에서 엽니다. 자기 유닛 프레임을 오른쪽 클릭하면 발밑에 핀을 놓고, NPC 대상 프레임을 오른쪽 클릭하면 그 NPC를 고정합니다. 위치 찾기로 지역 안 NPC를 찾습니다. 지역 메모에 추가는 그 지역에 들어갈 때 핀 목록을 띄울 수 있습니다. 지역 메모 숨기기는 그 목록만 남깁니다. 미니맵 핀 애니메이션은 기본으로 꺼져 있습니다. 기능 관리의 Notes에서 OneWay Pins를 켜거나 끕니다. 지도, 클릭, 크기 옵션은 OneWay Pins 설정 패널에 있습니다. 지도 클릭 메뉴는 그 패널에서 끌 수 있습니다. 켜져 있으면 세계 지도에서 추가는 기본이 Ctrl-오른쪽입니다.",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "데이터베이스 업데이트",
-    ["WHATS_NEW_H_DATABASE_BODY"] = "Catalog 퀘스트가 오리지널부터 한밤(패치 12.1)까지 최신입니다. 각 퀘스트에 우리가 가진 NPC, 퀘스트 텍스트, 그 밖의 정보가 들어 있습니다.",
+    ["WHATS_NEW_H_DATABASE_BODY"] = "Catalog이 늘었습니다. Vendors에 상점 93곳과 지도 핀 358개가 추가되었습니다. 퀘스트 212개에 시작 핀이 생겼습니다. Journal 엑스트라 5956행에 지도 좌표가 들어갔습니다.",
     ["WHATS_NEW_H_COLLECTOR_TITLE"] = "QoL - 미니맵 버튼 수집기",
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "OneWoW 미니맵 줄에 Mail, Settings, Portals 단추를 넣을 수 있습니다. 수집기 설정에서 각각 켜고 끕니다. Mail이 켜져 있으면 OneWoW 아이콘을 오른쪽 클릭해 Mail 열기도 됩니다.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "업데이트 알림",
