@@ -341,6 +341,7 @@ local function BuildContent(container, onRelayout)
             rightInset = 0,
             grow = true,
             emptyText = L["NO_ITEMS"],
+            sortKey = "bagbar:manual",
             getEntries = function()
                 return ItemTableEntries(GetSettings().manualItems)
             end,
@@ -478,6 +479,7 @@ local function BuildContent(container, onRelayout)
             rightInset = 0,
             grow = true,
             emptyText = L["NO_ITEMS"],
+            sortKey = "bagbar:blacklist",
             getEntries = function()
                 return ItemTableEntries(GetSettings().blacklist)
             end,

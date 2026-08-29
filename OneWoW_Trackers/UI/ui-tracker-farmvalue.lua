@@ -695,6 +695,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
         addText = ADD,
         emptyText = L["NO_ITEMS"],
         drop = { text = L["DRAG_ITEM_HERE"] },
+        sortKey = "trackers:farmvalue",
         getEntries = function()
             local ids, counts = TFV:GetSortedIdsAndCounts(list)
             local entries = {}

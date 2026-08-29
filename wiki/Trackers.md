@@ -28,7 +28,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 * Track unbound bag items with quantity, unit price, and total value
 * Session snapshot mode ("count from now") or full bag totals
-* Watchlist you curate, or every unbound stack in bags
+* Watchlist you curate, or every unbound stack in bags. Sort the watchlist editor by name or item ID.
 * Pricing follows QoL > Tooltips > Value (Auction House and optional TradeSkillMaster)
 
 ### Settings

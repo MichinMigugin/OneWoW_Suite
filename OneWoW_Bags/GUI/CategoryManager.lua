@@ -36,7 +36,7 @@ local max, floor = math.max, math.floor
 local pairs, ipairs = pairs, ipairs
 local strtrim = strtrim
 local tonumber, format = tonumber, format
-local tinsert, sort = tinsert, sort
+local tinsert = tinsert
 local C_Timer = C_Timer
 local GameTooltip = GameTooltip
 
@@ -1724,7 +1724,14 @@ function CatMgrUI:RefreshRight()
     addItemsLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     addItemsLbl:SetText(L["ADDED_ITEMS"])
     addItemsLbl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yPos = yPos - 16
+    local sortDrop = OneWoW_GUI:CreateItemListSortDropdown(rightTopWrapper, {
+        sortKey = "bags:categoryAdded",
+        onChange = function()
+            CatMgrUI:RefreshRight()
+        end,
+    })
+    sortDrop:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, yPos + 2)
+    yPos = yPos - 26
 
     local addDescLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addDescLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
@@ -1825,16 +1832,30 @@ function CatMgrUI:RefreshRight()
     if isCustom and catData and catData.items then
         for idStr in pairs(catData.items) do
             local id = tonumber(idStr)
-            if id then tinsert(allItems, { id = id, isCustom = true }) end
+            if id then
+                C_Item.RequestLoadItemDataByID(id)
+                tinsert(allItems, {
+                    id = id,
+                    label = C_Item.GetItemNameByID(id) or ("Item " .. id),
+                    isCustom = true,
+                })
+            end
         end
     end
     if catMod.addedItems then
         for idStr in pairs(catMod.addedItems) do
             local id = tonumber(idStr)
-            if id then tinsert(allItems, { id = id, isCustom = false }) end
+            if id then
+                C_Item.RequestLoadItemDataByID(id)
+                tinsert(allItems, {
+                    id = id,
+                    label = C_Item.GetItemNameByID(id) or ("Item " .. id),
+                    isCustom = false,
+                })
+            end
         end
     end
-    sort(allItems, function(a, b) return a.id < b.id end)
+    OneWoW_GUI:SortItemEntries(allItems, "bags:categoryAdded")
 
     if #allItems == 0 then
         local emptyLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1863,7 +1884,7 @@ function CatMgrUI:RefreshRight()
             nameTxt:SetPoint("LEFT", icon, "RIGHT", 6, 0)
             nameTxt:SetPoint("RIGHT", row, "RIGHT", -72, 0)
             nameTxt:SetJustifyH("LEFT")
-            nameTxt:SetText(C_Item.GetItemNameByID(itemID) or ("Item " .. itemID))
+            nameTxt:SetText(itemEntry.label or ("Item " .. itemID))
             nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local captItemID = itemID

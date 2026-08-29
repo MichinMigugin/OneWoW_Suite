@@ -29,6 +29,8 @@ local DEFAULTS = {
     },
     lastModuleTab = "home",
     lastSubTabs = {},
+    -- Per item-ID list display sort ("name" | "id"). Missing key = name.
+    itemListSort = {},
     -- Per-section ordered favorite sub-tab ids (hub row-2 pins).
     subTabFavorites = {},
     debugTrace = false,

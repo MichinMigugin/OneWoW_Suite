@@ -2,6 +2,11 @@
 
 - **Status**: Draft
 
+### Item lists
+- Sort item-ID lists by name or item ID. Each list keeps its own choice: Direct Deposit keep and auto-deposit, Bag Bar manual and blacklist, Auto Open blacklist, Bags category added items, and the Farm Value watchlist editor.
+
+---
+
 ### QoL
 #### Fixes
 - Crafting Orders starts off. Turning it off keeps it off on every character.
@@ -9,7 +14,7 @@
 
 ---
 
-*No user-facing changes this release for Home, Notes, Catalog, Mail, AltTracker, Shopping List, Bags, DevTool, Trackers, or Direct Deposit.*
+*No user-facing changes this release for Home, Notes, Catalog, Mail, AltTracker, Shopping List, or DevTool.*
 
 ---
 

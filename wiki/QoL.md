@@ -28,11 +28,11 @@ QoL has a **Tooltips** tab (not a module toggle). **Item Tracker** adds two bloc
 
 ### Automation
 
-Hands-off helpers: **Auto Repair**, **Fast Loot**, **Auto Mount**, **Auto Open** (containers; skips bank/mail/vendor and locked items), **Fast Forward** (skip cinematics; hold a modifier to watch), **Quest Tools** (accept/turn-in/gossip; Shift to skip), **Untrack Completed Achievements**, **Screenshot On Achievement**.
+Hands-off helpers: **Auto Repair**, **Fast Loot**, **Auto Mount**, **Auto Open** (containers; skips bank/mail/vendor and locked items; blacklist sortable by name or item ID), **Fast Forward** (skip cinematics; hold a modifier to watch), **Quest Tools** (accept/turn-in/gossip; Shift to skip), **Untrack Completed Achievements**, **Screenshot On Achievement**.
 
 ### Interface
 
-UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel** (zone notes and OneWay Pins for this map), **Bag Bar** (items matched by [search expressions](Bags-Search-Syntax)), **Quest Item Bar**, **Professions Panel**, **Crafting Orders** (off until you turn it on in Features; Craftable now / Missing mats / Recipe Unlearned; starts off if No Mats No Make or PatronOffers is enabled, and you can still turn One UI on; WoW UI switch and a gear to Features on the order tabs), **Character Info Sheet**, **Coords Display**, **Cursor Enhancer**, **Frame Mover**, combat-error spam filter, **Icon Browser** (searchable icon picker for macros, bank tabs, and transmog outfits), **Inspect Gear**, **LFG Lockouts**, minimap/world map tools, **Minimap Button Collector**, **Player Mounts**, **Prey Hunt Bar**, and more.
+UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel** (zone notes and OneWay Pins for this map), **Bag Bar** (items matched by [search expressions](Bags-Search-Syntax); manual and blacklist lists sortable by name or item ID), **Quest Item Bar**, **Professions Panel**, **Crafting Orders** (off until you turn it on in Features; Craftable now / Missing mats / Recipe Unlearned; starts off if No Mats No Make or PatronOffers is enabled, and you can still turn One UI on; WoW UI switch and a gear to Features on the order tabs), **Character Info Sheet**, **Coords Display**, **Cursor Enhancer**, **Frame Mover**, combat-error spam filter, **Icon Browser** (searchable icon picker for macros, bank tabs, and transmog outfits), **Inspect Gear**, **LFG Lockouts**, minimap/world map tools, **Minimap Button Collector**, **Player Mounts**, **Prey Hunt Bar**, and more.
 
 ### Social
 

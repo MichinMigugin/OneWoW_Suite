@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("enUS", {
     ["NO_MACROS"] = "No macros",
     ["GROW_DIRECTION"] = "Grow Direction",
     ["ITEM_ID"] = "Item ID:",
+    ["SORT_BY_ITEM_ID"] = "Item ID",
     ["NEW_CATEGORY"] = "New Category",
     ["OPEN_SETTINGS"] = "Open Settings",
     ["TYPE_S"] = "Type: %s",

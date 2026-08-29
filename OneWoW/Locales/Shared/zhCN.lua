@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["NO_MACROS"] = "没有宏",
     ["GROW_DIRECTION"] = "扩展方向",
     ["ITEM_ID"] = "物品 ID：",
+    ["SORT_BY_ITEM_ID"] = "物品 ID",
     ["NEW_CATEGORY"] = "新建分类",
     ["OPEN_SETTINGS"] = "打开设置",
     ["TYPE_S"] = "类型：%s",

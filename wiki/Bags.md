@@ -24,7 +24,7 @@
 
 * Built-in groups (equipment, consumables, reagents, recipes, junk, and more)
 * **Custom categories** — your own rules, including search expressions
-* Pin specific items into a category; drag-and-drop where the UI allows
+* Pin specific items into a category; drag-and-drop where the UI allows. Sort those pinned items by name or item ID.
 * Optional special rows such as **Recent Items** and junk handling
 
 Category **search rules** use the same language as the search bar — see [Search syntax](Bags-Search-Syntax).

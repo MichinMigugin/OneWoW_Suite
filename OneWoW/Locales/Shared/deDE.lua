@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("deDE", {
     ["NO_MACROS"] = "Keine Makros",
     ["GROW_DIRECTION"] = "Wachstumsrichtung",
     ["ITEM_ID"] = "Gegenstands-ID:",
+    ["SORT_BY_ITEM_ID"] = "Gegenstands-ID",
     ["NEW_CATEGORY"] = "Neue Kategorie",
     ["OPEN_SETTINGS"] = "Einstellungen öffnen",
     ["TYPE_S"] = "Typ: %s",

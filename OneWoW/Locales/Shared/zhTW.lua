@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("zhTW", {
     ["NO_MACROS"] = "沒有巨集",
     ["GROW_DIRECTION"] = "延伸方向",
     ["ITEM_ID"] = "物品 ID：",
+    ["SORT_BY_ITEM_ID"] = "物品 ID",
     ["NEW_CATEGORY"] = "新增分類",
     ["OPEN_SETTINGS"] = "開啟設定",
     ["TYPE_S"] = "類型：%s",

@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("frFR", {
     ["NO_MACROS"] = "Aucune macro",
     ["GROW_DIRECTION"] = "Sens d'expansion",
     ["ITEM_ID"] = "ID de l'objet :",
+    ["SORT_BY_ITEM_ID"] = "ID de l'objet",
     ["NEW_CATEGORY"] = "Nouvelle catégorie",
     ["OPEN_SETTINGS"] = "Ouvrir les réglages",
     ["TYPE_S"] = "Type : %s",

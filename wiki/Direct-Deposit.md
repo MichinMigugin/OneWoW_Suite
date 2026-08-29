@@ -17,7 +17,7 @@
 
 ## Item auto-deposit
 
-* Build a list by item ID, drag-and-drop, or **quick-add keybindings** while hovering a bag item
+* Build a list by item ID, drag-and-drop, or **quick-add keybindings** while hovering a bag item. Sort the list by name or item ID.
 * Per-item destination: Warband Bank, Personal Bank, or Guild Bank
 * Deposits run when you open a matching bank
 * **Deposit Now** or `/1wdd deposit` for an on-demand sweep; `/1wdd pause` or `stop` to halt mid-run
@@ -30,7 +30,7 @@ Optional: when a bank opens, deposit every warbound item from bags into the Warb
 Keep exceptions:
 
 * **Keep by Keyword** — expression like `#potion | #flask` (same language as [Bags search](Bags-Search-Syntax))
-* **Keep Specific Items** — always leave those item IDs in bags
+* **Keep Specific Items** — always leave those item IDs in bags. Sort that list by name or item ID.
 
 ---
 

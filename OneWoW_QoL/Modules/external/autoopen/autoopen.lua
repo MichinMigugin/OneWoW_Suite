@@ -194,6 +194,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
             emptyText = L["NO_ITEMS"],
             drop = { text = L["DRAG_ITEM_HERE"] },
             height = 120,
+            sortKey = "autoopen:blacklist",
             getEntries = BuildBlacklistEntries,
             onAdd = function(itemID)
                 AO:AddToBlacklist(itemID, true)

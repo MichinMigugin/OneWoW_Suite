@@ -945,6 +945,7 @@ local list = OneWoW_GUI:CreateEntryList(parent, {
     end,
     onRemove = function(id) Remove(id) end,
     -- optional: createRow(row, entry, api) -> height; api.RequestRefresh / IsEnabled
+    sortKey = "bagbar:blacklist", -- optional Name / Item ID toolbar; per-list preference
 })
 list:Refresh()
 list:SetEnabled(true)
@@ -959,6 +960,7 @@ local newY, editor = OneWoW_GUI:CreateItemListEditor(parent, {
     getEntries = function() ... end,
     onAdd = function(value) ... end,
     onRemove = function(id) ... end,
+    sortKey = "autoopen:blacklist", -- forwarded to the inner entry list
     -- optional: onClearAll / clearText for a Clear footer under the list
 })
 editor:SetEnabled(moduleEnabled)
@@ -967,6 +969,20 @@ editor:Refresh()
 
 `CreateItemListEditor` returns `(newYOffset, handle)`. Grow lists change height on
 refresh; Features detail panels typically rebuild on toggle, so stacking below is fine.
+
+`sortKey` (e.g. `"bagbar:blacklist"`) adds a Name / Item ID dropdown on that list
+and stores the choice in core `itemListSort[sortKey]` (default name). Bespoke
+lists (Bags category added items) call the same helpers:
+
+```lua
+OneWoW_GUI:GetItemListSort(listKey)           -- "name" | "id"
+OneWoW_GUI:SetItemListSort(listKey, "id")
+OneWoW_GUI:SortItemEntries(entries, listKey)  -- needs entry.id + entry.label
+local drop = OneWoW_GUI:CreateItemListSortDropdown(parent, {
+    sortKey = listKey,
+    onChange = function() list:Refresh() end,
+})
+```
 
 ### Status dot
 ```lua

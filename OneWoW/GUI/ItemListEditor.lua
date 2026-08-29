@@ -4,8 +4,10 @@
 -- CreateValueAddRow  — label + input + Add + optional chip drop
 -- CreateEntryList    — list panel (grow or fixed+scroll), default/custom rows
 -- CreateItemListEditor — thin composite (chip add-row + grow/fixed list + Clear)
+-- Item-list sort     — Get/Set/SortItemEntries + sortKey toolbar (name | id)
 --
--- Callers own data; these only own layout, theme, enable/disable, and refresh.
+-- Callers own data; these only own layout, theme, enable/disable, refresh, and
+-- optional per-list display sort.
 -- ============================================================================
 
 local OneWoW_GUI = OneWoW_GUI
@@ -16,6 +18,8 @@ local tonumber = tonumber
 local tostring = tostring
 local wipe = wipe
 local tinsert = tinsert
+local sort = sort
+local strcmputf8i = strcmputf8i
 
 local Constants = OneWoW_GUI.Constants
 local GUI = Constants.GUI
@@ -59,6 +63,114 @@ local function ParseInputValue(kind, raw)
         return text
     end
     return nil
+end
+
+local function SharedL()
+    return OneWoW.Locale:GetTable("shared")
+end
+
+local function ItemListSortStore()
+    return OneWoW:GetCoreGlobal().itemListSort
+end
+
+--- Display sort for one item-ID list. Missing key is name.
+---@param listKey string
+---@return string mode "name"|"id"
+function OneWoW_GUI:GetItemListSort(listKey)
+    local value = ItemListSortStore()[listKey]
+    if value == "id" then
+        return "id"
+    end
+    return "name"
+end
+
+--- Persist display sort for one item-ID list.
+---@param listKey string
+---@param value string "name"|"id"
+function OneWoW_GUI:SetItemListSort(listKey, value)
+    if value == "id" then
+        ItemListSortStore()[listKey] = "id"
+    else
+        ItemListSortStore()[listKey] = "name"
+    end
+end
+
+--- Sort an entry array in place by the list's saved Name / Item ID preference.
+---@param entries table
+---@param listKey string
+---@return table entries
+function OneWoW_GUI:SortItemEntries(entries, listKey)
+    local mode = self:GetItemListSort(listKey)
+    if mode == "id" then
+        sort(entries, function(a, b)
+            local aid = tonumber(a.id) or 0
+            local bid = tonumber(b.id) or 0
+            if aid ~= bid then
+                return aid < bid
+            end
+            return strcmputf8i(a.label or "", b.label or "") < 0
+        end)
+    else
+        sort(entries, function(a, b)
+            local cmp = strcmputf8i(a.label or "", b.label or "")
+            if cmp ~= 0 then
+                return cmp < 0
+            end
+            local aid = tonumber(a.id) or 0
+            local bid = tonumber(b.id) or 0
+            return aid < bid
+        end)
+    end
+    return entries
+end
+
+--- Compact Name / Item ID dropdown for a sortKey. Caller SetPoints the button.
+---@param parent Frame
+---@param options table
+---@return Button dropdown
+---@return FontString textFS
+function OneWoW_GUI:CreateItemListSortDropdown(parent, options)
+    options = options or {}
+    local sortKey = options.sortKey
+    local drop, textFS = self:CreateDropdown(parent, {
+        width = options.width or GUI.ENTRY_LIST_SORT_WIDTH,
+        height = options.height or GUI.ENTRY_LIST_SORT_HEIGHT,
+        text = NAME,
+    })
+
+    local function RefreshText()
+        local mode = self:GetItemListSort(sortKey)
+        if mode == "id" then
+            textFS:SetText(SharedL().SORT_BY_ITEM_ID)
+        else
+            textFS:SetText(NAME)
+        end
+        drop._activeValue = mode
+    end
+    RefreshText()
+
+    self:AttachFilterMenu(drop, {
+        searchable = false,
+        menuWidth = options.width or GUI.ENTRY_LIST_SORT_WIDTH,
+        buildItems = function()
+            return {
+                { text = NAME, value = "name" },
+                { text = SharedL().SORT_BY_ITEM_ID, value = "id" },
+            }
+        end,
+        onSelect = function(value)
+            self:SetItemListSort(sortKey, value)
+            RefreshText()
+            if options.onChange then
+                options.onChange(value)
+            end
+        end,
+        getActiveValue = function()
+            return self:GetItemListSort(sortKey)
+        end,
+    })
+
+    return drop, textFS
 end
 
 local function ClearFrameChildren(frame)
@@ -321,6 +433,7 @@ function OneWoW_GUI:CreateEntryList(parent, options)
     local rowHeightDefault = options.rowHeight or GUI.ENTRY_LIST_ROW_HEIGHT
     local x = options.x or 12
     local yOffset = options.yOffset
+    local sortKey = options.sortKey
 
     local listFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     listFrame:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
@@ -332,29 +445,8 @@ function OneWoW_GUI:CreateEntryList(parent, options)
         listFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -(options.rightInset or 12), yOffset)
     end
 
-    local contentParent = listFrame
-    local scrollFrame, scrollChild
-    if not grow then
-        listFrame:SetHeight(fixedHeight or 120)
-        scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(listFrame, {
-            name = options.scrollName,
-        })
-        contentParent = scrollChild
-    end
-
-    local emptyFS = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    emptyFS:SetPoint("CENTER", listFrame, "CENTER", 0, 0)
-    emptyFS:SetJustifyH("CENTER")
-    emptyFS:SetWordWrap(true)
-    emptyFS:SetText(emptyText)
-    emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    emptyFS:Hide()
-
     local handle = {
         frame = listFrame,
-        scrollFrame = scrollFrame,
-        scrollChild = scrollChild,
-        content = contentParent,
         _enabled = true,
         _removeButtons = {},
         _getEntries = getEntries,
@@ -363,7 +455,58 @@ function OneWoW_GUI:CreateEntryList(parent, options)
         _rowHeight = rowHeightDefault,
         _emptyText = emptyText,
         _grow = grow,
+        _sortKey = sortKey,
     }
+
+    local toolbarH = 0
+    if sortKey then
+        toolbarH = GUI.ENTRY_LIST_SORT_BAR
+        local toolbar = CreateFrame("Frame", nil, listFrame)
+        toolbar:SetHeight(toolbarH)
+        toolbar:SetPoint("TOPLEFT", listFrame, "TOPLEFT", 0, 0)
+        toolbar:SetPoint("TOPRIGHT", listFrame, "TOPRIGHT", 0, 0)
+        local drop = OneWoW_GUI:CreateItemListSortDropdown(toolbar, {
+            sortKey = sortKey,
+            onChange = function()
+                handle:Refresh()
+            end,
+        })
+        drop:SetPoint("RIGHT", toolbar, "RIGHT", -6, 0)
+        handle._sortDropdown = drop
+    end
+
+    local body = CreateFrame("Frame", nil, listFrame)
+    if sortKey then
+        body:SetPoint("TOPLEFT", listFrame, "TOPLEFT", 0, -toolbarH)
+        body:SetPoint("TOPRIGHT", listFrame, "TOPRIGHT", 0, -toolbarH)
+    else
+        body:SetPoint("TOPLEFT", listFrame, "TOPLEFT", 0, 0)
+        body:SetPoint("TOPRIGHT", listFrame, "TOPRIGHT", 0, 0)
+    end
+
+    local contentParent = body
+    local scrollFrame, scrollChild
+    if not grow then
+        listFrame:SetHeight(fixedHeight or 120)
+        body:SetPoint("BOTTOMLEFT", listFrame, "BOTTOMLEFT", 0, 0)
+        body:SetPoint("BOTTOMRIGHT", listFrame, "BOTTOMRIGHT", 0, 0)
+        scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(body, {
+            name = options.scrollName,
+        })
+        contentParent = scrollChild
+    end
+
+    local emptyFS = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    emptyFS:SetPoint("CENTER", body, "CENTER", 0, 0)
+    emptyFS:SetJustifyH("CENTER")
+    emptyFS:SetWordWrap(true)
+    emptyFS:SetText(emptyText)
+    emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    emptyFS:Hide()
+
+    handle.scrollFrame = scrollFrame
+    handle.scrollChild = scrollChild
+    handle.content = contentParent
 
     local function buildDefaultRow(row, entry, api)
         local iconSize = GUI.ENTRY_LIST_ICON_SIZE
@@ -421,6 +564,9 @@ function OneWoW_GUI:CreateEntryList(parent, options)
         ClearFrameChildren(contentParent)
 
         local entries = self._getEntries and self._getEntries() or {}
+        if self._sortKey then
+            OneWoW_GUI:SortItemEntries(entries, self._sortKey)
+        end
         local pad = GUI.ENTRY_LIST_PAD
         local rowOffset = -pad
         local hasItems = false
@@ -460,7 +606,8 @@ function OneWoW_GUI:CreateEntryList(parent, options)
 
         if self._grow then
             local contentH = hasItems and (math.abs(rowOffset) + pad) or GUI.ENTRY_LIST_EMPTY_HEIGHT
-            listFrame:SetHeight(contentH)
+            body:SetHeight(contentH)
+            listFrame:SetHeight(contentH + toolbarH)
         else
             local contentH = hasItems and (math.abs(rowOffset) + pad) or 1
             contentParent:SetHeight(math.max(1, contentH))
@@ -481,8 +628,14 @@ function OneWoW_GUI:CreateEntryList(parent, options)
         end
         if self._enabled then
             emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            if self._sortDropdown then
+                self._sortDropdown:Enable()
+            end
         else
             emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            if self._sortDropdown then
+                self._sortDropdown:Disable()
+            end
         end
     end
 
@@ -560,6 +713,7 @@ function OneWoW_GUI:CreateItemListEditor(parent, options)
         createRow = options.createRow,
         rowHeight = options.rowHeight,
         scrollName = options.scrollName,
+        sortKey = options.sortKey,
     }
     if options.grow ~= false and not options.height then
         listOpts.grow = true

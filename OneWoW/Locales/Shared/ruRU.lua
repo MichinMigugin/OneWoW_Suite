@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["NO_MACROS"] = "Нет макросов",
     ["GROW_DIRECTION"] = "Направление роста",
     ["ITEM_ID"] = "ID предмета:",
+    ["SORT_BY_ITEM_ID"] = "ID предмета",
     ["NEW_CATEGORY"] = "Новая категория",
     ["OPEN_SETTINGS"] = "Открыть настройки",
     ["TYPE_S"] = "Тип: %s",

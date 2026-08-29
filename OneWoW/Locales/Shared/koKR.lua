@@ -84,6 +84,7 @@ ns.Locale:RegisterShared("koKR", {
     ["NO_MACROS"] = "매크로 없음",
     ["GROW_DIRECTION"] = "확장 방향",
     ["ITEM_ID"] = "아이템 ID:",
+    ["SORT_BY_ITEM_ID"] = "아이템 ID",
     ["NEW_CATEGORY"] = "새 분류",
     ["OPEN_SETTINGS"] = "설정 열기",
     ["TYPE_S"] = "유형: %s",

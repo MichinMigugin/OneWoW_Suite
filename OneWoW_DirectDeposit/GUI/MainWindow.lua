@@ -498,24 +498,19 @@ function GUI:CreateItemsPanel(parent)
         height = excludeListHeight,
         scrollName = "OneWoW_DirectDepositExcludeList",
         emptyText = L["NO_ITEMS"],
+        sortKey = "directdeposit:keep",
         getEntries = function()
             local excludeData = ns.DirectDeposit:GetWarboundExcludeList()
-            local sorted = {}
-            for itemID, itemData in pairs(excludeData) do
-                tinsert(sorted, { id = tonumber(itemID), data = itemData })
-            end
-            sort(sorted, function(a, b)
-                return (a.data.addedTime or 0) < (b.data.addedTime or 0)
-            end)
             local entries = {}
-            for _, item in ipairs(sorted) do
-                C_Item.RequestLoadItemDataByID(item.id)
-                local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(item.id)
+            for itemID, itemData in pairs(excludeData) do
+                local id = tonumber(itemID)
+                C_Item.RequestLoadItemDataByID(id)
+                local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(id)
                 tinsert(entries, {
-                    id = item.id,
-                    label = item.data.itemName or C_Item.GetItemNameByID(item.id) or ("Item " .. item.id),
+                    id = id,
+                    label = itemData.itemName or C_Item.GetItemNameByID(id) or ("Item " .. id),
                     icon = icon,
-                    data = item.data,
+                    data = itemData,
                 })
             end
             return entries
@@ -607,24 +602,19 @@ function GUI:CreateItemsPanel(parent)
         rowHeight = 32,
         scrollName = "OneWoW_DirectDepositItemList",
         emptyText = L["NO_ITEMS"],
+        sortKey = "directdeposit:deposit",
         getEntries = function()
             local itemData = ns.DirectDeposit:GetItemList()
-            local sorted = {}
-            for itemID, data in pairs(itemData) do
-                tinsert(sorted, { id = tonumber(itemID), data = data })
-            end
-            sort(sorted, function(a, b)
-                return (a.data.addedTime or 0) < (b.data.addedTime or 0)
-            end)
             local entries = {}
-            for _, item in ipairs(sorted) do
-                C_Item.RequestLoadItemDataByID(item.id)
-                local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(item.id)
+            for itemID, data in pairs(itemData) do
+                local id = tonumber(itemID)
+                C_Item.RequestLoadItemDataByID(id)
+                local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(id)
                 tinsert(entries, {
-                    id = item.id,
-                    label = item.data.itemName or C_Item.GetItemNameByID(item.id) or ("Item " .. item.id),
+                    id = id,
+                    label = data.itemName or C_Item.GetItemNameByID(id) or ("Item " .. id),
                     icon = icon,
-                    data = item.data,
+                    data = data,
                 })
             end
             return entries
