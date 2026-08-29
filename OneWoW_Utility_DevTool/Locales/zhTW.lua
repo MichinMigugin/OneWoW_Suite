@@ -225,6 +225,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ERR_THROTTLE_PAUSED"] = "錯誤過多；擷取已限流，直到錯誤洪流停止。",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] 插件 '%s' 嘗試呼叫受保護的函式 '%s'。",
     ["ERR_COPY_TITLE"] = "複製錯誤",
+    ["ERR_COPY_ALL_TITLE"] = "複製全部錯誤",
+    ["ERR_COPY_ALL_ITEM"] = "錯誤 %d / %d",
     ["ERR_SOUND_DEVTOOL"] = "DevTool 提示音",
     ["ERR_SOUND_RAID_WARNING"] = "團隊警告",
     ["ERR_SOUND_TELL"] = "密語訊息",

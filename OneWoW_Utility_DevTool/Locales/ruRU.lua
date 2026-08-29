@@ -224,6 +224,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ERR_THROTTLE_PAUSED"] = "Слишком много ошибок; запись приостановлена до стихания потока.",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] Аддон '%s' попытался вызвать защищённую функцию '%s'.",
     ["ERR_COPY_TITLE"] = "Копировать ошибку",
+    ["ERR_COPY_ALL_TITLE"] = "Копировать все ошибки",
+    ["ERR_COPY_ALL_ITEM"] = "Ошибка %d из %d",
     ["ERR_SOUND_DEVTOOL"] = "Оповещение DevTool",
     ["ERR_SOUND_RAID_WARNING"] = "Предупреждение рейда",
     ["ERR_SOUND_TELL"] = "Шёпот",

@@ -37,7 +37,13 @@
 
 ---
 
-*No user-facing changes this release for Catalog, AltTracker, Trackers, Bags, Shopping List, Direct Deposit, Mail, or DevTool.*
+### DevTool
+#### Errors
+- DEVMODE's floating error list has Copy All. One click puts every distinct error from this session into the copy dialog so you can paste them all at once. The Errors tab has the same button.
+
+---
+
+*No user-facing changes this release for Catalog, AltTracker, Trackers, Bags, Shopping List, Direct Deposit, or Mail.*
 
 ---
 

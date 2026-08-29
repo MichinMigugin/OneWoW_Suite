@@ -854,6 +854,17 @@ function ErrorLogger:CopyCurrentError()
     ns:CopyToClipboard(text, L["ERR_COPY_TITLE"])
 end
 
+function ErrorLogger:CopyAllErrors()
+    local db = getErrorDB()
+    local fmt = db and db.copyFormat or "plain"
+    local text = ns.ErrorExport.BuildAllText(self:GetErrors(), fmt, L, self:GetSessionId())
+    if text == "" then
+        ns:Print(L["ERR_DEVMODE_EMPTY"])
+        return
+    end
+    ns:CopyToClipboard(text, L["ERR_COPY_ALL_TITLE"])
+end
+
 function ErrorLogger:ClearErrors()
     local db = getErrorDB()
     if db then

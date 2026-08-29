@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local tinsert = tinsert
+local ipairs = ipairs
 local type = type
 local tostring = tostring
 local date = date
@@ -152,4 +153,84 @@ function ns.ErrorExport.GetCopyText(err, formatKey, L)
         return ns.ErrorExport.BuildDiscordText(err, L)
     end
     return ns.ErrorExport.BuildPlainText(err, L)
+end
+
+--- Newest-first unique-by-message. Counter is the summed occurrence count.
+--- When sessionId is set and that session has errors, only those rows are used.
+function ns.ErrorExport.CollectUniqueErrors(errors, sessionId)
+    local source = errors
+    if type(errors) ~= "table" then
+        return {}
+    end
+    if sessionId ~= nil then
+        local filtered = {}
+        for i = 1, #errors do
+            if errors[i].session == sessionId then
+                tinsert(filtered, errors[i])
+            end
+        end
+        if #filtered > 0 then
+            source = filtered
+        end
+    end
+    local out = {}
+    local byMsg = {}
+    for i = #source, 1, -1 do
+        local err = source[i]
+        local msg = err.message or ""
+        local entry = byMsg[msg]
+        if not entry then
+            entry = {
+                message = msg,
+                time = err.time,
+                counter = err.counter or 1,
+                stack = err.stack or "",
+                locals = err.locals or "",
+                session = err.session,
+                source = err,
+                _analysis = err._analysis,
+            }
+            byMsg[msg] = entry
+            tinsert(out, entry)
+        else
+            entry.counter = entry.counter + (err.counter or 1)
+        end
+    end
+    return out
+end
+
+function ns.ErrorExport.EnsureAnalysis(err)
+    if not err then
+        return nil
+    end
+    if not err._analysis then
+        err._analysis = ns.ErrorAnalyzer:Analyze(err)
+    end
+    return err._analysis
+end
+
+--- One clipboard blob: WoW/locale header (plain) plus every unique error.
+function ns.ErrorExport.BuildAllText(errors, formatKey, L, sessionId)
+    L = L or {}
+    local unique = ns.ErrorExport.CollectUniqueErrors(errors, sessionId)
+    if #unique == 0 then
+        return ""
+    end
+    local lines = {}
+    if formatKey ~= "curseforge" and formatKey ~= "discord" then
+        for _, ln in ipairs(buildHeaderLines()) do
+            tinsert(lines, ln)
+        end
+    end
+    local total = #unique
+    for i, err in ipairs(unique) do
+        ns.ErrorExport.EnsureAnalysis(err)
+        if #lines > 0 then
+            tinsert(lines, "")
+        end
+        tinsert(lines, "--- " .. format(L["ERR_COPY_ALL_ITEM"], i, total) .. " ---")
+        tinsert(lines, "")
+        tinsert(lines, ns.ErrorExport.GetCopyText(err, formatKey, L))
+    end
+    return table.concat(lines, "\n")
 end

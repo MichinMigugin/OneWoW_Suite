@@ -224,6 +224,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ERR_THROTTLE_PAUSED"] = "오류가 너무 많습니다. 반복이 멈출 때까지 기록이 제한됩니다.",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] 애드온 '%s'이(가) 보호된 함수 '%s' 호출을 시도했습니다.",
     ["ERR_COPY_TITLE"] = "오류 복사",
+    ["ERR_COPY_ALL_TITLE"] = "모든 오류 복사",
+    ["ERR_COPY_ALL_ITEM"] = "오류 %d / %d",
     ["ERR_SOUND_DEVTOOL"] = "DevTool 알림",
     ["ERR_SOUND_RAID_WARNING"] = "공격대 경고",
     ["ERR_SOUND_TELL"] = "귓속말",

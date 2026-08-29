@@ -224,6 +224,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ERR_THROTTLE_PAUSED"] = "Trop d'erreurs ; capture limitée jusqu'à ce que le flux s'arrête.",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] L'addon '%s' a tenté d'appeler la fonction protégée '%s'.",
     ["ERR_COPY_TITLE"] = "Copier l'erreur",
+    ["ERR_COPY_ALL_TITLE"] = "Copier toutes les erreurs",
+    ["ERR_COPY_ALL_ITEM"] = "Erreur %d sur %d",
     ["ERR_SOUND_DEVTOOL"] = "Alerte DevTool",
     ["ERR_SOUND_RAID_WARNING"] = "Alerte raid",
     ["ERR_SOUND_TELL"] = "Chuchotement",

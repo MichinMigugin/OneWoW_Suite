@@ -35,30 +35,7 @@ local function formatTimeDisplay(err)
 end
 
 local function collectUniqueErrors()
-    local errors = ns.ErrorLogger:GetErrors()
-    local out = {}
-    local byMsg = {}
-    for i = #errors, 1, -1 do
-        local err = errors[i]
-        local msg = err.message or ""
-        local entry = byMsg[msg]
-        if not entry then
-            entry = {
-                message = msg,
-                time = err.time,
-                counter = err.counter or 1,
-                stack = err.stack or "",
-                locals = err.locals or "",
-                session = err.session,
-                source = err,
-            }
-            byMsg[msg] = entry
-            tinsert(out, entry)
-        else
-            entry.counter = entry.counter + (err.counter or 1)
-        end
-    end
-    return out
+    return ns.ErrorExport.CollectUniqueErrors(ns.ErrorLogger:GetErrors())
 end
 
 local function formatDetail(err)
@@ -182,6 +159,17 @@ function ErrorFloat:_ensure()
         OneWoW_GUI:SaveWindowPosition(frame, getErrorDB().devModePosition)
     end)
 
+    local copyAllBtn = OneWoW_GUI:CreateFitTextButton(titleBar, {
+        text = L["BTN_COPY_DETAILS"],
+        height = 18,
+        minWidth = 40,
+        paddingX = 12,
+    })
+    copyAllBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -4, 0)
+    copyAllBtn:SetScript("OnClick", function()
+        ns.ErrorLogger:CopyAllErrors()
+    end)
+
     local content = CreateFrame("Frame", nil, frame)
     content:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
     content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
@@ -204,6 +192,7 @@ function ErrorFloat:_ensure()
 
     self.frame = frame
     self.titleBar = titleBar
+    self.copyAllBtn = copyAllBtn
     self.content = content
     self.emptyLabel = emptyLabel
     self.detailText = detailText
@@ -312,6 +301,9 @@ function ErrorFloat:Refresh(highlightErr, doFlash)
         self.titleBar._titleText:SetText(L["ERR_DEVMODE"])
     end
     self.emptyLabel:SetText(L["ERR_DEVMODE_EMPTY"])
+    if self.copyAllBtn then
+        self.copyAllBtn:SetFitText(L["BTN_COPY_DETAILS"])
+    end
 
     local unique = collectUniqueErrors()
     local visible = min(#unique, MAX_ROWS)
@@ -351,6 +343,9 @@ function ErrorFloat:Refresh(highlightErr, doFlash)
 
     self:_layout(visible, hasDetail)
     self:_applyChrome(false)
+    if self.copyAllBtn then
+        self.copyAllBtn:SetEnabled(#unique > 0)
+    end
 
     if doFlash and getErrorDB().devModeFlash and highlightRow then
         self:_flashRow(highlightRow)

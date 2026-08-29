@@ -34,7 +34,7 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | Feature | Command | What it does |
 |---------|---------|----------------|
 | [DevTools](DevTool) | `/1wdt` | Toggle the DevTools window |
-| [DevTools](DevTool) | `/1wdt devmode` | Toggle the floating error list |
+| [DevTools](DevTool) | `/1wdt devmode` | Toggle the floating error list (Copy All dumps this session) |
 
 ### Shopping List extras
 

@@ -435,7 +435,20 @@ function ns.UI:CreateErrorsTab(parent)
         end
     end)
 
-    copyDrop:SetPoint("BOTTOMLEFT", copyBtn, "BOTTOMRIGHT", 10, 0)
+    local copyAllBtn = OneWoW_GUI:CreateFitTextButton(tab, {
+        text = L["BTN_COPY_DETAILS"],
+        height = 25,
+        minWidth = 80,
+    })
+    copyAllBtn:SetPoint("BOTTOMLEFT", copyBtn, "BOTTOMRIGHT", 8, 0)
+    copyAllBtn:SetScript("OnClick", function()
+        if ns.ErrorLogger then
+            ns.ErrorLogger:CopyAllErrors()
+        end
+    end)
+    tab.copyAllBtn = copyAllBtn
+
+    copyDrop:SetPoint("BOTTOMLEFT", copyAllBtn, "BOTTOMRIGHT", 10, 0)
 
     local analysisToggleBtn = OneWoW_GUI:CreateFitTextButton(tab, {
         text = L["BTN_TOGGLE_ANALYSIS"],

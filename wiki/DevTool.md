@@ -32,7 +32,7 @@ Start, pause, and filter a live event log. Optional firehose (all events — noi
 
 ### Errors
 
-Session Lua errors with stack traces and copy. Optional DEVMODE floating list (`/1wdt devmode`). If **!BugGrabber** is installed, the same captures show here.
+Session Lua errors with stack traces and copy. Optional DEVMODE floating list (`/1wdt devmode`) with **Copy All** for every distinct error this session (same button on the Errors tab). If **!BugGrabber** is installed, the same captures show here.
 
 ### Monitor
 

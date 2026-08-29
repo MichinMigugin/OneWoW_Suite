@@ -224,6 +224,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ERR_THROTTLE_PAUSED"] = "Zu viele Fehler; Aufzeichnung gedrosselt.",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] AddOn '%s' hat versucht die geschützte Funktion '%s' aufzurufen.",
     ["ERR_COPY_TITLE"] = "Fehler kopieren",
+    ["ERR_COPY_ALL_TITLE"] = "Alle Fehler kopieren",
+    ["ERR_COPY_ALL_ITEM"] = "Fehler %d von %d",
     ["ERR_SOUND_DEVTOOL"] = "DevTool-Hinweis",
     ["ERR_SOUND_RAID_WARNING"] = "Schlachtzugwarnung",
     ["ERR_SOUND_TELL"] = "Flüstern",

@@ -224,6 +224,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ERR_THROTTLE_PAUSED"] = "Too many errors; capture throttled until the flood stops.",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] AddOn '%s' tried to call the protected function '%s'.",
     ["ERR_COPY_TITLE"] = "Copy error",
+    ["ERR_COPY_ALL_TITLE"] = "Copy all errors",
+    ["ERR_COPY_ALL_ITEM"] = "Error %d of %d",
     ["ERR_SOUND_DEVTOOL"] = "DevTool alert",
     ["ERR_SOUND_RAID_WARNING"] = "Raid warning",
     ["ERR_SOUND_TELL"] = "Tell message",

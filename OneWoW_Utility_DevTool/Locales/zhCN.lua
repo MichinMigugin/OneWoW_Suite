@@ -225,6 +225,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ERR_THROTTLE_PAUSED"] = "错误过多；捕获已限流，直到错误洪流停止。",
     ["ERR_ADDON_CALL_PROTECTED"] = "[%s] 插件 '%s' 尝试调用受保护的函数 '%s'。",
     ["ERR_COPY_TITLE"] = "复制错误",
+    ["ERR_COPY_ALL_TITLE"] = "复制全部错误",
+    ["ERR_COPY_ALL_ITEM"] = "错误 %d / %d",
     ["ERR_SOUND_DEVTOOL"] = "DevTool 提示音",
     ["ERR_SOUND_RAID_WARNING"] = "团队警告",
     ["ERR_SOUND_TELL"] = "密语消息",
