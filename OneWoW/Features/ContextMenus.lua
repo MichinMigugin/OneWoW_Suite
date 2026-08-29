@@ -8,14 +8,9 @@ local Location = ns.Location
 
 local L = ns.L
 
-local function WithUnitAsTarget(unit, fn)
-    if unit ~= "target" then
-        TargetUnit(unit)
-        C_Timer.After(0.1, function() fn("target") end)
-        return
-    end
-    fn(unit)
-end
+-- Context menus pass unit tokens (player, partyN, nameplateN, …). Notes and
+-- mount helpers already accept those tokens. Do not call TargetUnit: it is
+-- protected and Blizzard blocks it from addon code (ADDON_ACTION_FORBIDDEN).
 
 local function NavigateToPlayer(fullName)
     if not OneWoW_Notes_API or not OneWoW_Notes_API.OpenPlayer then return end
@@ -34,12 +29,12 @@ end
 
 local function IsPlayMountsEnabled()
     if not OneWoW_QoL_API then return false end
-    return OneWoW_QoL_API.IsModuleEnabled("playmounts", false)
+    return OneWoW_QoL_API.IsModuleEnabled("playmounts")
 end
 
 local function IsMatchMountEnabled()
     if not OneWoW_QoL_API then return true end
-    if not OneWoW_QoL_API.IsModuleEnabled("playmounts", false) then
+    if not OneWoW_QoL_API.IsModuleEnabled("playmounts") then
         return false
     end
     return OneWoW_QoL_API.GetModuleToggle("playmounts", "enableMatchMount", true)
@@ -77,20 +72,19 @@ local function HandlePlayerAdd(unit)
 
     if not UnitExists(unit) or not UnitIsPlayer(unit) then return end
 
-    WithUnitAsTarget(unit, function(targetUnit)
-        local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(targetUnit)
-        if not playerInfo then return end
+    local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(unit)
+    if not playerInfo then return end
 
-        local existing = OneWoW_Notes_API.GetPlayer(playerInfo.fullName)
-        if existing then
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_EXISTS"], playerInfo.name))
-            NavigateToPlayer(playerInfo.fullName)
-            return
-        end
+    local existing = OneWoW_Notes_API.GetPlayer(playerInfo.fullName)
+    if existing then
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_EXISTS"], playerInfo.name))
+        NavigateToPlayer(playerInfo.fullName)
+        return
+    end
 
-        OneWoW_Notes_API.AddPlayer(playerInfo.fullName, playerInfo)
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_PLAYER_S"], playerInfo.name))
-    end)
+    OneWoW_Notes_API.AddPlayer(playerInfo.fullName, playerInfo)
+    print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_PLAYER_S"], playerInfo.name))
+    NavigateToPlayer(playerInfo.fullName)
 end
 
 local function HandleAddMountInfo(unit)
@@ -107,102 +101,100 @@ local function HandleAddMountInfo(unit)
 
     if not UnitExists(unit) or not UnitIsPlayer(unit) then return end
 
-    WithUnitAsTarget(unit, function(targetUnit)
-        local mountInfo = pmModule:DetectMountOnUnit(targetUnit)
-        if not mountInfo then
-            local playerName = UnitName(targetUnit) or "Player"
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
+    local mountInfo = pmModule:DetectMountOnUnit(unit)
+    if not mountInfo then
+        local playerName = UnitName(unit) or "Player"
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
+        return
+    end
+
+    local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(unit)
+    if not playerInfo then return end
+
+    -- Build the reference line + a dedup needle. A real mount becomes a single
+    -- canonical collectible row (created once, shared across every player that
+    -- rides it) plus a thin `(collectible=)` link in the player note — the
+    -- mount's type/source/status now live on the collectible row (resolved live
+    -- in the Collectibles tab), not duplicated into each player note. Movement
+    -- forms (Travel Form, etc.) have no mount id, so they stay a plain text line.
+    -- collectibleKey is nil for movement forms (Travel Form, etc.), which have
+    -- no mount id and stay a plain-text line; a real mount carries a canonical
+    -- key that drives both the shared collectible row and the structured
+    -- per-player ref (dedup / sighting).
+    local refText, dedupNeedle, collectibleKey, mountSpellID
+    if mountInfo.isMovementForm then
+        refText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
+        dedupNeedle = refText
+    else
+        -- playmounts:DetectMountOnUnit only resolves a mount from a non-secret
+        -- aura spellId (it gates on OneWoW.Restriction.IsSecret), so a returned
+        -- mountID is always a plain, resolvable number even in instanced content.
+        -- Still bail with a user-visible message if a canonical key can't be
+        -- built rather than writing a bad reference.
+        local key = OneWoW_Notes_API.BuildMountKey and OneWoW_Notes_API.BuildMountKey(mountInfo.mountID)
+        if not key then
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_UNIDENTIFIED"], playerInfo.name))
             return
         end
 
-        local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(targetUnit)
-        if not playerInfo then return end
-
-        -- Build the reference line + a dedup needle. A real mount becomes a single
-        -- canonical collectible row (created once, shared across every player that
-        -- rides it) plus a thin `(collectible=)` link in the player note — the
-        -- mount's type/source/status now live on the collectible row (resolved live
-        -- in the Collectibles tab), not duplicated into each player note. Movement
-        -- forms (Travel Form, etc.) have no mount id, so they stay a plain text line.
-        -- collectibleKey is nil for movement forms (Travel Form, etc.), which have
-        -- no mount id and stay a plain-text line; a real mount carries a canonical
-        -- key that drives both the shared collectible row and the structured
-        -- per-player ref (dedup / sighting).
-        local refText, dedupNeedle, collectibleKey, mountSpellID
-        if mountInfo.isMovementForm then
-            refText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
-            dedupNeedle = refText
-        else
-            -- playmounts:DetectMountOnUnit only resolves a mount from a non-secret
-            -- aura spellId (it gates on OneWoW.Restriction.IsSecret), so a returned
-            -- mountID is always a plain, resolvable number even in instanced content.
-            -- Still bail with a user-visible message if a canonical key can't be
-            -- built rather than writing a bad reference.
-            local key = OneWoW_Notes_API.BuildMountKey and OneWoW_Notes_API.BuildMountKey(mountInfo.mountID)
-            if not key then
-                print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_UNIDENTIFIED"], playerInfo.name))
-                return
-            end
-
-            -- Ensure the shared collectible row exists (defaults to "General" on
-            -- create); never touch an existing row so the user's own category/intent
-            -- survives re-adding the mount from another player.
-            if not OneWoW_Notes_API.GetCollectible(key) then
-                OneWoW_Notes_API.UpsertCollectible(key)
-            end
-
-            local link = OneWoW_Notes_API.BuildCollectibleLink and OneWoW_Notes_API.BuildCollectibleLink(key)
-            if not link then
-                link = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-            end
-            refText = string.format(L["UNIT_CTX_MOUNT_LABEL"], link)
-            collectibleKey = key
-            mountSpellID = mountInfo.spellID or mountInfo.spellId
+        -- Ensure the shared collectible row exists (defaults to "General" on
+        -- create); never touch an existing row so the user's own category/intent
+        -- survives re-adding the mount from another player.
+        if not OneWoW_Notes_API.GetCollectible(key) then
+            OneWoW_Notes_API.UpsertCollectible(key)
         end
 
-        local fullName = playerInfo.fullName
-        local existing = OneWoW_Notes_API.GetPlayer(fullName)
-        if existing then
-            -- Dedup on the structured collectible ref for real mounts (also matches
-            -- legacy notes that only embedded the link); movement forms have no
-            -- key, so they fall back to the plain-text needle.
-            local alreadyRecorded
-            if collectibleKey then
-                alreadyRecorded = OneWoW_Notes_API.PlayerHasCollectibleRef(fullName, collectibleKey)
-            else
-                local currentNote = existing.content or ""
-                alreadyRecorded = currentNote ~= "" and strfind(currentNote, dedupNeedle, 1, true) ~= nil
-            end
+        local link = OneWoW_Notes_API.BuildCollectibleLink and OneWoW_Notes_API.BuildCollectibleLink(key)
+        if not link then
+            link = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
+        end
+        refText = string.format(L["UNIT_CTX_MOUNT_LABEL"], link)
+        collectibleKey = key
+        mountSpellID = mountInfo.spellID or mountInfo.spellId
+    end
 
-            if alreadyRecorded then
-                print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"], playerInfo.name))
-                return
-            end
-
+    local fullName = playerInfo.fullName
+    local existing = OneWoW_Notes_API.GetPlayer(fullName)
+    if existing then
+        -- Dedup on the structured collectible ref for real mounts (also matches
+        -- legacy notes that only embedded the link); movement forms have no
+        -- key, so they fall back to the plain-text needle.
+        local alreadyRecorded
+        if collectibleKey then
+            alreadyRecorded = OneWoW_Notes_API.PlayerHasCollectibleRef(fullName, collectibleKey)
+        else
             local currentNote = existing.content or ""
-            if currentNote ~= "" then
-                existing.content = currentNote .. "\n\n" .. refText
-            else
-                existing.content = refText
-            end
-            OneWoW_Notes_API.SavePlayer(fullName, existing)
-            if collectibleKey then
-                OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, collectibleKey, mountSpellID)
-            end
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerInfo.name))
-        else
-            playerInfo.content = refText
-            OneWoW_Notes_API.AddPlayer(fullName, playerInfo)
-            if collectibleKey then
-                OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, collectibleKey, mountSpellID)
-            end
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerInfo.name))
+            alreadyRecorded = currentNote ~= "" and strfind(currentNote, dedupNeedle, 1, true) ~= nil
         end
 
-        if OneWoW_Notes_API.RefreshPlayersTab then
-            OneWoW_Notes_API.RefreshPlayersTab(fullName)
+        if alreadyRecorded then
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"], playerInfo.name))
+            return
         end
-    end)
+
+        local currentNote = existing.content or ""
+        if currentNote ~= "" then
+            existing.content = currentNote .. "\n\n" .. refText
+        else
+            existing.content = refText
+        end
+        OneWoW_Notes_API.SavePlayer(fullName, existing)
+        if collectibleKey then
+            OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, collectibleKey, mountSpellID)
+        end
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerInfo.name))
+    else
+        playerInfo.content = refText
+        OneWoW_Notes_API.AddPlayer(fullName, playerInfo)
+        if collectibleKey then
+            OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, collectibleKey, mountSpellID)
+        end
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerInfo.name))
+    end
+
+    if OneWoW_Notes_API.RefreshPlayersTab then
+        OneWoW_Notes_API.RefreshPlayersTab(fullName)
+    end
 end
 
 local function HandleMatchMount(unit)
@@ -217,42 +209,40 @@ local function HandleMatchMount(unit)
         return
     end
 
-    WithUnitAsTarget(unit, function(targetUnit)
-        local mountInfo = pmModule:DetectMountOnUnit(targetUnit)
-        if not mountInfo then
-            local playerName = UnitName(targetUnit) or "Player"
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
-            return
-        end
+    local mountInfo = pmModule:DetectMountOnUnit(unit)
+    if not mountInfo then
+        local playerName = UnitName(unit) or "Player"
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
+        return
+    end
 
-        if mountInfo.isMovementForm then
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_CANNOT_MATCH_FORM"], mountInfo.name))
-            return
-        end
+    if mountInfo.isMovementForm then
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_CANNOT_MATCH_FORM"], mountInfo.name))
+        return
+    end
 
-        if not mountInfo.isCollected then
-            local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_NOT_COLLECTED"], mountLink))
-            return
-        end
-
-        if IsFlying() then
-            print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_CANNOT_FLYING"])
-            return
-        end
-
+    if not mountInfo.isCollected then
         local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-        if IsMounted() then
-            Dismount()
-            C_Timer.After(0.3, function()
-                C_MountJournal.SummonByID(mountInfo.mountID)
-                print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MATCHING_MOUNT"], mountLink))
-            end)
-        else
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_NOT_COLLECTED"], mountLink))
+        return
+    end
+
+    if IsFlying() then
+        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_CANNOT_FLYING"])
+        return
+    end
+
+    local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
+    if IsMounted() then
+        Dismount()
+        C_Timer.After(0.3, function()
             C_MountJournal.SummonByID(mountInfo.mountID)
             print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MATCHING_MOUNT"], mountLink))
-        end
-    end)
+        end)
+    else
+        C_MountJournal.SummonByID(mountInfo.mountID)
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MATCHING_MOUNT"], mountLink))
+    end
 end
 
 local function HandleSelfWayPin()
@@ -347,37 +337,35 @@ local function HandleNPCAdd(unit, npcIDNum)
 
     if not UnitExists(unit) or UnitIsPlayer(unit) then return end
 
-    WithUnitAsTarget(unit, function(targetUnit)
-        local existing = OneWoW_Notes_API.GetNPC(npcIDNum)
-        if existing then
-            print("|cFFFFD100OneWoW:|r " .. L["NPC_NOTE_ALREADY_EXISTS"])
-            NavigateToNPC(npcIDNum)
-            return
-        end
-
-        local npcName = UnitName(targetUnit) or ("NPC " .. npcIDNum)
-        local mapID, x, y = Location.GetPlayerLocation()
-        local coords = x and { x = x, y = y } or nil
-        local mapInfo  = mapID and C_Map.GetMapInfo(mapID)
-        local zoneName = (mapInfo and mapInfo.name) or GetZoneText() or ""
-
-        local npcData = {
-            id           = npcIDNum,
-            name         = npcName,
-            mapID        = mapID,
-            zone         = zoneName,
-            coords       = coords,
-            category     = "Other",
-            storage      = "account",
-            content      = "",
-            tooltipLines = {"", "", "", ""},
-            alertOnFound = false,
-        }
-
-        OneWoW_Notes_API.AddNPC(npcIDNum, npcData)
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_NPC_S"], npcName))
+    local existing = OneWoW_Notes_API.GetNPC(npcIDNum)
+    if existing then
+        print("|cFFFFD100OneWoW:|r " .. L["NPC_NOTE_ALREADY_EXISTS"])
         NavigateToNPC(npcIDNum)
-    end)
+        return
+    end
+
+    local npcName = UnitName(unit) or ("NPC " .. npcIDNum)
+    local mapID, x, y = Location.GetPlayerLocation()
+    local coords = x and { x = x, y = y } or nil
+    local mapInfo  = mapID and C_Map.GetMapInfo(mapID)
+    local zoneName = (mapInfo and mapInfo.name) or GetZoneText() or ""
+
+    local npcData = {
+        id           = npcIDNum,
+        name         = npcName,
+        mapID        = mapID,
+        zone         = zoneName,
+        coords       = coords,
+        category     = "Other",
+        storage      = "account",
+        content      = "",
+        tooltipLines = {"", "", "", ""},
+        alertOnFound = false,
+    }
+
+    OneWoW_Notes_API.AddNPC(npcIDNum, npcData)
+    print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_NPC_S"], npcName))
+    NavigateToNPC(npcIDNum)
 end
 
 local function HandleNPCUpdateLocation(_, npcIDNum)

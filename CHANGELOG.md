@@ -18,7 +18,14 @@
 
 ---
 
-*No user-facing changes this release for Home, Notes, Catalog, Trackers, QoL, Bags, Shopping List, Direct Deposit, or Mail.*
+# Notes
+## Unit menus
+- Right-click Add Note on your player frame (or a party, raid, or nameplate) now creates or opens the note. It no longer errors.
+- Add Mount Info and Match Mount show on that menu when Play Mounts is on (it is on by default).
+
+---
+
+*No user-facing changes this release for Home, Catalog, Trackers, QoL, Bags, Shopping List, Direct Deposit, or Mail.*
 
 ---
 
