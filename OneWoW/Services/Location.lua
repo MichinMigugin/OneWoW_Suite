@@ -23,20 +23,24 @@ local _, ns = ...
 -- needs.
 --
 -- Distance works in percent space because that is how radii are authored (a
--- tracker step's waypointRadius and the minimap cutoff are both percent). Map
--- percent is not isotropic, so these distances are an approximation of world
--- range, not a substitute for it.
+-- tracker step's waypointRadius and similar cutoffs are percent). Map percent
+-- is not isotropic, so those distances are an approximation of world range,
+-- not a substitute for it.
 --
--- Pin rendering is deliberately not here: the Trackers world-map data provider
--- and OneWoW_QoL's map overlays hook Blizzard rendering for unrelated reasons.
+-- World helpers (GetWorldPos / WorldDelta / MinimapOffset) convert stored
+-- points through C_Map.GetWorldPosFromMapPos so pin placement can use real
+-- yards. Pin frames, tooltips, and MapCanvas stay in the feature units.
 -- Instance-entrance and delve-door resolution stays in OneWoW_Catalog's
 -- Navigation, which depends on Journal's generated door tables.
 -- ============================================================================
 
 local tonumber = tonumber
-local sqrt = math.sqrt
+local sqrt, cos, sin = math.sqrt, math.cos, math.sin
 local C_Map, C_SuperTrack = C_Map, C_SuperTrack
 local UiMapPoint, OpenWorldMap = UiMapPoint, OpenWorldMap
+local CreateVector2D = CreateVector2D
+
+local scratchMapPos = CreateVector2D(0, 0)
 
 ns.Location = {}
 local Location = ns.Location
@@ -159,4 +163,71 @@ function Location.IsWithinRadius(x1, y1, x2, y2, radius)
     local dist = Location.DistanceMapPercent(x1, y1, x2, y2)
     if not dist then return false end
     return dist <= (tonumber(radius) or 0)
+end
+
+--- Continent and world-yard position for a stored map point.
+--- World X is north-south and world Y is east-west (GetWorldPosFromMapPos).
+---@param mapID number|string|nil
+---@param x number|string|nil
+---@param y number|string|nil
+---@param fmt string|nil "percent", "fraction", or nil for the tolerant reading
+---@return number|nil continentID
+---@return number|nil worldX
+---@return number|nil worldY
+function Location.GetWorldPos(mapID, x, y, fmt)
+    mapID = tonumber(mapID)
+    x = Normalize(x, fmt)
+    y = Normalize(y, fmt)
+    if not (mapID and x and y) then return nil end
+
+    scratchMapPos:SetXY(x, y)
+    local continentID, pos = C_Map.GetWorldPosFromMapPos(mapID, scratchMapPos)
+    if not pos then return nil end
+
+    local worldX, worldY = pos:GetXY()
+    if not worldX or not worldY then return nil end
+
+    return continentID, worldX, worldY
+end
+
+--- World-yard offset of (x1, y1) from (x2, y2) on the same map.
+--- Returns nil when a point has no world position or the continents differ.
+---@param mapID number|string|nil
+---@param x1 number|string|nil
+---@param y1 number|string|nil
+---@param x2 number|string|nil
+---@param y2 number|string|nil
+---@param fmt string|nil "percent", "fraction", or nil for the tolerant reading
+---@return number|nil dWorldX
+---@return number|nil dWorldY
+---@return number|nil continentID
+function Location.WorldDelta(mapID, x1, y1, x2, y2, fmt)
+    local c1, wx1, wy1 = Location.GetWorldPos(mapID, x1, y1, fmt)
+    local c2, wx2, wy2 = Location.GetWorldPos(mapID, x2, y2, fmt)
+    if not (wx1 and wx2) then return nil end
+    if c1 ~= c2 then return nil end
+
+    return wx1 - wx2, wy1 - wy2, c1
+end
+
+--- Project a WorldDelta onto the minimap. +x is right, +y is up, 1.0 is
+--- C_Minimap.GetViewRadius yards. Pass GetPlayerFacing() as facing when
+--- rotateMinimap is on; omit it for north-up.
+---@param dWorldX number
+---@param dWorldY number
+---@param viewRadius number
+---@param facing number|nil
+---@return number|nil nx
+---@return number|nil ny
+function Location.MinimapOffset(dWorldX, dWorldY, viewRadius, facing)
+    if not viewRadius or viewRadius <= 0 then return nil end
+
+    local xDist = -dWorldY
+    local yDist = -dWorldX
+    if facing then
+        local c, s = cos(facing), sin(facing)
+        xDist, yDist = xDist * c - yDist * s, xDist * s + yDist * c
+    end
+
+    return xDist / viewRadius, -yDist / viewRadius
 end

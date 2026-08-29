@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["WAYPINS_ICON"] = "핀 아이콘",
     ["WAYPINS_COORDS"] = "지도 ID, X, Y",
     ["WAYPINS_MAP_TT"] = "클릭하면 실시간 경유지를 설정합니다. 우클릭하면 더 많은 옵션이 있습니다.",
+    ["WAYPINS_CATALOG_HINT"] = "Catalog에서 저장했습니다. 나중에 Catalog에서 이 출처를 볼 수 있습니다.",
     ["WAYPINS_DIALOG_TITLE"] = "새 OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "OneWay Pin 편집",
     ["WAYPINS_FIND_LOCATION"] = "위치 찾기",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "지역 메모를 추가하고 지역 고정을 활성화하면 들어갈 때 표시됩니다.",
     ["UI_HELP_PIN_ZONE_LINE2"] = "그 지역에 들어가면 메모가 자동으로 나타납니다.",
     ["UI_HELP_PIN_ZONE_LINE3"] = "지역 고정을 우클릭하면 표시 옵션이 나옵니다.",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "제목 표시줄에서 최소화하면 이름만 남습니다. 다음에 해당 지역에 들어갈 때 창이 이 설정을 기억합니다.",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

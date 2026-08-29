@@ -168,8 +168,7 @@ local function AcquireRow(parent)
         if pin then
             ns.WayPinsMap:SetHoverPin(pin.id)
             GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
-            GameTooltip:SetText(pin.title or L["WAYPINS_UNTITLED"], 1, 1, 1)
-            GameTooltip:AddLine(L["WAYPINS_LEGEND_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            ns.WayPinsTooltip.Fill(GameTooltip, pin, L["WAYPINS_LEGEND_TT"])
             GameTooltip:Show()
         end
     end)

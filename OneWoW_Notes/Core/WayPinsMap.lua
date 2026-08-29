@@ -5,24 +5,26 @@ local OneWoW_GUI = OneWoW_GUI
 local Location = OneWoW.Location
 local Visual = ns.WayPinsVisual
 
-local ipairs, wipe, tinsert = ipairs, wipe, tinsert
-local abs, cos, sin, sqrt = math.abs, math.cos, math.sin, math.sqrt
+local ipairs, pairs, next, tinsert = ipairs, pairs, next, tinsert
+local abs, sqrt = math.abs, math.sqrt
 local C_Map, C_Timer, C_Navigation, C_Minimap = C_Map, C_Timer, C_Navigation, C_Minimap
 local GetCVar, GetPlayerFacing, IsControlKeyDown = GetCVar, GetPlayerFacing, IsControlKeyDown
 local MenuUtil, GameTooltip = MenuUtil, GameTooltip
-local CreateVector2D = CreateVector2D
 local GetCursorPosition, UIParent = GetCursorPosition, UIParent
 local OpenWorldMap = OpenWorldMap
 local LibStub = LibStub
+local CreateFromMixins, Mixin = CreateFromMixins, Mixin
+local CreateUnsecuredRegionPoolInstance = CreateUnsecuredRegionPoolInstance
+local MapCanvasDataProviderMixin, MapCanvasPinMixin = MapCanvasDataProviderMixin, MapCanvasPinMixin
+local Minimap = Minimap
 
 -- ============================================================================
 -- WayPinsMap
 -- ============================================================================
--- World-map canvas buttons + minimap radar. Minimap placement uses world-yard
--- distance against C_Minimap.GetViewRadius so a landmark stays put while you
--- walk; map-percent used to be treated as the whole minimap radius, which
--- glued every pin to the player. Clicking a pin sets the Blizzard user
--- waypoint. Arrival clears that live track only.
+-- World-map MapCanvas pins + minimap radar. Minimap placement uses world-yard
+-- dx/dy from Location.WorldDelta against C_Minimap.GetViewRadius so a landmark
+-- stays put while you walk. Out-of-range pins sit on the rim. Clicking a pin
+-- sets the Blizzard user waypoint. Arrival clears that live track only.
 -- The map-chrome button parents to GetCanvasContainer like ATT and sits under
 -- ATT's button when that addon is loaded; otherwise it uses ATT's Retail slot.
 -- ============================================================================
@@ -32,19 +34,26 @@ ns.WayPinsMap = WayPinsMap
 
 local ARRIVE_YARDS = 22
 local PERCENT_COORDS = { format = "percent" }
-local FALLBACK_MAP_PERCENT = 2.5
+local PERCENT_FMT = "percent"
+local WORLD_PIN_TEMPLATE = "OneWoW_WayPinsWorldMapPinTemplate"
+local PREVIEW_MINIMAP_KEY = "__preview"
 
 local initialized = false
-local worldPins = {}
-local worldPinPool = {}
-local minimapPins = {}
-local minimapPinPool = {}
 local livePinID = nil
 local soloPinID = nil
 local hoverPinID = nil
 local arrivalTicker = nil
-local minimapTicker = nil
 local mapHooked = false
+local worldProvider
+local minimapDriver
+local minimapDirty = true
+local lastMinimapMapID
+local minimapActive = {}
+local minimapPinPool = {}
+
+local function MarkMinimapDirty()
+    minimapDirty = true
+end
 local mapButton
 local placingPin = false
 local placeCatcher
@@ -54,22 +63,6 @@ local placeGhost
 local ATT_MAP_BTN_X = -1
 local ATT_MAP_BTN_Y = -65
 local ATT_MAP_BTN_GAP = -2
-
-local scratchA = CreateVector2D(0, 0)
-local scratchB = CreateVector2D(0, 0)
-
-local function WorldDistanceYards(mapID, x1, y1, x2, y2)
-    x1, y1, x2, y2 = tonumber(x1), tonumber(y1), tonumber(x2), tonumber(y2)
-    if not (mapID and x1 and y1 and x2 and y2) then return nil end
-    scratchA:SetXY(x1 / 100, y1 / 100)
-    scratchB:SetXY(x2 / 100, y2 / 100)
-    local _, posA = C_Map.GetWorldPosFromMapPos(mapID, scratchA)
-    local _, posB = C_Map.GetWorldPosFromMapPos(mapID, scratchB)
-    if not posA or not posB then return nil end
-    local dx = posA.x - posB.x
-    local dy = posA.y - posB.y
-    return sqrt(dx * dx + dy * dy)
-end
 
 local function PinVisible(data)
     if soloPinID and data.id ~= soloPinID then
@@ -101,6 +94,7 @@ end
 ---@param draft table|nil
 function WayPinsMap:SetPreviewDraft(draft)
     previewDraft = draft
+    MarkMinimapDirty()
     self:RefreshWorldMap()
     self:UpdateMinimapPins()
     if ns.UI and ns.UI.RefreshWayPinsTab then
@@ -111,6 +105,7 @@ end
 function WayPinsMap:ClearPreviewDraft()
     if not previewDraft then return end
     previewDraft = nil
+    MarkMinimapDirty()
     self:RefreshWorldMap()
     self:UpdateMinimapPins()
     if ns.UI and ns.UI.RefreshWayPinsTab then
@@ -140,6 +135,7 @@ local function ClearLiveWaypoint()
     if C_Map.HasUserWaypoint() then
         C_Map.ClearUserWaypoint()
     end
+    MarkMinimapDirty()
     WayPinsMap:RefreshWorldMap()
     WayPinsMap:UpdateMinimapPins()
     if ns.WayPinsCompanion then
@@ -157,6 +153,7 @@ local function StartArrivalWatch()
         if not C_Map.HasUserWaypoint() then
             livePinID = nil
             StopArrivalWatch()
+            MarkMinimapDirty()
             WayPinsMap:RefreshWorldMap()
             WayPinsMap:UpdateMinimapPins()
             if ns.WayPinsCompanion then
@@ -206,7 +203,10 @@ function WayPinsMap:SetHoverPin(pinID)
         return
     end
     hoverPinID = pinID
-    for _, pin in ipairs(worldPins) do
+    if not WorldMapFrame or not WorldMapFrame.pinPools or not WorldMapFrame.pinPools[WORLD_PIN_TEMPLATE] then
+        return
+    end
+    for pin in WorldMapFrame:EnumeratePinsByTemplate(WORLD_PIN_TEMPLATE) do
         local data = pin.pinData
         if data then
             Visual.Apply(pin, data, WorldPinPaintOpts(data))
@@ -253,6 +253,7 @@ function WayPinsMap:TrackPin(pin)
     end
     livePinID = pin.id
     StartArrivalWatch()
+    MarkMinimapDirty()
     self:RefreshWorldMap()
     self:UpdateMinimapPins()
     if ns.WayPinsCompanion then
@@ -392,23 +393,17 @@ function WayPinsMap:ShowPinMenu(owner, data)
     end)
 end
 
-local function AcquireWorldPin()
-    for _, pin in ipairs(worldPinPool) do
-        if not pin._inUse then
-            return pin
-        end
-    end
-    local btn = CreateFrame("Button", nil, WorldMapFrame:GetCanvas())
-    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    btn:SetFrameStrata("HIGH")
-    Visual.Attach(btn)
+local WayPinsWorldPinMixin = CreateFromMixins(MapCanvasPinMixin)
 
+local function WireWorldPinScripts(btn)
+    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    btn:EnableMouse(true)
+    Visual.Attach(btn)
     btn:SetScript("OnEnter", function(myself)
         local data = myself.pinData
         if not data then return end
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(data.title or L["WAYPINS_UNTITLED"], 1, 1, 1)
-        GameTooltip:AddLine(L["WAYPINS_MAP_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        ns.WayPinsTooltip.Fill(GameTooltip, data, L["WAYPINS_MAP_TT"])
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", GameTooltip_Hide)
@@ -421,46 +416,84 @@ local function AcquireWorldPin()
         end
         WayPinsMap:TrackPin(data)
     end)
-
-    tinsert(worldPinPool, btn)
-    return btn
 end
 
-function WayPinsMap:RefreshWorldMap()
-    for _, pin in ipairs(worldPins) do
-        pin._inUse = false
-        Visual.Hide(pin)
-    end
-    wipe(worldPins)
+function WayPinsWorldPinMixin:OnLoad()
+    self:SetIgnoreGlobalPinScale(true)
+    self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
+    self:SetNudgeTargetFactor(0)
+end
 
+function WayPinsWorldPinMixin:OnAcquired(data)
+    self.pinData = data
+    Visual.Apply(self, data, WorldPinPaintOpts(data))
+    self:Show()
+end
+
+function WayPinsWorldPinMixin:OnReleased()
+    Visual.Hide(self)
+    self.pinData = nil
+end
+
+local WayPinsDataProviderMixin = CreateFromMixins(MapCanvasDataProviderMixin)
+
+function WayPinsDataProviderMixin:RemoveAllData()
+    self:GetMap():RemoveAllPinsByTemplate(WORLD_PIN_TEMPLATE)
+end
+
+function WayPinsDataProviderMixin:RefreshAllData()
+    self:RemoveAllData()
     if not Visual.ShowWorld() then return end
-    if not WorldMapFrame or not WorldMapFrame:IsShown() then
-        return
-    end
-    local canvas = WorldMapFrame:GetCanvas()
-    if not canvas then return end
+    if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
 
-    local mapID = WorldMapFrame:GetMapID()
+    local mapID = self:GetMap():GetMapID()
+    if not mapID then return end
+
     local pins = PinsForMap(mapID)
-    local cw, ch = canvas:GetWidth(), canvas:GetHeight()
-    if cw == 0 or ch == 0 then return end
-
     for _, data in ipairs(pins) do
         if PinVisible(data) then
             local x = (data.x or 0) / 100
             local y = (data.y or 0) / 100
             if x >= 0 and x <= 1 and y >= 0 and y <= 1 then
-                local pin = AcquireWorldPin()
-                pin:SetParent(canvas)
-                pin:ClearAllPoints()
-                pin:SetPoint("CENTER", canvas, "TOPLEFT", x * cw, -y * ch)
-                pin.pinData = data
-                Visual.Apply(pin, data, WorldPinPaintOpts(data))
-                pin._inUse = true
-                pin:Show()
-                tinsert(worldPins, pin)
+                local pin = self:GetMap():AcquirePin(WORLD_PIN_TEMPLATE, data)
+                pin:SetPosition(x, y)
             end
         end
+    end
+end
+
+local function EnsureWorldMapProvider()
+    if worldProvider or not WorldMapFrame then return end
+
+    local pool = CreateUnsecuredRegionPoolInstance(WORLD_PIN_TEMPLATE)
+    pool.parent = WorldMapFrame:GetCanvas()
+    pool.createFunc = function()
+        local btn = CreateFrame("Button", nil, WorldMapFrame:GetCanvas())
+        Mixin(btn, WayPinsWorldPinMixin)
+        WireWorldPinScripts(btn)
+        return btn
+    end
+    pool.resetFunc = function(_, pin)
+        pin:Hide()
+        pin:ClearAllPoints()
+        pin:OnReleased()
+        pin.pinTemplate = nil
+        pin.owningMap = nil
+    end
+    pool.creationFunc = pool.createFunc
+    pool.resetterFunc = pool.resetFunc
+    if not WorldMapFrame.pinPools then
+        WorldMapFrame.pinPools = {}
+    end
+    WorldMapFrame.pinPools[WORLD_PIN_TEMPLATE] = pool
+
+    worldProvider = CreateFromMixins(WayPinsDataProviderMixin)
+    WorldMapFrame:AddDataProvider(worldProvider)
+end
+
+function WayPinsMap:RefreshWorldMap()
+    if worldProvider then
+        worldProvider:RefreshAllData()
     end
 end
 
@@ -477,8 +510,10 @@ local function AcquireMinimapPin()
     Visual.Attach(btn)
 
     btn:SetScript("OnEnter", function(myself)
+        local pinData = myself.pinData
+        if not pinData then return end
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(myself.pinData and myself.pinData.title or L["WAYPINS_UNTITLED"], 1, 1, 1)
+        ns.WayPinsTooltip.Fill(GameTooltip, pinData)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", GameTooltip_Hide)
@@ -492,82 +527,142 @@ local function AcquireMinimapPin()
     return btn
 end
 
-function WayPinsMap:UpdateMinimapPins()
-    for _, pin in ipairs(minimapPins) do
-        pin._inUse = false
-        Visual.Hide(pin)
+local function ReleaseMinimapPin(pin)
+    pin._inUse = false
+    pin.pinID = nil
+    pin.pinData = nil
+    pin._paintKey = nil
+    Visual.Hide(pin)
+end
+
+local function MinimapPinKey(data)
+    return data.id or PREVIEW_MINIMAP_KEY
+end
+
+local function SyncMinimapPinSet(mapID)
+    for _, pin in pairs(minimapActive) do
+        pin._keep = false
     end
-    wipe(minimapPins)
 
-    if not Visual.ShowMinimap() then return end
-
-    local mapID, px, py = Location.GetPlayerLocation()
-    if not mapID or not px then return end
-
-    local pins = PinsForMap(mapID)
-    if #pins == 0 then return end
-
-    local view = C_Minimap.GetViewRadius()
-    if not view or view <= 0 then
-        view = 70
-    end
-    local rotate = GetCVar("rotateMinimap") == "1"
-    local facing = rotate and (GetPlayerFacing() or 0) or 0
-    local radiusPx = Minimap:GetWidth() / 2 - 4
-    local animate = Visual.MinimapAnimate()
-
-    for _, data in ipairs(pins) do
-        if PinVisible(data) then
-            local distYards = WorldDistanceYards(mapID, data.x, data.y, px, py)
-            local mag
-            if distYards then
-                if distYards > view then
-                    mag = nil
-                else
-                    mag = distYards / view
+    if mapID and Visual.ShowMinimap() then
+        local animate = Visual.MinimapAnimate()
+        for _, data in ipairs(PinsForMap(mapID)) do
+            if PinVisible(data) then
+                local key = MinimapPinKey(data)
+                local pin = minimapActive[key]
+                if not pin then
+                    pin = AcquireMinimapPin()
+                    pin._inUse = true
+                    minimapActive[key] = pin
                 end
-            else
-                local distPct = Location.DistanceMapPercent(data.x, data.y, px, py)
-                if distPct and distPct <= FALLBACK_MAP_PERCENT then
-                    mag = distPct / FALLBACK_MAP_PERCENT
+                pin._keep = true
+                pin.pinID = key
+                pin.pinData = data
+                local paintKey = key .. ":" .. tostring(livePinID) .. ":" .. Visual.MinimapSize(data) .. ":" .. tostring(animate)
+                if pin._paintKey ~= paintKey then
+                    Visual.Apply(pin, data, {
+                        size = Visual.MinimapSize(data),
+                        tracked = livePinID == data.id,
+                        animate = animate,
+                    })
+                    pin._paintKey = paintKey
                 end
             end
-            if mag then
-                local mapDx = (data.x - px)
-                local mapDy = (data.y - py)
-                local len = sqrt(mapDx * mapDx + mapDy * mapDy)
-                local ux, uy = 0, 0
-                if len > 0.0001 then
-                    ux = mapDx / len
-                    uy = -mapDy / len
-                    if rotate then
-                        local c, s = cos(facing), sin(facing)
-                        local rx = ux * c + uy * s
-                        local ry = -ux * s + uy * c
-                        ux, uy = rx, ry
-                    end
-                end
-                local pin = AcquireMinimapPin()
+        end
+    end
+
+    for key, pin in pairs(minimapActive) do
+        if not pin._keep then
+            ReleaseMinimapPin(pin)
+            minimapActive[key] = nil
+        end
+    end
+end
+
+--- Keep out-of-range pins on the rim. Square minimaps clamp per-axis; others
+--- use a circle. Corner shapes stay circular so this table does not grow.
+---@param nx number
+---@param ny number
+---@return number
+---@return number
+local function FloatOnMinimapEdge(nx, ny)
+    local shape = GetMinimapShape and GetMinimapShape() or "ROUND"
+    if shape == "SQUARE" then
+        local ax, ay = abs(nx), abs(ny)
+        local m = ax > ay and ax or ay
+        if m > 1 then
+            return nx / m, ny / m
+        end
+        return nx, ny
+    end
+    local mag2 = nx * nx + ny * ny
+    if mag2 > 1 then
+        local mag = sqrt(mag2)
+        return nx / mag, ny / mag
+    end
+    return nx, ny
+end
+
+local function PositionMinimapPins(mapID, px, py)
+    local view = C_Minimap.GetViewRadius()
+    if not view or view <= 0 or not px then
+        for _, pin in pairs(minimapActive) do
+            pin:Hide()
+        end
+        return
+    end
+
+    local rotate = GetCVar("rotateMinimap") == "1"
+    local facing = rotate and GetPlayerFacing() or nil
+    local radiusPx = Minimap:GetWidth() / 2 - 4
+
+    for _, pin in pairs(minimapActive) do
+        local data = pin.pinData
+        if data then
+            local dWx, dWy = Location.WorldDelta(mapID, data.x, data.y, px, py, PERCENT_FMT)
+            local nx, ny
+            if dWx then
+                nx, ny = Location.MinimapOffset(dWx, dWy, view, facing)
+            end
+            if nx then
+                local mag = sqrt(nx * nx + ny * ny)
+                nx, ny = FloatOnMinimapEdge(nx, ny)
                 pin:ClearAllPoints()
-                pin:SetPoint("CENTER", Minimap, "CENTER", ux * mag * radiusPx, uy * mag * radiusPx)
-                pin.pinData = data
-                Visual.Apply(pin, data, {
-                    size = Visual.MinimapSize(data),
-                    tracked = livePinID == data.id,
-                    animate = animate,
-                })
-                pin._inUse = true
+                pin:SetPoint("CENTER", Minimap, "CENTER", nx * radiusPx, ny * radiusPx)
+                if mag > 1 then
+                    mag = 1
+                end
                 pin:SetAlpha(1.0 - (mag * 0.35))
                 pin:Show()
-                tinsert(minimapPins, pin)
+            else
+                pin:Hide()
             end
         end
     end
 end
 
-local function EnsureMinimapTicker()
-    if minimapTicker then return end
-    minimapTicker = C_Timer.NewTicker(0.2, function()
+function WayPinsMap:UpdateMinimapPins()
+    if not Visual.ShowMinimap() or not Minimap:IsVisible() then
+        if next(minimapActive) then
+            SyncMinimapPinSet(nil)
+        end
+        return
+    end
+
+    local mapID, px, py = Location.GetPlayerLocation()
+    if minimapDirty or mapID ~= lastMinimapMapID then
+        SyncMinimapPinSet(mapID)
+        lastMinimapMapID = mapID
+        minimapDirty = false
+    end
+
+    PositionMinimapPins(mapID, px, py)
+end
+
+local function EnsureMinimapDriver()
+    if minimapDriver then return end
+    minimapDriver = CreateFrame("Frame")
+    minimapDriver:SetScript("OnUpdate", function()
         WayPinsMap:UpdateMinimapPins()
     end)
 end
@@ -897,6 +992,7 @@ end
 local function WireWorldMap()
     if mapHooked or not WorldMapFrame then return end
     mapHooked = true
+    EnsureWorldMapProvider()
     EnsureMapButton()
 
     hooksecurefunc(WorldMapFrame, "OnMapChanged", function()
@@ -927,8 +1023,8 @@ local function WireWorldMap()
     WorldMapFrame:HookScript("OnHide", function()
         StopPlaceMode()
         hoverPinID = nil
-        for _, pin in ipairs(worldPins) do
-            Visual.Hide(pin)
+        if worldProvider then
+            worldProvider:RemoveAllData()
         end
         if ns.WayPinsMapPanel then
             ns.WayPinsMapPanel:Hide()
@@ -937,13 +1033,6 @@ local function WireWorldMap()
             ns.WayPinsCompanion:ResumeAfterMap()
         end
     end)
-
-    local canvas = WorldMapFrame:GetCanvas()
-    if canvas then
-        canvas:HookScript("OnSizeChanged", function()
-            WayPinsMap:RefreshWorldMap()
-        end)
-    end
 
     local sc = WorldMapFrame.ScrollContainer
     if sc then
@@ -977,6 +1066,7 @@ local function WireWorldMap()
 end
 
 function WayPinsMap:Refresh()
+    MarkMinimapDirty()
     self:RefreshWorldMap()
     self:UpdateMinimapPins()
     if ns.WayPinsMapPanel then
@@ -995,13 +1085,13 @@ end
 function WayPinsMap:Initialize()
     if initialized then return end
     initialized = true
+    EnsureMinimapDriver()
 
     local function Arm()
         WireWorldMap()
         if ns.WayPinsMapPanel then
             ns.WayPinsMapPanel:Initialize()
         end
-        EnsureMinimapTicker()
         self:Refresh()
         if WorldMapFrame:IsShown() then
             PaintMapButtonIcon()
@@ -1030,6 +1120,7 @@ function WayPinsMap:Initialize()
             if livePinID and not C_Map.HasUserWaypoint() then
                 livePinID = nil
                 StopArrivalWatch()
+                MarkMinimapDirty()
                 self:Refresh()
                 if ns.WayPinsCompanion then
                     ns.WayPinsCompanion:RefreshRows()

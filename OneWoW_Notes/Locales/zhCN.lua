@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["WAYPINS_ICON"] = "标记图标",
     ["WAYPINS_COORDS"] = "地图 ID、X、Y",
     ["WAYPINS_MAP_TT"] = "点击设置实时路径点。右键查看更多。",
+    ["WAYPINS_CATALOG_HINT"] = "已从 Catalog 保存。稍后可在 Catalog 中查看此来源。",
     ["WAYPINS_DIALOG_TITLE"] = "新建 OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "编辑 OneWay Pin",
     ["WAYPINS_FIND_LOCATION"] = "查找地点",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "添加一条区域笔记并启用区域固定，以便进入时显示。",
     ["UI_HELP_PIN_ZONE_LINE2"] = "当你进入该区域时笔记会自动出现。",
     ["UI_HELP_PIN_ZONE_LINE3"] = "右键点击区域固定可查看显示选项。",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "点击标题栏的最小化可只保留名称。下次进入该区域时窗口会记住此设置。",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

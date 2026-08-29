@@ -47,6 +47,7 @@ Core\ZonePins.lua
 Core\ItemsData.lua
 Core\ZonesData.lua
 Core\WayPinsData.lua
+Core\WayPinsTooltip.lua
 Core\WayPinsVisual.lua
 Core\WayPinsMap.lua
 Core\WayPinsMapPanel.lua

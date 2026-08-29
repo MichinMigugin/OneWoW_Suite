@@ -274,16 +274,22 @@ function Visual.Attach(btn)
     bgFrame:EnableMouse(false)
     local bgTex = bgFrame:CreateTexture(nil, "BACKGROUND")
     bgTex:SetAllPoints()
+    bgTex:SetTexelSnappingBias(0)
+    bgTex:SetSnapToPixelGrid(false)
 
     local iconFrame = CreateFrame("Frame", nil, btn)
     iconFrame:SetAllPoints()
     iconFrame:EnableMouse(false)
     local icon = iconFrame:CreateTexture(nil, "ARTWORK")
     icon:SetAllPoints()
+    icon:SetTexelSnappingBias(0)
+    icon:SetSnapToPixelGrid(false)
 
     local glow = btn:CreateTexture(nil, "OVERLAY")
     glow:SetPoint("CENTER")
     glow:SetAtlas("UI-QuestPoiImportant-OuterGlow")
+    glow:SetTexelSnappingBias(0)
+    glow:SetSnapToPixelGrid(false)
     glow:Hide()
 
     local look = {

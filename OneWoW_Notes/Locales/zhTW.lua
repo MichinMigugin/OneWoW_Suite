@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["WAYPINS_ICON"] = "標記圖示",
     ["WAYPINS_COORDS"] = "地圖 ID、X、Y",
     ["WAYPINS_MAP_TT"] = "點擊以設定即時路徑點。右鍵可看更多。",
+    ["WAYPINS_CATALOG_HINT"] = "已從 Catalog 儲存。稍後可在 Catalog 中查看此來源。",
     ["WAYPINS_DIALOG_TITLE"] = "新增 OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "編輯 OneWay Pin",
     ["WAYPINS_FIND_LOCATION"] = "尋找地點",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "新增一筆區域筆記並啟用區域釘選，以便進入時顯示。",
     ["UI_HELP_PIN_ZONE_LINE2"] = "當你進入該區域時筆記會自動出現。",
     ["UI_HELP_PIN_ZONE_LINE3"] = "右鍵點擊區域釘選可查看顯示選項。",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "點擊標題列的最小化可只保留名稱。下次進入該區域時視窗會記住此設定。",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

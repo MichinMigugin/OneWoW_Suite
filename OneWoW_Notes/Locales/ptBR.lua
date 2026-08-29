@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["WAYPINS_ICON"] = "Ícone do marcador",
     ["WAYPINS_COORDS"] = "ID do mapa, X, Y",
     ["WAYPINS_MAP_TT"] = "Clique para definir um ponto de rota. Clique com o botão direito para mais.",
+    ["WAYPINS_CATALOG_HINT"] = "Salvo do Catalog. Abra o Catalog depois para ver esta origem.",
     ["WAYPINS_DIALOG_TITLE"] = "Novo OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "Editar OneWay Pin",
     ["WAYPINS_FIND_LOCATION"] = "Encontrar local",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "Adicione uma nota de zona e ative a fixação de zona para mostrá-la ao entrar.",
     ["UI_HELP_PIN_ZONE_LINE2"] = "A nota aparece automaticamente quando você entra nessa zona.",
     ["UI_HELP_PIN_ZONE_LINE3"] = "Clique com o botão direito na fixação de zona para opções de exibição.",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "Minimize a barra de título para deixar só o nome. A janela lembra disso na próxima vez que você entrar na zona.",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

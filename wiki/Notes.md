@@ -48,14 +48,17 @@ Turn **OneWay Pins** off in **Manage Features** (Settings) under Notes to hide t
 
 Hover the window for **Show Pins** and **Hide Zone Notes**. Hide Zone Notes leaves only the pin list, so you do not need a blank notes pane. The hover bar sits under both boxes and sizes to what is showing. Opacity on the note, hover bar, and pin list stay in step.
 
+Use the **minimize** button on the title bar (or double-click / Shift-click the bar) to shrink the window to the name only. The pin list hides with it. That setting is remembered the next time you enter the zone. The X still hides the window for 30 minutes.
+
 **Add** on the pin list (or right-click empty space) opens **Add Here** and **Find Location**. Left-click a listed pin to go, Ctrl-click to open the OneWay Pins tab, right-click for Go / Track, Show on Map, Edit, Open Pin Tab, or Delete. Creating a pin does not create a zone note by itself.
 
 ### Maps and the list
 
 * Pins stay on the world map, minimap, and the OneWay Pins tab until you delete them
+* Minimap pins stay on the landmark as you walk. Pins outside the current zoom sit on the rim
 * Each row has **Go** (live waypoint) and **Show Map** (open that pin's zone and set a live waypoint; other pins stay visible)
 * The world map **Map Legend** can list OneWay Pins for the map you are viewing (OneWay Pins settings or the map button). Hover a name to highlight that pin. Opening the map hides pinned zone notes until you close it
-* Edit a pin to set icon, world-map and minimap size, optional background (including New Item and other glows), **Effect** (None, Zooming, Spinning, or Both), and **Background Scale**. Scale is relative to the icon, so the same pin looks the same on the world map, minimap, and list. Backgrounds stay still unless you pick an effect. The Notes tab details preview plays that effect. Changes show on the maps and the Notes tab after a short pause; Save writes them. Extra layers use more memory. OneWay Pins settings set the default sizes. **Disable minimap animations** in OneWay Pins settings is on by default (the minimap does not play pin animations well).
+* Edit a pin to set title, an optional **description**, icon (including Blizzard minimap tracking icons such as banker, mailbox, flight master, trainers, food, and reagents), world-map and minimap size, optional background (including New Item and other glows), **Effect** (None, Zooming, Spinning, or Both), and **Background Scale**. Scale is relative to the icon, so the same pin looks the same on the world map, minimap, and list. Backgrounds stay still unless you pick an effect. The Notes tab details preview plays that effect. Hover a pin in the zone list or map legend for title, description, and coordinates. Pins saved from Catalog Journal, Vendors, or Quests mention Catalog on the tooltip. Changes show on the maps and the Notes tab after a short pause; Save writes them. Extra layers use more memory. OneWay Pins settings set the default sizes. **Disable minimap animations** in OneWay Pins settings is on by default (the minimap does not play pin animations well).
 
 ---
 

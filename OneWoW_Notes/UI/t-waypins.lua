@@ -32,7 +32,7 @@ local function MatchesFilters(pin)
         end
     end
     if searchFilter ~= "" then
-        local hay = (pin.title or "") .. " " .. ns.WayPins:MapDisplayName(pin.mapID)
+        local hay = (pin.title or "") .. " " .. (pin.description or "") .. " " .. ns.WayPins:MapDisplayName(pin.mapID)
         if not hay:lower():find(searchFilter, 1, true) then
             return false
         end
@@ -94,6 +94,17 @@ local function PaintDetail()
     detailWidgets.coords:SetText(string.format("%.1f, %.1f", paint.x or 0, paint.y or 0))
     local stor = pin.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"]
     detailWidgets.storage:SetText(string.format(L["UI_STORAGE_WITH_VALUE"], stor))
+    local description = paint.description
+    local extra = 0
+    if type(description) == "string" and description ~= "" then
+        detailWidgets.desc:SetText(description)
+        detailWidgets.desc:Show()
+        extra = math.max(detailWidgets.desc:GetStringHeight(), 12) + 8
+    else
+        detailWidgets.desc:SetText("")
+        detailWidgets.desc:Hide()
+    end
+    detailWidgets.infoBar:SetHeight(72 + extra)
 end
 
 function ns.UI.RefreshWayPinsTab()
@@ -377,6 +388,14 @@ function ns.UI.CreateWayPinsTab(parent)
     storageFS:SetPoint("TOPLEFT", coords, "BOTTOMLEFT", 0, -4)
     storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     detailWidgets.storage = storageFS
+
+    local desc = OneWoW_GUI:CreateFS(infoBar, 11)
+    desc:SetPoint("TOPLEFT", storageFS, "BOTTOMLEFT", 0, -4)
+    desc:SetPoint("RIGHT", -12, 0)
+    desc:SetJustifyH("LEFT")
+    desc:SetWordWrap(true)
+    desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    detailWidgets.desc = desc
 
     parent:HookScript("OnShow", function()
         ns.UI.RefreshWayPinsTab()

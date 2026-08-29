@@ -165,6 +165,7 @@ local function CollectDraft()
     local draft = {
         id          = editingID,
         title       = fields.title:GetSearchText(),
+        description = fields.description:GetSearchText(),
         mapID       = mapID,
         x           = x,
         y           = y,
@@ -261,6 +262,17 @@ local function EnsureDialog()
     fields.title = OneWoW_GUI:CreateEditBox(content, {
         placeholderText = L["WAYPINS_UNTITLED"],
         maxLetters = 80,
+        onTextChanged = function()
+            SchedulePreview()
+        end,
+    })
+
+    fields.descLabel = OneWoW_GUI:CreateFS(content, 12)
+    fields.descLabel:SetText(DESCRIPTION)
+    fields.descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    fields.description = OneWoW_GUI:CreateEditBox(content, {
+        maxLetters = 240,
         onTextChanged = function()
             SchedulePreview()
         end,
@@ -409,6 +421,12 @@ local function EnsureDialog()
         PlaceWide(fields.title, y)
         y = y - 30
 
+        Place(fields.descLabel, DIALOG_PAD, y)
+        y = y - 16
+
+        PlaceWide(fields.description, y)
+        y = y - 30
+
         Place(fields.coordLabel, DIALOG_PAD, y)
         y = y - 16
 
@@ -525,6 +543,7 @@ function ns.UI.OpenWayPinDialog(seed)
     fields.bgScale = (seed.bg and tonumber(seed.bg.scale)) or 1
 
     fields.title:SetText(seed.title or "")
+    fields.description:SetText(seed.description or "")
     fields.mapID:SetText(seed.mapID and tostring(seed.mapID) or "")
     fields.x:SetText(seed.x and string.format("%.2f", seed.x) or "")
     fields.y:SetText(seed.y and string.format("%.2f", seed.y) or "")

@@ -23,6 +23,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 * Pin lists as floating progress windows while you play
 * World-map pins for coordinate steps on pinned lists
+* Minimap pins for those steps stay on the landmark as you walk
 
 ### Farm value
 

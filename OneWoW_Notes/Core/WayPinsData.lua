@@ -38,6 +38,17 @@ local function CopyIcon(spec)
     return icon
 end
 
+local function CopyDescription(text)
+    if type(text) ~= "string" then
+        return nil
+    end
+    text = text:gsub("^%s+", ""):gsub("%s+$", "")
+    if text == "" then
+        return nil
+    end
+    return text
+end
+
 local function CopyBg(bg)
     if type(bg) ~= "table" or not bg.enabled then
         return nil
@@ -136,21 +147,22 @@ function WayPins:Add(fields)
 
     local storage = fields.storage == "character" and "character" or "account"
     local pin = {
-        id        = pinID,
-        title     = title,
-        mapID     = mapID,
-        x         = x,
-        y         = y,
-        icon      = CopyIcon(fields.icon),
-        bg        = CopyBg(fields.bg),
-        effect    = CopyEffect(fields.effect),
-        mapSize      = tonumber(fields.mapSize),
-        minimapSize  = tonumber(fields.minimapSize),
-        source    = fields.source or "manual",
-        sourceKey = fields.sourceKey,
-        storage   = storage,
-        created   = fields.created or GetServerTime(),
-        modified  = GetServerTime(),
+        id          = pinID,
+        title       = title,
+        description = CopyDescription(fields.description),
+        mapID       = mapID,
+        x           = x,
+        y           = y,
+        icon        = CopyIcon(fields.icon),
+        bg          = CopyBg(fields.bg),
+        effect      = CopyEffect(fields.effect),
+        mapSize     = tonumber(fields.mapSize),
+        minimapSize = tonumber(fields.minimapSize),
+        source      = fields.source or "manual",
+        sourceKey   = fields.sourceKey,
+        storage     = storage,
+        created     = fields.created or GetServerTime(),
+        modified    = GetServerTime(),
     }
 
     local targetDB = self:GetDataDB(storage)
@@ -165,6 +177,7 @@ function WayPins:Save(pinID, pin)
     pin.mapID = tonumber(pin.mapID) or pin.mapID
     pin.x = tonumber(pin.x) or pin.x
     pin.y = tonumber(pin.y) or pin.y
+    pin.description = CopyDescription(pin.description)
     pin.icon = CopyIcon(pin.icon)
     pin.bg = CopyBg(pin.bg)
     pin.effect = CopyEffect(pin.effect)

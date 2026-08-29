@@ -612,6 +612,7 @@ function ns.UI.CreateNotesHelpPanel()
         L["UI_HELP_PIN_ZONE_LINE1"],
         L["UI_HELP_PIN_ZONE_LINE2"],
         L["UI_HELP_PIN_ZONE_LINE3"],
+        L["UI_HELP_PIN_ZONE_LINE4"],
     })
 
     pinsScrollContent:HookScript("OnSizeChanged", UpdatePinsScrollHeight)

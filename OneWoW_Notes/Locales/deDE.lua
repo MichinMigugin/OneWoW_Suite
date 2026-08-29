@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["WAYPINS_ICON"] = "Markierungssymbol",
     ["WAYPINS_COORDS"] = "Karten-ID, X, Y",
     ["WAYPINS_MAP_TT"] = "Klicken, um einen Live-Wegpunkt zu setzen. Rechtsklick für mehr.",
+    ["WAYPINS_CATALOG_HINT"] = "Aus Catalog gespeichert. Oeffnen Sie Catalog spaeter, um diese Quelle zu sehen.",
     ["WAYPINS_DIALOG_TITLE"] = "Neue OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "OneWay Pin bearbeiten",
     ["WAYPINS_FIND_LOCATION"] = "Ort finden",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "Füge eine Zonennotiz hinzu und aktiviere die Zonenanheftung, um sie beim Betreten anzuzeigen.",
     ["UI_HELP_PIN_ZONE_LINE2"] = "Die Notiz erscheint automatisch, wenn du diese Zone betrittst.",
     ["UI_HELP_PIN_ZONE_LINE3"] = "Rechtsklick auf die Zonenanheftung für Anzeigeoptionen.",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "Minimiere die Titelleiste, um nur den Namen zu behalten. Das Fenster merkt sich das beim nächsten Betreten der Zone.",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

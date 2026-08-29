@@ -68,11 +68,7 @@ function TMU:Initialize()
         end)
     end
 
-    C_Timer.NewTicker(5, function()
-        if ns.TrackerMap then
-            ns.TrackerMap:UpdateMinimapPins()
-        end
-    end)
+    TM:StartMinimapDriver()
 end
 
 function TMU:ShowWaypointList(listID)

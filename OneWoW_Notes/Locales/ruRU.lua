@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["WAYPINS_ICON"] = "Значок метки",
     ["WAYPINS_COORDS"] = "ID карты, X, Y",
     ["WAYPINS_MAP_TT"] = "Нажмите, чтобы задать путевую точку. ПКМ - ещё.",
+    ["WAYPINS_CATALOG_HINT"] = "Сохранено из Catalog. Позже откройте Catalog, чтобы увидеть этот источник.",
     ["WAYPINS_DIALOG_TITLE"] = "Новый OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "Редактировать OneWay Pin",
     ["WAYPINS_FIND_LOCATION"] = "Найти место",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "Добавьте заметку о зоне и включите закрепление зоны, чтобы показывать ее при входе.",
     ["UI_HELP_PIN_ZONE_LINE2"] = "Заметка появляется автоматически, когда вы входите в эту зону.",
     ["UI_HELP_PIN_ZONE_LINE3"] = "Правый клик по закреплению зоны для параметров отображения.",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "Сверните заголовок, чтобы оставить только имя. Окно запомнит это при следующем входе в зону.",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

@@ -81,6 +81,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["WAYPINS_ICON"] = "Pin Icon",
     ["WAYPINS_COORDS"] = "Map ID, X, Y",
     ["WAYPINS_MAP_TT"] = "Click to set a live waypoint. Right-click for more.",
+    ["WAYPINS_CATALOG_HINT"] = "Saved from Catalog. Open Catalog later to see this source.",
     ["WAYPINS_DIALOG_TITLE"] = "New OneWay Pin",
     ["WAYPINS_DIALOG_EDIT"] = "Edit OneWay Pin",
     ["WAYPINS_FIND_LOCATION"] = "Find Location",
@@ -509,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_HELP_PIN_ZONE_LINE1"] = "Add a zone note and enable the zone pin to show it on entry.",
     ["UI_HELP_PIN_ZONE_LINE2"] = "The note appears automatically when you enter that zone.",
     ["UI_HELP_PIN_ZONE_LINE3"] = "Right-click the zone pin for display options.",
+    ["UI_HELP_PIN_ZONE_LINE4"] = "Minimize the title bar to keep only the name. The window remembers that the next time you enter the zone.",
 
     ["ADDON_TITLE_SHORT"] = "Notes",
 

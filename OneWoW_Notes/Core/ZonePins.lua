@@ -7,6 +7,23 @@ local PinSupport = ns.PinSupport
 local ZonePins = {}
 ns.ZonePins = ZonePins
 
+local TEX_COLLAPSE = "Interface\\Buttons\\UI-MinusButton-UP"
+local TEX_EXPAND   = "Interface\\Buttons\\UI-PlusButton-UP"
+local TITLEBAR_DOUBLE_CLICK = 0.4
+
+local function ApplyMinimizeVisual(pin)
+    local btn = pin.minimizeBtn
+    if not btn then return end
+    local tex = pin.collapsed and TEX_EXPAND or TEX_COLLAPSE
+    btn:SetNormalTexture(tex)
+    btn:SetPushedTexture(tex)
+    btn:SetHighlightTexture(tex)
+end
+
+local function CollapsedHeight(pin)
+    return PinSupport.GetFrameHeight(pin.titleBar, 20) + 14
+end
+
 function ZonePins:Initialize()
     if not ns.zonePins then ns.zonePins = {} end
 
@@ -98,10 +115,14 @@ function ZonePins:HideAllPins()
     ns.zonePins = {}
 end
 
-function ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y, width, height)
+function ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y, width, height, meta)
+    meta = meta or {}
     ns.db.global.zonePinPositions[zoneName] = {
         point = point, relativePoint = relativePoint,
-        x = x, y = y, width = width, height = height
+        x = x, y = y, width = width, height = height,
+        collapsed = meta.collapsed and true or false,
+        expandedWidth = meta.expandedWidth or width,
+        expandedHeight = meta.expandedHeight or height,
     }
 end
 
@@ -133,8 +154,18 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         if myself._widthBeforeHideNote then
             w = myself._widthBeforeHideNote
         end
-        ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y,
-            w, PinSupport.GetPinHeight(myself, 400))
+        local h = PinSupport.GetPinHeight(myself, 400)
+        local collapsed = myself.collapsed and true or false
+        local ew, eh = w, h
+        if collapsed then
+            ew = myself._savedWidth or w
+            eh = myself._savedHeight or h
+        end
+        ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y, w, h, {
+            collapsed = collapsed,
+            expandedWidth = ew,
+            expandedHeight = eh,
+        })
     end
 
     local pin = CreateFrame("Frame", "OneWoW_ZonePin_" .. safeName, UIParent, "BackdropTemplate")
@@ -170,6 +201,10 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin:SetAlpha(1.0)
     pin.zoneName = zoneName
     pin.noteId = zoneName
+    pin.collapsed = false
+    pin._titleBarLastClick = 0
+    pin._savedWidth = 300
+    pin._savedHeight = 400
 
     -- Title bar
     local titleBar = CreateFrame("Frame", nil, pin, "BackdropTemplate")
@@ -197,7 +232,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
 
     local titleText = OneWoW_GUI:CreateFS(titleBar, 10)
     titleText:SetPoint("LEFT",  titleBar, "LEFT",  5, 0)
-    titleText:SetPoint("RIGHT", titleBar, "RIGHT", -25, 0)
+    titleText:SetPoint("RIGHT", titleBar, "RIGHT", -44, 0)
     titleText:SetText(ns.Zones and ns.Zones:FormatTitleFromData(zoneData) or zoneName)
     titleText:SetJustifyH("LEFT")
     titleText:SetTextColor(titleColor[1], titleColor[2], titleColor[3], 1)
@@ -230,6 +265,29 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         ZonePins:HideZonePin(zoneName)
     end)
     pin.closeBtn = closeBtn
+
+    local minimizeBtn = CreateFrame("Button", nil, titleBar)
+    minimizeBtn:SetSize(16, 16)
+    minimizeBtn:SetPoint("RIGHT", closeBtn, "LEFT", -2, 0)
+    minimizeBtn:SetNormalTexture(TEX_COLLAPSE)
+    minimizeBtn:SetPushedTexture(TEX_COLLAPSE)
+    minimizeBtn:SetHighlightTexture(TEX_COLLAPSE)
+    minimizeBtn:SetScript("OnClick", function()
+        pin:ToggleCollapsed()
+    end)
+    minimizeBtn:SetScript("OnEnter", function(myself)
+        PinSupport.ShowTooltip(myself, "ANCHOR_BOTTOM", MINIMIZE)
+        if pin.ShowHoverControls then
+            pin.ShowHoverControls()
+        end
+    end)
+    minimizeBtn:SetScript("OnLeave", function()
+        PinSupport.HideTooltip()
+        if pin.HideHoverControlsIfAway then
+            pin.HideHoverControlsIfAway()
+        end
+    end)
+    pin.minimizeBtn = minimizeBtn
 
     -- Content area (scrollable)
     local contentFrame = CreateFrame("Frame", nil, pin)
@@ -314,6 +372,24 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         if not zd then return end
 
         myself:UpdateTitleHeight()
+
+        if myself.collapsed then
+            local ch = CollapsedHeight(myself)
+            myself:SetHeight(ch)
+            myself._cachedHeight = ch
+            myself:SetResizeBounds(200, ch, GetScreenWidth(), GetScreenHeight())
+            if myself.titleBar then myself.titleBar:Show() end
+            if myself.closeBtn then myself.closeBtn:Show() end
+            if myself.minimizeBtn then myself.minimizeBtn:Show() end
+            myself.contentFrame:Hide()
+            myself.todoMainFrame:Hide()
+            if myself.resizeBtn then myself.resizeBtn:Hide() end
+            if myself.hoverPanel then myself.hoverPanel:Hide() end
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:ApplyClusterLayout(myself)
+            end
+            return
+        end
 
         if zd.hideZoneNote == true and zd.showWayPins ~= false then
             if PinSupport.IsLayoutBlocked() then
@@ -542,6 +618,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
                 pin:SetMovable(true)
                 pin:RegisterForDrag("LeftButton")
             end
+            if pin.SyncTitleBarDrag then pin:SyncTitleBarDrag() end
         end,
     })
     if zoneData.lockMove then
@@ -604,6 +681,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         return false
     end
     local function ShowHoverControls()
+        if pin.collapsed then return end
         if ns.WayPinsCompanion then
             ns.WayPinsCompanion:ApplyClusterLayout(pin)
         end
@@ -628,6 +706,100 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin.ShowHoverControls = ShowHoverControls
     pin.HideHoverControlsIfAway = HideHoverControlsIfAway
 
+    pin.SyncTitleBarDrag = function()
+        if zoneData.lockMove then
+            titleBar:RegisterForDrag()
+        else
+            titleBar:RegisterForDrag("LeftButton")
+        end
+    end
+
+    pin.ToggleCollapsed = function(myself)
+        if myself.collapsed then
+            myself.collapsed = false
+            local ew = myself._savedWidth or 300
+            local eh = myself._savedHeight or 400
+            myself:SetSize(ew, eh)
+            myself._cachedWidth = ew
+            myself._cachedHeight = eh
+            myself:SetResizable(true)
+            if myself.resizeBtn then
+                myself.resizeBtn:Show()
+            end
+            ApplyMinimizeVisual(myself)
+            if myself.RefreshLayout then
+                myself:RefreshLayout()
+            end
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:Sync()
+            end
+        else
+            local ew = myself._widthBeforeHideNote or PinSupport.GetPinWidth(myself, 300)
+            local eh = PinSupport.GetPinHeight(myself, 400)
+            myself._savedWidth = ew
+            myself._savedHeight = eh
+            if myself._widthBeforeHideNote then
+                myself:SetWidth(myself._widthBeforeHideNote)
+                myself._widthBeforeHideNote = nil
+            end
+            myself.collapsed = true
+            if myself.hoverPanel then myself.hoverPanel:Hide() end
+            myself.contentFrame:Hide()
+            myself.todoMainFrame:Hide()
+            if myself.resizeBtn then myself.resizeBtn:Hide() end
+            myself:SetResizable(false)
+            if myself.titleBar then myself.titleBar:Show() end
+            if myself.closeBtn then myself.closeBtn:Show() end
+            if myself.minimizeBtn then myself.minimizeBtn:Show() end
+            ApplyMinimizeVisual(myself)
+            local ch = CollapsedHeight(myself)
+            myself:SetHeight(ch)
+            myself._cachedHeight = ch
+            myself._cachedWidth = myself._savedWidth
+            myself:SetResizeBounds(200, ch, GetScreenWidth(), GetScreenHeight())
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:Sync()
+            end
+        end
+        SaveZonePinGeometry(myself)
+    end
+
+    titleBar:EnableMouse(true)
+    titleBar:SetScript("OnEnter", function()
+        PinSupport.ShowTooltip(titleBar, "ANCHOR_BOTTOM", L["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"])
+        ShowHoverControls()
+    end)
+    titleBar:SetScript("OnLeave", function()
+        PinSupport.HideTooltip()
+        HideHoverControlsIfAway()
+    end)
+    titleBar:SetScript("OnMouseUp", function(_, button)
+        if button ~= "LeftButton" then return end
+        if IsShiftKeyDown() then
+            pin:ToggleCollapsed()
+            pin._titleBarLastClick = 0
+            return
+        end
+        local now = GetTime()
+        if pin._titleBarLastClick and (now - pin._titleBarLastClick) < TITLEBAR_DOUBLE_CLICK then
+            pin:ToggleCollapsed()
+            pin._titleBarLastClick = 0
+        else
+            pin._titleBarLastClick = now
+        end
+    end)
+    titleBar:SetScript("OnDragStart", function()
+        if not zoneData.lockMove then
+            pin:StartMoving()
+            pin._titleBarLastClick = 0
+        end
+    end)
+    titleBar:SetScript("OnDragStop", function()
+        pin:StopMovingOrSizing()
+        SaveZonePinGeometry(pin)
+    end)
+    pin:SyncTitleBarDrag()
+
     hoverPanel:EnableMouse(true)
     hoverPanel:SetScript("OnEnter", ShowHoverControls)
     hoverPanel:SetScript("OnLeave", HideHoverControlsIfAway)
@@ -642,8 +814,20 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         pin:ClearAllPoints()
         pin:SetPoint(savedPos.point or "CENTER", UIParent, savedPos.relativePoint or "CENTER",
                      savedPos.x or 0, savedPos.y or 0)
-        if savedPos.width and savedPos.height then
+        if savedPos.collapsed and savedPos.expandedWidth and savedPos.expandedHeight then
+            pin.collapsed = true
+            pin._savedWidth = savedPos.expandedWidth
+            pin._savedHeight = savedPos.expandedHeight
+            local collapsedH = savedPos.height or CollapsedHeight(pin)
+            pin:SetSize(savedPos.expandedWidth, collapsedH)
+            pin._cachedWidth = savedPos.expandedWidth
+            pin._cachedHeight = collapsedH
+            pin:SetResizable(false)
+            ApplyMinimizeVisual(pin)
+        elseif savedPos.width and savedPos.height then
             pin:SetSize(savedPos.width, savedPos.height)
+            pin._savedWidth = savedPos.width
+            pin._savedHeight = savedPos.height
             pin._cachedWidth = savedPos.width
             pin._cachedHeight = savedPos.height
         end

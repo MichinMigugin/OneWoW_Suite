@@ -118,6 +118,28 @@ local iconDisplayNames = {
     ["AnimCreate_Icon_Mask"]                = "AnimCreate Mask",
 }
 
+-- ObjectIconsAtlas minimap-tracking names. Display text comes from
+-- MINIMAP_TRACKING_* GlobalStrings (see GetDisplayName).
+local iconDisplayGlobals = {
+    ["Banker"]              = "MINIMAP_TRACKING_BANKER",
+    ["Auctioneer"]          = "MINIMAP_TRACKING_AUCTIONEER",
+    ["Mailbox"]             = "MINIMAP_TRACKING_MAILBOX",
+    ["Innkeeper"]           = "MINIMAP_TRACKING_INNKEEPER",
+    ["FlightMaster"]        = "MINIMAP_TRACKING_FLIGHTMASTER",
+    ["Repair"]              = "MINIMAP_TRACKING_REPAIR",
+    ["StableMaster"]        = "MINIMAP_TRACKING_STABLEMASTER",
+    ["Class"]               = "MINIMAP_TRACKING_TRAINER_CLASS",
+    ["Profession"]          = "MINIMAP_TRACKING_TRAINER_PROFESSION",
+    ["Food"]                = "MINIMAP_TRACKING_VENDOR_FOOD",
+    ["Reagents"]            = "MINIMAP_TRACKING_VENDOR_REAGENT",
+    ["Ammunition"]          = "MINIMAP_TRACKING_VENDOR_AMMO",
+    ["Poisons"]             = "MINIMAP_TRACKING_VENDOR_POISON",
+    ["BattleMaster"]        = "MINIMAP_TRACKING_BATTLEMASTER",
+    ["Barbershop-32x32"]    = "MINIMAP_TRACKING_BARBER",
+    ["poi-transmogrifier"]  = "MINIMAP_TRACKING_TRANSMOGRIFIER",
+    ["WildBattlePet"]       = "MINIMAP_TRACKING_WILD_BATTLE_PET",
+}
+
 function OverlayIcons:GetIconList()
     return {
         "BLANK",
@@ -143,6 +165,23 @@ function OverlayIcons:GetIconList()
         "icon-recipe",
         "icon-toy",
         "icon-trash",
+        "Banker",
+        "Auctioneer",
+        "Mailbox",
+        "Innkeeper",
+        "FlightMaster",
+        "Repair",
+        "StableMaster",
+        "Class",
+        "Profession",
+        "Food",
+        "Reagents",
+        "Ammunition",
+        "Poisons",
+        "BattleMaster",
+        "Barbershop-32x32",
+        "poi-transmogrifier",
+        "WildBattlePet",
         "poi-door-arrow-up",
         "poi-traveldirections-arrow",
         "talents-arrow-line-red",
@@ -227,6 +266,13 @@ function OverlayIcons:GetIconList()
 end
 
 function OverlayIcons:GetDisplayName(iconName)
+    local globalKey = iconDisplayGlobals[iconName]
+    if globalKey then
+        local text = _G[globalKey]
+        if type(text) == "string" and text ~= "" then
+            return text
+        end
+    end
     return iconDisplayNames[iconName] or iconName
 end
 
