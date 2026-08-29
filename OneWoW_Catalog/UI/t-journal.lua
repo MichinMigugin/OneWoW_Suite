@@ -1838,6 +1838,11 @@ function ShowInstanceDetail(panels, instData)
         end
         dataAddon.MergeLiveATTExtras(instData)
     end
+    -- Hydrate mutates the cache entry after SetSelectedIndex already bound the
+    -- row. Refresh rebinds visible cards; do not SetSelectedIndex (re-enters).
+    if journalListAPI then
+        journalListAPI.Refresh()
+    end
 
     if panels.diffDropdown then
         local isDelve = instData.instanceType == "delve"

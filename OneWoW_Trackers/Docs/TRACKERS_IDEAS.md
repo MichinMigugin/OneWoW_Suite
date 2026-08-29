@@ -42,7 +42,7 @@ Do not invent parallel track types. The engine already evaluates:
 | Hidden daily/weekly rare lock | `rare_quest` — **display name only**, see caveat below |
 | Account-wide quest flag | `quest_account` |
 | “N of these quests” | `quest_pool` / `quest_pool_account` |
-| Kill / loot / talk / enter instance | `kill_creature`, `loot_item`, `npc_interact`, `enter_instance` |
+| Kill / loot / talk / enter instance / dungeon-raid boss | `kill_creature`, `loot_item`, `npc_interact`, `enter_instance`, `kill_encounter` |
 | Map pin on a step | `mapID` + `coordX`/`coordY` + `TrackerMap` |
 | Step gating | `professionRequired`, `eventRequired` (calendar `eventID`), `faction` hide; `requiresSteps` dims **and** blocks user check-off (`TD:CanCompleteStep`); editor picker; still does not hide |
 | Per-alt “who has done this step” | `rosterMode` (current char stamped into an account roster) |
@@ -59,6 +59,8 @@ Do not invent parallel track types. The engine already evaluates:
   `C_QuestLog.IsQuestFlaggedCompleted`, no distinct reset semantics. It is a label, not a
   daily-lock capability. The real capability needs the curated key → hidden-quest map
   ([`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-1) plus a daily-reset list.
+- **`kill_encounter` is live lockout for the logged-in character**, not the Endgame store
+  `_API` (P-3) and not skip/dim for `enter_instance` / `kill_creature`. See §12 / §3.
 - **`requiresSteps` dims a hub row and blocks user check-off** via `TD:CanCompleteStep`
   (hub + pin). It does not hide the step or feed `IsStepVisible`. The step editor has a
   sibling picker. Markup still does not parse it — serialize/import plus the editor. §2's
@@ -70,16 +72,17 @@ Do not invent parallel track types. The engine already evaluates:
   (`quest` / `quest_account` / `quest_world` / `quest_active` / `rare_quest`) share one
   card; vault slots and profession tasks share one card each. `rare_quest` is a **label**,
   not its own card (same evaluator as `quest`). Remaining singles have their own cards
-  (loot, timer, zone, campaign, quest progress, exploration). Nested objectives reuse the
-  same schema. Dusting for Moths is authorable in the UI. See
-  [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-4 (shipped).
+  (loot, timer, zone, campaign, quest progress, exploration, `kill_encounter`). Nested
+  objectives reuse the same schema. Dusting for Moths is authorable in the UI. See
+  [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) P-4 (shipped); `kill_encounter` shipped
+  after P-4 as sequence 7b.
 - **`custom_timer` reset uses `sp.lastCompleted` plus `trackParams.interval` (seconds).**
   The step editor collects the interval in hours. Objective rows still show seconds.
 - **Objective roll-up:** a step with an `objectives` array completes when every objective is
   done (`EvaluateStep`), regardless of the parent `trackType`. `faction` (`alliance` /
   `horde` / `both`) hides steps and sections; profession and calendar event gates also hide.
 
-**Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. Lockouts are not consulted. There is no “set instance difficulty” step. (`eventRequired` fail-open **shipped** — see §4.)
+**Gaps vs the design sentence in `COLLECTIBLES.md`:** lists are **not** keyed by collectible key today. There is no Notes → Trackers `_API` to spawn or focus a plan. There is no “set instance difficulty” step. (`eventRequired` fail-open **shipped** — see §4.) Lockouts: `kill_encounter` already answers live lockout for the logged-in character via `C_RaidLocks.IsEncounterComplete`. `enter_instance` / `kill_creature` still do not consult lockouts, and there is no Endgame store `_API` for stored / cross-alt reads (roadmap P-3).
 
 **Gaps vs the rest of the suite UI:** the engine and pin overlay are usable; the hub **Tracker** tab is a mid-modernization authoring surface (see Hub tab UI below). Notes handoff lands in that tab.
 
@@ -93,9 +96,9 @@ Three layers, not one screen: **data** (`TrackerData` — lists → sections →
 
 | Uses the toolkit | Rolls its own |
 | --- | --- |
-| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateIconButton`, `CreateDivider`, `CreateLayoutFrame`, `CreateReorderDrag`, `CreateListRowBasic` (left rail compose), `CreateVirtualizer` (left rail, 56px), `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Detail section/step rows (`t-tracker.lua` 906, 1022): raw `CreateFrame("Button", …, "BackdropTemplate")`. **Declined, not blocked** — they need collapse chrome, a hover icon strip, checkboxes, and a complete frame list for the drag controller. |
-| Theme / language callbacks on the lifecycle root. Editor quick-start + import cards on `CreateListRowBasic`; farm detail editor on `CreateFrame` + `CreateItemListEditor` | Expanding step-category card (`ui-tracker-editor.lua` 1144): accordion with active state, always-visible description, embedded field row. **Declined** — see §0. |
-| Pinned overlay shell: `CreateFrame` + `CreateTitleBar` + `CreateFS` | Pinned overlay rows: pooled raw frames (section `BackdropTemplate` at 32, steps plain Buttons) plus its farm rows (`ui-tracker-farmvalue.lua` 375, reached from `RenderPinned`). Reasonable for a float; **not part of §0**. |
+| Panels, `CreateScrollFrame`, `CreateFitTextButton`, `CreateDropdown` + `AttachFilterMenu`, `CreateEditBox`, `CreateCheckbox`, `CreateProgressBar`, `CreateFavoriteToggleButton`, `CreateIconButton`, `CreateDivider`, `CreateLayoutFrame`, `CreateReorderDrag`, `CreateListRowBasic` (left rail compose), `CreateVirtualizer` (left rail, 56px), `CreateFS`, `GetThemeColor`, hub `LEFT_PANEL_WIDTH` / `PANEL_GAP`, `CreateDialog` | Detail section/step rows (`t-tracker.lua` 910, 1026): raw `CreateFrame("Button", …, "BackdropTemplate")`. **Declined, not blocked** — they need collapse chrome, a hover icon strip, checkboxes, and a complete frame list for the drag controller. |
+| Theme / language callbacks on the lifecycle root. Editor quick-start + import cards on `CreateListRowBasic`; farm detail editor on `CreateFrame` + `CreateItemListEditor` | Expanding step-category card (`ui-tracker-editor.lua` 2217): accordion with active state, always-visible description, embedded field row. **Declined** — see §0. |
+| Pinned overlay shell: `CreateFrame` + `CreateTitleBar` + `CreateFS` | Pinned overlay rows: pooled raw frames (section `BackdropTemplate` at 36, steps plain Buttons) plus its farm rows (`ui-tracker-farmvalue.lua` 375, reached from `RenderPinned`). Reasonable for a float; **not part of §0**. |
 
 **No detail-tree virtualizer, and therefore no `CreateReorderDrag` data-index API.** Both
 declined — see §0. `ShowDetail` is structure-only (select, collapse, add/delete, reorder,
@@ -124,16 +127,18 @@ its own. Trackers' own slices, for orientation:
 | **0** — hub tab GUI-first (§0) | **Shipped**; the surface every later idea sits on |
 | **0b** — calendar fail-open (§4) | **Shipped** |
 | **1** — collectible-key handoff (§1) | Next |
-| **2** — lockout skip for the logged-in character (§3) | Blocked on the Endgame lockout `_API` (roadmap P-3) |
+| **2** — lockout skip for `enter_instance` / `kill_creature` (§3) | Blocked on the Endgame lockout `_API` (roadmap P-3). `kill_encounter` already does live lockout for the logged-in char |
 
 Slice 0 has no remaining items. Everything once listed under §0 is now either shipped or
 recorded as declined (detail-tree virtualizer, the `CreateReorderDrag` data-index API it needed,
 detail rows and the step-category card staying custom) or out of scope (pinned overlay restyle
 and its farm rows, dwell-expand during drag). See §0 for the reasoning. Not a new product.
+`kill_encounter` (§12) also shipped — fill from the current encounter plus live raid-lock
+evaluation. That does not unblock §3 skip/dim for other instance types.
 
 Do not start with AltTracker2, rare subscribe, chore encyclopedias, detach windows, or
-instance-first loot. Those hang off contracts we do not have yet. Do not land Notes handoff on
-the current authoring tab.
+instance-first loot. Those hang off contracts we do not have yet. Notes handoff is next and
+lands on the shipped authoring tab.
 
 ---
 
@@ -165,7 +170,7 @@ comparing one vocabulary.
 
 **Declined — decided, do not re-litigate:**
 
-- **Expanding step-category card stays custom** (`ui-tracker-editor.lua` 1144). An inline
+- **Expanding step-category card stays custom** (`ui-tracker-editor.lua` 2217). An inline
   accordion carrying a selected/active state, an always-visible description, and an embedded
   field row plus Save/Fill buttons. `CreateCard` has no active state and hides its content when
   collapsed; `CreateSelectableCard` is checkbox-backed. Not worth expanding shared GUI for one
@@ -182,7 +187,7 @@ comparing one vocabulary.
   section drag compounds it — the step controller deliberately flattens headers and steps into
   one item list so a step can be dropped on a header, and a windowed pool cannot guarantee the
   target is realized.
-- **Detail section/step rows stay custom `BackdropTemplate`** (`t-tracker.lua` 906, 1022).
+- **Detail section/step rows stay custom `BackdropTemplate`** (`t-tracker.lua` 910, 1026).
   Not blocked — chosen. They need collapse chrome, a hover icon strip, checkboxes, and a
   complete frame list for the drag controller, none of which `CreateListRowBasic` offers.
 - **`CreateCard` vs dense-row for the left rail.** Dense compose on `CreateListRowBasic` won;
@@ -191,7 +196,7 @@ comparing one vocabulary.
 **Not part of §0:**
 
 - **Pinned overlay restyle.** `ui-tracker-pinned.lua` rows are pooled raw frames (section rows
-  `BackdropTemplate` at 32; steps plain Buttons) under a toolkit shell. The overlay is the play
+  `BackdropTemplate` at 36; steps plain Buttons) under a toolkit shell. The overlay is the play
   surface, not the authoring surface — its own pass if it ever happens.
 - **Farm-value item rows.** `AcquireFarmRow` (`ui-tracker-farmvalue.lua` ~375) is reached only
   from `TFV:RenderPinned`, called by the pinned overlay — so it belongs to the row above, not to
@@ -229,17 +234,17 @@ Do **not** own Collectionist’s Midnight encyclopedia. A plan’s steps are eit
 
 ### 3. Remaining-attempt / lockout skip
 
-FuocoNote / ICH / BountyHelper / MRP all answer “is this still lootable this reset?” from `GetSavedInstance*` (and shared 10/25 diffs). We already store lockouts in AltTracker_Endgame.
+FuocoNote / ICH / BountyHelper / MRP all answer “is this still lootable this reset?” from `GetSavedInstance*` (and shared 10/25 diffs). We already store lockouts in AltTracker_Endgame. `kill_encounter` already answers live lockout for the **logged-in** character via `C_RaidLocks.IsEncounterComplete` (redirected difficulty) — that is not this slice.
 
-- **Build:** when a step names `enter_instance` / `kill_creature` (or a future encounter id), evaluate lockout and **skip or dim** — do not invent an attempt ledger. “Tried this week” is lockout + `rare_quest`, not a custom counter.
+- **Build:** when a step names `enter_instance` / `kill_creature`, evaluate **stored** lockout and **skip or dim** — do not invent an attempt ledger. “Tried this week” is lockout + `rare_quest`, not a custom counter. `kill_encounter` already self-completes on the live raid lock; this slice is the other instance types plus a shared skip/dim policy.
 - **Roster read:** the *data* is available today and is **not** blocked by AltTracker2 — lockouts come from Endgame (via the `_API` in roadmap P-3) and cross-alt quest completion from `OneWoW_CatalogData_Quests_API.GetCompletedCharacters`. Only the Ask-the-roster *UI* waits for AltTracker2. Trackers evaluates the logged-in char first either way.
 - Collectibles-side framing: [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) §2 / §8.
 
 ### 4. Calendar fail-open
 
-`eventRequired` already hides holiday / timewalking steps. FuocoNote’s rule: if the calendar has not arrived (`GetNumDayEvents == 0`), **keep the step visible**. Hiding a TW vendor farm because the calendar is empty looks like the addon lied.
+**Shipped.** `eventRequired` hides holiday / timewalking steps. FuocoNote’s rule: if the calendar has not arrived (`GetNumDayEvents == 0`), **keep the step visible**. Hiding a TW vendor farm because the calendar is empty looks like the addon lied.
 
-- **Build:** distinguish “calendar unknown” vs “event known inactive.” Unknown → show; inactive → hide. Open calendar once on login if we need a real answer (they do). Ties to the collectibles temporal service; the step gate is Trackers’ consumer.
+The engine fail-opens until `CALENDAR_UPDATE_EVENT_LIST`, then fail-closes when the event is known inactive (`TrackerEngine.IsEventActive`). Unknown → show; inactive → hide. Ties to the collectibles temporal service; the step gate is Trackers’ consumer.
 
 ### 5. Difficulty as an action
 
@@ -332,10 +337,12 @@ ChoreTracker `Data/Timers/*.lua`: `interval`, `duration`, `offset` from weekly r
 
 ### 12. Encounter-linked steps (Catalog / Journal, not an EJ overlay)
 
-MidnightRoutine’s *idea* is right: a weekly can complete on EJ `encounterIds` + difficulty, not only a quest flag. Their *authoring* is wrong for us — they overlay Blizzard’s Encounter Journal (`UI/EncounterJournalOverlay.lua`). We already have that interface: Catalog Journal + `OneWoW_CatalogData_Journal`.
+**Shipped (the step):** `kill_encounter` auto-completes on Adventure Guide encounter defeat. Unit GUIDs are secret in instances, so open-world `kill_creature` fill cannot work there. Completion uses `ENCOUNTER_END`'s combat encounter ID plus live `C_RaidLocks.IsEncounterComplete` (nil while the lock is still open so a session latch is not wiped). Fill uses the current pull or last successful kill this session (`Fill from current encounter`), not the targeted unit. Schema params: journal `encounterID`, plus `dungeonEncounterID` / `mapID` / optional `difficultyID` filled from the snapshot or `EJ_GetEncounterInfo`. Editor card is its own picker. See `Core/Encounter.lua` and Trackers [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-- **Reuse:** `instanceID` / `encounterID` from the Journal store; valid diffs from Generated `JournalMapDifficulties` (DB2 `MapDifficulty`); combat bridge `JournalEncounter.DungeonEncounterID` → `DungeonEncounter` when a step needs kill credit. Authoring pattern is ShoppingList’s Catalog tradeskill hook: pick a row in Catalog, emit a Trackers step — `RegisterAddonLoadedWatcher("OneWoW_Catalog", …)`, not a FrameXML overlay.
-- **Build:** step params `{ instanceID, encounterID, difficultyID }` so “kill X on H this week” auto-completes (lockout skip is §3). Consume `OneWoW_CatalogData_Journal_API` the suite way: `RegisterAddonLoadedWatcher` / data-ready for sticky UI, `EnsureLoaded` / `WithAddon` only on an explicit “pick from Journal” action, call-time `_API` for one-shot reads. Never `## OptionalDeps: OneWoW_*` (Blizzard would auto-load and skip soft opt-out). Difficulty *action* (`SetDungeonDifficultyID` …) stays §5.
+MidnightRoutine’s *idea* was right: a weekly can complete on EJ encounters + difficulty, not only a quest flag. Their *authoring* is still wrong for us — they overlay Blizzard’s Encounter Journal. We already have that interface: Catalog Journal + `OneWoW_CatalogData_Journal`.
+
+- **Reuse (shipped):** live EJ for fill and lock; combat ID from `ENCOUNTER_*`. Valid diffs still come from Generated `JournalMapDifficulties` when a step needs them.
+- **Still to build:** ShoppingList-style “pick a row in Catalog, emit a Trackers step” — `RegisterAddonLoadedWatcher("OneWoW_Catalog", …)`, not a FrameXML overlay. Consume `OneWoW_CatalogData_Journal_API` the suite way: data-ready for sticky UI, `EnsureLoaded` / `WithAddon` only on an explicit pick action, call-time `_API` for one-shot reads. Never `## OptionalDeps: OneWoW_*`. Difficulty *action* (`SetDungeonDifficultyID` …) stays §5. Skip/dim of `enter_instance` / `kill_creature` stays §3 (P-3).
 - **Do not** clone Routine’s EJ overlay, walk a third-party instance dump for membership, or hand-maintain a boss list Trackers-side. Listing truth stays Generated + live EJ merge ([`JOURNAL_DATA.md`](../../OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md)).
 
 ### 13. Detach a section, not a second product
@@ -416,6 +423,7 @@ in [`ROADMAP.md`](../../OneWoW/Docs/ROADMAP.md) so they get one answer, not thre
 - ~~Detail-tree virtualizer (§0): blocked on `CreateReorderDrag` addressing by data index?~~ **Answered:** declined. Lists do not get big enough, and the shared data-index API it needed is declined with it. Left rail dense compose is closed.
 - ~~Handoff: auto-spawn a plan on `farming` intent, or only on an explicit “Track this”?~~ **Answered:** explicit “Track this” for v1.
 - ~~Rare capture: share vendor `off|prompt|auto` UI chrome but a separate SV key?~~ **Answered:** separate SV key, same vocabulary.
+- ~~Encounter authoring: Catalog Journal picker vs fill-from-combat?~~ **Answered for v1:** fill from the current or last-ended encounter. Catalog “pick a row, emit a step” is still optional later (§12 remaining).
 - **Rare alerts (§9): do the two settings compose?** Pin mode defaults `off` but capture mode defaults `prompt`. If capture is independent, installing SilverDragon produces StaticPopups the player never opted into — the exact vendor-auto failure §9 argues against. Recommended: gate capture on pin mode being non-`off`.
 - `SetDifficulty` step vs a button on `enter_instance` steps only?
 - Rare alerts: NPCs only, or also SilverDragon `AnnounceLoot` / RareScanner containers?

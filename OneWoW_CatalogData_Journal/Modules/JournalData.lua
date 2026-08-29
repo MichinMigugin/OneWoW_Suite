@@ -240,10 +240,11 @@ end
 --- Toy / mount / pet journal probes for leftover Misc or Consumable rows.
 --- Not called for every loot item: Enum class/subclass already covers most.
 ---
---- Runs per card rather than per visible row because its result feeds ApplyTotals,
---- which turns item.special into the card's hasToys / hasMounts / hasPets tags and
---- the collectible filters. Deferring to row paint would leave those wrong until
---- the player scrolled every row.
+--- Runs at skeleton index build (once per unique leftover JournalLoot itemID)
+--- and again per card on hydrate because ApplyTotals turns item.special into
+--- the card's hasToys / hasMounts / hasPets tags and the collectible filters.
+--- Deferring to row paint would leave those wrong until the player scrolled
+--- every row.
 ---@param idata table
 ---@return string|nil special
 local function ProbeCollectibleSpecial(idata)
@@ -369,7 +370,7 @@ function JournalData:DetermineItemStatus(itemID, itemData, specialType)
     end
 
     if specialType == "Quest" then
-        return collected and L["JOURNAL_QUEST_COMPLETED"] or L["JOURNAL_QUEST_NOT_COMPLETED"]
+        return collected and L["JOURNAL_STATUS_COMPLETED"] or L["JOURNAL_STATUS_NOT_COMPLETED"]
     end
 
     if specialType == "Mount" or specialType == "Pet" or specialType == "Toy"
@@ -1106,6 +1107,64 @@ end
 
 local extrasCountByKey = nil
 local extrasRareCountByKey = nil
+local extrasTaxonomyByKey = nil
+local generatedTaxonomyByInstance = nil
+
+local SPECIAL_TO_FLAG = {
+    TMog    = "hasTMog",
+    Mount   = "hasMounts",
+    Pet     = "hasPets",
+    Toy     = "hasToys",
+    Recipe  = "hasRecipes",
+    Quest   = "hasQuest",
+    Housing = "hasHousing",
+}
+
+local function NewTaxonomy()
+    return {
+        hasTMog    = false,
+        hasMounts  = false,
+        hasPets    = false,
+        hasToys    = false,
+        hasRecipes = false,
+        hasQuest   = false,
+        hasHousing = false,
+    }
+end
+
+local function OrSpecial(flags, special)
+    local key = SPECIAL_TO_FLAG[special]
+    if key then
+        flags[key] = true
+    end
+end
+
+local function OrTaxonomy(dst, src)
+    if not src then
+        return dst
+    end
+    if not dst then
+        dst = NewTaxonomy()
+    end
+    dst.hasTMog    = dst.hasTMog    or src.hasTMog
+    dst.hasMounts  = dst.hasMounts  or src.hasMounts
+    dst.hasPets    = dst.hasPets    or src.hasPets
+    dst.hasToys    = dst.hasToys    or src.hasToys
+    dst.hasRecipes = dst.hasRecipes or src.hasRecipes
+    dst.hasQuest   = dst.hasQuest   or src.hasQuest
+    dst.hasHousing = dst.hasHousing or src.hasHousing
+    return dst
+end
+
+local function StampSkeletonTaxonomy(entry, flags)
+    entry.hasTMog    = flags and flags.hasTMog    or false
+    entry.hasMounts  = flags and flags.hasMounts  or false
+    entry.hasPets    = flags and flags.hasPets    or false
+    entry.hasToys    = flags and flags.hasToys    or false
+    entry.hasRecipes = flags and flags.hasRecipes or false
+    entry.hasQuest   = flags and flags.hasQuest   or false
+    entry.hasHousing = flags and flags.hasHousing or false
+end
 
 --- Unique non-achievement extras itemIDs per card key.
 ---
@@ -1113,10 +1172,12 @@ local extrasRareCountByKey = nil
 --- an Adventure Guide drop on the same instance. Adding these counts to
 --- CountGeneratedLoot therefore reproduces exactly what ApplyTotals will compute
 --- once the card hydrates, from static data only - no C_Item, one pass over
---- ~8.5k rows per session.
+--- ~8.5k rows per session. The same pass ORs hasTMog / hasToys / ... from
+--- shipped extras fields via DetermineItemSpecial.
 local function BuildExtrasCounts()
     extrasCountByKey = {}
     extrasRareCountByKey = {}
+    extrasTaxonomyByKey = {}
     local itemsByKey = {}
     local raresByKey = {}
 
@@ -1143,6 +1204,7 @@ local function BuildExtrasCounts()
                     local key = isWorld
                         and worldKey
                         or JournalData.CacheKey(exp.expansionID, instID)
+                    local special = JournalData:DetermineItemSpecial(row)
                     local function AddToKey(bucketKey)
                         local set = itemsByKey[bucketKey]
                         if not set then
@@ -1157,6 +1219,14 @@ local function BuildExtrasCounts()
                                 raresByKey[bucketKey] = rares
                             end
                             rares[tonumber(row.npcID)] = true
+                        end
+                        if special then
+                            local tax = extrasTaxonomyByKey[bucketKey]
+                            if not tax then
+                                tax = NewTaxonomy()
+                                extrasTaxonomyByKey[bucketKey] = tax
+                            end
+                            OrSpecial(tax, special)
                         end
                     end
                     AddToKey(key)
@@ -1211,9 +1281,59 @@ local function BuildExtrasCounts()
                         mergedRares[npcID] = true
                     end
                     extrasRareCountByKey[key] = SetSize(mergedRares)
+                    extrasTaxonomyByKey[key] = OrTaxonomy(
+                        extrasTaxonomyByKey[key] or NewTaxonomy(),
+                        extrasTaxonomyByKey[worldKey]
+                    )
                 end
             end
         end
+    end
+end
+
+--- Instant-only JournalLoot classification for skeleton has* flags.
+--- Unique itemIDs only; leftover Misc/Consumable rows get ProbeCollectibleSpecial
+--- once, not per card. Never GetItemInfo / RequestLoadItemDataByID.
+local function BuildGeneratedTaxonomy()
+    generatedTaxonomyByInstance = {}
+    local loot = ns.JournalLoot
+    if not loot then
+        return
+    end
+    local specialByItemID = {}
+    for instanceID, rows in pairs(loot) do
+        local flags = NewTaxonomy()
+        local seen = {}
+        for i = 1, #rows do
+            local itemID = rows[i].itemID
+            if itemID and not seen[itemID] then
+                seen[itemID] = true
+                local special = specialByItemID[itemID]
+                if special == nil then
+                    local _, itemType, itemSubType, itemEquipLoc, _, classID, subclassID =
+                        C_Item.GetItemInfoInstant(itemID)
+                    local idata = {
+                        itemID      = itemID,
+                        itemType    = itemType or "",
+                        itemSubType = itemSubType or "",
+                        classID    = classID,
+                        subclassID = subclassID,
+                        isTransmog = itemEquipLoc and itemEquipLoc ~= ""
+                            and itemEquipLoc ~= "INVTYPE_NON_EQUIP_IGNORE" or false,
+                    }
+                    special = JournalData:DetermineItemSpecial(idata)
+                    if not special then
+                        special = ProbeCollectibleSpecial(idata)
+                    end
+                    specialByItemID[itemID] = special or false
+                    special = specialByItemID[itemID]
+                end
+                if special then
+                    OrSpecial(flags, special)
+                end
+            end
+        end
+        generatedTaxonomyByInstance[instanceID] = flags
     end
 end
 
@@ -1237,6 +1357,24 @@ local function CountExtrasRares(expansionID, instanceID, instanceType)
         BuildExtrasCounts()
     end
     return extrasRareCountByKey[JournalData.CacheKey(expansionID, instanceID, instanceType)] or 0
+end
+
+---@param instanceID number
+---@param instanceType string
+---@param cacheKey string
+---@return table|nil
+local function SkeletonTaxonomy(instanceID, instanceType, cacheKey)
+    if not extrasCountByKey then
+        BuildExtrasCounts()
+    end
+    local tax = extrasTaxonomyByKey[cacheKey]
+    if instanceType ~= "zone" and instanceID and instanceID > 0 then
+        if not generatedTaxonomyByInstance then
+            BuildGeneratedTaxonomy()
+        end
+        tax = OrTaxonomy(tax, generatedTaxonomyByInstance[instanceID])
+    end
+    return tax
 end
 
 ---@param expansionID number
@@ -1298,20 +1436,22 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         entranceSource     = entranceSource,
         achievements       = AchievementsFor(mapID, instanceType, expansionID, instanceID),
     }
-    -- Skeleton cards skip ApplyTotals / C_Item. Hydrate via EnsureEncounters.
-    -- totalItems must already match what ApplyTotals will compute, or the count
-    -- visibly changes when the player opens the card.
+    -- Skeleton cards skip ApplyTotals / encounter tables. Hydrate via
+    -- EnsureEncounters. totalItems and has* taxonomy must already match what
+    -- ApplyTotals will compute, or the left card visibly changes on open.
     if instanceType == "delve" then
         entry.encountersHydrated = true
         entry.totalItems = 0
         entry.bossCount = 0
         entry.rareCount = 0
+        StampSkeletonTaxonomy(entry, nil)
     elseif instanceType == "world" and (not instanceID or instanceID == 0) then
         -- Synthetic world cards carry extras only; live overlay may add more on open.
         entry.encountersHydrated = false
         entry.totalItems = CountExtrasLoot(expansionID, instanceID, instanceType)
         entry.bossCount = 0
         entry.rareCount = CountExtrasRares(expansionID, instanceID, instanceType)
+        StampSkeletonTaxonomy(entry, SkeletonTaxonomy(instanceID, instanceType, entry.cacheKey))
     elseif instanceType == "zone" then
         entry.encountersHydrated = false
         entry.totalItems = CountExtrasLoot(expansionID, instanceID, instanceType)
@@ -1320,6 +1460,7 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         entry.isCity = instInfo and instInfo.isCity or false
         entry.uiMapType = instInfo and instInfo.uiMapType
         entry.source = instInfo and instInfo.source
+        StampSkeletonTaxonomy(entry, SkeletonTaxonomy(instanceID, instanceType, entry.cacheKey))
     else
         entry.encountersHydrated = false
         entry.totalItems = CountGeneratedLoot(instanceID)
@@ -1328,6 +1469,7 @@ local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, enc
         entry.rareCount = instanceType == "world"
             and CountExtrasRares(expansionID, instanceID, instanceType)
             or 0
+        StampSkeletonTaxonomy(entry, SkeletonTaxonomy(instanceID, instanceType, entry.cacheKey))
     end
     return entry
 end
@@ -1339,8 +1481,9 @@ function JournalData:BuildJournalCache()
     local membership = ns.JournalTierMembership
     local overrides = ns.JournalListingOverrides or { forceHide = {}, forceShow = {} }
 
-    -- Skeleton cards only: names, map, achievements, Generated loot/boss counts.
-    -- Loot rows and extras hydrate in EnsureEncounters (one card at a time).
+    -- Skeleton cards only: names, map, achievements, Generated loot/boss counts,
+    -- and has* taxonomy from extras + Instant JournalLoot. Loot rows hydrate
+    -- in EnsureEncounters (one card at a time).
     local function AddCard(expansionID, instanceID, orderIndex)
         local key = self.CacheKey(expansionID, instanceID)
         if overrides.forceHide and overrides.forceHide[key] then

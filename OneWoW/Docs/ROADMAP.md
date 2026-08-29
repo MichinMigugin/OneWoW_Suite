@@ -79,8 +79,16 @@ freshness compromise. Do not build a second quest-completion store.
 
 **Unblocks:** Trackers §3 (lockout skip / dim), AltTracker2 Ops lockout matrix.
 
-`OneWoW_AltTracker_Endgame` exposes only `GetCharacterData(charKey)`; consumers walk
-`charData.raids.lockouts` by hand. Two consumers are queued.
+`OneWoW_AltTracker_Endgame` still exposes only `GetCharacterData(charKey)`; there is no
+`GetLockouts` / `IsSavedTo` on the public `_API`. Consumers that need stored lockouts still
+walk `charData.raids.lockouts` by hand.
+
+That is **not** the same surface as Trackers' shipped `kill_encounter` evaluator, which
+answers live lockout for the **logged-in** character via `C_RaidLocks.IsEncounterComplete`
+(with redirected difficulty). Skip/dim for `enter_instance` / `kill_creature`, and AT2's
+roster matrix, still need the store `_API`. Legacy Progress now counts raid kills from
+stored lockouts plus the Adventure Guide **inside** Endgame's Raids module — still a blob
+walk, not a public read.
 
 **Decided:** add a raw read (`GetLockouts(charKey)`) with a predicate on top
 (`IsSavedTo(charKey, instanceID, difficultyID)`). The predicate covers Trackers' skip/dim
@@ -112,13 +120,19 @@ Phases (0–7):
 6. Nested objectives editor
 7. Remaining picker types: loot, timer, zone, campaign, quest progress, exploration
 
+After P-4, `kill_encounter` shipped as its own picker (fill from the current or last-ended
+Adventure Guide encounter + live `C_RaidLocks`). See sequence **7b**. That does not reopen
+P-4.
+
 ### P-4b · Shared location service (`OneWoW.Location`)
 
 **Shipped.** Suite-wide map helpers (`ToFraction` / `ToPercent`, `GetPlayerMapID`,
 `GetPlayerLocation`, `SetWaypoint` with `CanSetUserWaypointOnMap` and
 `opts.format` / `openMap` / `superTrack`, `DistanceMapPercent`, `IsWithinRadius`). No pin
-rendering. Consumed by Trackers, Catalog Navigation (waypoint half), Notes NPCs, Vendors,
-and AltTracker hearth. See [ARCHITECTURE.md](ARCHITECTURE.md) core service roster.
+rendering (OneWay Pins and `TrackerMap` own that). Consumed by Trackers, Catalog Navigation
+(waypoint half), Catalog quest scanner, Notes NPCs and OneWay Pins, Vendors, AltTracker
+hearth, and QoL coords / map-world tools. See [ARCHITECTURE.md](ARCHITECTURE.md) core
+service roster.
 
 ---
 
@@ -135,10 +149,11 @@ Items marked **parallel** have no dependency on the item above them.
 | 2 | Curated key → hidden-quest map (P-1) | Collectibles data | — · **parallel** |
 | 3 | Endgame lockout `_API` (P-3) | Endgame store | — · **parallel** |
 | 4 | Collectible-key handoff `_API` + "Track this" (§1) | Trackers ← Notes | 0 |
-| 5 | Lockout skip / dim for the logged-in char (§3) | Trackers | 3 |
+| 5 | Lockout skip / dim for `enter_instance` / `kill_creature` (§3) | Trackers | 3 |
 | 6 | Daily loot-lock on a wanted key (§2 + §8) | Collectibles | 2, and 5 for the lockout half |
 | 7a | Shared location service (`OneWoW.Location`) (P-4b) | Core | — · **shipped** |
 | 7 | Step-type authorability (P-4) | Trackers | 0, 7a · **shipped** |
+| 7b | Encounter step (`kill_encounter`) (Trackers §12) | Trackers | 7 · **shipped** |
 | 8 | Unobtainable overlay + achievement→reward map (§3–§4) | Collectibles | — |
 | 9 | Wowhead URL builder (§9) | Collectibles | — |
 | 10 | AltTracker2 Phase 0–2 (scaffold → Home/Dossier → Ask v1) | AltTracker2 | 3 for lockout asks |
@@ -148,9 +163,10 @@ Items marked **parallel** have no dependency on the item above them.
 With 0 shipped, items 1, 2 and 3 are the ones to start in parallel: none of them touches the
 authoring tab, and each unblocks something downstream.
 
-**Not yet** (hang off contracts we do not have): RS/SD rare subscribe, encounter steps,
-Trading Post checklist, detach-section, account rollup, chore-preset refresh, in-instance
-remaining strip.
+**Not yet** (hang off contracts we do not have): RS/SD rare subscribe, Trading Post
+checklist, detach-section, account rollup, chore-preset refresh, in-instance remaining
+strip. Encounter steps shipped as `kill_encounter` (7b); Catalog Journal "pick a row, emit
+a step" and skip/dim of other instance types are still ideas (Trackers §12 remaining / §3).
 
 ---
 
@@ -223,3 +239,14 @@ Recorded so the same claims do not get re-derived from the older text:
   owns the shipped "am I near this point" math for the `coordinates` type; when §6 prune or §11
   POI pins need distance, add the helper the consumer actually wants — `git log` has these two
   if the old shape turns out to be right.
+
+### Corrections applied 2026-08-29 (week away)
+
+- **Encounter steps shipped** as `kill_encounter` (sequence 7b). Live `C_RaidLocks` for the
+  logged-in character is **not** P-3. P-3 remains the Endgame store `_API`.
+- **P-3 is still unshipped.** `GetLockouts` / `IsSavedTo` do not exist. Legacy Progress now
+  counts raid kills from stored lockouts plus the Adventure Guide inside Endgame Raids —
+  still an in-module blob walk.
+- **Location consumers grew.** OneWay Pins, Catalog quest scanner, QoL coords / map-world
+  tools also call `OneWoW.Location`. Pin rendering stays out of the service.
+- Sequence "Not yet" no longer lists encounter steps. Next parallel work is still 1, 2, 3.

@@ -55,7 +55,7 @@ not inventing.
 | Live per-offer affordability | `OneWoW.Collectibles.GetOfferAffordability(offer)` | `OneWoW/Services/Collectibles.lua` |
 | Ensemble/set progress rollup | `GetEnsembleProgress` / `GetSetMembers` | same service |
 | Punch-list voidcache → content itemIDs | `Collectibles.GetPunchListSummary` + curated map | `OneWoW/Services/CollectiblesPunchLists.lua` (QoL Collections tooltip footer) |
-| Executable farm steps (quest, rare lock, kill, pin, calendar gate, collection state) | Trackers engine + `rare_quest` / `quest_account` / mount·pet·toy·transmog via Collectibles keys | `OneWoW_Trackers` — see [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md) |
+| Executable farm steps (quest, rare lock, kill, dungeon/raid boss, pin, calendar gate, collection state) | Trackers engine + `rare_quest` / `quest_account` / `kill_encounter` / mount·pet·toy·transmog via Collectibles keys | `OneWoW_Trackers` — see [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md). `kill_encounter` is shipped (live `C_RaidLocks` for the logged-in char); skip/dim of other instance types is still P-3 |
 
 **Genuinely new work:** curated data maps (achievement→reward, collectible→
 daily-lock-quest, collectible→instance/encounter — **not** punch-lists, those
@@ -69,12 +69,13 @@ handoff.
 
 A `farming`-intent collectible should spawn or focus a **Trackers** plan ("go to
 Vendor A, spend 1000g" / "farm mob X"), not grow a farm engine inside Notes.
-Trackers already ships lists, auto-complete, pins, `rare_quest`, and collection
+Trackers already ships lists, auto-complete, pins, `rare_quest`, `kill_encounter`, and collection
 steps keyed through `OneWoW.Collectibles`.
 
 **This doc owns:** when to hand off (intent / explicit action) and that the plan
 is identified by the collectible key. **Trackers owns:** `_API`, skip/prune,
 difficulty action, calendar fail-open — [`TRACKERS_IDEAS.md`](../../OneWoW_Trackers/Docs/TRACKERS_IDEAS.md).
+Encounter completion (`kill_encounter`) already ships on the Trackers side.
 
 The payload of a good plan is a Collectionist-style **taskList** (live-evaluable
 gates + waypoints), mapped onto existing Trackers step types, not prose in the
@@ -305,9 +306,13 @@ boss dead this reset?" That wants a thin curated **key → { instanceID,
 encounterID, difficultyIDs }** (Collection Log `MountDropCategories` shape), not
 their raid-pack encyclopedia. **Activity UI is Catalog Journal** (`OneWoW_Catalog`
 + `OneWoW_CatalogData_Journal_API`, membership/difficulties from `.warehouse/Sources/Wago`
-Generated Lua). A Trackers in-instance strip is a *consumer* of those IDs, not a
-second EJ. Notes is not a loot log. **Decide the key→instance map before building
-the strip.**
+Generated Lua). Journal extras now include world, holiday, and NPC drops
+and already carry `itemID` + `instanceID` / `encounterID` / diffs — that is listing
+truth, not a collectible-key map. `ResolveKeyFromItem` can bridge a row to a key
+when we decide to. A Trackers in-instance strip is a *consumer* of those IDs, not a
+second EJ. Trackers `kill_encounter` already answers “is this boss dead this reset”
+for the logged-in character; it does not answer “what collectibles still drop here.”
+Notes is not a loot log. **Decide the key→instance map before building the strip.**
 
 **Current-expansion cockpit** (Collectionist): a Progress / want-list **filter**
 ("Midnight missing"), not a second addon. The maintenance cost is their curated
@@ -378,8 +383,10 @@ Wowhead builder (#9).
   login and on every turn-in, so most alts are fresher than an AltTracker collection snapshot.
   Only never-seen characters fall back to "last seen."
 - Instance-first remaining loot: Catalog Journal is the EJ UI; Trackers strip
-  consumes Journal IDs; remaining work is the curated key→instance map, not
-  which addon browses bosses.
+  consumes Journal IDs; listing extras now include world/holiday/NPC drops with
+  itemID + instance/encounter/diffs. Remaining work is the curated key→instance
+  map (optionally via `ResolveKeyFromItem`), not which addon browses bosses.
+  Trackers `kill_encounter` covers “boss dead this reset” for the logged-in char.
 - Temporal helper: core service vs Collectibles vs Trackers-local (Trackers doc).
 - `illusion:` key type / ExtendedSets coverage: in or out?
 
