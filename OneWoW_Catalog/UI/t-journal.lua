@@ -226,12 +226,25 @@ local function CountIncompleteStories(instData)
     return remaining, #criteria
 end
 
+---@param instData table
+---@return boolean
+local function StoriesAchievementIncomplete(instData)
+    local achID = StoriesAchievementID(instData)
+    if not achID then
+        return false
+    end
+    local id, _, _, completed = GetAchievementInfo(achID)
+    return id ~= nil and not completed
+end
+
 local function FormatCardCountParts(instData)
     local countParts = {}
     if instData.instanceType == "delve" then
-        local remaining, total = CountIncompleteStories(instData)
-        if total > 0 and remaining > 0 then
-            tinsert(countParts, string.format(L["JOURNAL_DELVE_STORIES_LEFT"], remaining, total))
+        if StoriesAchievementIncomplete(instData) then
+            local remaining, total = CountIncompleteStories(instData)
+            if total > 0 and remaining > 0 then
+                tinsert(countParts, string.format(L["JOURNAL_DELVE_STORIES_LEFT"], remaining, total))
+            end
         end
     elseif instData.instanceType == "zone" then
         tinsert(countParts, FormatRareCount(CountRareEncounters(instData)))
@@ -307,6 +320,25 @@ local function ResolveDelveStoryDisplayName(instData)
     local criteria = CollectStoryCriteria(StoriesAchievementID(instData))
     local name, idx = MatchStoryDisplayName(raw, criteria)
     return name, idx, criteria
+end
+
+--- Type-line warning color tracks this variant, not the parent Stories achievement.
+---@param idx number|nil
+---@param criteria table|nil
+---@return boolean
+local function ActiveStoryIncomplete(idx, criteria)
+    if idx and criteria and criteria[idx] then
+        return not criteria[idx].completed
+    end
+    if not criteria then
+        return false
+    end
+    for i = 1, #criteria do
+        if not criteria[i].completed then
+            return true
+        end
+    end
+    return false
 end
 
 local COL_SOURCE_RIGHT = -248
@@ -696,8 +728,11 @@ local function FormatInstanceInfoLine(instData, iconSize)
             and "delves-bountiful"
             or "delves-regular"
         typeStr = string.format("|A:%s:%d:%d|a %s", atlas, iconSize, iconSize, DELVE_LABEL)
-        local storyName = ResolveDelveStoryDisplayName(instData)
+        local storyName, idx, criteria = ResolveDelveStoryDisplayName(instData)
         if storyName then
+            if ActiveStoryIncomplete(idx, criteria) then
+                storyName = OneWoW_GUI:WrapThemeColor(storyName, "TEXT_WARNING")
+            end
             typeStr = typeStr .. "  |  " .. storyName
         end
     end
@@ -1619,7 +1654,7 @@ local function BuildAchievementsTable(parent, instData, yOffset)
 
             yOffset = yOffset - (ITEM_ROW_HEIGHT + 2)
 
-            if row.kind == "stories" then
+            if row.kind == "stories" and not completed then
                 local criteria = CollectStoryCriteria(achID)
                 local addon = GetDataAddon()
                 local raw = addon and addon.GetDelveStoryText(instData.mapID)
