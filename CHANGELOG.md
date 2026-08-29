@@ -25,7 +25,13 @@
 
 ---
 
-*No user-facing changes this release for Home, Catalog, Trackers, QoL, Bags, Shopping List, Direct Deposit, or Mail.*
+# Catalog
+## Journal
+- Instance cards show Transmog, Toy, Housing, and the rest of those tags when the list first appears. Opening a card no longer takes two clicks to fill the tags or the boss and item counts.
+
+---
+
+*No user-facing changes this release for Home, Trackers, QoL, Bags, Shopping List, Direct Deposit, or Mail.*
 
 ---
 

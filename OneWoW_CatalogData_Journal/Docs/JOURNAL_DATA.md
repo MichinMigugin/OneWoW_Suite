@@ -44,9 +44,10 @@ Favorites and list selection use the same key.
 ## Lazy hydrate
 
 The in-memory card index is cheap: membership, delves, synthetic World, Generated
-loot counts and boss counts. Encounter rows (`C_Item`, extras) load in
-`EnsureEncounters` for **one card** when you open details, toast, or ESC
-collection, or when Has uncollected filters the current list.
+loot counts and boss counts, and taxonomy flags (`hasTMog`, and so on).
+Encounter rows (`C_Item`, extras placement) load in `EnsureEncounters` for
+**one card** when you open details, toast, or ESC collection, or when Has
+uncollected filters the current list.
 
 `GetInstanceByMapID` hydrates only the preferred card for that map. It must not
 build loot for every dungeon and raid.
@@ -57,9 +58,13 @@ synchronously froze the client — the same stall lazy hydrate exists to avoid, 
 reached through a filter instead of through login. Any future filter that needs
 collection state has to be chunked the same way.
 
-List cards paint without hydrating. Taxonomy tags (`hasTMog`, and so on) fill in
-after that card hydrates, but the **item count must not change on open**: a
-skeleton card's `totalItems` is `CountGeneratedLoot` (unique `JournalLoot` itemIDs)
+List cards paint without hydrating. Taxonomy tags (`hasTMog`, and so on) are
+stamped on the skeleton the same way `totalItems` is: extras rows already carry
+`isTransmog` / `isToy` / `classID` (one pass with `CountExtrasLoot`), and
+Adventure Guide loot is classified once per unique `itemID` with Instant plus
+leftover ToyBox / Mount / Pet probes. Opening a card must not be what first
+fills those tags. The **item count must not change on open**: a skeleton card's
+`totalItems` is `CountGeneratedLoot` (unique `JournalLoot` itemIDs)
 plus `CountExtrasLoot` (unique non-achievement `OneWoWExtras_*` itemIDs for that
 card key), which is exactly what `ApplyTotals` recomputes after hydrate. Those two
 sets never overlap because the extras files are pre-diffed against `JournalLoot`,
@@ -74,10 +79,12 @@ Hydrate itself is Instant-only: `C_Item.GetItemInfoInstant` plus
 raid card). ToyBox / Mount / Pet journal probes run only for leftover
 Miscellaneous or Consumable rows on that card, not for armor and weapons.
 
-Those probes are deliberately **per card, not per visible row**: `ApplyTotals` turns
-`item.special` into the card's `hasToys` / `hasMounts` / `hasPets` tags and feeds the
-collectible filters, so deferring them to row paint would leave card tags and
-filters wrong until the player scrolled every row.
+Those probes also run once per unique leftover `JournalLoot` itemID when the
+skeleton taxonomy index is built, so list tags match hydrate without walking
+every card. Hydrate still probes leftover rows on the open card because
+`ApplyTotals` turns `item.special` into the card's `hasToys` / `hasMounts` /
+`hasPets` tags and feeds the collectible filters. Deferring probes to row
+paint would leave those wrong until the player scrolled every row.
 
 Because hydrate is Instant-only, an uncached item resolves neither its name nor its
 quality: the row gets the localized `JOURNAL_UNKNOWN_ITEM` placeholder and quality

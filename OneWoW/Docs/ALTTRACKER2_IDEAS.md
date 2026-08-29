@@ -37,7 +37,9 @@ The redesign is large enough that a parallel unit is safer than in-place surgery
 
 Because legacy AltTracker is **deleted** at cutover, treat it as **feature-frozen** from
 here: bug fixes only. Anything added there is thrown away at Phase 8 and widens the parity
-checklist that gates the cutover.
+checklist that gates the cutover. Store-side accuracy that AT2 will read anyway is the
+exception (Progress raid-kill counting from lockouts + Adventure Guide, currency ID fixes,
+tracking picks moved into Options). Do not grow interim roster UI there.
 
 ### Design thesis
 
@@ -104,6 +106,8 @@ local ADDON = {
 
     -- Slash / search path prefixes if needed
     SLASH_TOKEN     = "at2",           -- temporary; retire or alias on rename
+    -- Suite slash prefix is `/1w` (legacy AltTracker is `/1wat`). On cutover,
+    -- either share `/1wat` or pick `/1wat2` until rename. See open decision #5.
 }
 ```
 
@@ -294,10 +298,15 @@ OneWoW_AltTracker2/          # gitignored until graduation (this doc lives in On
 Cross-unit rules: `_API` only; `RegisterDataReadyWatcher` for sticky UI; ephemeral tooltips
 nil-guard at call time. No foreign SV bypass.
 
-**Endgame lockouts need a real read surface.** Endgame exposes only
-`GetCharacterData(charKey)`; consumers currently walk `charData.raids.lockouts` themselves.
-Both Trackers (lockout skip) and AT2 Ops want this. **Decided:** add a raw read
-(`GetLockouts(charKey)`) with a predicate on top (`IsSavedTo(charKey, instanceID,
+**Endgame lockouts still need a public read surface.** Endgame exposes only
+`GetCharacterData(charKey)`; there is no `GetLockouts` / `IsSavedTo`. Consumers currently
+walk `charData.raids.lockouts` themselves. Legacy Progress now counts raid kills from those
+stored lockouts plus the Adventure Guide **inside** Endgame's Raids module (`C_RaidLocks`
+for the live char, blob walk for snapshots) — that is not a public `_API` and does not
+replace this work. Both Trackers (lockout skip for `enter_instance` / `kill_creature`) and
+AT2 Ops want the store surface. Trackers' shipped `kill_encounter` answers live lockout
+for the logged-in character only (`C_RaidLocks.IsEncounterComplete`). **Decided:** add a
+raw read (`GetLockouts(charKey)`) with a predicate on top (`IsSavedTo(charKey, instanceID,
 difficultyID)`), so the difficulty-matching rules — including shared legacy 10/25 pairing —
 and the “last seen” freshness stamp live in the store rather than in every consumer.
 `OneWoW_CatalogData_Quests`' `CompletionTracker` is the precedent to follow. Sequenced in
@@ -309,6 +318,7 @@ and the “last seen” freshness stamp live in the store rather than in every c
 - `OneWoW.AltScope` — roles + scope inclusion (`IsCharIncluded`, `GetRolesSorted`, …)
 - `OneWoW.SearchExpand` / `PredicateEngine` — Ask + Items/Bank search
 - `OneWoW.Restriction` — any bank-pull / secure actions
+- `OneWoW.Location` — player map, waypoint, hearth (legacy Summary already consumes it)
 - QoL tooltip ItemIndex consumer — ambient “where is this item”
 - Catalog — quest browsing **and cross-alt quest completion**
   (`OneWoW_CatalogData_Quests_API`); Ask consumes and deep-links rather than duplicating
@@ -391,7 +401,8 @@ Roles turn Ask from “scan 40 alts” into “scan the alts that matter for thi
 
 ### Borrow early
 
-1. List → detail + attention-only icons (AltVault, Home cards)
+1. List → detail + attention-only icons (AltVault, Home cards; Home’s collector row
+   now also has optional Mail / Settings / Portals tiles)
 2. Dual matrix orientations + vault coaching (AlterEgo / Kronon / Altism / Frudi)
 3. Smart Ask presets (Altoholic Misc filters)
 4. Dim-on-search for grids; actionable empty states; weekly self-expiry
@@ -521,6 +532,8 @@ Record answers here as they land:
 4. **Shared GUI primitives:** new matrix/attention-row in `OneWoW_GUI` vs local AT2 widgets
    until proven?
 5. **Legacy coexistence:** how long both tabs stay; shared slash `/1wat` behavior?
+   Suite slash prefix is now `/1w` (legacy is `/1wat`). AT2 should not invent a
+   non-`/1w` alias.
 6. **Season content packs:** keep overrides in data files; never bake season columns into
    chrome.
 7. **Attention score:** exact badge set and sort weight for Home?
