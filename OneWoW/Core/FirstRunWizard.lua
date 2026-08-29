@@ -1098,13 +1098,13 @@ function FirstRun:BuildPanel(parent, opts)
 
                 if entry.inUnitFeatures then
                     for fi, feat in ipairs(entry.inUnitFeatures) do
-                        local iconInfo = ns:GetFeatureIcon(feat.iconKey) or {}
+                        local featIconInfo = ns:GetFeatureIcon(feat.iconKey) or {}
                         local sub = OneWoW_GUI:CreateSelectableSubCard(listContainer, {
                             title = L[feat.labelKey],
                             summary = L[feat.summaryKey],
-                            iconTexture = iconInfo.texture,
-                            iconAtlas = iconInfo.atlas,
-                            iconTexCoords = iconInfo.texCoords,
+                            iconTexture = featIconInfo.texture,
+                            iconAtlas = featIconInfo.atlas,
+                            iconTexCoords = featIconInfo.texCoords,
                             checked = featureSelections[feat.id] and true or false,
                             interactive = true,
                             onToggle = function(_, checked)
