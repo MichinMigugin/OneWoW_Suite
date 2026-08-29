@@ -1207,6 +1207,18 @@ function ns.UI.CreateCollectiblesTab(parent)
         parent.RefreshCollectiblesList()
     end
 
+    function parent.GetNavEntity()
+        if selectedKey then
+            return "collectible", selectedKey
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind == "collectible" then
+            parent.SelectCollectible(id)
+        end
+    end
+
     ns.UI.RefreshCollectiblesList = parent.RefreshCollectiblesList
 
     -- Lets the merchant capture listener refresh the open detail in place when a

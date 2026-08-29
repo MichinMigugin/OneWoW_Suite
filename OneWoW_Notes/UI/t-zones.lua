@@ -935,6 +935,18 @@ function ns.UI.CreateZonesTab(parent)
         parent.RefreshZonesList()
     end
 
+    function parent.GetNavEntity()
+        if selectedZone then
+            return "zone", selectedZone
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind == "zone" then
+            parent.SelectZone(id)
+        end
+    end
+
     parent:HookScript("OnShow", function()
         if ns.pendingZoneSelect then
             local name = ns.pendingZoneSelect

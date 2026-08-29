@@ -1778,6 +1778,7 @@ local function OpenRewardItemInItemSearch(itemID, itemName)
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "itemsearch")
+    OneWoW.UI:CommitNavEntity("item", itemID)
 
     C_Timer.After(0.05, function()
         if ns.UI and ns.UI.OpenItemSearch then
@@ -4413,6 +4414,7 @@ function OpenQuestByID(questID, panels, fromArchive)
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "quests")
+    OneWoW.UI:CommitNavEntity("quest", questID)
 
     panels = panels or ns.UI.questsPanels
 
@@ -4838,6 +4840,7 @@ function ns.UI.OpenToQuest(questID)
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "quests")
+    OneWoW.UI:CommitNavEntity("quest", questID)
 
     C_Timer.After(0.15, function()
         local panels = ns.UI.questsPanels
@@ -5289,5 +5292,44 @@ function ns.UI.CreateQuestsTab(parent)
 
     ns.UI.RefreshQuestsList = function(invalidateStatus)
         RefreshQuestList(panels, invalidateStatus)
+    end
+
+    function parent.GetNavEntity()
+        if selectedQuest and selectedQuest.id then
+            return "quest", selectedQuest.id
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind ~= "quest" then
+            return
+        end
+        id = tonumber(id)
+        if not id then
+            return
+        end
+        local addon = GetDataAddon()
+        if not addon then
+            return
+        end
+        local quest = addon.GetQuest(id)
+        if not quest then
+            if addon.EnsureArchiveThen then
+                addon.EnsureArchiveThen(function()
+                    parent.RestoreNavEntity(kind, id)
+                end)
+            end
+            return
+        end
+        local entries = panels._questListEntries
+        if entries and questListAPI then
+            for i, entry in ipairs(entries) do
+                if entry.quest and entry.quest.id == id and QuestListEntryIsSelectable(entry) then
+                    SelectQuestFromList(panels, entry.quest, i)
+                    return
+                end
+            end
+        end
+        ShowQuestDetail(panels, quest)
     end
 end

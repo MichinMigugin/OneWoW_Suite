@@ -979,6 +979,9 @@ function ns.UI.CreateItemSearchTab(parent)
         end
 
         itemID = tonumber(itemID)
+        if itemID then
+            OneWoW.UI:CommitNavEntity("item", itemID)
+        end
         local query = itemID and tostring(itemID) or itemName or ""
 
         currentSource = "all"
@@ -1013,5 +1016,18 @@ function ns.UI.CreateItemSearchTab(parent)
                 end
             end)
         end
+    end
+
+    function parent.GetNavEntity()
+        if selectedItem and selectedItem.itemID then
+            return "item", selectedItem.itemID
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind ~= "item" then
+            return
+        end
+        SelectVisibleItemResult(id)
     end
 end

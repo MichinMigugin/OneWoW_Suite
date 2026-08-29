@@ -825,6 +825,18 @@ function ns.UI.CreateNPCsTab(parent)
         parent.RefreshNPCsList()
     end
 
+    function parent.GetNavEntity()
+        if selectedNPC then
+            return "npc", selectedNPC
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind == "npc" then
+            parent.SelectNPC(id)
+        end
+    end
+
     parent:HookScript("OnShow", function()
         if ns.pendingNPCSelect then
             local id = ns.pendingNPCSelect

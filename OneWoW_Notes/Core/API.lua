@@ -73,6 +73,7 @@ function OneWoW_Notes_API.OpenNPC(npcID)
     ns.pendingNPCSelect = npcID
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "npcs")
+    OneWoW.UI:CommitNavEntity("npc", npcID)
 
     local tabFrame = OneWoW.UI:GetContentFrame("notes", "npcs")
     if tabFrame and tabFrame.SelectNPC then
@@ -162,6 +163,7 @@ function OneWoW_Notes_API.OpenPlayer(fullName)
     ns.pendingPlayerSelect = fullName
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "players")
+    OneWoW.UI:CommitNavEntity("player", fullName)
 
     local tabFrame = OneWoW.UI:GetContentFrame("notes", "players")
     if tabFrame and tabFrame.SelectPlayer then
@@ -286,6 +288,7 @@ function OneWoW_Notes_API.OpenZone(noteIdOrTitle)
     ns.pendingZoneSelect = noteId
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "zones")
+    OneWoW.UI:CommitNavEntity("zone", noteId)
 
     local tabFrame = OneWoW.UI:GetContentFrame("notes", "zones")
     if tabFrame and tabFrame.SelectZone then
@@ -308,6 +311,7 @@ function OneWoW_Notes_API.OpenItem(itemID)
     ns.pendingItemSelect = itemID
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "items")
+    OneWoW.UI:CommitNavEntity("item", itemID)
 
     if ns.UI.OpenNotesItem and ns.UI.OpenNotesItem(itemID) then
         ns.pendingItemSelect = nil
@@ -359,6 +363,7 @@ function OneWoW_Notes_API.OpenCollectible(key)
     ns.pendingCollectibleSelect = key
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "collectibles")
+    OneWoW.UI:CommitNavEntity("collectible", key)
 
     local tabFrame = OneWoW.UI:GetContentFrame("notes", "collectibles")
     if tabFrame and tabFrame.SelectCollectible then

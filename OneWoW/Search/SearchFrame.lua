@@ -31,12 +31,7 @@ local function NavigateTo(entry)
         local gui = ns.UI
         gui:Show()
         C_Timer.After(0.05, function()
-            gui:SelectModuleTab(entry.module)
-            if entry.subtab then
-                C_Timer.After(0.05, function()
-                    gui:SelectSubTab(entry.module, entry.subtab)
-                end)
-            end
+            gui:SelectModuleTab(entry.module, entry.subtab)
         end)
     elseif entry.navType == "external" and entry.navFunc then
         entry.navFunc()

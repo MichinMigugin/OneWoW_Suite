@@ -1233,6 +1233,7 @@ function ns.UI.OpenToVendor(npcID)
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "vendors")
+    OneWoW.UI:CommitNavEntity("vendor", npcID)
 
     local function trySelect()
         local panels = ns.UI.vendorsPanels
@@ -1586,6 +1587,39 @@ function ns.UI.CreateVendorsTab(parent)
 
     function parent.SelectVendor(npcID)
         ns.UI.OpenToVendor(npcID)
+    end
+
+    function parent.GetNavEntity()
+        if selectedVendor and selectedVendor.npcID then
+            return "vendor", selectedVendor.npcID
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind ~= "vendor" then
+            return
+        end
+        id = tonumber(id)
+        if not id then
+            return
+        end
+        local addon = GetDataAddon()
+        if not addon then
+            return
+        end
+        local vendor = addon.GetVendor(id)
+        if not vendor then
+            return
+        end
+        if vendorListAPI then
+            for i, row in ipairs(listResults) do
+                if row.npcID == id then
+                    vendorListAPI.SetSelectedIndex(i)
+                    return
+                end
+            end
+        end
+        ShowVendorDetail(panels, vendor)
     end
 
     parent:HookScript("OnShow", function()

@@ -643,6 +643,12 @@ at the top of the L2 menu. Order persists in `ns.db.global.subTabFavorites`
 (`[moduleName] = { subTabName, ... }`). Last section/sub-tab selection persists in
 `ns.db.global.lastModuleTab` / `lastSubTabs`.
 
+The title bar has session-only **Back** and **Forward** (cap 8).
+`SelectModuleTab` / `SelectSubTab` and `Open*` jumps record the leaving
+`(module, subtab, entity)`. Hide and `FullReset` wipe the stack; last-tab
+SavedVariables are unchanged. Content frames may implement `GetNavEntity` /
+`RestoreNavEntity` so Back can re-select a quest, NPC, vendor, or similar.
+
 ### 5.1 ModuleRegistry
 
 Modules that appear in the hub section dropdown register via `OneWoW:RegisterModule()`:

@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "Ряд мини-карты OneWoW может добавить кнопки Mail, Settings и Portals. Каждую можно включить или выключить в настройках сборщика. Щелчок правой кнопкой по значку OneWoW также предлагает Открыть Mail, если Mail загружен.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Уведомление об обновлении",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "Если у кого-то рядом более новая OneWoW, строка в чате, окно и Главная > Требует внимания сообщат об этом. Скачайте с CurseForge или onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Назад и вперед",
+    ["WHATS_NEW_H_NAV_BODY"] = "В заголовке OneWoW теперь есть Назад и Вперед. Они помнят последние разделы и вкладки этой сессии, а также задание, НИП или торговца, которых вы смотрели. Закрытие окна очищает историю.",
     ["CMD_TOGGLE_ONEWOW"] = "Переключить OneWoW",
     ["CMD_KEYWORD_HELP"] = "Открыть справку по ключевым словам поиска",
     ["CMD_OPEN_ALTTRACKER"] = "Открыть AltTracker",

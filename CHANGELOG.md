@@ -3,6 +3,9 @@
 ## Home
 - If someone near you is on a newer OneWoW, chat, a popup, and Needs attention on Home tell you to update. Download from CurseForge or onewow.net.
 
+## Hub
+- Back and Forward buttons sit on the title bar. They remember the last few sections and tabs you opened this session, plus the quest, NPC, or vendor you were on. Closing the window starts a fresh trail.
+
 ## Item lists
 - Sort item-ID lists by name or item ID. Each list keeps its own choice: Direct Deposit keep and auto-deposit, Bag Bar manual and blacklist, Auto Open blacklist, Bags category added items, and the Farm Value watchlist editor.
 
@@ -20,6 +23,9 @@
 ---
 
 # QoL
+## Crafting Orders
+- Craftable now rows have a Craft button on the list. Click Start, then craft, then complete without opening the order. After you start one, the other rows dim. The started order stays on its own Public / Guild / Personal / Patron tab.
+
 ## Fixes
 - Crafting Orders starts off. Turning it off keeps it off on every character.
 - If No Mats No Make or PatronOffers is enabled, Crafting Orders starts off so those addons can run. You can still turn One UI on. Turning it off fully restores their list.

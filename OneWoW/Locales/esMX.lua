@@ -189,6 +189,8 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "La fila del minimapa de OneWoW puede anadir botones de Mail, Settings y Portals. Activa o desactiva cada uno en los ajustes del colector. Clic derecho en el icono de OneWoW tambien ofrece Abrir Mail cuando Mail esta cargado.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Aviso de actualizacion",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "Si alguien cerca de ti tiene una OneWoW mas reciente, una linea de chat, una ventana y Inicio > Necesita atencion te lo dicen. Descarga en CurseForge o onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Atras y adelante",
+    ["WHATS_NEW_H_NAV_BODY"] = "La barra de titulo de OneWoW ahora tiene Atras y Adelante. Recuerdan las ultimas secciones y pestanas de esta sesion, y la mision, el PNJ o el vendedor que tenias abiertos. Cerrar la ventana borra el rastro.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir la ayuda de palabras clave de búsqueda",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

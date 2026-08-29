@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "La riga minimappa OneWoW puo aggiungere i pulsanti Mail, Settings e Portals. Accendi o spegni ciascuno nelle impostazioni del raccoglitore. Clic destro sull'icona OneWoW offre anche Apri Mail quando Mail e caricato.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Avviso di aggiornamento",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "Se qualcuno vicino a te ha una OneWoW piu recente, una riga in chat, una finestra e Home > Richiede attenzione te lo dicono. Scarica da CurseForge o onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Indietro e avanti",
+    ["WHATS_NEW_H_NAV_BODY"] = "La barra del titolo di OneWoW ora ha Indietro e Avanti. Ricordano le ultime sezioni e schede di questa sessione, e la missione, il PNG o il venditore che stavi consultando. Chiudere la finestra cancella la cronologia.",
     ["CMD_TOGGLE_ONEWOW"] = "Attiva/disattiva OneWoW",
     ["CMD_KEYWORD_HELP"] = "Apri l'aiuto sulle parole chiave di ricerca",
     ["CMD_OPEN_ALTTRACKER"] = "Apri AltTracker",

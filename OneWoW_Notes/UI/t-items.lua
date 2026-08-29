@@ -862,6 +862,18 @@ function ns.UI.CreateItemsTab(parent)
         parent.RefreshItemsList()
     end
 
+    function parent.GetNavEntity()
+        if selectedItem then
+            return "item", selectedItem
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind == "item" then
+            parent.SelectItem(id)
+        end
+    end
+
     ns.UI.RefreshItemsList = parent.RefreshItemsList
 
     ns.UI.OpenNotesItem = function(itemID)

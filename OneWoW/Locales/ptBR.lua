@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "A fileira do minimapa OneWoW pode adicionar botoes de Mail, Settings e Portals. Ligue ou desligue cada um nas configuracoes do coletor. Clique com o botao direito no icone OneWoW tambem oferece Abrir Mail quando Mail esta carregado.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Aviso de atualizacao",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "Se alguem perto de voce tiver uma OneWoW mais recente, uma linha no chat, uma janela e Inicio > Precisa de atencao avisam. Baixe no CurseForge ou onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Voltar e avancar",
+    ["WHATS_NEW_H_NAV_BODY"] = "A barra de titulo do OneWoW agora tem Voltar e Avancar. Elas lembram as ultimas secoes e abas desta sessao, e a missao, o PNJ ou o vendedor que voce estava vendo. Fechar a janela apaga o rastro.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir a ajuda de palavras-chave de busca",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

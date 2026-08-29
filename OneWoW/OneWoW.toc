@@ -187,6 +187,7 @@ Search\SearchFrame.lua
 
 # Hub UI
 UI\navigation.lua
+UI\NavHistory.lua
 UI\MainWindow.lua
 UI\Minimap.lua
 UI\t-home.lua

@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "OneWoW 미니맵 줄에 Mail, Settings, Portals 단추를 넣을 수 있습니다. 수집기 설정에서 각각 켜고 끕니다. Mail이 켜져 있으면 OneWoW 아이콘을 오른쪽 클릭해 Mail 열기도 됩니다.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "업데이트 알림",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "근처에 더 새로운 OneWoW를 쓰는 사람이 있으면 채팅, 팝업, 홈의 주의 필요로 알려 줍니다. CurseForge 또는 onewow.net에서 받으세요.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "뒤로 및 앞으로",
+    ["WHATS_NEW_H_NAV_BODY"] = "OneWoW 제목 표시줄에 뒤로와 앞으로가 생겼습니다. 이번 세션에서 연 구역과 탭, 보고 있던 퀘스트, NPC, 상인을 기억합니다. 창을 닫으면 기록이 지워집니다.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker 열기",

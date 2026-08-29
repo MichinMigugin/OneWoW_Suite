@@ -38,6 +38,7 @@ Even with no optional modules, **OneWoW** includes:
 * **Shared themes** across OneWoW windows
 * **Eleven locales** — in-game text follows your WoW client language
 * **Update notice** — if someone near you has a newer OneWoW, chat, a popup, and Home Needs attention tell you. Update via [CurseForge](Install) or [onewow.net](https://onewow.net/).
+* **Back and Forward** — title-bar arrows remember the last few sections and tabs you opened this session, plus the quest, NPC, or vendor you were on. Closing the window starts a fresh trail.
 
 ## Suggested first session
 

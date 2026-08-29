@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "OneWoW 小地圖列可加入 Mail、Settings 和 Portals 按鈕。在收集器設定中分別開關。已載入 Mail 時，右鍵 OneWoW 圖示也可開啟 Mail。",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "更新提示",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "附近有人使用較新的 OneWoW 時，聊天、彈出視窗和首頁「需要注意」會提醒你更新。請從 CurseForge 或 onewow.net 下載。",
+    ["WHATS_NEW_H_NAV_TITLE"] = "後退與前進",
+    ["WHATS_NEW_H_NAV_BODY"] = "OneWoW 標題列現在有後退與前進。會記住你這次開啟的幾個分區和分頁，以及正在看的任務、NPC 或商人。關閉視窗後紀錄會清空。",
     ["CMD_TOGGLE_ONEWOW"] = "切換 OneWoW",
     ["CMD_KEYWORD_HELP"] = "開啟搜尋關鍵字說明",
     ["CMD_OPEN_ALTTRACKER"] = "開啟 AltTracker",

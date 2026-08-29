@@ -683,6 +683,18 @@ function ns.UI.CreatePlayersTab(parent)
         parent.RefreshPlayersList()
     end
 
+    function parent.GetNavEntity()
+        if selectedPlayer then
+            return "player", selectedPlayer
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind == "player" then
+            parent.SelectPlayer(id)
+        end
+    end
+
     parent:HookScript("OnShow", function()
         if ns.pendingPlayerSelect then
             local name = ns.pendingPlayerSelect

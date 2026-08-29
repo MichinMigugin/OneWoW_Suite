@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "The OneWoW minimap row can add Mail, Settings, and Portals buttons. Turn each on or off in collector settings. Right-click the OneWoW icon also offers Open Mail when Mail is loaded.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Update notice",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "If someone near you is on a newer OneWoW, a chat line, a popup, and Home Needs attention tell you to update. Download from CurseForge or onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Back and Forward",
+    ["WHATS_NEW_H_NAV_BODY"] = "The OneWoW title bar now has Back and Forward. They remember the last few sections and tabs you opened this session, plus the quest, NPC, or vendor you were on. Closing the window starts a fresh trail.",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",
     ["CMD_KEYWORD_HELP"] = "Open Search Keywords help",
     ["CMD_OPEN_ALTTRACKER"] = "Open AltTracker",

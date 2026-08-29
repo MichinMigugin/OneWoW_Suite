@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "Die OneWoW-Minimap-Reihe kann Mail-, Settings- und Portals-Schalter hinzufugen. Jeden in den Sammler-Einstellungen ein- oder ausschalten. Rechtsklick auf das OneWoW-Symbol bietet auch Mail offnen, wenn Mail geladen ist.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Update-Hinweis",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "Wenn jemand in deiner Nähe eine neuere OneWoW-Version hat, sagen dir eine Chatzeile, ein Popup und Start > Benötigt Aufmerksamkeit Bescheid. Download über CurseForge oder onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Zurück und Vor",
+    ["WHATS_NEW_H_NAV_BODY"] = "Die OneWoW-Titelleiste hat jetzt Zurück und Vor. Sie merken sich die letzten Bereiche und Tabs dieser Sitzung sowie die Quest, den NSC oder Händler, den du angesehen hast. Das Schließen des Fensters löscht die Spur.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW umschalten",
     ["CMD_KEYWORD_HELP"] = "Hilfe zu Suchbegriffen öffnen",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker öffnen",

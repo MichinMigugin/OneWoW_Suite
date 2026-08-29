@@ -9,6 +9,12 @@ local MainWindow = nil
 local isInitialized = false
 local currentModuleTab = "home"
 local currentSubTab = nil
+local navBackBtn = nil
+local navForwardBtn = nil
+local pendingLeaveSnapshot = nil
+local pendingCoalesceLeave = nil
+local pendingCoalesceArrive = nil
+local coalesceQueued = false
 local row2Buttons = {}
 local moduleContentFrames = {}
 local row1Container = nil
@@ -635,13 +641,197 @@ function UI:RefreshHomeStatus()
     end
 end
 
+local function GetNavContentFrame(moduleName, subTabName)
+    if moduleName == "home" then
+        return homePanel
+    end
+    if subTabName then
+        return moduleContentFrames[moduleName .. ":" .. subTabName]
+    end
+    if moduleName == "settings" then
+        return settingsPanel
+    end
+    return nil
+end
 
-function UI:SelectModuleTab(moduleName)
+local function SnapshotLocation()
+    local frame = GetNavContentFrame(currentModuleTab, currentSubTab)
+    local kind, id
+    if frame and frame.GetNavEntity then
+        kind, id = frame.GetNavEntity()
+    end
+    return {
+        module = currentModuleTab,
+        subtab = currentSubTab,
+        kind = kind,
+        id = id,
+    }
+end
+
+local function FormatNavLabel(entry)
+    if not entry then
+        return nil
+    end
+    local section = SectionLabelFor(entry.module)
+    if not entry.subtab then
+        return section
+    end
+    local tabInfo = FindSectionTab(entry.module, entry.subtab)
+    local subName = GetTabDisplayName(tabInfo)
+    if subName ~= "" then
+        return section .. " / " .. subName
+    end
+    return section
+end
+
+-- common-icon-forwardarrow is baked gold. Desaturate, then tint so the
+-- arrows follow the theme instead of sitting as a yellow blob on the title bar.
+local function PaintNavIcon(btn, hover)
+    local icon = btn and btn.icon
+    if not icon then
+        return
+    end
+    icon:SetDesaturated(true)
+    if btn._navEnabled then
+        local key = hover and "TEXT_ACCENT" or "ACCENT_PRIMARY"
+        icon:SetVertexColor(OneWoW_GUI:GetThemeColor(key))
+        icon:SetAlpha(1)
+    else
+        icon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        icon:SetAlpha(0.45)
+    end
+end
+
+local function SetNavButtonState(btn, enabled)
+    if not btn then
+        return
+    end
+    btn._navEnabled = enabled
+    btn:SetEnabled(enabled)
+    btn:EnableMouse(true)
+    PaintNavIcon(btn, btn:IsMouseOver())
+end
+
+function UI:RefreshNavButtons()
+    local history = UI.NavHistory
+    SetNavButtonState(navBackBtn, history.CanBack())
+    SetNavButtonState(navForwardBtn, history.CanForward())
+end
+
+local function FlushHubNav()
+    local leave = pendingCoalesceLeave
+    local arrive = pendingCoalesceArrive
+    pendingCoalesceLeave = nil
+    pendingCoalesceArrive = nil
+    coalesceQueued = false
+    if arrive then
+        UI.NavHistory.Commit(leave, arrive)
+    end
+    UI:RefreshNavButtons()
+end
+
+local function QueueHubNav(leave, arrive)
+    if UI.NavHistory.IsApplying() or not UI.NavHistory.IsArmed() then
+        return
+    end
+    if not pendingCoalesceLeave then
+        pendingCoalesceLeave = leave
+    end
+    pendingCoalesceArrive = arrive
+    if not coalesceQueued then
+        coalesceQueued = true
+        C_Timer.After(0, FlushHubNav)
+    end
+end
+
+local function ApplyNavEntry(entry)
+    if not entry then
+        return
+    end
+    if entry.subtab then
+        UI:SelectModuleTab(entry.module, entry.subtab)
+    else
+        UI:SelectModuleTab(entry.module)
+    end
+    local frame = GetNavContentFrame(entry.module, entry.subtab)
+    if frame and frame.RestoreNavEntity and entry.kind ~= nil and entry.id ~= nil then
+        frame.RestoreNavEntity(entry.kind, entry.id)
+    end
+end
+
+function UI:GoBack()
+    FlushHubNav()
+    if not UI.NavHistory.CanBack() then
+        return
+    end
+    UI.NavHistory.SetApplying(true)
+    ApplyNavEntry(UI.NavHistory.Back())
+    UI.NavHistory.SetApplying(false)
+    UI:RefreshNavButtons()
+end
+
+function UI:GoForward()
+    FlushHubNav()
+    if not UI.NavHistory.CanForward() then
+        return
+    end
+    UI.NavHistory.SetApplying(true)
+    ApplyNavEntry(UI.NavHistory.Forward())
+    UI.NavHistory.SetApplying(false)
+    UI:RefreshNavButtons()
+end
+
+--- Stamp or push an entity after an Open* jump lands on the current tab.
+---@param kind string
+---@param id number|string
+function UI:CommitNavEntity(kind, id)
+    if not kind or id == nil then
+        return
+    end
+    if UI.NavHistory.IsApplying() or not UI.NavHistory.IsArmed() then
+        return
+    end
+    if pendingCoalesceArrive
+        and pendingCoalesceArrive.module == currentModuleTab
+        and pendingCoalesceArrive.subtab == currentSubTab then
+        pendingCoalesceArrive.kind = kind
+        pendingCoalesceArrive.id = id
+        return
+    end
+    if UI.NavHistory.FillCurrentEntity(kind, id) then
+        UI:RefreshNavButtons()
+        return
+    end
+    local current = UI.NavHistory.Current()
+    if not current then
+        return
+    end
+    if current.module ~= currentModuleTab or current.subtab ~= currentSubTab then
+        return
+    end
+    if current.kind == kind and current.id == id then
+        return
+    end
+    QueueHubNav(current, {
+        module = currentModuleTab,
+        subtab = currentSubTab,
+        kind = kind,
+        id = id,
+    })
+end
+
+function UI:SelectModuleTab(moduleName, targetSub)
     -- Lazy modules load the first time their tab is opened. Dormant until modules
     -- become LoadOnDemand; a no-op while all modules are login-phase.
     if ns.LoadOrchestrator then
         ns.LoadOrchestrator:EnsureModuleForTab(moduleName)
     end
+
+    local leave = nil
+    if not UI.NavHistory.IsApplying() and UI.NavHistory.IsArmed() then
+        leave = SnapshotLocation()
+    end
+    pendingLeaveSnapshot = leave
 
     currentModuleTab = moduleName
     currentSubTab = nil
@@ -664,6 +854,8 @@ function UI:SelectModuleTab(moduleName)
             OneWoW_GUI:ApplyFontToFrame(homePanel)
         end
         homePanel:Show()
+        pendingLeaveSnapshot = nil
+        QueueHubNav(leave, { module = moduleName, subtab = nil })
         return
     end
 
@@ -671,7 +863,7 @@ function UI:SelectModuleTab(moduleName)
         if UI.settingsTabs and #UI.settingsTabs > 0 then
             local lastSub = ns.db.global.lastSubTabs["settings"]
             local firstTab = UI.settingsTabs[1].name
-            local targetTab = lastSub or firstTab
+            local targetTab = targetSub or lastSub or firstTab
 
             local found = false
             for _, tabInfo in ipairs(UI.settingsTabs) do
@@ -691,6 +883,8 @@ function UI:SelectModuleTab(moduleName)
                 UI:CreateSettingsMainTab(settingsPanel)
             end
             settingsPanel:Show()
+            pendingLeaveSnapshot = nil
+            QueueHubNav(leave, { module = moduleName, subtab = nil })
         end
         return
     end
@@ -706,6 +900,8 @@ function UI:SelectModuleTab(moduleName)
             OneWoW_GUI:ApplyFontToFrame(frame)
         end
         moduleContentFrames[key]:Show()
+        pendingLeaveSnapshot = nil
+        QueueHubNav(leave, { module = moduleName, subtab = nil })
         return
     end
 
@@ -713,7 +909,7 @@ function UI:SelectModuleTab(moduleName)
     if #tabs > 0 then
         local lastSub = ns.db.global.lastSubTabs[moduleName]
         local firstTab = tabs[1].name
-        local targetTab = lastSub or firstTab
+        local targetTab = targetSub or lastSub or firstTab
 
         local found = false
         for _, tabInfo in ipairs(tabs) do
@@ -727,6 +923,8 @@ function UI:SelectModuleTab(moduleName)
         UI:SelectSubTab(moduleName, targetTab)
     else
         UI:RefreshSubNav()
+        pendingLeaveSnapshot = nil
+        QueueHubNav(leave, { module = moduleName, subtab = nil })
     end
 end
 
@@ -795,6 +993,12 @@ local function FindModuleTab(moduleName, subTabName)
 end
 
 function UI:SelectSubTab(moduleName, subTabName)
+    local leave = pendingLeaveSnapshot
+    pendingLeaveSnapshot = nil
+    if not leave and not UI.NavHistory.IsApplying() and UI.NavHistory.IsArmed() then
+        leave = SnapshotLocation()
+    end
+
     currentSubTab = subTabName
 
     ns.db.global.lastSubTabs[moduleName] = subTabName
@@ -848,6 +1052,8 @@ function UI:SelectSubTab(moduleName, subTabName)
             activeContentFrame:Activate()
         end
     end
+
+    QueueHubNav(leave, { module = moduleName, subtab = subTabName })
 end
 
 function UI:GetContentFrame(moduleName, subTabName)
@@ -905,6 +1111,12 @@ function UI:InitMainWindow()
         if row2Container then
             row2Container:Hide()
         end
+        pendingLeaveSnapshot = nil
+        pendingCoalesceLeave = nil
+        pendingCoalesceArrive = nil
+        coalesceQueued = false
+        UI.NavHistory.Clear()
+        UI:RefreshNavButtons()
     end)
     MainWindow:Hide()
 
@@ -921,6 +1133,53 @@ function UI:InitMainWindow()
     titleBar:RegisterForDrag("LeftButton")
     titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
     titleBar:SetScript("OnDragStop", function() MainWindow:StopMovingOrSizing() end)
+
+    local function AttachNavTooltip(btn, title, blizzardTip, peekFn)
+        btn:HookScript("OnEnter", function(myself)
+            PaintNavIcon(myself, true)
+            GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
+            GameTooltip:SetText(title)
+            if blizzardTip and blizzardTip ~= title then
+                GameTooltip:AddLine(blizzardTip, 1, 1, 1, true)
+            end
+            local dest = peekFn()
+            local label = dest and FormatNavLabel(dest)
+            if label then
+                GameTooltip:AddLine(label, OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            end
+            GameTooltip:Show()
+        end)
+        btn:HookScript("OnLeave", function(myself)
+            PaintNavIcon(myself, false)
+            GameTooltip:Hide()
+        end)
+    end
+
+    local closeBtn = titleBar._closeBtn
+    navForwardBtn = OneWoW_GUI:CreateAtlasIconButton(titleBar, {
+        atlas = "common-icon-forwardarrow",
+        width = 20,
+        height = 20,
+    })
+    navForwardBtn:SetPoint("RIGHT", closeBtn, "LEFT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
+    navForwardBtn:SetScript("OnClick", function()
+        UI:GoForward()
+    end)
+    AttachNavTooltip(navForwardBtn, BROWSER_FORWARD_TOOLTIP, BROWSER_FORWARD_TOOLTIP, UI.NavHistory.PeekForward)
+
+    navBackBtn = OneWoW_GUI:CreateAtlasIconButton(titleBar, {
+        atlas = "common-icon-forwardarrow",
+        width = 20,
+        height = 20,
+    })
+    navBackBtn:SetPoint("RIGHT", navForwardBtn, "LEFT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
+    navBackBtn.icon:SetTexCoord(1, 0, 0, 1)
+    navBackBtn:SetScript("OnClick", function()
+        UI:GoBack()
+    end)
+    AttachNavTooltip(navBackBtn, BACK, BROWSER_BACK_TOOLTIP, UI.NavHistory.PeekBack)
+
+    UI:RefreshNavButtons()
 
     row1Container = CreateFrame("Frame", nil, MainWindow)
     row1Container:SetHeight(C.ROW1_HEIGHT)
@@ -1070,20 +1329,29 @@ function UI:InitMainWindow()
 end
 
 function UI:Show(moduleName)
+    local wasHidden = not (MainWindow and MainWindow:IsShown())
     if not isInitialized then
         UI:InitMainWindow()
+        wasHidden = true
     else
         UI:RefreshRow1ModuleTabs()
     end
     if MainWindow then
         MainWindow:Show()
         MainWindow:Raise()
+        if wasHidden or not UI.NavHistory.IsArmed() then
+            UI.NavHistory.SetArmed(true)
+            if not UI.NavHistory.Current() then
+                UI.NavHistory.Seed(SnapshotLocation())
+            end
+        end
         if moduleName then
             UI:SelectModuleTab(moduleName)
         else
             -- Init selects the last tab while the window is still hidden; refit pins now.
             UI:RefreshSubNav()
         end
+        UI:RefreshNavButtons()
     end
 end
 
@@ -1244,6 +1512,13 @@ function UI:FullReset()
     refreshingSubNav = false
     wipe(sectionModuleNames)
     wipe(sectionLabels)
+    navBackBtn = nil
+    navForwardBtn = nil
+    pendingLeaveSnapshot = nil
+    pendingCoalesceLeave = nil
+    pendingCoalesceArrive = nil
+    coalesceQueued = false
+    UI.NavHistory.Clear()
 end
 
 EventRegistry:RegisterCallback("ns.ModuleRegistered", function()

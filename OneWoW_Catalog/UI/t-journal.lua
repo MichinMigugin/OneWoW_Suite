@@ -2661,6 +2661,43 @@ function ns.UI.CreateJournalTab(parent)
             RefreshJournalList(panels)
         end,
     })
+
+    function parent.GetNavEntity()
+        if selectedInstance then
+            return "instance", JournalCacheKey(selectedInstance)
+        end
+    end
+
+    function parent.RestoreNavEntity(kind, id)
+        if kind ~= "instance" or id == nil then
+            return
+        end
+        id = tostring(id)
+        local inst, keepIndex
+        for i, row in ipairs(listResults) do
+            if JournalCacheKey(row) == id
+                or (row.mapID and tostring(row.mapID) == id)
+                or (row.instanceID and tostring(row.instanceID) == id) then
+                inst = row
+                keepIndex = i
+                break
+            end
+        end
+        if not inst then
+            local mapID = tonumber(id)
+            if mapID then
+                inst = OneWoW_CatalogData_Journal_API.GetInstanceByMapID(mapID)
+            end
+        end
+        if not inst then
+            return
+        end
+        if keepIndex and journalListAPI then
+            journalListAPI.SetSelectedIndex(keepIndex)
+            return
+        end
+        ShowInstanceDetail(panels, inst)
+    end
 end
 
 function ns.UI.OpenToInstance(mapID)
@@ -2670,6 +2707,7 @@ function ns.UI.OpenToInstance(mapID)
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "journal")
+    OneWoW.UI:CommitNavEntity("instance", JournalCacheKey(instData))
 
     C_Timer.After(0.15, function()
         local panels = panels_ref or ns.UI.journalPanels

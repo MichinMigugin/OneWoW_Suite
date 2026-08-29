@@ -188,6 +188,8 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_COLLECTOR_BODY"] = "La rangee de minicarte OneWoW peut ajouter les boutons Mail, Settings et Portals. Activez ou desactivez chacun dans les parametres du collecteur. Un clic droit sur l'icone OneWoW propose aussi Ouvrir Mail quand Mail est charge.",
     ["WHATS_NEW_H_VERSIONCHECK_TITLE"] = "Avis de mise à jour",
     ["WHATS_NEW_H_VERSIONCHECK_BODY"] = "Si quelqu'un près de vous a une OneWoW plus récente, une ligne de chat, une fenêtre et Accueil > Nécessite votre attention vous le disent. Téléchargez via CurseForge ou onewow.net.",
+    ["WHATS_NEW_H_NAV_TITLE"] = "Retour et suivant",
+    ["WHATS_NEW_H_NAV_BODY"] = "La barre de titre OneWoW a maintenant Retour et Suivant. Ils retiennent les dernières sections et onglets ouverts pendant cette session, ainsi que la quête, le PNJ ou le vendeur consultés. Fermer la fenêtre efface l'historique.",
     ["CMD_TOGGLE_ONEWOW"] = "Basculer OneWoW",
     ["CMD_KEYWORD_HELP"] = "Ouvrir l'aide des mots-clés de recherche",
     ["CMD_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",
