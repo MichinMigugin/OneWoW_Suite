@@ -944,7 +944,7 @@ local list = OneWoW_GUI:CreateEntryList(parent, {
         return { { id = 12345, label = "Name", icon = texturePath, data = {} } }
     end,
     onRemove = function(id) Remove(id) end,
-    -- optional: createRow(row, entry, api) -> height; api.RequestRefresh / IsEnabled
+    -- optional: createRow(row, entry, api) -> height; api.RequestRefresh / IsEnabled / zebraIndex
     sortKey = "bagbar:blacklist", -- optional Name / Item ID toolbar; per-list preference
 })
 list:Refresh()
@@ -984,6 +984,27 @@ local drop = OneWoW_GUI:CreateItemListSortDropdown(parent, {
 })
 ```
 
+### Zebra fill (stacked list rows)
+
+Odd rows use `BG_PRIMARY`, even rows `BG_SECONDARY`. Hover / selected / header
+override. OnLeave must restore through this helper, not a hardcoded fill.
+
+```lua
+local key = OneWoW_GUI:GetZebraThemeKey(index)   -- "BG_PRIMARY" | "BG_SECONDARY"
+OneWoW_GUI:ApplyListRowFill(row, {
+    zebraIndex = index,     -- idle stripe
+    selected = false,
+    hover = false,
+    header = false,
+    fillKey = nil,          -- wins when set (quest section tints, zebra=false idle)
+})
+```
+
+`CreateEntryList`, `CreateListRowBasic` (default on; `zebra = false` to opt out),
+`CreateVirtualizer` (`row._zebraIndex` / `state.zebraIndex`), and Notes list
+rows apply this automatically. `ClearFrame` resets the parent stripe sequence
+used when `CreateListRowBasic` is not given `zebraIndex`.
+
 ### Status dot
 ```lua
 local dot = OneWoW_GUI:CreateStatusDot(parent, {
@@ -999,6 +1020,8 @@ dot:SetStatus(true)   -- update: true=DOT_FEATURES_ENABLED, false=DOT_FEATURES_D
 local row = OneWoW_GUI:CreateListRowBasic(parent, {
     height = 30,                -- optional, default 30
     label = "Item Name",        -- optional, default ""
+    zebra = true,               -- optional, default true; false = flat BG_SECONDARY
+    zebraIndex = i,             -- optional; else NextZebraIndex(parent)
     showDot = true,             -- optional, adds status dot on right
     dotEnabled = true,          -- optional, initial dot state
     showValueText = false,      -- optional, adds right-aligned value text
@@ -1017,6 +1040,7 @@ Returns a Button with themed hover/active states. Properties:
 - `row.valueText` - FontString (if showValueText=true)
 - `row:SetActive(bool)` - toggle active/selected styling
 - `row.isActive` - current active state
+- `row._zebraIndex` - stripe index when zebra is on
 
 Future variants: `CreateListRowExtended` (expandable content section on click).
 

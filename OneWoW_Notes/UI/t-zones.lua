@@ -1032,6 +1032,9 @@ function ns.UI.CreateZonesTab(parent)
     end
 
     parent.RefreshZonesList = function()
+        if scrollChild then
+            scrollChild._onewowZebraSeq = nil
+        end
         for _, ctrl in pairs(sectionReorders) do
             ctrl:Cancel()
         end

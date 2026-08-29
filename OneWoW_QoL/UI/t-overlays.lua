@@ -2493,6 +2493,7 @@ local function BuildOverlayList(split)
         -- Pinned "+ Add Overlay" action row (never auto-selected).
         local addRow = OneWoW_GUI:CreateListRowBasic(lsc, {
             height = 30,
+            zebra = false,
             label = "+ " .. L["OVR_ADD_OVERLAY_BTN"],
             onClick = function() ns.UI.ShowAddOverlayDialog() end,
         })

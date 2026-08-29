@@ -33,7 +33,7 @@ local function PrefLabel(pref)
     return L["MMBTNS_ICONS_MINI"]
 end
 
-local function BuildIconRow(parent, info, yOffset, refreshFn)
+local function BuildIconRow(parent, info, yOffset, refreshFn, zebraIndex)
     local capturedName = info.name
     local pref = info.pref or "mini"
 
@@ -42,7 +42,8 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
     row:SetPoint("TOPLEFT",  parent, "TOPLEFT",   ROW_PADDING_X, yOffset)
     row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -ROW_PADDING_X, yOffset)
     row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    row._zebraIndex = zebraIndex or 1
+    OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = row._zebraIndex })
     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     -- Removal is only allowed for stale entries (addon currently disabled /
@@ -164,8 +165,8 @@ local function BuildMinimapIconsSection(parent, yOffset, refreshFn)
         rowsContainer:SetHeight((empty:GetStringHeight() or 14) + 8)
     else
         local localY = 0
-        for _, info in ipairs(buttons) do
-            localY = BuildIconRow(rowsContainer, info, localY, refreshFn)
+        for i, info in ipairs(buttons) do
+            localY = BuildIconRow(rowsContainer, info, localY, refreshFn, i)
         end
         rowsContainer:SetHeight(math.abs(localY) + 4)
     end

@@ -702,6 +702,9 @@ function ns.UI.CreatePlayersTab(parent)
     end
 
     function parent.RefreshPlayersList()
+        if scrollChild then
+            scrollChild._onewowZebraSeq = nil
+        end
         for _, ctrl in pairs(sectionReorders) do
             ctrl:Cancel()
         end

@@ -236,8 +236,10 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
                 row:SetPoint("TOPLEFT", content, "TOPLEFT", rowInset, -y)
                 row:SetPoint("RIGHT", content, "RIGHT", -rowInset, 0)
                 row.entryIndex = idx
+                row._zebraIndex = idx
                 local rowState = {
                     selected = state.selectedIndex == idx and rowIsSelectable(idx),
+                    zebraIndex = idx,
                 }
                 -- Match legacy CreateVirtualizedList: selection font before consumer bind.
                 if row.SetNormalFontObject then

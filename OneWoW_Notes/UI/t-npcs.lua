@@ -820,6 +820,9 @@ function ns.UI.CreateNPCsTab(parent)
     end)
 
     function parent.RefreshNPCsList()
+        if scrollChild then
+            scrollChild._onewowZebraSeq = nil
+        end
         for _, ctrl in pairs(sectionReorders) do
             ctrl:Cancel()
         end

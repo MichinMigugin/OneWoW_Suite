@@ -869,6 +869,9 @@ function ns.UI.CreateNotesTab(parent)
     end
 
     function parent.RefreshNotesList()
+        if scrollChild then
+            scrollChild._onewowZebraSeq = nil
+        end
         for _, ctrl in pairs(sectionReorders) do
             ctrl:Cancel()
         end

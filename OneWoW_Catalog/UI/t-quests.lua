@@ -3508,7 +3508,11 @@ local function UpdateQuestListEntry(btn, entry, state)
         ns.CardChrome.ResolveExpansionBackground(expLevel, "level")
     )
     btn._borderKey = ns.CardChrome.QuestBorderKey(quest)
-    btn._chromeFill = btn.isChild and "QUEST_ROW_CHILD" or "BG_SECONDARY"
+    if btn.isChild then
+        btn._chromeFill = "QUEST_ROW_CHILD"
+    else
+        btn._chromeFill = nil
+    end
     ApplyQuestRowChrome(btn, btn._rowSelected, false)
 end
 
@@ -3715,7 +3719,7 @@ local function CreateQuestListRow(parent, api)
     btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     ns.CardChrome.Attach(btn)
     btn._borderKey = "quest.standard"
-    btn._chromeFill = "BG_SECONDARY"
+    btn._chromeFill = nil
     btn._rowSelected = false
     ApplyQuestRowChrome(btn, false, false)
 
@@ -3821,7 +3825,8 @@ local function CreateQuestListRow(parent, api)
     return btn
 end
 
-local function BindQuestListRow(row, _, entry, state)
+local function BindQuestListRow(row, index, entry, state)
+    row._zebraIndex = index
     UpdateQuestListEntry(row, entry, state)
 end
 

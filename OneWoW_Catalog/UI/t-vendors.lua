@@ -604,7 +604,8 @@ local function ApplyVendorPortrait(row, displayID)
     end
 end
 
-local function BindVendorListRow(row, _, vendor, state)
+local function BindVendorListRow(row, index, vendor, state)
+    row._zebraIndex = index
     row.vendor = vendor
     row._rowSelected = state.selected and true or false
     row._borderKey = ns.CardChrome.VendorBorderKey(vendor)

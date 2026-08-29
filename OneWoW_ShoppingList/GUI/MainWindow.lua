@@ -57,11 +57,22 @@ local function HideAllRows(pool)
     end
 end
 
+local function PaintShoppingSidebarRow(row, hover)
+    if row.data and row.data.isSelected then
+        OneWoW_GUI:ApplyListRowFill(row, { selected = true })
+    elseif hover then
+        OneWoW_GUI:ApplyListRowFill(row, { hover = true })
+    else
+        OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = row._zebraIndex })
+    end
+end
+
 local function CreateListRow(parent)
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetHeight(32)
     row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    row._zebraIndex = 1
+    OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = 1 })
     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     row.starBtn = CreateFrame("Button", nil, row)
@@ -111,7 +122,7 @@ local function CreateListRow(parent)
         if not row:IsMouseOver() then
             self:Hide()
             if not row.data or not row.data.isSelected then
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                PaintShoppingSidebarRow(row, false)
             end
         end
     end)
@@ -136,25 +147,22 @@ local function CreateListRow(parent)
     row.selectedBar:Hide()
 
     row:SetScript("OnEnter", function(self)
-        if not self.data or not self.data.isSelected then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        end
+        PaintShoppingSidebarRow(self, true)
     end)
     row:SetScript("OnLeave", function(self)
-        if not self.data or not self.data.isSelected then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        end
+        PaintShoppingSidebarRow(self, false)
     end)
 
     row.data = {}
     return row
 end
 
-local function ConfigureListRow(row, listName, isSelected, isDefault, childCount)
+local function ConfigureListRow(row, listName, isSelected, isDefault, childCount, zebraIndex)
     row:Show()
     row.data.listName   = listName
     row.data.isSelected = isSelected
     row.data.isDefault  = isDefault
+    row._zebraIndex     = zebraIndex or 1
 
     local list = ns.ShoppingList:GetList(listName)
     local displayName = listName
@@ -182,12 +190,12 @@ local function ConfigureListRow(row, listName, isSelected, isDefault, childCount
     end
 
     if isSelected then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        PaintShoppingSidebarRow(row, false)
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
         row.selectedBar:Show()
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     else
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        PaintShoppingSidebarRow(row, false)
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         row.selectedBar:Hide()
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -777,7 +785,7 @@ function MainWindow:RefreshSidebar()
         local isSelected = (listName == activeList)
         local isDefault  = (depth == 0) and (listName == defaultList)
         local childCount = childrenOf[listName] and #childrenOf[listName] or 0
-        ConfigureListRow(row, listName, isSelected, isDefault, childCount)
+        ConfigureListRow(row, listName, isSelected, isDefault, childCount, rowIdx)
 
         local indent   = INDENT[depth]   or 40
         local height   = HEIGHT[depth]   or 24
@@ -854,17 +862,13 @@ function MainWindow:RefreshSidebar()
         end
 
         row:SetScript("OnEnter", function(myself)
-            if not myself.data or not myself.data.isSelected then
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            end
+            PaintShoppingSidebarRow(myself, true)
             if myself.deleteBtn and capturedName ~= ns.MAIN_LIST_KEY then
                 myself.deleteBtn:Show()
             end
         end)
         row:SetScript("OnLeave", function(myself)
-            if not myself.data or not myself.data.isSelected then
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-            end
+            PaintShoppingSidebarRow(myself, false)
             if myself.deleteBtn and not myself.deleteBtn:IsMouseOver() then
                 myself.deleteBtn:Hide()
             end
@@ -984,7 +988,7 @@ function MainWindow:RefreshItemList()
         scrollContent:SetHeight(math.abs(y) + 10)
     end
 
-    for _, itemData in ipairs(items) do
+    for i, itemData in ipairs(items) do
         local capturedData  = itemData
         local capturedListN = activeList
 
@@ -995,6 +999,8 @@ function MainWindow:RefreshItemList()
         row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
         row:SetHeight(rowHeight)
         row:EnableMouse(true)
+        row._zebraIndex = i
+        OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = i })
 
         local statusBar = CreateFrame("Button", nil, row)
         statusBar:SetWidth(6)

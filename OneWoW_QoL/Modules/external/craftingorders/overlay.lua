@@ -145,22 +145,21 @@ end
 
 local function ApplyRowChrome(row, index, entry, selected, hover)
     if entry and entry.kind == "header" then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        OneWoW_GUI:ApplyListRowFill(row, { header = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
         return
     end
     if selected then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        OneWoW_GUI:ApplyListRowFill(row, { selected = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
         return
     end
     if hover then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        OneWoW_GUI:ApplyListRowFill(row, { hover = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
         return
     end
-    local fill = (index % 2 == 1) and "BG_PRIMARY" or "BG_SECONDARY"
-    row:SetBackdropColor(OneWoW_GUI:GetThemeColor(fill))
+    OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = index })
     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 end
 

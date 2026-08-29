@@ -570,19 +570,25 @@ local function FindProfessionByName(profName)
     return nil
 end
 
-local function ApplyRecipeRowChrome(row, selected, zebraEven)
+local function ApplyRecipeRowChrome(row, selected, zebraIndex)
     if selected then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        OneWoW_GUI:ApplyListRowFill(row, { selected = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
     elseif row.entry and row.entry.type == "header" then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        OneWoW_GUI:ApplyListRowFill(row, { header = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     else
-        if zebraEven then
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        else
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        end
+        OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = zebraIndex or row._zebraIndex })
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    end
+end
+
+local function PaintDetailReagentRow(row, hover)
+    if hover then
+        OneWoW_GUI:ApplyListRowFill(row, { hover = true })
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+    else
+        OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = row._zebraIndex })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
 end
@@ -678,7 +684,7 @@ local function CreateRecipeListRow(parent, _)
         end
     end)
     row:SetScript("OnLeave", function(myself)
-        ApplyRecipeRowChrome(myself, myself._rowSelected, myself._zebraEven)
+        ApplyRecipeRowChrome(myself, myself._rowSelected, myself._zebraIndex)
         GameTooltip:Hide()
     end)
     row:SetScript("OnClick", function(myself)
@@ -717,7 +723,7 @@ end
 local function BindRecipeListRow(row, index, entry, state)
     row.entry = entry
     row._rowSelected = state.selected and entry.type == "recipe" or false
-    row._zebraEven = (index % 2 == 0)
+    row._zebraIndex = index
 
     if entry.type == "header" then
         row.iconFrame:Hide()
@@ -738,7 +744,7 @@ local function BindRecipeListRow(row, index, entry, state)
     row.countText:Hide()
     row.iconFrame:Show()
     row.nameText:Show()
-    ApplyRecipeRowChrome(row, row._rowSelected, row._zebraEven)
+    ApplyRecipeRowChrome(row, row._rowSelected, row._zebraIndex)
 
     local recipe = entry.recipe
     local addon = GetDataAddon()
@@ -1036,8 +1042,8 @@ ShowRecipeDetail = function(recipe)
         riRow:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
         riRow:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
         riRow:SetBackdrop(BACKDROP_SIMPLE)
-        riRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        riRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        riRow._zebraIndex = 1
+        PaintDetailReagentRow(riRow, false)
         tinsert(detailElements, riRow)
 
         local riIcon = CreateFrame("Frame", nil, riRow, "BackdropTemplate")
@@ -1077,15 +1083,13 @@ ShowRecipeDetail = function(recipe)
         end
 
         riRow:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            PaintDetailReagentRow(self, true)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetItemByID(recipeItemID)
             GameTooltip:Show()
         end)
         riRow:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            PaintDetailReagentRow(self, false)
             GameTooltip:Hide()
         end)
 
@@ -1111,6 +1115,7 @@ ShowRecipeDetail = function(recipe)
 
         yOffset = yOffset - 28
 
+        local rgIndex = 0
         for _, rg in ipairs(reagents) do
             local reagentItemID = rg[1]
             local reagentQty = rg[2]
@@ -1119,14 +1124,15 @@ ShowRecipeDetail = function(recipe)
             if reagentType == 0 then
                 -- skip, displayed in slots section below
             else
+            rgIndex = rgIndex + 1
 
             local rgRow = CreateFrame("Frame", nil, child, "BackdropTemplate")
             rgRow:SetHeight(REAGENT_ROW_HEIGHT)
             rgRow:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
             rgRow:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
             rgRow:SetBackdrop(BACKDROP_SIMPLE)
-            rgRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            rgRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            rgRow._zebraIndex = rgIndex
+            PaintDetailReagentRow(rgRow, false)
             tinsert(detailElements, rgRow)
 
             local rgIcon = CreateFrame("Frame", nil, rgRow, "BackdropTemplate")
@@ -1184,15 +1190,13 @@ ShowRecipeDetail = function(recipe)
             end
 
             rgRow:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                PaintDetailReagentRow(self, true)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetItemByID(reagentItemID)
                 GameTooltip:Show()
             end)
             rgRow:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                PaintDetailReagentRow(self, false)
                 GameTooltip:Hide()
             end)
 
@@ -1286,7 +1290,7 @@ ShowRecipeDetail = function(recipe)
             onHandTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             yOffset = yOffset - 28
 
-            for _, entry in ipairs(onHandEntries) do
+            for i, entry in ipairs(onHandEntries) do
                 local itemID = entry.itemID
                 local isExpanded = expandedOnHand[itemID] == true
 
@@ -1295,8 +1299,8 @@ ShowRecipeDetail = function(recipe)
                 ohBtn:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
                 ohBtn:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
                 ohBtn:SetBackdrop(BACKDROP_SIMPLE)
-                ohBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-                ohBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                ohBtn._zebraIndex = i
+                PaintDetailReagentRow(ohBtn, false)
                 tinsert(detailElements, ohBtn)
 
                 local expandIcon = ohBtn:CreateTexture(nil, "ARTWORK")
@@ -1354,15 +1358,13 @@ ShowRecipeDetail = function(recipe)
                     end
                 end)
                 ohBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                    PaintDetailReagentRow(self, true)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:SetItemByID(capturedItemID)
                     GameTooltip:Show()
                 end)
                 ohBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    PaintDetailReagentRow(self, false)
                     GameTooltip:Hide()
                 end)
 

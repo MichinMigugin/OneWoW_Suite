@@ -97,6 +97,7 @@ end
 
 function OneWoW_GUI:ClearFrame(frame)
     if not frame then return end
+    frame._onewowZebraSeq = nil
     for _, child in ipairs({ frame:GetChildren() }) do
         child:Hide()
         child:SetParent(nil)

@@ -399,6 +399,7 @@ end
 ---  hover boolean
 ---  borderKey string|nil
 ---  fillTheme string|nil
+---  zebraIndex number|nil
 function CardChrome.ApplyRowChrome(card, state)
     state = state or {}
     if state.borderKey ~= nil then
@@ -410,6 +411,9 @@ function CardChrome.ApplyRowChrome(card, state)
     if state.fillTheme ~= nil then
         card._chromeFill = state.fillTheme
     end
+    if state.zebraIndex ~= nil then
+        card._zebraIndex = state.zebraIndex
+    end
 
     local selected = card._chromeSelected
     local hover = state.hover
@@ -419,7 +423,12 @@ function CardChrome.ApplyRowChrome(card, state)
     elseif hover then
         fillKey = "BG_HOVER"
     else
-        fillKey = card._chromeFill or "BG_SECONDARY"
+        local fillTheme = card._chromeFill
+        if not fillTheme or fillTheme == "BG_PRIMARY" or fillTheme == "BG_SECONDARY" then
+            fillKey = OneWoW_GUI:GetZebraThemeKey(card._zebraIndex or 1)
+        else
+            fillKey = fillTheme
+        end
     end
     card:SetBackdropColor(OneWoW_GUI:GetThemeColor(fillKey))
 

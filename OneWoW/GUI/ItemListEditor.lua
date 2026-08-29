@@ -580,11 +580,16 @@ function OneWoW_GUI:CreateEntryList(parent, options)
             end,
         }
 
-        for _, entry in ipairs(entries) do
+        for i, entry in ipairs(entries) do
             hasItems = true
-            local row = CreateFrame("Frame", nil, contentParent)
+            local row = CreateFrame("Frame", nil, contentParent, "BackdropTemplate")
             row:SetPoint("TOPLEFT", contentParent, "TOPLEFT", 10, rowOffset)
             row:SetPoint("TOPRIGHT", contentParent, "TOPRIGHT", -10, rowOffset)
+            row:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            row._zebraIndex = i
+            api.zebraIndex = i
+            OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = i })
 
             local h
             if self._createRow then

@@ -278,8 +278,12 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
     row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, opts.yOffset)
     row:SetHeight(height)
     row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row._zebraIndex = opts.zebraIndex or OneWoW_GUI:NextZebraIndex(scrollChild)
+    OneWoW_GUI:ApplyListRowFill(row, {
+        zebraIndex = row._zebraIndex,
+        selected = opts.selected and true or false,
+    })
 
     if opts.barColor then
         local bar = row:CreateTexture(nil, "ARTWORK")
@@ -427,13 +431,16 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
         if opts.onSelect then opts.onSelect() end
     end)
     row:SetScript("OnEnter", function(self)
-        if not opts.selected then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end
+        if not opts.selected then
+            OneWoW_GUI:ApplyListRowFill(self, { hover = true })
+        end
     end)
     row:SetScript("OnLeave", function(self)
-        if not opts.selected then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY")) end
+        if not opts.selected then
+            OneWoW_GUI:ApplyListRowFill(self, { zebraIndex = self._zebraIndex })
+        end
     end)
     if opts.selected then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         row:SetBackdropBorderColor(1, 0.82, 0, 1)
     end
     row._notesListSelected = opts.selected and true or false

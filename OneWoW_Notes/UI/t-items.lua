@@ -645,6 +645,9 @@ function ns.UI.CreateItemsTab(parent)
     end
 
     function parent.RefreshItemsList()
+        if scrollChild then
+            scrollChild._onewowZebraSeq = nil
+        end
         for _, ctrl in pairs(sectionReorders) do
             ctrl:Cancel()
         end

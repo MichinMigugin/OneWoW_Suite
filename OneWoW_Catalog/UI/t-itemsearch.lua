@@ -93,12 +93,11 @@ local function ClearDetailElements()
 end
 
 local function ApplyItemRowBackdrop(row, index, selected, hover)
-    row._chromeFill = ((index % 2) == 1) and "BG_PRIMARY" or "BG_SECONDARY"
     ns.CardChrome.ApplyRowChrome(row, {
         selected = selected,
         hover = hover,
         borderKey = row._borderKey or "default",
-        fillTheme = row._chromeFill,
+        zebraIndex = index,
     })
 end
 

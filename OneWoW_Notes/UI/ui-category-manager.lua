@@ -195,7 +195,7 @@ function ns.UI.ShowCategoryManager(initialSection)
         local ROW_GAP = 2
         local yPos = 0
 
-        for _, catName in ipairs(allCategories) do
+        for i, catName in ipairs(allCategories) do
             local isBuiltin = IsBuiltIn(currentSection, catName)
 
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
@@ -203,12 +203,7 @@ function ns.UI.ShowCategoryManager(initialSection)
             row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, -yPos)
             row:SetHeight(ROW_H)
             row:SetBackdrop(BACKDROP_SIMPLE)
-
-            if isBuiltin then
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            else
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            end
+            OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = i })
 
             local nameFS = OneWoW_GUI:CreateFS(row, 10)
             nameFS:SetPoint("LEFT", row, "LEFT", 8, 0)
