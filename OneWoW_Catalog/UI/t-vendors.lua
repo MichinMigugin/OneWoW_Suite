@@ -706,6 +706,84 @@ local function StepRow(yOffset, height, gap)
     return yOffset - height - (gap or DETAIL_ROW_GAP)
 end
 
+local VENDOR_WAYPIN_SOURCE = "vendor"
+
+local function PaintOpenPinLink(link, pinID)
+    link:SetText(L["VENDORS_OPEN_WAYPIN"])
+    link.tooltipTitle = L["VENDORS_OPEN_WAYPIN"]
+    link.tooltipText = L["VENDORS_OPEN_WAYPIN_TT"]
+    link:SetScript("OnClick", function()
+        ns.Navigation:OpenOneWayPin(pinID)
+    end)
+end
+
+local function BindSaveOrOpenLink(link, vendor, mapID, x, y)
+    local pinID = ns.Navigation:FindOneWayPin(VENDOR_WAYPIN_SOURCE, vendor.npcID, mapID)
+    if pinID then
+        PaintOpenPinLink(link, pinID)
+        return
+    end
+    link:SetText(L["VENDORS_SAVE_WAYPIN"])
+    link.tooltipTitle = L["VENDORS_SAVE_WAYPIN"]
+    link.tooltipText = L["VENDORS_SAVE_WAYPIN_TT"]
+    link:SetScript("OnClick", function()
+        local savedID = ns.Navigation:SaveOneWayPin(
+            vendor.name, mapID, x, y, VENDOR_WAYPIN_SOURCE, vendor.npcID
+        )
+        if savedID then
+            PaintOpenPinLink(link, savedID)
+        end
+    end)
+end
+
+local function AddLocationRow(parent, yOffset, vendor, mapID, loc, addon)
+    local zonePart = LocationZoneLabel(loc)
+    local coordStr = ""
+    if loc.x and loc.y and loc.x > 0 then
+        coordStr = string.format(" (%.1f, %.1f)", loc.x, loc.y)
+    end
+
+    local locLine = OneWoW_GUI:CreateFS(parent, 12)
+    locLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+    locLine:SetJustifyH("LEFT")
+    locLine:SetText(zonePart .. coordStr)
+    locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    tinsert(detailElements, locLine)
+
+    local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
+    local pinLink = OneWoW_GUI:CreateTextLink(parent, {
+        text = L["VENDORS_WAYPOINT"],
+        fontSize = 11,
+        tooltipTitle = L["VENDORS_WAYPOINT"],
+        tooltipText = L["VENDORS_WAYPOINT_TT"],
+        onClick = function()
+            if addon then
+                if not addon.CreateWaypoint(vendor, capturedMapID) then
+                    print("|cFFFFD100OneWoW:|r " .. L["VENDORS_WAYPOINT_FAILED"])
+                end
+            end
+        end,
+    })
+    pinLink:SetPoint("LEFT", locLine, "RIGHT", 8, 0)
+    tinsert(detailElements, pinLink)
+
+    local rowH = math.max(locLine:GetStringHeight(), pinLink:GetHeight() or 12)
+    if capturedX and capturedX > 0 and ns.Navigation:IsWayPinsEnabled() then
+        local existingID = ns.Navigation:FindOneWayPin(VENDOR_WAYPIN_SOURCE, vendor.npcID, capturedMapID)
+        local saveLink = OneWoW_GUI:CreateTextLink(parent, {
+            text = existingID and L["VENDORS_OPEN_WAYPIN"] or L["VENDORS_SAVE_WAYPIN"],
+            fontSize = 11,
+            nav = existingID and true or false,
+        })
+        saveLink:SetPoint("LEFT", pinLink, "RIGHT", 8, 0)
+        tinsert(detailElements, saveLink)
+        BindSaveOrOpenLink(saveLink, vendor, capturedMapID, capturedX, capturedY)
+        rowH = math.max(rowH, saveLink:GetHeight() or 12)
+    end
+
+    return StepRow(yOffset, rowH)
+end
+
 local function BindVendorTypeControls(panels, vendor)
     local typeDropdown = panels.vendorTypeDropdown
     local typeDropdownText = panels.vendorTypeDropdownText
@@ -818,94 +896,19 @@ local function ShowVendorDetail(panels, vendor)
         tinsert(infoParts, expName)
     end
 
-    local locPinHeight = 0
+    local infoLine = OneWoW_GUI:CreateFS(parent, 12)
+    infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+    infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+    infoLine:SetJustifyH("LEFT")
+    infoLine:SetText(tconcat(infoParts, "  |  "))
+    infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    tinsert(detailElements, infoLine)
+    yOffset = StepRow(yOffset, infoLine:GetStringHeight())
+
     if vendor.locations then
-        local firstLoc = true
         for mapID, loc in pairs(vendor.locations) do
-            local zonePart = LocationZoneLabel(loc)
-            local coordStr = ""
-            if loc.x and loc.y and loc.x > 0 then
-                coordStr = string.format(" (%.1f, %.1f)", loc.x, loc.y)
-            end
-            if firstLoc then
-                tinsert(infoParts, zonePart .. coordStr)
-                firstLoc = false
-
-                local infoLine = OneWoW_GUI:CreateFS(parent, 12)
-                infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-                infoLine:SetJustifyH("LEFT")
-                infoLine:SetText(tconcat(infoParts, "  |  "))
-                infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                tinsert(detailElements, infoLine)
-
-                local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
-                local pinLink = OneWoW_GUI:CreateTextLink(parent, {
-                    text = L["VENDORS_WAYPOINT"],
-                    fontSize = 11,
-                    onClick = function()
-                        if addon then
-                            addon.CreateWaypoint(vendor, capturedMapID)
-                        end
-                    end,
-                })
-                pinLink:SetPoint("LEFT", infoLine, "RIGHT", 8, 0)
-                tinsert(detailElements, pinLink)
-                if capturedX and capturedX > 0 and ns.Navigation:IsWayPinsEnabled() then
-                    local saveLink = OneWoW_GUI:CreateTextLink(parent, {
-                        text = L["VENDORS_SAVE_WAYPIN"],
-                        fontSize = 11,
-                        onClick = function()
-                            ns.Navigation:SaveOneWayPin(vendor.name, capturedMapID, capturedX, capturedY, "vendor", vendor.npcID)
-                        end,
-                    })
-                    saveLink:SetPoint("LEFT", pinLink, "RIGHT", 8, 0)
-                    tinsert(detailElements, saveLink)
-                end
-                locPinHeight = math.max(infoLine:GetStringHeight(), pinLink:GetHeight() or 12)
-                yOffset = StepRow(yOffset, locPinHeight)
-            else
-                local locLine = OneWoW_GUI:CreateFS(parent, 12)
-                locLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-                locLine:SetJustifyH("LEFT")
-                locLine:SetText(zonePart .. coordStr)
-                locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                tinsert(detailElements, locLine)
-
-                local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
-                local pinLink = OneWoW_GUI:CreateTextLink(parent, {
-                    text = L["VENDORS_WAYPOINT"],
-                    fontSize = 11,
-                    onClick = function()
-                        if addon then
-                            addon.CreateWaypoint(vendor, capturedMapID)
-                        end
-                    end,
-                })
-                pinLink:SetPoint("LEFT", locLine, "RIGHT", 8, 0)
-                tinsert(detailElements, pinLink)
-                if capturedX and capturedX > 0 and ns.Navigation:IsWayPinsEnabled() then
-                    local saveLink = OneWoW_GUI:CreateTextLink(parent, {
-                        text = L["VENDORS_SAVE_WAYPIN"],
-                        fontSize = 11,
-                        onClick = function()
-                            ns.Navigation:SaveOneWayPin(vendor.name, capturedMapID, capturedX, capturedY, "vendor", vendor.npcID)
-                        end,
-                    })
-                    saveLink:SetPoint("LEFT", pinLink, "RIGHT", 8, 0)
-                    tinsert(detailElements, saveLink)
-                end
-                yOffset = StepRow(yOffset, math.max(locLine:GetStringHeight(), pinLink:GetHeight() or 12))
-            end
+            yOffset = AddLocationRow(parent, yOffset, vendor, mapID, loc, addon)
         end
-    else
-        local infoLine = OneWoW_GUI:CreateFS(parent, 12)
-        infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-        infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-        infoLine:SetJustifyH("LEFT")
-        infoLine:SetText(tconcat(infoParts, "  |  "))
-        infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        tinsert(detailElements, infoLine)
-        yOffset = StepRow(yOffset, infoLine:GetStringHeight())
     end
 
     yOffset = yOffset - 4
@@ -1622,6 +1625,12 @@ function ns.UI.CreateVendorsTab(parent)
         ShowVendorDetail(panels, vendor)
     end
 
+    OneWoW:RegisterDataReadyWatcher("OneWoW_Notes", function()
+        if selectedVendor then
+            ShowVendorDetail(panels, selectedVendor)
+        end
+    end)
+
     parent:HookScript("OnShow", function()
         if ns.pendingVendorSelect then
             local id = ns.pendingVendorSelect
@@ -1629,6 +1638,8 @@ function ns.UI.CreateVendorsTab(parent)
             C_Timer.After(0.05, function()
                 ns.UI.OpenToVendor(id)
             end)
+        elseif selectedVendor then
+            ShowVendorDetail(panels, selectedVendor)
         end
     end)
 end

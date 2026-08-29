@@ -408,8 +408,9 @@ end
 --- Backdrop-less text that acts as a clickable link. Width fits the label.
 --- Idle LINK_IDLE + LINK_UNDERLINE, hover LINK_HOVER, Point cursor.
 --- `nav = true` appends a smaller ASCII `>` (font-safe) after the label.
+--- Optional tooltipTitle / tooltipText; mutate btn.tooltipTitle / btn.tooltipText later.
 ---@param parent Frame
----@param options { text?: string, fontSize?: number, nav?: boolean, onClick?: fun(self: Button) }
+---@param options { text?: string, fontSize?: number, nav?: boolean, tooltipTitle?: string, tooltipText?: string, onClick?: fun(self: Button) }
 ---@return Button
 function OneWoW_GUI:CreateTextLink(parent, options)
     options = options or {}
@@ -495,10 +496,25 @@ function OneWoW_GUI:CreateTextLink(parent, options)
         end
     end
 
+    btn.tooltipTitle = options.tooltipTitle
+    btn.tooltipText = options.tooltipText
+
     btn:SetScript("OnEnter", function(myself)
         if not myself:IsEnabled() then return end
         ApplyLinkColors("hover")
         SetCursor("Interface\\CURSOR\\Point")
+        local title = myself.tooltipTitle
+        local tip = myself.tooltipText
+        if title or tip then
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            if title then
+                GameTooltip:SetText(title, 1, 1, 1)
+            end
+            if tip then
+                GameTooltip:AddLine(tip, 0.8, 0.8, 0.8, true)
+            end
+            GameTooltip:Show()
+        end
     end)
     btn:SetScript("OnLeave", function(myself)
         if myself:IsEnabled() then
@@ -507,6 +523,7 @@ function OneWoW_GUI:CreateTextLink(parent, options)
             ApplyLinkColors("disabled")
         end
         ResetCursor()
+        GameTooltip:Hide()
     end)
     if onClick then
         btn:SetScript("OnClick", onClick)

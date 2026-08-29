@@ -9,7 +9,7 @@ local C_Map = C_Map
 local Location = OneWoW.Location
 
 -- Vendor locations are stored as 0-100.
-local PERCENT_COORDS = { format = "percent" }
+local PERCENT_COORDS = { format = "percent", openMap = true }
 
 local function CopyItemEntry(itemData)
     local copy = {}

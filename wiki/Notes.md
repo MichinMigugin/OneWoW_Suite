@@ -39,7 +39,7 @@ Turn **OneWay Pins** off in **Manage Features** (Settings) under Notes to hide t
 * Right-click **your own unit frame** to drop a pin at your feet
 * Right-click **any NPC's target frame** to pin that NPC
 * **Find Location** looks up NPCs in a zone by name, type, notes, tooltip lines, or what they sell (Catalog Vendors for shop search). Type a zone name or map ID (**Current Zone** fills where you are; **Verify Zone** checks it). A leading ! hides matches. Results update after a short pause
-* Catalog **Journal**, **Vendors**, and **Quests** can save a pin: right-click the existing map pin, or use Save Pin next to Pin on a vendor
+* Catalog **Journal**, **Vendors**, and **Quests** can save a pin: right-click the existing map pin, or use Save Pin next to Pin on a vendor. If that vendor location is already saved, the link is **Open Pin** and takes you to the OneWay Pins tab. Saving the same vendor on the same map again does not create a second pin. Deleting it also removes leftover copies of that location.
 * On the world map: **Add Pin**, then click the map (a pin ghost and live coordinates follow the cursor). **Add Here** saves at your feet. **Find Location** is on that button too. **Map Click Menu** (OneWay Pins settings or the world-map pin button) turns the add-pin click off. When on, pick Ctrl-Right or Right. Default is on with **Ctrl-Right**, so a plain right-click stays with Blizzard and other addons.
 
 ### Zone notes

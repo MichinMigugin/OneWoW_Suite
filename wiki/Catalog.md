@@ -9,7 +9,7 @@
 ## Tabs (overview)
 
 * **Journal** — dungeons, raids, Delves, and World hubs across expansions; encounters, Adventure Guide loot, additional extras, and achievements when Journal data is installed. The pin next to the favorite star opens the map and marks the entrance. Right-click that pin to save a OneWay Pin in Notes.
-* **Vendors** — who sells what, where, and for which currency. Classic through Midnight shops ship with the Vendors pack; housing, Quartermaster, PvP, Guild, and Delve shops get a type when we can tell. Shops you have not opened yet show Unseen on the details pane. Opening a merchant still updates portrait, live prices, and pins. **Save Pin** next to Pin writes a OneWay Pin in Notes. Filter by expansion, zone, currency, or type.
+* **Vendors** — who sells what, where, and for which currency. Classic through Midnight shops ship with the Vendors pack; housing, Quartermaster, PvP, Guild, and Delve shops get a type when we can tell. Shops you have not opened yet show Unseen on the details pane. Opening a merchant still updates portrait, live prices, and pins. **Pin** sets a live waypoint and opens that zone on the world map. **Save Pin** writes a OneWay Pin in Notes; it becomes **Open Pin** once that vendor location is saved. Filter by expansion, zone, currency, or type.
 * **Tradeskills** — recipes for Classic through Midnight (patch 12.1), materials, skill ranks, and where to learn a recipe when we know it (trainer, vendor, drop, quest, or Specialization). Learned From uses the NPC name; vendor names open that shop in Vendors.
 * **Item Search** — find an item and see vendors, crafts, drops, and other sources
 * **Quests** — quest database and completion tracking (with Quests data)

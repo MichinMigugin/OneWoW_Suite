@@ -11,9 +11,9 @@ local format, type = string.format, type
 -- Catalog hint for journal/vendor/quest sources). Lives here so map math
 -- files do not have to own copy.
 --
--- WayPinsMap hook (other agent owns that file this pass):
---   World pin OnEnter  -> ns.WayPinsTooltip.Fill(GameTooltip, data, L["WAYPINS_MAP_TT"])
---   Minimap pin OnEnter -> ns.WayPinsTooltip.Fill(GameTooltip, pinData)
+-- WayPinsMap:
+--   World pin OnMouseEnter -> ns.WayPinsTooltip.Fill(GameTooltip, data, L["WAYPINS_MAP_TT"])
+--   Minimap pin OnEnter    -> ns.WayPinsTooltip.Fill(GameTooltip, pinData)
 -- Caller still SetOwner + Show.
 -- ============================================================================
 

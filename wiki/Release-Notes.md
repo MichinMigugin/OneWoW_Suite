@@ -37,6 +37,8 @@
 - Pins can have an optional description. Hover a pin in the zone list or map legend to see title, description, and coordinates. Pins saved from Catalog Journal, Vendors, or Quests mention Catalog on the tooltip.
 - The pin icon picker includes Blizzard minimap tracking icons (banker, auctioneer, mailbox, innkeeper, flight master, repair, stable master, trainers, food, reagents, and more).
 - Minimap pins stay on the landmark while you walk. Pins outside the current zoom sit on the rim.
+- Saving the same vendor, quest, or instance again does not create a second pin. Deleting that pin also removes leftover copies of the same location.
+- Opening the world map (Pin on a vendor, or the map with pins on it) no longer errors.
 
 ---
 
@@ -60,6 +62,11 @@
 - Vendors lists 93 more shops, and 358 extra map pins on shops Catalog already had.
 - 212 more quests have a start pin.
 - Journal extras now include map coordinates on 5956 rows.
+
+#### Vendors
+- Zone, coordinates, Pin, and Save Pin sit on their own row under the NPC id, so long zone names no longer clip Save Pin at the minimum window width.
+- Hover Pin or Save Pin for what each does. Pin opens that zone on the world map and sets a live waypoint. If the map refuses a waypoint, chat says so.
+- After you save a vendor pin, Save Pin becomes Open Pin and jumps to that entry in Notes. Saving the same vendor on the same map again does not create a duplicate.
 
 ---
 

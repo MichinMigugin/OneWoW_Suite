@@ -438,12 +438,33 @@ function OneWoW_Notes_API.SetWayPinsEnabled(enabled)
 end
 
 --- Adds a OneWay Pin. Returns the opaque pin id.
+--- Same source + sourceKey + mapID returns the existing pin (no duplicate).
 ---@param fields table
 ---@return string|nil pinID
 function OneWoW_Notes_API.AddWayPin(fields)
     if not ns.WayPinsVisual.Enabled() then return nil end
     if not ns.WayPins then return nil end
     return ns.WayPins:Add(fields)
+end
+
+--- First pin for this source, sourceKey, and map.
+---@param source string
+---@param sourceKey any
+---@param mapID number
+---@return table|nil pin
+function OneWoW_Notes_API.FindWayPin(source, sourceKey, mapID)
+    if not ns.WayPinsVisual.Enabled() then return nil end
+    if not ns.WayPins then return nil end
+    return ns.WayPins:FindBySource(source, sourceKey, mapID)
+end
+
+--- Open Notes on the OneWay Pins tab, selecting this pin (Zone filter All).
+---@param pinID string|nil
+function OneWoW_Notes_API.OpenWayPin(pinID)
+    if not ns.WayPinsVisual.Enabled() then return end
+    if ns.WayPinsMap then
+        ns.WayPinsMap:OpenPinTab(pinID)
+    end
 end
 
 --- Pins for a uiMapID, title-sorted.

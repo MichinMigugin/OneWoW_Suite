@@ -249,7 +249,7 @@ local function CollectResults(zoneText, filterText)
                                     mapID = tonumber(mapID),
                                     x = loc.x,
                                     y = loc.y,
-                                    source = "catalog",
+                                    source = "vendor",
                                     sourceKey = npcID,
                                 })
                             end

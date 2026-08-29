@@ -9,7 +9,7 @@ local ipairs, pairs, next, tinsert = ipairs, pairs, next, tinsert
 local abs, sqrt = math.abs, math.sqrt
 local C_Map, C_Timer, C_Navigation, C_Minimap = C_Map, C_Timer, C_Navigation, C_Minimap
 local GetCVar, GetPlayerFacing, IsControlKeyDown = GetCVar, GetPlayerFacing, IsControlKeyDown
-local MenuUtil, GameTooltip = MenuUtil, GameTooltip
+local MenuUtil, GameTooltip, GameTooltip_Hide = MenuUtil, GameTooltip, GameTooltip_Hide
 local GetCursorPosition, UIParent = GetCursorPosition, UIParent
 local OpenWorldMap = OpenWorldMap
 local LibStub = LibStub
@@ -393,35 +393,44 @@ function WayPinsMap:ShowPinMenu(owner, data)
     end)
 end
 
+-- MapCanvas AcquirePin asserts OnEnter/OnLeave are unset, then wires those
+-- scripts to OnMouseEnter/OnMouseLeave. Clicks go through OnMouseClickAction.
 local WayPinsWorldPinMixin = CreateFromMixins(MapCanvasPinMixin)
-
-local function WireWorldPinScripts(btn)
-    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    btn:EnableMouse(true)
-    Visual.Attach(btn)
-    btn:SetScript("OnEnter", function(myself)
-        local data = myself.pinData
-        if not data then return end
-        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        ns.WayPinsTooltip.Fill(GameTooltip, data, L["WAYPINS_MAP_TT"])
-        GameTooltip:Show()
-    end)
-    btn:SetScript("OnLeave", GameTooltip_Hide)
-    btn:SetScript("OnClick", function(myself, button)
-        local data = myself.pinData
-        if not data then return end
-        if button == "RightButton" then
-            WayPinsMap:ShowPinMenu(myself, data)
-            return
-        end
-        WayPinsMap:TrackPin(data)
-    end)
-end
 
 function WayPinsWorldPinMixin:OnLoad()
     self:SetIgnoreGlobalPinScale(true)
     self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
     self:SetNudgeTargetFactor(0)
+    self:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    self:EnableMouse(true)
+    Visual.Attach(self)
+end
+
+function WayPinsWorldPinMixin:ShouldMouseButtonBePassthrough()
+    -- MapCanvas default passes RightButton through so the map can zoom out.
+    return false
+end
+
+function WayPinsWorldPinMixin:OnMouseEnter()
+    local data = self.pinData
+    if not data then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    ns.WayPinsTooltip.Fill(GameTooltip, data, L["WAYPINS_MAP_TT"])
+    GameTooltip:Show()
+end
+
+function WayPinsWorldPinMixin:OnMouseLeave()
+    GameTooltip_Hide()
+end
+
+function WayPinsWorldPinMixin:OnMouseClickAction(button)
+    local data = self.pinData
+    if not data then return end
+    if button == "RightButton" then
+        WayPinsMap:ShowPinMenu(self, data)
+        return
+    end
+    WayPinsMap:TrackPin(data)
 end
 
 function WayPinsWorldPinMixin:OnAcquired(data)
@@ -470,7 +479,6 @@ local function EnsureWorldMapProvider()
     pool.createFunc = function()
         local btn = CreateFrame("Button", nil, WorldMapFrame:GetCanvas())
         Mixin(btn, WayPinsWorldPinMixin)
-        WireWorldPinScripts(btn)
         return btn
     end
     pool.resetFunc = function(_, pin)

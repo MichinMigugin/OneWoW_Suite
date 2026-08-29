@@ -688,6 +688,8 @@ local link = OneWoW_GUI:CreateTextLink(parent, {
     text = "Open in Bags",
     fontSize = 11,    -- optional, default 12
     nav = true,       -- optional: smaller ASCII `>` after the label (in-hub navigation)
+    tooltipTitle = L.HINT_TITLE, -- optional
+    tooltipText = L.HINT,       -- optional second line
     onClick = function()
         -- handle click
     end,
@@ -695,6 +697,7 @@ local link = OneWoW_GUI:CreateTextLink(parent, {
 ```
 Fit-width button with no backdrop. Idle `LINK_IDLE` + subtle `LINK_UNDERLINE`, hover `LINK_HOVER`, Point cursor.
 `nav = true` appends a smaller `>` (ASCII — safe across fonts) for “go elsewhere” links; omit for actions / external URLs.
+`tooltipTitle` / `tooltipText` show on hover (same as `CreateFitTextButton`). Mutate `link.tooltipTitle` / `link.tooltipText` after create if the label changes.
 `link:SetText(s)` refits width; `link:SetEnabled(false)` mutes to `TEXT_MUTED`.
 Access label via `link.text` (chevron via `link.chevron` when `nav`).
 

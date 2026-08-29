@@ -254,6 +254,32 @@ function Navigation:IsWayPinsEnabled()
     return OneWoW_Notes_API.IsWayPinsEnabled()
 end
 
+--- First saved pin for this source, sourceKey, and map. Does not load Notes.
+---@param source string
+---@param sourceKey any
+---@param mapID number
+---@return string|nil pinID
+function Navigation:FindOneWayPin(source, sourceKey, mapID)
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.FindWayPin then
+        return nil
+    end
+    if not OneWoW_Notes_API.IsWayPinsEnabled() then
+        return nil
+    end
+    local pin = OneWoW_Notes_API.FindWayPin(source, sourceKey, mapID)
+    return pin and pin.id or nil
+end
+
+--- Open Notes on the OneWay Pins tab for this pin.
+---@param pinID string
+function Navigation:OpenOneWayPin(pinID)
+    if not pinID then return end
+    OneWoW:BringUp("OneWoW_Notes")
+    if OneWoW_Notes_API and OneWoW_Notes_API.OpenWayPin then
+        OneWoW_Notes_API.OpenWayPin(pinID)
+    end
+end
+
 --- Persist a landmark in Notes OneWay Pins. Coordinates may be 0-1 or 0-100.
 ---@param title string
 ---@param mapID number

@@ -4,7 +4,7 @@ local L = ns.L
 local Location = OneWoW.Location
 
 local CopyTable = CopyTable
-local pairs, type, tonumber = pairs, type, tonumber
+local pairs, ipairs, type, tonumber, tostring = pairs, ipairs, type, tonumber, tostring
 local tinsert, sort, format = tinsert, sort, string.format
 local GetServerTime = GetServerTime
 local C_Map = C_Map
@@ -98,6 +98,41 @@ function WayPins:GetPin(pinID)
     return self:GetAll()[pinID]
 end
 
+local function SourceKeyMatch(a, b)
+    if a == nil or b == nil then
+        return false
+    end
+    return tostring(a) == tostring(b)
+end
+
+--- First pin with this source, sourceKey, and map. Nil sourceKey never matches.
+---@param source string|nil
+---@param sourceKey any
+---@param mapID number|nil
+---@return table|nil pin
+function WayPins:FindBySource(source, sourceKey, mapID)
+    if type(source) ~= "string" or source == "" or sourceKey == nil then
+        return nil
+    end
+    mapID = tonumber(mapID)
+    if not mapID or mapID == 0 then
+        return nil
+    end
+    local first
+    for _, pin in pairs(self:GetAll()) do
+        if type(pin) == "table"
+            and pin.source == source
+            and SourceKeyMatch(pin.sourceKey, sourceKey)
+            and tonumber(pin.mapID) == mapID
+        then
+            if not first or (pin.id or "") < (first.id or "") then
+                first = pin
+            end
+        end
+    end
+    return first
+end
+
 --- Pins for a uiMapID, title-sorted.
 ---@param mapID number|nil
 ---@return table[]
@@ -133,6 +168,13 @@ function WayPins:Add(fields)
     local y = tonumber(fields.y)
     if not mapID or mapID == 0 or not x or not y then
         return nil
+    end
+
+    if fields.source and fields.sourceKey ~= nil then
+        local existing = self:FindBySource(fields.source, fields.sourceKey, mapID)
+        if existing then
+            return existing.id
+        end
     end
 
     local pinID = fields.id
@@ -198,7 +240,25 @@ end
 
 function WayPins:Remove(pinID)
     if not pinID then return end
-    ns.DataModule.Remove(self, pinID)
+    local pin = self:GetPin(pinID)
+    if pin and pin.source and pin.sourceKey ~= nil then
+        local source, sourceKey, mapID = pin.source, pin.sourceKey, pin.mapID
+        local ids = {}
+        for id, other in pairs(self:GetAll()) do
+            if type(other) == "table"
+                and other.source == source
+                and SourceKeyMatch(other.sourceKey, sourceKey)
+                and tonumber(other.mapID) == tonumber(mapID)
+            then
+                tinsert(ids, id)
+            end
+        end
+        for _, id in ipairs(ids) do
+            ns.DataModule.Remove(self, id)
+        end
+    else
+        ns.DataModule.Remove(self, pinID)
+    end
     NotifyChanged()
 end
 

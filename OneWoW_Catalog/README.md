@@ -32,6 +32,7 @@ Find vendors and what they sell:
 - Find vendors by location or item
 - Check prices and currency requirements
 - Filter by vendor type (general merchants, specialty vendors, etc.)
+- **Pin** sets a live waypoint and opens that zone on the world map. **Save Pin** writes a OneWay Pin in Notes; it becomes **Open Pin** once that vendor location is saved
 
 ### Tradeskills Tab
 Complete profession and recipe database:
