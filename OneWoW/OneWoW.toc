@@ -112,6 +112,7 @@ Core\FirstRunWizard.lua
 Core\FeatureHealth.lua
 Core\WhatsNewData.lua
 Core\WhatsNew.lua
+Core\VersionCheck.lua
 
 # Services (shared OneWoW.* engines/utilities consumed cross-unit — see ARCHITECTURE §6).
 # DO NOT reorder within this block: TooltipScanner before PredicateEngine (PE

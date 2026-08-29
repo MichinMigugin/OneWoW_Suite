@@ -37,6 +37,7 @@ Even with no optional modules, **OneWoW** includes:
 * **Universal search** — find items, portals, and suite data without digging through menus
 * **Shared themes** across OneWoW windows
 * **Eleven locales** — in-game text follows your WoW client language
+* **Update notice** — if someone near you has a newer OneWoW, chat, a popup, and Home Needs attention tell you. Update via [CurseForge](Install) or [onewow.net](https://onewow.net/).
 
 ## Suggested first session
 

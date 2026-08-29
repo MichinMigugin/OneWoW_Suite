@@ -1,5 +1,8 @@
 # OneWoW Suite Changelog
 
+## Home
+- If someone near you is on a newer OneWoW, chat, a popup, and Needs attention on Home tell you to update. Download from CurseForge or onewow.net.
+
 ## Item lists
 - Sort item-ID lists by name or item ID. Each list keeps its own choice: Direct Deposit keep and auto-deposit, Bag Bar manual and blacklist, Auto Open blacklist, Bags category added items, and the Farm Value watchlist editor.
 
@@ -26,7 +29,7 @@
 
 ---
 
-*No user-facing changes this release for Home, Catalog, AltTracker, Trackers, Bags, Shopping List, Direct Deposit, Mail, or DevTool.*
+*No user-facing changes this release for Catalog, AltTracker, Trackers, Bags, Shopping List, Direct Deposit, Mail, or DevTool.*
 
 ---
 

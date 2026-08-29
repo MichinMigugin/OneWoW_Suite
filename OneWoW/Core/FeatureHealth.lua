@@ -6,9 +6,9 @@
 -- a third enable layer. Soft opt-out and Blizzard (hard) disable of a unit are
 -- silent for that unit unless they diminish or break a still-wanted dependent.
 --
--- Classes: load_pending | diminished | broken | version_mismatch
+-- Classes: load_pending | diminished | broken | version_mismatch | remote_update
 -- Dismissable: load_pending, diminished (account-wide featureHealthDismissed)
--- Non-dismissable: broken, version_mismatch
+-- Non-dismissable: broken, version_mismatch, remote_update
 -- ============================================================================
 local _, ns = ...
 
@@ -21,6 +21,7 @@ local CLASS_LOAD_PENDING = "load_pending"
 local CLASS_DIMINISHED = "diminished"
 local CLASS_BROKEN = "broken"
 local CLASS_VERSION = "version_mismatch"
+local CLASS_REMOTE_UPDATE = "remote_update"
 
 --- Display label for a catalog root or store load unit.
 ---@param addonName string
@@ -139,6 +140,16 @@ local function CollectRawAttention()
             text = format(L["HOME_VERSION_MISMATCH_NOTICE"], coreVersion or "")
         end
         add("version_mismatch", CLASS_VERSION, false, text)
+    end
+
+    local latestSeen = ns.db.global.remoteUpdateLatestSeen
+    if latestSeen ~= "" and ns.VersionCheck.IsNewer(latestSeen, coreVersion) then
+        add(
+            "remote_update",
+            CLASS_REMOTE_UPDATE,
+            false,
+            format(L["HOME_REMOTE_UPDATE"], latestSeen, coreVersion or "")
+        )
     end
 
     -- Catalog roots: load_pending / broken when soft-wanted; silent when hard/soft off.

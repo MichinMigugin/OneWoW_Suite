@@ -36,6 +36,10 @@ local DEFAULTS = {
     debugTrace = false,
     -- TOC Version string last dismissed in the What's New dialog (account-wide).
     whatsNewDismissedVersion = "",
+    -- Newest peer core TOC seen this account (cleared when local >= seen).
+    remoteUpdateLatestSeen = "",
+    -- Remote TOC the update popup was silenced for (newer remotes nag again).
+    remoteUpdatePopupDismissedVersion = "",
     -- Account-dismissed FeatureHealth attention ids (load_pending / diminished).
     featureHealthDismissed = {},
     -- Named search expressions (#token, SAVED) for suite-wide SearchExpand.
