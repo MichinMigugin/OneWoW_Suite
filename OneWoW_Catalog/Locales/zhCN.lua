@@ -66,6 +66,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["JOURNAL_CARD_RARE_ONE"] = "%d 个稀有",
     ["JOURNAL_CARD_RARES"] = "%d 个稀有",
     ["JOURNAL_CARD_ITEMS"] = "%d 件物品",
+    ["JOURNAL_DELVE_STORIES_LEFT"] = "剩余 %d / %d 个故事",
     ["JOURNAL_CARD_TMOG"] = "幻化",
     ["JOURNAL_CARD_MOUNT"] = "坐骑",
     ["JOURNAL_CARD_PET"] = "宠物",

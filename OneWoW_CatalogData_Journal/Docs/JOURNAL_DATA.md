@@ -159,9 +159,15 @@ Delves are not Encounter Journal instances. Cards come from `DelveMembership`
 (`MapDifficulty` 208, collapsed season-duplicate MapIDs) with
 `instanceType = "delve"`. Pins use `DelveEntrances`. Achievements use
 `DelveAchievements` (Stories/Discoveries + expansion Glory + matching lair solos).
-There is no EJ loot table; the items section stays empty.
-Weekly bountiful doors (`RefreshBountiful`) read `DelveMembership` names and
-`DelveEntrances` pins/POIs only — never the journal loot cache.
+Generated Stories rows stamp `kind = "stories"` so Catalog can expand criteria
+at paint time without parsing localized titles. There is no EJ loot table; the
+items section stays empty.
+Weekly bountiful doors and today's story variant (`RefreshBountiful`) read
+`DelveMembership` names and `DelveEntrances` pins/POIs only — never the journal
+loot cache. Story text comes from the live door's TextWithState widget
+(`orderIndex` 0) on the outdoor zone `uiMapID` stamped on `DelveEntrances`
+(not the interior map's `parentMapID`). Catalog matches that text to
+Stories criteria (substring, then text after the last colon).
 
 ## Generated files
 
@@ -182,8 +188,8 @@ python bin/journal_db2_tools.py report
 | `Data/Generated/InstanceFlags.lua` | `ns.JournalInstanceMeta` (flags, name, mapID, instanceType) |
 | `Data/Generated/InstanceEntrances.lua` | `ns.JournalInstanceEntrances` (world-space door pins) |
 | `Data/Generated/DelveMembership.lua` | `ns.DelveMembership` (primary delve MapIDs, not EJ) |
-| `Data/Generated/DelveEntrances.lua` | `ns.DelveEntrances` (AreaPOI world doors) |
-| `Data/Generated/Achievements.lua` | `ns.JournalAchievements`, `ns.DelveAchievements` |
+| `Data/Generated/DelveEntrances.lua` | `ns.DelveEntrances` (AreaPOI world doors + outdoor `uiMapID`) |
+| `Data/Generated/Achievements.lua` | `ns.JournalAchievements`, `ns.DelveAchievements` (Stories rows include `kind = "stories"`) |
 | `Data/Generated/ZoneMembership.lua` | `ns.JournalZoneMembership`, `ns.JournalZoneCollapse` |
 | `Data/Generated/ZoneAchievements.lua` | `ns.JournalZoneAchievements`, `ns.JournalAchievementZones` |
 | `Data/Generated/JournalEncounters.lua` | `ns.JournalEncounters` (boss rows per instanceID) |

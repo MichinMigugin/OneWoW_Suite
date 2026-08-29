@@ -66,6 +66,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_CARD_RARE_ONE"] = "%d rare",
     ["JOURNAL_CARD_RARES"] = "%d rares",
     ["JOURNAL_CARD_ITEMS"] = "%d objets",
+    ["JOURNAL_DELVE_STORIES_LEFT"] = "%d sur %d histoires restantes",
     ["JOURNAL_CARD_TMOG"] = "Transmog.",
     ["JOURNAL_CARD_MOUNT"] = "Monture",
     ["JOURNAL_CARD_PET"] = "Mascotte",

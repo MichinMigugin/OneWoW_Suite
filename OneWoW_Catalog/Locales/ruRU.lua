@@ -66,6 +66,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_CARD_RARE_ONE"] = "Редкий: %d",
     ["JOURNAL_CARD_RARES"] = "Редких: %d",
     ["JOURNAL_CARD_ITEMS"] = "Предметов: %d",
+    ["JOURNAL_DELVE_STORIES_LEFT"] = "Осталось историй: %d из %d",
     ["JOURNAL_CARD_TMOG"] = "Трансмог.",
     ["JOURNAL_CARD_MOUNT"] = "Транспорт",
     ["JOURNAL_CARD_PET"] = "Питомец",

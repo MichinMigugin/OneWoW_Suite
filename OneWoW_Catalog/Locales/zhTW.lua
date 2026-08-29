@@ -66,6 +66,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_CARD_RARE_ONE"] = "%d 個稀有",
     ["JOURNAL_CARD_RARES"] = "%d 個稀有",
     ["JOURNAL_CARD_ITEMS"] = "%d 件物品",
+    ["JOURNAL_DELVE_STORIES_LEFT"] = "剩餘 %d / %d 個故事",
     ["JOURNAL_CARD_TMOG"] = "幻化",
     ["JOURNAL_CARD_MOUNT"] = "坐騎",
     ["JOURNAL_CARD_PET"] = "寵物",

@@ -65,6 +65,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_CARD_RARE_ONE"] = "희귀 %d마리",
     ["JOURNAL_CARD_RARES"] = "희귀 %d마리",
     ["JOURNAL_CARD_ITEMS"] = "아이템 %d개",
+    ["JOURNAL_DELVE_STORIES_LEFT"] = "이야기 %d/%d개 남음",
     ["JOURNAL_CARD_TMOG"] = "형상변환",
     ["JOURNAL_CARD_MOUNT"] = "탈것",
     ["JOURNAL_CARD_PET"] = "애완",

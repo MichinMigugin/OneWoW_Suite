@@ -60,6 +60,8 @@
 - The row you have selected shows a blue bar on the left, so it stays obvious next to type colors and in the Tradeskills list.
 
 #### Journal
+- Delve cards show today's story on the type line, and remaining Stories progress on the count line when that achievement is incomplete. Details list each variant under Stories, with today's highlighted.
+- Story names resolve for doors on another zone (Isle of Quel'Danas, Zul'Aman, The Coiled Isle), not only the zone you are standing in. Nemesis lairs still have no Stories row.
 - Instance cards show Transmog, Toy, Housing, and the rest of those tags when the list first appears. Opening a card no longer takes two clicks to fill the tags or the boss and item counts.
 - Quest loot rows show Completed or Not Completed. They no longer print the locale key name over the Type column.
 - Long achievement names stop before Difficulty. They no longer sit on top of H, M, or M+.

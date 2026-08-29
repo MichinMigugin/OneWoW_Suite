@@ -143,10 +143,96 @@ local function FormatAchievementCount(n)
     return string.format("%d %s", n or 0, ACHIEVEMENTS)
 end
 
+---@param instData table
+---@return number|nil
+local function StoriesAchievementID(instData)
+    local rows = instData and instData.achievements
+    if not rows then
+        return nil
+    end
+    for i = 1, #rows do
+        if rows[i].kind == "stories" then
+            return rows[i].id
+        end
+    end
+    return nil
+end
+
+---@param achID number|nil
+---@return table
+local function CollectStoryCriteria(achID)
+    local out = {}
+    if not achID then
+        return out
+    end
+    local n = GetAchievementNumCriteria(achID)
+    for i = 1, n do
+        local name, _, completed = GetAchievementCriteriaInfo(achID, i)
+        if name and name ~= "" then
+            tinsert(out, { name = name, completed = completed and true or false })
+        end
+    end
+    return out
+end
+
+---@param s string
+---@return string
+local function StripColorCodes(s)
+    return (s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|cn.-:", ""):gsub("|r", ""))
+end
+
+--- Criterion name if it appears in the widget text; else text after the last colon.
+---@param raw string|nil
+---@param criteria table
+---@return string|nil displayName
+---@return number|nil matchedIndex
+local function MatchStoryDisplayName(raw, criteria)
+    if not raw or raw == "" then
+        return nil, nil
+    end
+    local plain = StripColorCodes(raw)
+    local lower = plain:lower()
+    for i = 1, #criteria do
+        local name = criteria[i].name
+        if name ~= "" and lower:find(name:lower(), 1, true) then
+            return name, i
+        end
+    end
+    local after = plain:match("^.*:%s*(.-)%s*$")
+    if after and after ~= "" then
+        return after, nil
+    end
+    if plain ~= "" then
+        return plain, nil
+    end
+    return nil, nil
+end
+
+---@param instData table
+---@return number remaining
+---@return number total
+local function CountIncompleteStories(instData)
+    local achID = StoriesAchievementID(instData)
+    if not achID then
+        return 0, 0
+    end
+    local criteria = CollectStoryCriteria(achID)
+    local remaining = 0
+    for i = 1, #criteria do
+        if not criteria[i].completed then
+            remaining = remaining + 1
+        end
+    end
+    return remaining, #criteria
+end
+
 local function FormatCardCountParts(instData)
     local countParts = {}
     if instData.instanceType == "delve" then
-        -- Delves have no EJ loot table.
+        local remaining, total = CountIncompleteStories(instData)
+        if total > 0 and remaining > 0 then
+            tinsert(countParts, string.format(L["JOURNAL_DELVE_STORIES_LEFT"], remaining, total))
+        end
     elseif instData.instanceType == "zone" then
         tinsert(countParts, FormatRareCount(CountRareEncounters(instData)))
         local encCount = CountBossEncounters(instData)
@@ -206,6 +292,21 @@ local diffAbbrev = {
 
 local function GetDataAddon()
     return OneWoW_CatalogData_Journal_API
+end
+
+---@param instData table
+---@return string|nil displayName
+---@return number|nil matchedIndex
+---@return table|nil criteria
+local function ResolveDelveStoryDisplayName(instData)
+    if not instData or instData.instanceType ~= "delve" then
+        return nil, nil, nil
+    end
+    local addon = GetDataAddon()
+    local raw = addon and addon.GetDelveStoryText(instData.mapID)
+    local criteria = CollectStoryCriteria(StoriesAchievementID(instData))
+    local name, idx = MatchStoryDisplayName(raw, criteria)
+    return name, idx, criteria
 end
 
 local COL_SOURCE_RIGHT = -248
@@ -595,6 +696,10 @@ local function FormatInstanceInfoLine(instData, iconSize)
             and "delves-bountiful"
             or "delves-regular"
         typeStr = string.format("|A:%s:%d:%d|a %s", atlas, iconSize, iconSize, DELVE_LABEL)
+        local storyName = ResolveDelveStoryDisplayName(instData)
+        if storyName then
+            typeStr = typeStr .. "  |  " .. storyName
+        end
     end
     if instData.isTimewalker then
         typeStr = typeStr ~= "" and (typeStr .. "  |  " .. PLAYER_DIFFICULTY_TIMEWALKER)
@@ -1334,17 +1439,86 @@ local function BuildAchievementsTable(parent, instData, yOffset)
         return yOffset - 8
     end
 
-    for i, row in ipairs(rows) do
+    local zebra = 0
+
+    --- Nested Stories criteria: same row height, name indented, no icon column.
+    local function AppendStoryCriterionRow(achID, critName, critDone, isActive)
+        zebra = zebra + 1
+        local critRow = CreateFrame("Button", nil, parent, "BackdropTemplate")
+        critRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
+        critRow:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
+        critRow:SetHeight(ITEM_ROW_HEIGHT)
+        critRow:SetBackdrop(BACKDROP_SIMPLE)
+        critRow._zebraIndex = zebra
+        PaintDetailItemRow(critRow, false)
+        table.insert(detailElements, critRow)
+
+        local statusLabel = critDone and CRITERIA_COMPLETED or INCOMPLETE
+        local colorKey = critDone and "TEXT_FEATURES_ENABLED" or "TEXT_WARNING"
+        local statusFS = OneWoW_GUI:CreateFS(critRow, 10)
+        statusFS:SetPoint("RIGHT", critRow, "RIGHT", COL_STATUS_RIGHT, 0)
+        statusFS:SetJustifyH("RIGHT")
+        statusFS:SetWordWrap(false)
+        statusFS:SetText(statusLabel)
+        local statusTextW = statusFS:GetStringWidth()
+        if statusTextW > 72 then
+            statusFS:SetWidth(72)
+        end
+        statusFS:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
+
+        local xIcon = critRow:CreateTexture(nil, "ARTWORK")
+        xIcon:SetSize(ACH_STATUS_ICON, ACH_STATUS_ICON)
+        xIcon:SetPoint("RIGHT", statusFS, "LEFT", -4, 0)
+        xIcon:SetAtlas("common-icon-redx")
+        TintStatusIcon(xIcon, not critDone, "TEXT_WARNING")
+
+        local checkIcon = critRow:CreateTexture(nil, "ARTWORK")
+        checkIcon:SetSize(ACH_STATUS_ICON, ACH_STATUS_ICON)
+        checkIcon:SetPoint("RIGHT", xIcon, "LEFT", -ACH_STATUS_GAP, 0)
+        checkIcon:SetAtlas("common-icon-checkmark")
+        TintStatusIcon(checkIcon, critDone, "TEXT_FEATURES_ENABLED")
+
+        local nameFS = OneWoW_GUI:CreateFS(critRow, 12)
+        nameFS:SetPoint("LEFT", critRow, "LEFT", 40, 0)
+        nameFS:SetPoint("RIGHT", checkIcon, "LEFT", -8, 0)
+        nameFS:SetJustifyH("LEFT")
+        nameFS:SetWordWrap(false)
+        nameFS:SetText(critName)
+        nameFS:SetTextColor(OneWoW_GUI:GetThemeColor(isActive and "TEXT_ACCENT" or "TEXT_PRIMARY"))
+
+        local capturedID = achID
+        local capturedName = critName
+        critRow:SetScript("OnClick", function()
+            OpenAchievementUI(capturedID)
+        end)
+        critRow:SetScript("OnEnter", function(myself)
+            PaintDetailItemRow(myself, true)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(capturedName, 1, 1, 1)
+            local tr, tg, tb = OneWoW_GUI:GetThemeColor(colorKey)
+            GameTooltip:AddLine(statusLabel, tr, tg, tb, true)
+            GameTooltip:Show()
+        end)
+        critRow:SetScript("OnLeave", function(myself)
+            PaintDetailItemRow(myself, false)
+            GameTooltip:Hide()
+        end)
+
+        yOffset = yOffset - (ITEM_ROW_HEIGHT + 2)
+    end
+
+    for _, row in ipairs(rows) do
         local achID = row.id
         local id, name, points, completed, _, _, _, description, _, icon, rewardText, _, wasEarnedByMe =
             GetAchievementInfo(achID)
         if id then
+            zebra = zebra + 1
             local itemRow = CreateFrame("Button", nil, parent, "BackdropTemplate")
             itemRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
             itemRow:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
             itemRow:SetHeight(ITEM_ROW_HEIGHT)
             itemRow:SetBackdrop(BACKDROP_SIMPLE)
-            itemRow._zebraIndex = i
+            itemRow._zebraIndex = zebra
             PaintDetailItemRow(itemRow, false)
             table.insert(detailElements, itemRow)
 
@@ -1444,6 +1618,16 @@ local function BuildAchievementsTable(parent, instData, yOffset)
             end)
 
             yOffset = yOffset - (ITEM_ROW_HEIGHT + 2)
+
+            if row.kind == "stories" then
+                local criteria = CollectStoryCriteria(achID)
+                local addon = GetDataAddon()
+                local raw = addon and addon.GetDelveStoryText(instData.mapID)
+                local _, activeIdx = MatchStoryDisplayName(raw, criteria)
+                for j = 1, #criteria do
+                    AppendStoryCriterionRow(achID, criteria[j].name, criteria[j].completed, j == activeIdx)
+                end
+            end
         end
     end
 

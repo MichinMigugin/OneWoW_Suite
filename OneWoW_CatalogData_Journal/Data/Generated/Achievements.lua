@@ -4,7 +4,8 @@
 local _, ns = ...
 
 -- Achievement IDs only. Names/points/status come from GetAchievementInfo.
--- [mapID] = { { id, diff? }, ... }  diff is a JOURNAL_DIFF_* suffix.
+-- [mapID] = { { id, diff?, kind? }, ... }  diff is a JOURNAL_DIFF_* suffix.
+-- kind = "stories" marks Delve Stories achievements (runtime criteria).
 ns.JournalAchievements = {
 	[33] = {
 		{ id = 5093, diff = "H" },
@@ -2135,22 +2136,22 @@ ns.JournalAchievements = {
 ns.DelveAchievements = {
 	[2664] = {
 		{ id = 40438 },
-		{ id = 40525 },
+		{ id = 40525, kind = "stories" },
 		{ id = 40803 },
 	},
 	[2679] = {
 		{ id = 40438 },
-		{ id = 40531 },
+		{ id = 40531, kind = "stories" },
 		{ id = 40808 },
 	},
 	[2680] = {
 		{ id = 40438 },
-		{ id = 40527 },
+		{ id = 40527, kind = "stories" },
 		{ id = 40806 },
 	},
 	[2681] = {
 		{ id = 40438 },
-		{ id = 40526 },
+		{ id = 40526, kind = "stories" },
 		{ id = 40807 },
 	},
 	[2682] = {
@@ -2159,57 +2160,57 @@ ns.DelveAchievements = {
 	},
 	[2683] = {
 		{ id = 40438 },
-		{ id = 40528 },
+		{ id = 40528, kind = "stories" },
 		{ id = 40816 },
 	},
 	[2684] = {
 		{ id = 40438 },
-		{ id = 40529 },
+		{ id = 40529, kind = "stories" },
 		{ id = 40812 },
 	},
 	[2685] = {
 		{ id = 40438 },
-		{ id = 40533 },
+		{ id = 40533, kind = "stories" },
 		{ id = 40810 },
 	},
 	[2686] = {
 		{ id = 40438 },
-		{ id = 40530 },
+		{ id = 40530, kind = "stories" },
 		{ id = 40809 },
 	},
 	[2687] = {
 		{ id = 40438 },
-		{ id = 40532 },
+		{ id = 40532, kind = "stories" },
 		{ id = 40813 },
 	},
 	[2688] = {
 		{ id = 40438 },
-		{ id = 40536 },
+		{ id = 40536, kind = "stories" },
 		{ id = 40814 },
 	},
 	[2689] = {
 		{ id = 40438 },
-		{ id = 40535 },
+		{ id = 40535, kind = "stories" },
 		{ id = 40811 },
 	},
 	[2690] = {
 		{ id = 40438 },
-		{ id = 40534 },
+		{ id = 40534, kind = "stories" },
 		{ id = 40815 },
 	},
 	[2803] = {
 		{ id = 40438 },
 		{ id = 42679 },
-		{ id = 42771 },
+		{ id = 42771, kind = "stories" },
 	},
 	[2815] = {
 		{ id = 40438 },
-		{ id = 41098 },
+		{ id = 41098, kind = "stories" },
 		{ id = 41100 },
 	},
 	[2826] = {
 		{ id = 40438 },
-		{ id = 41099 },
+		{ id = 41099, kind = "stories" },
 		{ id = 41101 },
 	},
 	[2831] = {
@@ -2217,7 +2218,7 @@ ns.DelveAchievements = {
 		{ id = 41210 },
 	},
 	[2933] = {
-		{ id = 61726 },
+		{ id = 61726, kind = "stories" },
 		{ id = 61894 },
 		{ id = 61906 },
 	},
@@ -2226,37 +2227,37 @@ ns.DelveAchievements = {
 		{ id = 42190 },
 	},
 	[2952] = {
-		{ id = 61727 },
+		{ id = 61727, kind = "stories" },
 		{ id = 61892 },
 		{ id = 61906 },
 	},
 	[2953] = {
-		{ id = 61725 },
+		{ id = 61725, kind = "stories" },
 		{ id = 61893 },
 		{ id = 61906 },
 	},
 	[2961] = {
-		{ id = 61730 },
+		{ id = 61730, kind = "stories" },
 		{ id = 61896 },
 		{ id = 61906 },
 	},
 	[2962] = {
-		{ id = 61729 },
+		{ id = 61729, kind = "stories" },
 		{ id = 61863 },
 		{ id = 61906 },
 	},
 	[2963] = {
-		{ id = 61724 },
+		{ id = 61724, kind = "stories" },
 		{ id = 61897 },
 		{ id = 61906 },
 	},
 	[2964] = {
-		{ id = 61731 },
+		{ id = 61731, kind = "stories" },
 		{ id = 61898 },
 		{ id = 61906 },
 	},
 	[2965] = {
-		{ id = 61732 },
+		{ id = 61732, kind = "stories" },
 		{ id = 61899 },
 		{ id = 61906 },
 	},
@@ -2264,24 +2265,24 @@ ns.DelveAchievements = {
 		{ id = 61906 },
 	},
 	[2979] = {
-		{ id = 61733 },
+		{ id = 61733, kind = "stories" },
 		{ id = 61900 },
 		{ id = 61906 },
 	},
 	[3003] = {
-		{ id = 61728 },
+		{ id = 61728, kind = "stories" },
 		{ id = 61895 },
 		{ id = 61906 },
 	},
 	[3038] = {
 		{ id = 61906 },
 		{ id = 63170 },
-		{ id = 63437 },
+		{ id = 63437, kind = "stories" },
 	},
 	[3077] = {
 		{ id = 61906 },
 		{ id = 63171 },
-		{ id = 63436 },
+		{ id = 63436, kind = "stories" },
 	},
 	[3079] = {
 		{ id = 61906 },

@@ -1984,31 +1984,121 @@ function JournalData:GetItemDropLocations(itemID)
 end
 
 JournalData.bountifulMapIDs = {}
+JournalData.storyByMapID = {}
 
-local function MarkBountifulFromPOI(self, uiMapID, poiID, poiToMap, nameToMap)
-    local mapped = poiToMap[poiID]
-    if mapped then
-        self.bountifulMapIDs[mapped] = true
+local TEXT_WITH_STATE = Enum.UIWidgetVisualizationType.TextWithState
+local POI_REFRESH_DELAY = 0.5
+local poiRefreshPending = false
+
+--- Active story line from a live delve door tooltip (orderIndex 0 TextWithState).
+---@param info table|nil
+---@return string|nil
+local function ReadStoryWidgetText(info)
+    if not info or not info.tooltipWidgetSet then
+        return nil
+    end
+    local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(info.tooltipWidgetSet)
+    if not widgets then
+        return nil
+    end
+    for i = 1, #widgets do
+        local widget = widgets[i]
+        if widget.widgetType == TEXT_WITH_STATE then
+            local viz = C_UIWidgetManager.GetTextWithStateWidgetVisualizationInfo(widget.widgetID)
+            if viz and viz.orderIndex == 0 and viz.text and viz.text ~= "" then
+                return viz.text
+            end
+        end
+    end
+    return nil
+end
+
+---@param self table
+---@param delveMapID number
+---@param info table|nil
+local function AbsorbLivePOI(self, delveMapID, info)
+    if not info then
         return
     end
-    local info = C_AreaPoiInfo.GetAreaPOIInfo(uiMapID, poiID)
-    local atlas = info and info.atlasName
+    local atlas = info.atlasName
     if atlas and atlas:lower():find("bountiful", 1, true) then
-        local mid = info.name and nameToMap[info.name]
-        if mid then
-            self.bountifulMapIDs[mid] = true
+        self.bountifulMapIDs[delveMapID] = true
+    end
+    if not self.storyByMapID[delveMapID] then
+        local text = ReadStoryWidgetText(info)
+        if text then
+            self.storyByMapID[delveMapID] = text
         end
     end
 end
 
-local function WalkDelveMaps(self, startID, seenMaps, poiToMap, nameToMap)
+--- Zone-parent lookup: only one of bountiful / regular is in GetDelvesForMap.
+---@param self table
+---@param delveMapID number
+---@param zoneMapID number
+---@param rows table
+local function CaptureDelveOnZone(self, delveMapID, zoneMapID, rows)
+    local live = C_AreaPoiInfo.GetDelvesForMap(zoneMapID)
+    local liveSet = {}
+    if live then
+        for i = 1, #live do
+            liveSet[live[i]] = true
+        end
+    end
+    for i = 1, #rows do
+        local row = rows[i]
+        local poiID
+        if row.bountifulPoiID and liveSet[row.bountifulPoiID] then
+            poiID = row.bountifulPoiID
+            self.bountifulMapIDs[delveMapID] = true
+        elseif row.areaPoiID and liveSet[row.areaPoiID] then
+            poiID = row.areaPoiID
+        end
+        if poiID then
+            AbsorbLivePOI(self, delveMapID, C_AreaPoiInfo.GetAreaPOIInfo(zoneMapID, poiID))
+        else
+            if row.bountifulPoiID then
+                AbsorbLivePOI(self, delveMapID, C_AreaPoiInfo.GetAreaPOIInfo(zoneMapID, row.bountifulPoiID))
+            end
+            if row.areaPoiID then
+                AbsorbLivePOI(self, delveMapID, C_AreaPoiInfo.GetAreaPOIInfo(zoneMapID, row.areaPoiID))
+            end
+        end
+    end
+end
+
+local function MarkBountifulFromPOI(self, uiMapID, poiID, poiToMap, nameToMap, areaPoiToMap)
+    local mapped = poiToMap[poiID] or (areaPoiToMap and areaPoiToMap[poiID])
+    if poiToMap[poiID] then
+        self.bountifulMapIDs[poiToMap[poiID]] = true
+    end
+    local info = C_AreaPoiInfo.GetAreaPOIInfo(uiMapID, poiID)
+    if not mapped and info then
+        local atlas = info.atlasName
+        if atlas and atlas:lower():find("bountiful", 1, true) then
+            local mid = info.name and nameToMap[info.name]
+            if mid then
+                self.bountifulMapIDs[mid] = true
+                mapped = mid
+            end
+        end
+    end
+    if not mapped and info and info.name then
+        mapped = nameToMap[info.name]
+    end
+    if mapped then
+        AbsorbLivePOI(self, mapped, info)
+    end
+end
+
+local function WalkDelveMaps(self, startID, seenMaps, poiToMap, nameToMap, areaPoiToMap)
     local uiMapID = startID
     while uiMapID and uiMapID ~= 0 and not seenMaps[uiMapID] do
         seenMaps[uiMapID] = true
         local pois = C_AreaPoiInfo.GetDelvesForMap(uiMapID)
         if pois then
             for i = 1, #pois do
-                MarkBountifulFromPOI(self, uiMapID, pois[i], poiToMap, nameToMap)
+                MarkBountifulFromPOI(self, uiMapID, pois[i], poiToMap, nameToMap, areaPoiToMap)
             end
         end
         local mapInfo = C_Map.GetMapInfo(uiMapID)
@@ -2016,14 +2106,32 @@ local function WalkDelveMaps(self, startID, seenMaps, poiToMap, nameToMap)
     end
 end
 
---- Live bountiful doors this week. atlasName or generated bountifulPoiID.
+---@param self table
+---@return string
+local function LiveFingerprint(self)
+    local n = 0
+    for _ in pairs(self.bountifulMapIDs) do
+        n = n + 1
+    end
+    local stories = {}
+    for mapID, text in pairs(self.storyByMapID) do
+        stories[#stories + 1] = mapID .. "\1" .. text
+    end
+    sort(stories)
+    return n .. "\2" .. table.concat(stories, "\2")
+end
+
+--- Live bountiful doors and today's story variant. atlasName or generated
+--- bountifulPoiID; story from the door tooltip widget (orderIndex 0).
 -- Reads DelveMembership / DelveEntrances only. Must not call BuildJournalCache:
 -- PEW runs this for every login, and hydrating every journal card there stalls movement.
 function JournalData:RefreshBountiful()
     wipe(self.bountifulMapIDs)
+    wipe(self.storyByMapID)
 
     local nameToMap = {}
     local poiToMap = {}
+    local areaPoiToMap = {}
     local membership = ns.DelveMembership
     if membership then
         for _, cards in pairs(membership) do
@@ -2041,9 +2149,20 @@ function JournalData:RefreshBountiful()
         for mapID, rows in pairs(entrances) do
             for i = 1, #rows do
                 local row = rows[i]
+                if row.areaPoiID then
+                    areaPoiToMap[row.areaPoiID] = mapID
+                end
                 if row.bountifulPoiID then
                     poiToMap[row.bountifulPoiID] = mapID
                 end
+            end
+            local zoneMapID = rows[1] and rows[1].uiMapID
+            if not zoneMapID then
+                local mapInfo = C_Map.GetMapInfo(mapID)
+                zoneMapID = mapInfo and mapInfo.parentMapID
+            end
+            if zoneMapID and zoneMapID ~= 0 then
+                CaptureDelveOnZone(self, mapID, zoneMapID, rows)
             end
         end
         for _, rows in pairs(entrances) do
@@ -2051,7 +2170,7 @@ function JournalData:RefreshBountiful()
                 local row = rows[i]
                 if row.mapID and row.mapID ~= 0 then
                     local uiMapID = C_Map.GetMapPosFromWorldPos(row.mapID, CreateVector2D(row.x, row.y))
-                    WalkDelveMaps(self, uiMapID, seenMaps, poiToMap, nameToMap)
+                    WalkDelveMaps(self, uiMapID, seenMaps, poiToMap, nameToMap, areaPoiToMap)
                 end
             end
         end
@@ -2060,7 +2179,7 @@ function JournalData:RefreshBountiful()
     -- Midnight doors often ship ContinentID 0; the player map still lists live POIs.
     local playerMap = C_Map.GetBestMapForUnit("player")
     if playerMap then
-        WalkDelveMaps(self, playerMap, seenMaps, poiToMap, nameToMap)
+        WalkDelveMaps(self, playerMap, seenMaps, poiToMap, nameToMap, areaPoiToMap)
     end
 end
 
@@ -2070,12 +2189,35 @@ function JournalData:IsDelveBountiful(mapID)
     return mapID ~= nil and self.bountifulMapIDs[mapID] == true
 end
 
+--- Raw door-tooltip story line (may include a localized "Story Variant:" prefix).
+---@param mapID number|nil
+---@return string|nil
+function JournalData:GetDelveStoryText(mapID)
+    return mapID and self.storyByMapID[mapID] or nil
+end
+
+local function SchedulePOIRefresh()
+    if poiRefreshPending then
+        return
+    end
+    poiRefreshPending = true
+    C_Timer.After(POI_REFRESH_DELAY, function()
+        poiRefreshPending = false
+        local before = LiveFingerprint(JournalData)
+        JournalData:RefreshBountiful()
+        if LiveFingerprint(JournalData) ~= before then
+            ns:FireScanCallbacks("bountiful")
+        end
+    end)
+end
+
 function JournalData:ClearCache()
     self.journalCache = nil
     self.extrasByKey = nil
     self.extrasReady = nil
     self.ejItemOnInst = nil
     wipe(self.bountifulMapIDs)
+    wipe(self.storyByMapID)
     if ns.EJLiveLoot and ns.EJLiveLoot.OnJournalCacheCleared then
         ns.EJLiveLoot:OnJournalCacheCleared()
     end
@@ -2083,4 +2225,13 @@ end
 
 function JournalData:Initialize()
     self.initialized = true
+    if self.poiFrame then
+        return
+    end
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("AREA_POIS_UPDATED")
+    f:SetScript("OnEvent", function()
+        SchedulePOIRefresh()
+    end)
+    self.poiFrame = f
 end

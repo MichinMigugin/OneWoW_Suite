@@ -39,6 +39,13 @@ function OneWoW_CatalogData_Journal_API.IsDelveBountiful(mapID)
     return ns.JournalData:IsDelveBountiful(mapID)
 end
 
+--- Raw live story-variant tooltip text for a delve map (nil if unknown).
+---@param mapID number|nil
+---@return string|nil
+function OneWoW_CatalogData_Journal_API.GetDelveStoryText(mapID)
+    return ns.JournalData:GetDelveStoryText(mapID)
+end
+
 --- Determines collection status metadata for a journal loot item.
 ---@param itemID number
 ---@param itemData table|nil
