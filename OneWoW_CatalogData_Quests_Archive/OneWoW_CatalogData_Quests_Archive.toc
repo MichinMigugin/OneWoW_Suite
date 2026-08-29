@@ -1,5 +1,5 @@
 ## Interface: 120007, 120100
-## Version: R6.2608.2805
+## Version: R6.2608.2902
 ## Title: OneWoW - Data: |cFFFFFFFFQuest Archive|r
 ## Notes: OneWoW Data Addon that: provides Classic through Dragonflight quest data for the Catalog.
 ## Author: OneWoW Dev Team
