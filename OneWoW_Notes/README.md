@@ -16,6 +16,7 @@ Your personal note journal:
 - Choose which notes display on login
 - Customize note appearance (font size, color, opacity)
 - Pin notes to your screen while playing
+- Scale pinned notes and zone windows from Notes settings (50% to 200%)
 - Rich text formatting (bold, colors, custom styling)
 - Search notes by title or content
 

@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["NPC_LABEL_LOCATION"] = "Localização:",
     ["NPC_ERROR_NAME_REQUIRED"] = "O nome do NPC é obrigatório.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Escala das janelas fixadas",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Ajusta a escala das notas e janelas de zona fixadas.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Detecção e alertas",
     ["SETTINGS_ENABLED"] = "Ligado",

@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["NPC_LABEL_LOCATION"] = "Position :",
     ["NPC_ERROR_NAME_REQUIRED"] = "Le nom du PNJ est requis.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Échelle des fenêtres épinglées",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Met à l'échelle les notes et fenêtres de zone épinglées.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Détection et alertes",
     ["SETTINGS_ENABLED"] = "Activé",

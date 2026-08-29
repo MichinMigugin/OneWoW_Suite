@@ -9,7 +9,7 @@
 
 **SavedVariables:** `OneWoW_Trackers_DB` (global), `OneWoW_Trackers_CharDB` (per character). Internal reads use `ns.db` after `DB:Init` in `Core/Database.lua`.
 
-**Public cross-unit surface:** `OneWoW_Trackers_API` in `Core/API.lua` (UI Toggle/Show/Hide, weekly-reset region picker for QoL settings). Lifecycle colon hooks live on `OneWoW_Trackers = {}` only (`OneWoW_Trackers.lua`).
+**Public cross-unit surface:** `OneWoW_Trackers_API` in `Core/API.lua` (UI Toggle/Show/Hide). Lifecycle colon hooks live on `OneWoW_Trackers = {}` only (`OneWoW_Trackers.lua`). Hub Settings panel: pinned-window scale and weekly-reset region (`UI/t-settings.lua`).
 
 **RequiredDeps:** `OneWoW`. **OptionalDeps:** `TradeSkillMaster`, `Auctionator` (farm value pricing).
 
@@ -32,6 +32,7 @@ Core/TrackerPresets.lua      — bundled presets and examples
 Core/TrackerMap.lua          — world-map pin provider
 Core/Constants.lua           — GUI constants (inherits suite defaults)
 UI/t-tracker.lua             — hub tab (browser + detail)
+UI/t-settings.lua            — hub Settings (pinned scale + weekly reset region)
 UI/ui-tracker-editor.lua     — create/edit dialogs
 UI/ui-tracker-pinned.lua     — pinned overlay windows (owns overlay frames)
 UI/ui-tracker-map.lua        — map integration hooks
@@ -65,7 +66,6 @@ Follows suite orchestrator hooks (no per-file `ADDON_LOADED` init) — see [ARCH
 
 ## Integration Points
 
-- **OneWoW hub** — `ModuleRegistry` tab `"trackers"`; minimap open path
-- **OneWoW_QoL** — weekly reset region picker via `OneWoW_Trackers_API`
+- **OneWoW hub** — `ModuleRegistry` tab `"trackers"`; Settings panel (pinned scale, weekly reset region); minimap open path
 - **Map** — `TrackerMap` pins coordinate steps for pinned lists
 - **Pricing** — AH via OneWoW/Auctionator; TSM when present

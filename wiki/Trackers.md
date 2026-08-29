@@ -34,6 +34,8 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 ### Settings
 
+* Open **Settings > Trackers** in the hub
+* Pinned list scale (50% to 200%) applies to every pinned overlay
 * Weekly reset region override (auto-detect or US / EU / Asia)
 
 ---

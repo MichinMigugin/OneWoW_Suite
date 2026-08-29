@@ -26,6 +26,8 @@ local defaults = {
         -- "auto" follows the realm's region via C_DateAndTime; a region key
         -- ("us"/"eu"/"asia") forces the weekly reset weekday instead.
         weeklyResetRegion      = "auto",
+        -- Percent scale for all pinned overlay windows (50-200).
+        pinnedScale            = 100,
     },
     char = {
         trackerProgress        = {},

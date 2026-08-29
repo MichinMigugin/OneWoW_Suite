@@ -86,6 +86,44 @@ function ns.UI.CreateSettingsTab(parent)
     local scrollChild = scrollObj.scrollChild
 
     local yOffset = -20
+    local PinSupport = ns.PinSupport
+
+    local displaySection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = DISPLAY, yOffset = yOffset })
+    yOffset = displaySection.bottomY - 8
+
+    local scaleDesc = OneWoW_GUI:CreateFS(scrollChild, 12)
+    scaleDesc:SetPoint("TOPLEFT", 16, yOffset)
+    scaleDesc:SetPoint("TOPRIGHT", -16, yOffset)
+    scaleDesc:SetJustifyH("LEFT")
+    scaleDesc:SetWordWrap(true)
+    scaleDesc:SetSpacing(3)
+    scaleDesc:SetText(L["SETTINGS_PINNED_SCALE_DESC"])
+    scaleDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    local wrapWidth = (scrollChild:GetWidth() or 0) - 32
+    if wrapWidth < 200 then wrapWidth = 740 end
+    scaleDesc:SetWidth(wrapWidth)
+    yOffset = yOffset - math.max(scaleDesc:GetStringHeight(), 12) - 10
+
+    local scaleLbl = OneWoW_GUI:CreateFS(scrollChild, 12)
+    scaleLbl:SetPoint("TOPLEFT", 16, yOffset)
+    scaleLbl:SetText(L["SETTINGS_PINNED_SCALE"])
+    scaleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - 18
+
+    local scaleSlider = OneWoW_GUI:CreateSlider(scrollChild, {
+        width = math.max(140, wrapWidth - 40),
+        minVal = PinSupport.SCALE_MIN,
+        maxVal = PinSupport.SCALE_MAX,
+        step = PinSupport.SCALE_STEP,
+        currentVal = PinSupport.ClampScalePercent(ns.db.global.pinnedScale),
+        onChange = function(val)
+            ns.db.global.pinnedScale = PinSupport.ClampScalePercent(val)
+            PinSupport.ApplyAllPinScales()
+        end,
+        fmt = "%d%%",
+    })
+    scaleSlider:SetPoint("TOPLEFT", 16, yOffset)
+    yOffset = yOffset - 48
 
     yOffset = yOffset - 20
     local waypinsSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["TAB_WAYPINS"], yOffset = yOffset })

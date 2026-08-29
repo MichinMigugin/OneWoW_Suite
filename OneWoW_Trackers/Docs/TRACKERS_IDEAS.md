@@ -90,7 +90,7 @@ Do not invent parallel track types. The engine already evaluates:
 
 ## Hub tab UI (audit)
 
-Three layers, not one screen: **data** (`TrackerData` — lists → sections → steps), **engine** (`TrackerEngine` — evaluate, pins, map), **UI** (hub tab author / browse, editor dialogs, pinned overlay, farm value). `/1wt` opens the hub tab. `_API` today is show/hide + weekly-reset region.
+Three layers, not one screen: **data** (`TrackerData` — lists → sections → steps), **engine** (`TrackerEngine` — evaluate, pins, map), **UI** (hub tab author / browse, editor dialogs, pinned overlay, farm value). `/1wt` opens the hub tab. `_API` today is show/hide.
 
 **Chrome, left list, and detail reorder use `OneWoW_GUI`. Section/step rows stay custom.**
 

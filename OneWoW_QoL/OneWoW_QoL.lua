@@ -27,12 +27,6 @@ local function RegisterWithOneWoW()
         order = OneWoW:GetModuleTabOrder("qol"),
         tabs = tabs,
     })
-    OneWoW:RegisterSettingsPanel({
-        name        = "qol",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
-        order       = OneWoW:GetModuleTabOrder("qol"),
-        create      = function(p) ns.UI.CreateSettingsTab(p) end,
-    })
 end
 
 local function OnInitialize()

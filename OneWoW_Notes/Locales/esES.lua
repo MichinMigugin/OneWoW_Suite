@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["NPC_LABEL_LOCATION"] = "Ubicación:",
     ["NPC_ERROR_NAME_REQUIRED"] = "El nombre del PNJ es obligatorio.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Escala de ventanas ancladas",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Escala las notas ancladas y las ventanas de zona.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Detección y alertas",
     ["SETTINGS_ENABLED"] = "Activado",

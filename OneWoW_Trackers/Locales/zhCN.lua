@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["SETTINGS_RESET_TITLE"]          = "每周重置日",
     ["SETTINGS_RESET_DESC"]           = "每周追踪器在你所在区域的重置日重置，会根据你的服务器自动检测。若检测有误，可在此强制指定区域。",
+    ["SETTINGS_PINNED_SCALE"]         = "置顶窗口缩放",
+    ["SETTINGS_PINNED_SCALE_DESC"]    = "缩放所有置顶的追踪器列表。",
     ["RESET_REGION_AUTO"]             = "自动检测（推荐）",
     ["RESET_REGION_US"]               = "北美 — 周二",
     ["RESET_REGION_EU"]               = "欧洲 — 周三",

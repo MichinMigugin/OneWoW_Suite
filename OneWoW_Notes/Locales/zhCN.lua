@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["NPC_LABEL_LOCATION"] = "位置：",
     ["NPC_ERROR_NAME_REQUIRED"] = "需要 NPC 名称。",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "置顶窗口缩放",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "缩放置顶的笔记和区域窗口。",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "检测与提醒",
     ["SETTINGS_ENABLED"] = "开",

@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["NPC_LABEL_LOCATION"] = "Местоположение:",
     ["NPC_ERROR_NAME_REQUIRED"] = "Требуется имя НИП.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Масштаб закрепленных окон",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Масштабирует закрепленные заметки и окна зон.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Обнаружение и оповещения",
     ["SETTINGS_ENABLED"] = "Вкл.",

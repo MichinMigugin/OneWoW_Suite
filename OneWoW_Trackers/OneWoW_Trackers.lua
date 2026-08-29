@@ -41,7 +41,12 @@ local function RegisterAsOneWoWModule()
             },
         },
     })
-
+    OneWoW:RegisterSettingsPanel({
+        name        = "trackers",
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
+        order       = OneWoW:GetModuleTabOrder("trackers"),
+        create      = function(p) ns.UI.CreateSettingsTab(p) end,
+    })
 end
 
 local function OnInitialize()

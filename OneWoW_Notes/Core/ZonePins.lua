@@ -175,9 +175,8 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -100, -50)
     pin:SetMovable(true)
     pin:SetResizable(true)
-    local sw = GetScreenWidth()
-    local sh = GetScreenHeight()
-    pin:SetResizeBounds(200, 150, sw, sh)
+    PinSupport.ApplyPinScale(pin)
+    PinSupport.SetPinResizeBounds(pin, 200, 150)
     pin:EnableMouse(true)
     pin:SetClampedToScreen(true)
     pin:RegisterForDrag("LeftButton")
@@ -377,7 +376,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             local ch = CollapsedHeight(myself)
             myself:SetHeight(ch)
             myself._cachedHeight = ch
-            myself:SetResizeBounds(200, ch, GetScreenWidth(), GetScreenHeight())
+            PinSupport.SetPinResizeBounds(myself, 200, ch)
             if myself.titleBar then myself.titleBar:Show() end
             if myself.closeBtn then myself.closeBtn:Show() end
             if myself.minimizeBtn then myself.minimizeBtn:Show() end
@@ -418,7 +417,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         local hasContent  = zd.content and zd.content ~= ""
         local titleBarHeight = PinSupport.GetFrameHeight(myself.titleBar, 20) + 10
         local minWindow   = titleBarHeight + (hasContent and 60 or 10) + taskHeight + 35
-        myself:SetResizeBounds(200, minWindow, GetScreenWidth(), GetScreenHeight())
+        PinSupport.SetPinResizeBounds(myself, 200, minWindow)
 
         myself.contentFrame:ClearAllPoints()
         myself.todoMainFrame:ClearAllPoints()
@@ -772,7 +771,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             myself:SetHeight(ch)
             myself._cachedHeight = ch
             myself._cachedWidth = myself._savedWidth
-            myself:SetResizeBounds(200, ch, GetScreenWidth(), GetScreenHeight())
+            PinSupport.SetPinResizeBounds(myself, 200, ch)
             if ns.WayPinsCompanion then
                 ns.WayPinsCompanion:Sync()
             end

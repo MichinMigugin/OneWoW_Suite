@@ -873,7 +873,6 @@ dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua`).
 |---|---|---|---|
 | OneWoW | OneWoW_Bags | `Integrations/OneWoW_Bags.lua` (wired via `RegisterAddonLoadedWatcher`) | Overlay engine with Bags callbacks |
 | OneWoW_ShoppingList | OneWoW_Catalog | `OneWoW_Catalog_TradeskillAPI` | Recipe callback |
-| OneWoW_QoL | OneWoW_Trackers | `OneWoW_Trackers_API` | Weekly reset region picker (QoL settings tab) |
 
 ### Store access rules
 

@@ -133,7 +133,7 @@ local ADDON_SETTINGS_MAP = {
         dbName = "OneWoW_Notes_DB",
         displayName = "Notes",
         acedb = true,
-        keys = {"language", "theme", "minimap", "lastTab", "mainFrameSize", "mainFramePosition", "sortCompletedTasks", "zoneAlertsEnabled", "npcScanEnabled", "playerScanEnabled"},
+        keys = {"language", "theme", "minimap", "lastTab", "mainFrameSize", "mainFramePosition", "sortCompletedTasks", "zoneAlertsEnabled", "npcScanEnabled", "playerScanEnabled", "pinnedScale"},
     },
     {
         dbName = "OneWoW_Catalog_DB",

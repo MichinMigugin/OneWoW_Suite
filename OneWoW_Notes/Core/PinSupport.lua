@@ -27,6 +27,64 @@ function PinSupport.HideTooltip()
     pinTooltip:Hide()
 end
 
+PinSupport.SCALE_MIN     = 50
+PinSupport.SCALE_MAX     = 200
+PinSupport.SCALE_STEP    = 5
+PinSupport.SCALE_DEFAULT = 100
+
+--- Clamp a pinned-window scale percent to the supported range.
+---@param percent number|nil
+---@return number
+function PinSupport.ClampScalePercent(percent)
+    local n = tonumber(percent)
+    if not n then n = PinSupport.SCALE_DEFAULT end
+    if n < PinSupport.SCALE_MIN then return PinSupport.SCALE_MIN end
+    if n > PinSupport.SCALE_MAX then return PinSupport.SCALE_MAX end
+    return n
+end
+
+--- Screen size in the frame's local units (UIParent size / frame:GetScale).
+---@param frame Frame
+---@return number width
+---@return number height
+function PinSupport.ScreenSizeInFrameUnits(frame)
+    local scale = frame:GetScale()
+    if scale <= 0 then scale = 1 end
+    return GetScreenWidth() / scale, GetScreenHeight() / scale
+end
+
+--- Apply resize max from screen size in the pin's local units.
+---@param frame Frame
+---@param minW number
+---@param minH number
+function PinSupport.SetPinResizeBounds(frame, minW, minH)
+    local sw, sh = PinSupport.ScreenSizeInFrameUnits(frame)
+    frame:SetResizeBounds(minW, minH, sw, sh)
+end
+
+--- Apply the saved global scale to one pin.
+---@param frame Frame
+function PinSupport.ApplyPinScale(frame)
+    frame:SetScale(PinSupport.ClampScalePercent(ns.db.global.pinnedScale) / 100)
+end
+
+--- Apply the saved global scale to every live note and zone pin.
+function PinSupport.ApplyAllPinScales()
+    local scale = PinSupport.ClampScalePercent(ns.db.global.pinnedScale) / 100
+    if ns.notePins then
+        for _, pin in pairs(ns.notePins) do
+            pin:SetScale(scale)
+            pin:RefreshLayout()
+        end
+    end
+    if ns.zonePins then
+        for _, pin in pairs(ns.zonePins) do
+            pin:SetScale(scale)
+            pin:RefreshLayout()
+        end
+    end
+end
+
 function PinSupport.CachePinSize(pin)
     if PinSupport.IsLayoutBlocked() then return end
     pin._cachedWidth = pin:GetWidth()

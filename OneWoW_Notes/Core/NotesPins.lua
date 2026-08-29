@@ -186,9 +186,8 @@ function NotesPins:CreateNotePin(noteID, note)
     pin:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -50, -50)
     pin:SetMovable(true)
     pin:SetResizable(true)
-    local screenWidth = GetScreenWidth()
-    local screenHeight = GetScreenHeight()
-    pin:SetResizeBounds(200, 150, screenWidth, screenHeight)
+    PinSupport.ApplyPinScale(pin)
+    PinSupport.SetPinResizeBounds(pin, 200, 150)
     pin:EnableMouse(true)
     pin:SetClampedToScreen(true)
     pin:RegisterForDrag("LeftButton")
@@ -457,10 +456,8 @@ function NotesPins:CreateNotePin(noteID, note)
         myself:UpdateTitleHeight()
 
         if myself.collapsed then
-            local sw = GetScreenWidth()
-            local sh = GetScreenHeight()
             local ch = PinSupport.GetFrameHeight(myself.titleBar, 20) + 14
-            myself:SetResizeBounds(200, ch, sw, sh)
+            PinSupport.SetPinResizeBounds(myself, 200, ch)
             myself.contentFrame:Hide()
             myself.todoMainFrame:Hide()
             myself.resizeBtn:Hide()
@@ -491,9 +488,7 @@ function NotesPins:CreateNotePin(noteID, note)
         local margins = 35
         local minWindowHeight = titleBarHeight + contentMinHeight + taskMinHeight + margins
 
-        local sw = GetScreenWidth()
-        local sh = GetScreenHeight()
-        myself:SetResizeBounds(200, minWindowHeight, sw, sh)
+        PinSupport.SetPinResizeBounds(myself, 200, minWindowHeight)
 
         myself.contentFrame:ClearAllPoints()
         myself.todoMainFrame:ClearAllPoints()
@@ -703,8 +698,7 @@ function NotesPins:CreateNotePin(noteID, note)
             local ch = PinSupport.GetFrameHeight(pin.titleBar, 20) + 14
             pin:SetHeight(ch)
             pin._cachedHeight = ch
-            local sw, sh = GetScreenWidth(), GetScreenHeight()
-            pin:SetResizeBounds(200, ch, sw, sh)
+            PinSupport.SetPinResizeBounds(pin, 200, ch)
         end
         SavePinGeometry(pin)
     end

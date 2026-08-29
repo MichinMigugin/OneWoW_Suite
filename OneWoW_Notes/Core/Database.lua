@@ -56,6 +56,8 @@ local defaults = {
         -- List and are permanently purged after collectiblePurgeTTLDays (0 = immediate).
         collectibleAutoDelete    = false,
         collectiblePurgeTTLDays  = 7,
+        -- Percent scale for pinned notes and zone windows (50-200).
+        pinnedScale              = 100,
         -- One-time legacy mount-blob migration guard (set true after the pass).
         collectibleMountMigrated = false,
         -- One-time guard for remapping the retired "Mount"/"Transmog" built-in

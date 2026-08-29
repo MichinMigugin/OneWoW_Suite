@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
     ["SETTINGS_RESET_TITLE"]          = "Día de reinicio semanal",
     ["SETTINGS_RESET_DESC"]           = "Los rastreadores semanales se reinician el día de reinicio de tu región, detectado automáticamente desde tu reino. Si la detección falla, fuerza tu región aquí.",
+    ["SETTINGS_PINNED_SCALE"]         = "Escala de ventanas ancladas",
+    ["SETTINGS_PINNED_SCALE_DESC"]    = "Escala todas las listas de rastreo ancladas.",
     ["RESET_REGION_AUTO"]             = "Detección automática (recomendado)",
     ["RESET_REGION_US"]               = "Norteamérica — martes",
     ["RESET_REGION_EU"]               = "Europa — miércoles",

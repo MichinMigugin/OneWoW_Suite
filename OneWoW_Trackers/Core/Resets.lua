@@ -3,9 +3,9 @@ local _, ns = ...
 -- ============================================================================
 -- Tracker resets
 -- ============================================================================
--- Daily/weekly/custom-timer boundaries and the QoL weekly-reset region picker.
--- Methods stay on ns.TrackerData so OneWoW_Trackers_API and the engine are
--- unchanged. See OneWoW_Trackers/Docs/ARCHITECTURE.md.
+-- Daily/weekly/custom-timer boundaries and the weekly-reset region picker
+-- (Trackers settings tab). Methods stay on ns.TrackerData. See
+-- OneWoW_Trackers/Docs/ARCHITECTURE.md.
 -- ============================================================================
 
 local TD = ns.TrackerData
@@ -66,10 +66,9 @@ end
 -- ============================================================================
 -- Weekly reset region — public API
 -- ============================================================================
--- The weekly-reset-day picker UI is hosted by another addon (OneWoW_QoL's
--- settings tab), so the region concept is exposed through OneWoW_Trackers_API
--- rather than letting the UI poke our SavedVariables directly. All user-facing
--- strings stay localized in this addon.
+-- The weekly-reset-day picker lives on the Trackers settings tab. Region
+-- accessors stay on TrackerData so the UI does not poke SavedVariables
+-- directly. All user-facing strings stay localized in this addon.
 
 local RESET_REGION_ORDER = { "auto", "us", "eu", "asia" }
 local RESET_REGION_LABEL_KEY = {

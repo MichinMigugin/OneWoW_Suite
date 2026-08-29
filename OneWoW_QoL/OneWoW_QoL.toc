@@ -45,7 +45,6 @@ Modules\ModuleRegistry.lua
 # UI - Tabs
 UI\t-features.lua
 UI\t-toggles.lua
-UI\t-settings.lua
 
 # Shared UI helpers (used by tooltip + overlay feature panes)
 UI\AltScopeSection.lua

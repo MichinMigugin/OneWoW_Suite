@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["SETTINGS_RESET_TITLE"]           = "Jour de réinitialisation hebdomadaire",
     ["SETTINGS_RESET_DESC"]            = "Les suivis hebdomadaires se réinitialisent le jour de reset de votre région, détecté automatiquement depuis votre royaume. Si la détection est erronée, forcez votre région ici.",
+    ["SETTINGS_PINNED_SCALE"]          = "Échelle des fenêtres épinglées",
+    ["SETTINGS_PINNED_SCALE_DESC"]     = "Met à l'échelle toutes les listes de suivi épinglées.",
     ["RESET_REGION_AUTO"]              = "Détection automatique (recommandé)",
     ["RESET_REGION_US"]                = "Amérique du Nord — mardi",
     ["RESET_REGION_EU"]                = "Europe — mercredi",

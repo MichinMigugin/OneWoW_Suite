@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["NPC_LABEL_LOCATION"] = "Posizione:",
     ["NPC_ERROR_NAME_REQUIRED"] = "Il nome del PNG è obbligatorio.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Scala delle finestre fissate",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Scala le note e le finestre di zona fissate.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Rilevamento e avvisi",
     ["SETTINGS_ENABLED"] = "Attivo",

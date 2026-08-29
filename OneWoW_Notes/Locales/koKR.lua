@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["NPC_LABEL_LOCATION"] = "위치:",
     ["NPC_ERROR_NAME_REQUIRED"] = "NPC 이름이 필요합니다.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "고정 창 크기",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "고정된 메모와 지역 창의 크기를 조절합니다.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "감지 및 알림",
     ["SETTINGS_ENABLED"] = "켜기",

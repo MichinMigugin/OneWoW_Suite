@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["SETTINGS_RESET_TITLE"]          = "Giorno di reset settimanale",
     ["SETTINGS_RESET_DESC"]           = "I tracker settimanali si reimpostano nel giorno di reset della tua regione, rilevato automaticamente dal tuo reame. Se il rilevamento è errato, forza qui la tua regione.",
+    ["SETTINGS_PINNED_SCALE"]         = "Scala delle finestre fissate",
+    ["SETTINGS_PINNED_SCALE_DESC"]    = "Scala tutte le liste tracker fissate.",
     ["RESET_REGION_AUTO"]             = "Rilevamento automatico (consigliato)",
     ["RESET_REGION_US"]               = "Nord America — martedì",
     ["RESET_REGION_EU"]               = "Europa — mercoledì",

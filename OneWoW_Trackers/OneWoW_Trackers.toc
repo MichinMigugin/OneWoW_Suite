@@ -62,5 +62,6 @@ OneWoW_Trackers.lua
 UI\t-tracker.lua
 UI\ui-tracker-editor.lua
 UI\ui-tracker-pinned.lua
+UI\t-settings.lua
 UI\ui-tracker-map.lua
 UI\ui-tracker-farmvalue.lua

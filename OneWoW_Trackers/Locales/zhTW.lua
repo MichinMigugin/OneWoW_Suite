@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["SETTINGS_RESET_TITLE"]          = "每週重置日",
     ["SETTINGS_RESET_DESC"]           = "每週追蹤器在你所在區域的重置日重置，會依照你的伺服器自動偵測。若偵測有誤，可在此強制指定區域。",
+    ["SETTINGS_PINNED_SCALE"]         = "釘選視窗縮放",
+    ["SETTINGS_PINNED_SCALE_DESC"]    = "縮放所有釘選的追蹤器清單。",
     ["RESET_REGION_AUTO"]             = "自動偵測（建議）",
     ["RESET_REGION_US"]               = "北美 — 週二",
     ["RESET_REGION_EU"]               = "歐洲 — 週三",

@@ -7,8 +7,9 @@ local Location = OneWoW.Location
 ns.TrackerPinned = {}
 local TP = ns.TrackerPinned
 
-local ipairs, format, tinsert, tremove, pairs, math_max, math_abs = ipairs, format, tinsert, tremove, pairs, math.max, math.abs
+local ipairs, format, tinsert, tremove, pairs, math_max, math_min, math_abs = ipairs, format, tinsert, tremove, pairs, math.max, math.min, math.abs
 local GetTime, IsShiftKeyDown = GetTime, IsShiftKeyDown
+local tonumber = tonumber
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -17,6 +18,36 @@ local PERCENT_COORDS = { format = "percent" }
 
 local DOUBLE_CLICK_INTERVAL = 0.4
 local HOVER_HIDE_DELAY      = 0.05
+
+local SCALE_MIN     = 50
+local SCALE_MAX     = 200
+local SCALE_STEP    = 5
+local SCALE_DEFAULT = 100
+local PIN_MIN_W, PIN_MIN_H = 200, 100
+local PIN_MAX_W, PIN_MAX_H = 500, 800
+
+TP.SCALE_MIN  = SCALE_MIN
+TP.SCALE_MAX  = SCALE_MAX
+TP.SCALE_STEP = SCALE_STEP
+
+--- Clamp a pinned-window scale percent to the supported range.
+---@param percent number|nil
+---@return number
+function TP:ClampScalePercent(percent)
+    return math_min(SCALE_MAX, math_max(SCALE_MIN, tonumber(percent) or SCALE_DEFAULT))
+end
+
+local function ScreenSizeInFrameUnits(frame)
+    local scale = frame:GetScale()
+    if scale <= 0 then scale = 1 end
+    return GetScreenWidth() / scale, GetScreenHeight() / scale
+end
+
+local function ApplyPinnedScale(frame)
+    frame:SetScale(TP:ClampScalePercent(ns.db.global.pinnedScale) / 100)
+    local sw, sh = ScreenSizeInFrameUnits(frame)
+    frame:SetResizeBounds(PIN_MIN_W, PIN_MIN_H, math_min(PIN_MAX_W, sw), math_min(PIN_MAX_H, sh))
+end
 
 local sectionPool = {}
 local stepPool = {}
@@ -149,7 +180,7 @@ function TP:Create(listID)
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:SetResizable(true)
-    frame:SetResizeBounds(200, 100, 500, 800)
+    ApplyPinnedScale(frame)
     frame:EnableMouse(true)
 
     if list.pinnedPosition then
@@ -730,6 +761,13 @@ function TP:RefreshAll()
     for _, win in pairs(windows) do
         win:Refresh()
         OneWoW_GUI:ApplyFontToFrame(win)
+    end
+end
+
+--- Apply the saved global scale to every live pinned overlay.
+function TP:ApplyAllScales()
+    for _, win in pairs(windows) do
+        ApplyPinnedScale(win)
     end
 end
 

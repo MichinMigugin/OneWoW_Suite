@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["SETTINGS_RESET_TITLE"]          = "Wöchentlicher Reset-Tag",
     ["SETTINGS_RESET_DESC"]           = "Wöchentliche Tracker setzen am Reset-Tag deiner Region zurück, der automatisch anhand deines Realms erkannt wird. Falls die Erkennung einmal falsch ist, erzwinge deine Region hier.",
+    ["SETTINGS_PINNED_SCALE"]         = "Skalierung angepinnter Fenster",
+    ["SETTINGS_PINNED_SCALE_DESC"]    = "Skaliert alle angepinnten Tracker-Listen.",
     ["RESET_REGION_AUTO"]             = "Automatisch erkennen (empfohlen)",
     ["RESET_REGION_US"]               = "Nordamerika — Dienstag",
     ["RESET_REGION_EU"]               = "Europa — Mittwoch",

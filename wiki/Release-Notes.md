@@ -33,6 +33,9 @@
 #### Collectibles
 - Opening Collectibles stays smooth when you have hundreds of items. Clicking a row no longer rebuilds the whole list.
 
+#### Display
+- Pinned notes and zone windows scale from Notes settings (50% to 200%).
+
 #### OneWay Pins
 - Pins can have an optional description. Hover a pin in the zone list or map legend to see title, description, and coordinates. Pins saved from Catalog Journal, Vendors, or Quests mention Catalog on the tooltip.
 - The pin icon picker includes Blizzard minimap tracking icons (banker, auctioneer, mailbox, innkeeper, flight master, repair, stable master, trainers, food, reagents, and more).
@@ -44,6 +47,9 @@
 ---
 
 ### Trackers
+#### Settings
+- Trackers has a Settings page. Scale all pinned lists (50% to 200%). Weekly Reset Day lives here.
+
 #### Map pins
 - Minimap pins for pinned lists stay on the landmark while you walk.
 
@@ -77,7 +83,12 @@
 
 ---
 
-*No user-facing changes this release for Home, QoL, Shopping List, Direct Deposit, or Mail.*
+### QoL
+- Weekly Reset Day moved to Settings > Trackers.
+
+---
+
+*No user-facing changes this release for Home, Shopping List, Direct Deposit, or Mail.*
 
 ---
 

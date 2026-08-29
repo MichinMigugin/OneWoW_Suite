@@ -86,6 +86,7 @@ Link collectibles into journal notes the same way you link items.
 * Right-click helpers (target info, timestamps, character name)
 * Auto-save as you type
 * Suite themes and all eleven locales via OneWoW
+* **Settings > Notes:** scale for pinned notes and zone windows (50% to 200%)
 
 QoL **Inspect Gear** can save inspect notes into Notes when that module is enabled.
 

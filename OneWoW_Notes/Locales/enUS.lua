@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NPC_LABEL_LOCATION"] = "Location:",
     ["NPC_ERROR_NAME_REQUIRED"] = "NPC name is required.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Pinned window scale",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Scale pinned notes and zone windows.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Detection & Alerts",
     ["SETTINGS_ENABLED"] = "On",

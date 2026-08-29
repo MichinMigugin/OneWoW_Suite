@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["NPC_LABEL_LOCATION"] = "位置：",
     ["NPC_ERROR_NAME_REQUIRED"] = "需要 NPC 名稱。",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "釘選視窗縮放",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "縮放釘選的筆記與區域視窗。",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "偵測與提醒",
     ["SETTINGS_ENABLED"] = "開",

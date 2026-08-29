@@ -166,6 +166,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["SETTINGS_RESET_TITLE"]          = "주간 초기화 요일",
     ["SETTINGS_RESET_DESC"]           = "주간 추적기는 서버에서 자동으로 감지된 지역 초기화 요일에 초기화됩니다. 감지가 잘못된 경우 여기서 지역을 강제로 지정하세요.",
+    ["SETTINGS_PINNED_SCALE"]         = "고정 창 크기",
+    ["SETTINGS_PINNED_SCALE_DESC"]    = "고정된 모든 추적기 목록의 크기를 조절합니다.",
     ["RESET_REGION_AUTO"]             = "자동 감지 (권장)",
     ["RESET_REGION_US"]               = "북미 — 화요일",
     ["RESET_REGION_EU"]               = "유럽 — 수요일",

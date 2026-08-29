@@ -444,6 +444,10 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["NPC_LABEL_LOCATION"] = "Position:",
     ["NPC_ERROR_NAME_REQUIRED"] = "Ein NSC-Name ist erforderlich.",
 
+-- Settings - Display
+    ["SETTINGS_PINNED_SCALE"] = "Skalierung angepinnter Fenster",
+    ["SETTINGS_PINNED_SCALE_DESC"] = "Skaliert angepinnte Notizen und Zonenfenster.",
+
 -- Settings - Detection
     ["SETTINGS_DETECTION"] = "Erkennung & Warnungen",
     ["SETTINGS_ENABLED"] = "An",
