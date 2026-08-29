@@ -97,6 +97,29 @@ local function HideBlizzardButtons(view)
     end
 end
 
+-- Standard suite button chrome (matches CreateFitTextButton): backdrop fill,
+-- themed border, hover/pressed states, muted label when disabled. The magic
+-- button cannot be a CreateFitTextButton (it must stay an
+-- InsecureActionButtonTemplate for the secure click mirror), so it carries
+-- the same chrome by hand.
+local function ApplyMagicChrome(magic, hover)
+    if not magic:IsEnabled() then
+        magic:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        magic:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        magic.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        return
+    end
+    if hover then
+        magic:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        magic:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        magic.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    else
+        magic:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        magic:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        magic.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+end
+
 local function PlaceMagic(magic, view)
     local info = view and view.OrderInfo
     if not info then return end
@@ -194,13 +217,13 @@ function M:EnsureMagicButton()
         end
     end)
 
-    local magic = CreateFrame("Button", MAGIC_NAME, view.OrderInfo, "InsecureActionButtonTemplate")
+    local magic = CreateFrame("Button", MAGIC_NAME, view.OrderInfo,
+        "InsecureActionButtonTemplate, BackdropTemplate")
     PlaceMagic(magic, view)
     magic:RegisterForClicks("LeftButtonUp")
-    local bg = magic:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    magic.bg = bg
+    magic:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
+    -- Blocked-in-combat tooltip must still show while the button is disabled.
+    magic:SetMotionScriptsWhileDisabled(true)
     local label = OneWoW_GUI:CreateFS(magic, 12)
     label:SetPoint("LEFT", magic, "LEFT", 8, 0)
     label:SetPoint("RIGHT", magic, "RIGHT", -8, 0)
@@ -242,6 +265,7 @@ function M:EnsureMagicButton()
     end)
 
     magic:SetScript("OnEnter", function(myself)
+        ApplyMagicChrome(myself, true)
         if Restriction.IsProtectedActionBlocked() then
             GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(SPELL_FAILED_AFFECTING_COMBAT)
@@ -254,7 +278,18 @@ function M:EnsureMagicButton()
             action:GetScript("OnEnter")(action)
         end
     end)
-    magic:SetScript("OnLeave", GameTooltip_Hide)
+    magic:SetScript("OnLeave", function(myself)
+        ApplyMagicChrome(myself, false)
+        GameTooltip_Hide()
+    end)
+    magic:SetScript("OnMouseDown", function(myself)
+        if not myself:IsEnabled() then return end
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+    end)
+    magic:SetScript("OnMouseUp", function(myself)
+        if not myself:IsEnabled() then return end
+        ApplyMagicChrome(myself, myself:IsMouseOver())
+    end)
 
     local concBtn = CreateFrame("Button", CONC_NAME, magic)
     concBtn:SetSize(CONC_SIZE, CONC_SIZE)
@@ -320,8 +355,6 @@ function M:ValidateMagicButton()
 
     local blocked = Restriction.IsProtectedActionBlocked()
     magic:SetEnabled(not blocked and action:IsEnabled())
-    local r, g, b = OneWoW_GUI:GetThemeColor("BTN_NORMAL")
-    magic.bg:SetColorTexture(r, g, b)
     if kind == "start" then
         magic.label:SetText(PROFESSIONS_START_ORDER)
     elseif kind == "complete" then
@@ -329,7 +362,7 @@ function M:ValidateMagicButton()
     else
         magic.label:SetText(action:GetText() or CREATE_PROFESSION)
     end
-    magic.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    ApplyMagicChrome(magic, magic:IsMouseOver())
 
     local conc = GetConcentrateButton(view)
     local needConc = kind == "create" and conc and conc:IsShown()

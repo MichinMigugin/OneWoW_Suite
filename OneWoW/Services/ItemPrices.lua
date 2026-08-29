@@ -233,13 +233,14 @@ function IP:GetTSMUnitPriceForSpecies(speciesID, displayName)
     return self:GetTSMUnitPrice(link)
 end
 
-function IP:GetUnitAHPrice(itemID, itemLink)
-    if not itemID then return nil, nil end
+-- Same TSM / Auctionator / OneWoW-scan branches as GetUnitAHPrice, without
+-- the tooltip Value `showAHValue` gate. Callers that need a number for their
+-- own UI (Crafting Orders profit) pass an explicit source.
+function IP:GetUnitAHPriceFrom(source, itemID, itemLink)
+    source = source or "onewow"
 
-    local v = GetValueCfg()
-    if v.showAHValue == false then return nil, nil end
-
-    if v.ahPriceSource == "tsm" then
+    if source == "tsm" then
+        local v = GetValueCfg()
         local price, srcStr = ResolveTSMPrice(itemLink, v.tsmPriceString)
         if price and price > 0 then
             return price, {
@@ -252,10 +253,15 @@ function IP:GetUnitAHPrice(itemID, itemLink)
         return nil, nil
     end
 
-    if v.ahPriceSource == "auctionator" and C_AddOns.IsAddOnLoaded("Auctionator")
-        and Auctionator and Auctionator.API and Auctionator.API.v1 then
+    if source == "auctionator" then
+        if not (C_AddOns.IsAddOnLoaded("Auctionator")
+            and Auctionator and Auctionator.API and Auctionator.API.v1) then
+            return nil, nil
+        end
+        if not itemID and not itemLink then
+            return nil, nil
+        end
         local api = Auctionator.API.v1
-        local price, ageDays
         local ok, p = pcall(function()
             if itemLink then
                 return api.GetAuctionPriceByItemLink(CALLER_ID, itemLink)
@@ -263,7 +269,7 @@ function IP:GetUnitAHPrice(itemID, itemLink)
             return api.GetAuctionPriceByItemID(CALLER_ID, itemID)
         end)
         if ok and type(p) == "number" and p > 0 then
-            price = p
+            local ageDays
             local okAge, d = pcall(function()
                 if itemLink then
                     return api.GetAuctionAgeByItemLink(CALLER_ID, itemLink)
@@ -273,7 +279,7 @@ function IP:GetUnitAHPrice(itemID, itemLink)
             if okAge and type(d) == "number" then
                 ageDays = d
             end
-            return price, {
+            return p, {
                 source = "auctionator",
                 ageDays = ageDays,
                 timestamp = nil,
@@ -282,6 +288,7 @@ function IP:GetUnitAHPrice(itemID, itemLink)
         return nil, nil
     end
 
+    if not itemID then return nil, nil end
     if OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetPrice then
         local row = OneWoW_AltTracker_Auctions_API.GetPrice(itemID, itemLink)
         if row and row.price and row.price > 0 then
@@ -296,6 +303,22 @@ function IP:GetUnitAHPrice(itemID, itemLink)
     return nil, nil
 end
 
+function IP:GetUnitAHPrice(itemID, itemLink)
+    if not itemID then return nil, nil end
+
+    local v = GetValueCfg()
+    if v.showAHValue == false then return nil, nil end
+
+    local price, meta = self:GetUnitAHPriceFrom(v.ahPriceSource, itemID, itemLink)
+    if price then
+        return price, meta
+    end
+    if v.ahPriceSource == "auctionator" then
+        return self:GetUnitAHPriceFrom("onewow", itemID, itemLink)
+    end
+    return nil, nil
+end
+
 function IP:GetTSMUnitPrice(itemLink)
     local v = GetValueCfg()
     if v.showTSMValue ~= true then return nil, nil end
@@ -305,6 +328,9 @@ end
 OneWoW_ItemPricesAPI = {
     GetUnitAHPrice = function(itemID, itemLink)
         return IP:GetUnitAHPrice(itemID, itemLink)
+    end,
+    GetUnitAHPriceFrom = function(source, itemID, itemLink)
+        return IP:GetUnitAHPriceFrom(source, itemID, itemLink)
     end,
     GetUnitAHPriceForSpecies = function(speciesID, displayName)
         return IP:GetUnitAHPriceForSpecies(speciesID, displayName)

@@ -205,26 +205,7 @@ function NotesPins:CreateNotePin(noteID, note)
     end)
 
     local pinAlpha = note.opacity or 0.9
-
-    if pinAlpha >= 1.0 then
-        pin:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, tileSize = 16, edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }
-        })
-        pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
-    else
-        pin:SetBackdrop({
-            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = true, tileSize = 16, edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }
-        })
-        pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], pinAlpha)
-    end
-
-    pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    PinSupport.ApplyOpacityBackdrop(pin, bgColor, pinAlpha, borderColor)
     pin:SetAlpha(1.0)
     pin.noteID = noteID
     pin.collapsed = false
@@ -775,15 +756,8 @@ function NotesPins:CreateNotePin(noteID, note)
     hoverControlsPanel:SetPoint("TOPLEFT", pin, "BOTTOMLEFT", 0, 0)
     hoverControlsPanel:SetPoint("TOPRIGHT", pin, "BOTTOMRIGHT", 0, 0)
     hoverControlsPanel:SetHeight(72)
-    hoverControlsPanel:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-    })
     local listItemColor = colorConfig.listItem
-    hoverControlsPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], pinAlpha)
-    hoverControlsPanel:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    PinSupport.ApplyOpacityBackdrop(hoverControlsPanel, listItemColor, pinAlpha, borderColor)
     hoverControlsPanel:SetFrameLevel(pin:GetFrameLevel() + 10)
     hoverControlsPanel:Hide()
     pin.hoverControlsPanel = hoverControlsPanel
@@ -795,25 +769,8 @@ function NotesPins:CreateNotePin(noteID, note)
         currentVal = pinAlpha,
         onChange = function(val)
             note.opacity = val
-            if val >= 1.0 then
-                pin:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8X8",
-                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                    tile = false, tileSize = 16, edgeSize = 16,
-                    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-                })
-                pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
-            else
-                pin:SetBackdrop({
-                    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                    tile = true, tileSize = 16, edgeSize = 16,
-                    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-                })
-                pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], val)
-            end
-            pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
-            hoverControlsPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], val)
+            PinSupport.ApplyOpacityBackdrop(pin, bgColor, val, borderColor)
+            PinSupport.ApplyOpacityBackdrop(hoverControlsPanel, listItemColor, val, borderColor)
         end,
     })
     pin.alphaSlider = alphaSlider
@@ -1050,8 +1007,10 @@ function NotesPins:RefreshNotePinColors(noteID)
     local borderColor = colorConfig.border
     local pinAlpha = note.opacity or 0.9
 
-    pinFrame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], pinAlpha)
-    pinFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    PinSupport.ApplyOpacityBackdrop(pinFrame, bgColor, pinAlpha, borderColor)
+    if pinFrame.hoverControlsPanel and colorConfig.listItem then
+        PinSupport.ApplyOpacityBackdrop(pinFrame.hoverControlsPanel, colorConfig.listItem, pinAlpha, borderColor)
+    end
 
     if pinFrame.titleBar then
         local titleColor = colorConfig.titleBar
@@ -1110,15 +1069,11 @@ function NotesPins:RefreshSyncPins()
                 local borderColor = colorConfig.border
                 local titleBarColor = colorConfig.titleBar
 
-                if pinFrame:GetBackdropColor() then
-                    local opacity = note.opacity or 0.9
-                    if opacity >= 1.0 then
-                        pinFrame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
-                    else
-                        pinFrame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], opacity)
-                    end
+                local opacity = note.opacity or 0.9
+                PinSupport.ApplyOpacityBackdrop(pinFrame, bgColor, opacity, borderColor)
+                if pinFrame.hoverControlsPanel and colorConfig.listItem then
+                    PinSupport.ApplyOpacityBackdrop(pinFrame.hoverControlsPanel, colorConfig.listItem, opacity, borderColor)
                 end
-                pinFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
 
                 if pinFrame.titleBar then
                     pinFrame.titleBar:SetBackdropColor(titleBarColor[1], titleBarColor[2], titleBarColor[3], 0.8)

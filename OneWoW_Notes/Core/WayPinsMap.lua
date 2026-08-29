@@ -8,7 +8,7 @@ local Visual = ns.WayPinsVisual
 local ipairs, wipe, tinsert = ipairs, wipe, tinsert
 local abs, cos, sin, sqrt = math.abs, math.cos, math.sin, math.sqrt
 local C_Map, C_Timer, C_Navigation, C_Minimap = C_Map, C_Timer, C_Navigation, C_Minimap
-local GetCVar, GetPlayerFacing = GetCVar, GetPlayerFacing
+local GetCVar, GetPlayerFacing, IsControlKeyDown = GetCVar, GetPlayerFacing, IsControlKeyDown
 local MenuUtil, GameTooltip = MenuUtil, GameTooltip
 local CreateVector2D = CreateVector2D
 local GetCursorPosition, UIParent = GetCursorPosition, UIParent
@@ -298,7 +298,35 @@ function WayPinsMap:ShowOnMap(pin)
     self:TrackPin(pin)
 end
 
+function WayPinsMap:AddHere()
+    if not Visual.Enabled() then return end
+    local mapID, x, y = Location.GetPlayerLocation()
+    if not mapID or not x then
+        return
+    end
+    ns.UI.OpenWayPinDialog({
+        mapID  = mapID,
+        x      = x,
+        y      = y,
+        source = "manual",
+    })
+end
+
+function WayPinsMap:ShowAddMenu(owner)
+    if not Visual.Enabled() then return end
+    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+        rootDescription:CreateTitle(L["TAB_WAYPINS"])
+        rootDescription:CreateButton(L["WAYPINS_ADD_HERE"], function()
+            WayPinsMap:AddHere()
+        end)
+        rootDescription:CreateButton(L["WAYPINS_FIND_LOCATION"], function()
+            ns.UI.OpenWayPinFindDialog()
+        end)
+    end)
+end
+
 function WayPinsMap:OpenPinTab(pinID)
+    if not Visual.Enabled() then return end
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "waypins")
     if pinID and ns.UI.SelectWayPin then
@@ -634,6 +662,7 @@ local function EnsurePlaceChrome()
 end
 
 local function StartPlaceMode()
+    if not Visual.Enabled() then return end
     if not WorldMapFrame or not WorldMapFrame:IsShown() then return end
     EnsurePlaceChrome()
     local sc = WorldMapFrame.ScrollContainer
@@ -683,25 +712,44 @@ local function MapButtonMenu(owner)
             end)
         end
         rootDescription:CreateDivider()
+        rootDescription:CreateCheckbox(L["WAYPINS_MAP_CLICK_MENU"], function()
+            return Visual.MapClickMenu()
+        end, function()
+            ns.db.global.waypinMapClickEnabled = not Visual.MapClickMenu()
+            if ns.UI.SyncWayPinSettings then
+                ns.UI.SyncWayPinSettings()
+            end
+        end)
+        rootDescription:CreateTitle(L["WAYPINS_MAP_CLICK"])
+        local function MapClickLabel(mode)
+            if mode == "right" then return L["WAYPINS_MAP_CLICK_RIGHT"] end
+            return L["WAYPINS_MAP_CLICK_CTRL"]
+        end
+        for _, mode in ipairs({ "ctrlRight", "right" }) do
+            rootDescription:CreateRadio(MapClickLabel(mode), function()
+                return Visual.MapClick() == mode
+            end, function()
+                ns.db.global.waypinMapClick = mode
+                if ns.UI.SyncWaypinMapClick then
+                    ns.UI.SyncWaypinMapClick()
+                end
+            end)
+        end
+        rootDescription:CreateDivider()
         rootDescription:CreateButton(L["WAYPINS_ADD_PIN"], function()
             C_Timer.After(0, StartPlaceMode)
         end)
         rootDescription:CreateButton(L["WAYPINS_ADD_HERE"], function()
-            local mapID, x, y = Location.GetPlayerLocation()
-            if mapID and x then
-                ns.UI.OpenWayPinDialog({
-                    mapID  = mapID,
-                    x      = x,
-                    y      = y,
-                    source = "manual",
-                })
-            end
+            WayPinsMap:AddHere()
         end)
         rootDescription:CreateButton(L["WAYPINS_FIND_LOCATION"], function()
             ns.UI.OpenWayPinFindDialog()
         end)
         rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
             WayPinsMap:OpenPinTab()
+        end)
+        rootDescription:CreateButton(SETTINGS, function()
+            ns.UI.OpenWayPinSettings()
         end)
     end)
 end
@@ -806,6 +854,44 @@ local function EnsureMapButton()
         MapButtonMenu(myself)
     end)
     AnchorMapButton()
+    if not Visual.Enabled() then
+        mapButton:Hide()
+    end
+end
+
+local function MapClickAdds()
+    if not Visual.Enabled() or not Visual.MapClickMenu() then return false end
+    if Visual.MapClick() == "right" then return true end
+    return IsControlKeyDown()
+end
+
+function WayPinsMap:ApplyEnabled()
+    if not Visual.Enabled() then
+        StopPlaceMode()
+    end
+    if mapButton then
+        if Visual.Enabled() then
+            mapButton:Show()
+        else
+            mapButton:Hide()
+        end
+    end
+    self:Refresh()
+    if ns.WayPinsMapPanel then
+        ns.WayPinsMapPanel:Sync()
+    end
+    if ns.WayPinsCompanion then
+        ns.WayPinsCompanion:Sync()
+    end
+    if ns.ZonePins and ns.ZonePins.ApplyWayPinsEnabled then
+        ns.ZonePins:ApplyWayPinsEnabled()
+    end
+    if ns.UI.ApplyNpcWaypinButton then
+        ns.UI.ApplyNpcWaypinButton()
+    end
+    if OneWoW.UI and OneWoW.UI.RefreshSubNav then
+        OneWoW.UI:RefreshSubNav()
+    end
 end
 
 local function WireWorldMap()
@@ -823,6 +909,13 @@ local function WireWorldMap()
     WorldMapFrame:HookScript("OnShow", function()
         C_Timer.After(0, AnchorMapButton)
         PaintMapButtonIcon()
+        if mapButton then
+            if Visual.Enabled() then
+                mapButton:Show()
+            else
+                mapButton:Hide()
+            end
+        end
         WayPinsMap:RefreshWorldMap()
         if ns.WayPinsCompanion then
             ns.WayPinsCompanion:PauseForMap()
@@ -858,11 +951,13 @@ local function WireWorldMap()
         sc:HookScript("OnMouseDown", function(myself, button)
             if placingPin then return end
             if button ~= "RightButton" then return end
+            if not MapClickAdds() then return end
             downX, downY = myself:GetNormalizedCursorPosition()
         end)
         sc:HookScript("OnMouseUp", function(myself, button)
             if placingPin then return end
             if button ~= "RightButton" then return end
+            if not MapClickAdds() then return end
             local x, y = myself:GetNormalizedCursorPosition()
             if not x or not y then return end
             if downX and (abs(x - downX) > 0.008 or abs(y - downY) > 0.008) then

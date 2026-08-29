@@ -56,6 +56,27 @@ FirstRun.CATALOG = {
         summaryKey  = "WIZARD_FEATURE_NOTES_DESC",
         group       = "feature",
         datastores  = {},
+        -- In-unit toggles (not TOC load units). Same sub-row chrome as stores;
+        -- Apply calls setEnabled instead of SetFeatureOptOut / EnsureLoaded.
+        inUnitFeatures = {
+            {
+                id         = "waypins",
+                labelKey   = "WIZARD_FEATURE_WAYPINS",
+                summaryKey = "WIZARD_FEATURE_WAYPINS_DESC",
+                iconKey    = "OneWoW_Notes_WayPins",
+                isEnabled  = function()
+                    if OneWoW_Notes_API then
+                        return OneWoW_Notes_API.IsWayPinsEnabled()
+                    end
+                    return true
+                end,
+                setEnabled = function(enabled)
+                    if OneWoW_Notes_API then
+                        OneWoW_Notes_API.SetWayPinsEnabled(enabled)
+                    end
+                end,
+            },
+        },
     },
     {
         addonName   = "OneWoW_Trackers",
@@ -145,6 +166,35 @@ local STORE_DESC_KEYS = {
     OneWoW_CatalogData_Vendors     = "WIZARD_CAT_DATA_VENDORS_DESC",
     OneWoW_CatalogData_Tradeskills = "WIZARD_CAT_DATA_TRADESKILLS_DESC",
 }
+
+local function ForEachInUnitFeature(fn)
+    for _, entry in ipairs(FirstRun.CATALOG) do
+        local feats = entry.inUnitFeatures
+        if feats then
+            for _, feat in ipairs(feats) do
+                fn(entry, feat)
+            end
+        end
+    end
+end
+
+function FirstRun:GetInUnitFeatureSelections()
+    local selections = {}
+    ForEachInUnitFeature(function(_, feat)
+        selections[feat.id] = feat.isEnabled() and true or false
+    end)
+    return selections
+end
+
+function FirstRun:ApplyInUnitFeatures(featureSelections)
+    if not featureSelections then return end
+    ForEachInUnitFeature(function(_, feat)
+        local want = featureSelections[feat.id]
+        if want ~= nil then
+            feat.setEnabled(want and true or false)
+        end
+    end)
+end
 
 local STORE_AFFECTED_KEYS = {
     OneWoW_CatalogData_Journal = {
@@ -335,7 +385,7 @@ end
 -- (the only way to truly unload, or to re-enable a Blizzard-disabled unit) and
 -- clears the soft opt-out (Blizzard becomes authoritative for these), then prompts
 -- a reload. Returns true when a reload was prompted.
-function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
+function FirstRun:Apply(selections, perCharacter, hard, storeSelections, featureSelections)
     storeSelections = storeSelections or {}
 
     local datastoreState = ComputeDatastoreState(selections, storeSelections)
@@ -363,6 +413,15 @@ function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
             hideOnEscape = true,
             preferredIndex = 3,
         }
+        -- In-unit setters need the parent loaded so they can write SavedVariables
+        -- before the reload (hard Apply does not otherwise BringUp opted-in units).
+        for _, entry in ipairs(FirstRun.CATALOG) do
+            if entry.inUnitFeatures and selections[entry.addonName]
+                and not C_AddOns.IsAddOnLoaded(entry.addonName) then
+                LoadFeatureNow(entry.addonName)
+            end
+        end
+        FirstRun:ApplyInUnitFeatures(featureSelections)
         StaticPopup_Show("ONEWOW_MANAGE_FEATURES_RELOAD")
         return true
     end
@@ -391,6 +450,7 @@ function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
             ns:EnsureLoaded(ds)
         end
     end
+    FirstRun:ApplyInUnitFeatures(featureSelections)
     return false
 end
 
@@ -503,9 +563,17 @@ function FirstRun:BuildPanel(parent, opts)
         end
     end
 
+    local featureSelections = FirstRun:GetInUnitFeatureSelections()
+    local originalFeatureSelections = {}
+    ForEachInUnitFeature(function(_, feat)
+        originalFeatureSelections[feat.id] = featureSelections[feat.id] and true or false
+    end)
+
     local cards = {}
     local storeCards = {}
     local storeMeta = {}
+    local featureCards = {}
+    local featureMeta = {}
 
     local function CountSelected()
         local count = 0
@@ -548,7 +616,15 @@ function FirstRun:BuildPanel(parent, opts)
                 end
             end
         end
-        return false
+        local featureChanged = false
+        ForEachInUnitFeature(function(_, feat)
+            local cur = featureSelections[feat.id] and true or false
+            local orig = originalFeatureSelections[feat.id] and true or false
+            if cur ~= orig then
+                featureChanged = true
+            end
+        end)
+        return featureChanged
     end
 
     local hero = OneWoW_GUI:CreateHeroPanel(content, {
@@ -747,7 +823,7 @@ function FirstRun:BuildPanel(parent, opts)
     local groupOrder  = { "feature", "standalone", "utility" }
 
     -- Forward-declared; closures below capture these.
-    local RefreshRow, RefreshAllRows, RefreshStoreRow, RefreshStoreRowsForParent, RefreshAllStoreRows, RefreshActions
+    local RefreshRow, RefreshAllRows, RefreshStoreRow, RefreshStoreRowsForParent, RefreshAllStoreRows, RefreshFeatureRow, RefreshFeatureRowsForParent, RefreshAllFeatureRows, RefreshActions
 
     local function GetCatalogLabel(addonName)
         for _, entry in ipairs(FirstRun.CATALOG) do
@@ -838,9 +914,17 @@ function FirstRun:BuildPanel(parent, opts)
                 end
             end
         end
+        ForEachInUnitFeature(function(entry, feat)
+            if preset == "recommended" then
+                featureSelections[feat.id] = selections[entry.addonName] and true or false
+            elseif preset == "minimal" then
+                featureSelections[feat.id] = false
+            end
+        end)
         RefreshSummary()
         RefreshAllRows()
         RefreshAllStoreRows()
+        RefreshAllFeatureRows()
         RefreshActions()
     end
 
@@ -901,6 +985,7 @@ function FirstRun:BuildPanel(parent, opts)
                         presetButtons.SetActiveByValue("manual")
                         RefreshRow(addon)
                         RefreshAllStoreRows()
+                        RefreshFeatureRowsForParent(addon)
                         RefreshActions()
                         RefreshSummary()
                     end,
@@ -954,6 +1039,7 @@ function FirstRun:BuildPanel(parent, opts)
                     RefreshRow(addon)
                     RefreshStoreRowsForParent(addon)
                     RefreshAllStoreRows()
+                    RefreshFeatureRowsForParent(addon)
                     RefreshActions()
                     RefreshSummary()
                 end)
@@ -1005,6 +1091,35 @@ function FirstRun:BuildPanel(parent, opts)
                         storeMeta[store] = { parent = addon, optional = isOptional }
                         table.insert(listItems, sub)
                         if si < #manifest.stores then
+                            subRowTightAfter[#listItems] = true
+                        end
+                    end
+                end
+
+                if entry.inUnitFeatures then
+                    for fi, feat in ipairs(entry.inUnitFeatures) do
+                        local iconInfo = ns:GetFeatureIcon(feat.iconKey) or {}
+                        local sub = OneWoW_GUI:CreateSelectableSubCard(listContainer, {
+                            title = L[feat.labelKey],
+                            summary = L[feat.summaryKey],
+                            iconTexture = iconInfo.texture,
+                            iconAtlas = iconInfo.atlas,
+                            iconTexCoords = iconInfo.texCoords,
+                            checked = featureSelections[feat.id] and true or false,
+                            interactive = true,
+                            onToggle = function(_, checked)
+                                featureSelections[feat.id] = checked and true or false
+                                presetButtons.SetActiveByValue("manual")
+                                RefreshFeatureRow(feat.id)
+                                RefreshActions()
+                                RefreshSummary()
+                            end,
+                        })
+                        sub:ClearAllPoints()
+                        featureCards[feat.id] = sub
+                        featureMeta[feat.id] = { parent = addon, feat = feat }
+                        table.insert(listItems, sub)
+                        if fi < #entry.inUnitFeatures then
                             subRowTightAfter[#listItems] = true
                         end
                     end
@@ -1137,6 +1252,30 @@ function FirstRun:BuildPanel(parent, opts)
         end
     end
 
+    RefreshFeatureRow = function(featureId)
+        local sub = featureCards[featureId]
+        local meta = featureMeta[featureId]
+        if not sub or not meta then return end
+        local parentWanted = selections[meta.parent] and true or false
+        sub:SetChecked(featureSelections[featureId] and true or false, true)
+        sub:SetMuted(not parentWanted)
+        sub:SetInteractive(parentWanted)
+    end
+
+    RefreshFeatureRowsForParent = function(parentAddon)
+        ForEachInUnitFeature(function(entry, feat)
+            if entry.addonName == parentAddon then
+                RefreshFeatureRow(feat.id)
+            end
+        end)
+    end
+
+    RefreshAllFeatureRows = function()
+        for featureId in pairs(featureCards) do
+            RefreshFeatureRow(featureId)
+        end
+    end
+
     -- Commit buttons: soft Apply for opt-out toggles; Apply & Reload when a pending
     -- change needs a Blizzard flag write (hard disable or re-enable). Soft re-enable
     -- alone greys out Apply & Reload; Blizzard-disabled re-enable greys out Apply.
@@ -1226,6 +1365,9 @@ function FirstRun:BuildPanel(parent, opts)
         for store, wanted in pairs(storeSelections) do
             originalStoreSelections[store] = wanted and true or false
         end
+        ForEachInUnitFeature(function(_, feat)
+            originalFeatureSelections[feat.id] = featureSelections[feat.id] and true or false
+        end)
     end
 
     -- Re-read the live enable state for `pc` into the staged selections and push
@@ -1248,9 +1390,14 @@ function FirstRun:BuildPanel(parent, opts)
                 storeSelections[store] = false
             end
         end
+        local freshFeatures = FirstRun:GetInUnitFeatureSelections()
+        ForEachInUnitFeature(function(_, feat)
+            featureSelections[feat.id] = freshFeatures[feat.id] and true or false
+        end)
         presetButtons.SetActiveByValue("manual")
         RefreshAllRows()
         RefreshAllStoreRows()
+        RefreshAllFeatureRows()
     end
 
     -- Commit a scope change. keepChanges = carry the staged checkbox intent into
@@ -1266,6 +1413,7 @@ function FirstRun:BuildPanel(parent, opts)
         end
         scopeDDText:SetText(ScopeText(newPC))
         RefreshAllRows()
+        RefreshAllFeatureRows()
         RefreshActions()
         RefreshSummary()
     end
@@ -1312,21 +1460,23 @@ function FirstRun:BuildPanel(parent, opts)
 
     softApplyBtn:SetScript("OnClick", function()
         if not softApplyBtn._enabled then return end
-        FirstRun:Apply(selections, perCharacter, false, storeSelections)
+        FirstRun:Apply(selections, perCharacter, false, storeSelections, featureSelections)
         RebaseOriginal()
         RefreshAllRows()
         RefreshAllStoreRows()
+        RefreshAllFeatureRows()
         RefreshActions()
         RefreshSummary()
     end)
 
     hardApplyBtn:SetScript("OnClick", function()
         if not hardApplyBtn._enabled then return end
-        FirstRun:Apply(selections, perCharacter, true, storeSelections)
+        FirstRun:Apply(selections, perCharacter, true, storeSelections, featureSelections)
     end)
 
     RefreshAllRows()
     RefreshAllStoreRows()
+    RefreshAllFeatureRows()
     RefreshActions()
     RefreshSummary()
 end

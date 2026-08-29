@@ -129,8 +129,12 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         end
         PinSupport.CachePinSize(myself)
         local point, _, relativePoint, x, y = myself:GetPoint()
+        local w = PinSupport.GetPinWidth(myself, 300)
+        if myself._widthBeforeHideNote then
+            w = myself._widthBeforeHideNote
+        end
         ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y,
-            PinSupport.GetPinWidth(myself, 300), PinSupport.GetPinHeight(myself, 400))
+            w, PinSupport.GetPinHeight(myself, 400))
     end
 
     local pin = CreateFrame("Frame", "OneWoW_ZonePin_" .. safeName, UIParent, "BackdropTemplate")
@@ -151,6 +155,9 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         myself:StopMovingOrSizing()
         SaveZonePinGeometry(myself)
     end)
+    pin.SaveGeometry = function(myself)
+        SaveZonePinGeometry(myself)
+    end
 
     pin:SetScript("OnMouseDown", function(myself)
         if myself.windowInfo and ns.BringWindowToFront then
@@ -159,25 +166,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     end)
 
     local pinAlpha = zoneData.opacity or 0.9
-
-    if pinAlpha >= 1.0 then
-        pin:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, tileSize = 16, edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }
-        })
-        pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
-    else
-        pin:SetBackdrop({
-            bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = true, tileSize = 16, edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }
-        })
-        pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], pinAlpha)
-    end
-    pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    PinSupport.ApplyOpacityBackdrop(pin, bgColor, pinAlpha, borderColor)
     pin:SetAlpha(1.0)
     pin.zoneName = zoneName
     pin.noteId = zoneName
@@ -326,6 +315,18 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
 
         myself:UpdateTitleHeight()
 
+        if zd.hideZoneNote == true and zd.showWayPins ~= false then
+            if PinSupport.IsLayoutBlocked() then
+                PinSupport.RegisterDeferredPin(myself)
+            else
+                PinSupport.CachePinSize(myself)
+            end
+            if ns.WayPinsCompanion then
+                ns.WayPinsCompanion:ApplyClusterLayout(myself)
+            end
+            return
+        end
+
         local todoCount = #(zd.todos or {})
         local taskHeight = 0
         if todoCount > 0 then
@@ -399,6 +400,10 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             PinSupport.RegisterDeferredPin(myself)
         else
             PinSupport.CachePinSize(myself)
+        end
+
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:ApplyClusterLayout(myself)
         end
     end
 
@@ -495,18 +500,23 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     hoverPanel:SetPoint("TOPLEFT",  pin, "BOTTOMLEFT",  0, 0)
     hoverPanel:SetPoint("TOPRIGHT", pin, "BOTTOMRIGHT", 0, 0)
     hoverPanel:SetHeight(50)
-    hoverPanel:SetBackdrop({
-        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-    })
     local listItemColor = colorConfig.listItem
-    hoverPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], pinAlpha)
-    hoverPanel:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    PinSupport.ApplyOpacityBackdrop(hoverPanel, listItemColor, pinAlpha, borderColor)
     hoverPanel:SetFrameLevel(pin:GetFrameLevel() + 10)
     hoverPanel:Hide()
     pin.hoverPanel = hoverPanel
+
+    local function ApplyAllOpacity(val)
+        PinSupport.ApplyOpacityBackdrop(pin, bgColor, val, borderColor)
+        PinSupport.ApplyOpacityBackdrop(hoverPanel, listItemColor, val, borderColor)
+        local titleBarColor = colorConfig.titleBar
+        if pin.titleBar then
+            pin.titleBar:SetBackdropColor(titleBarColor[1], titleBarColor[2], titleBarColor[3], 0.8)
+        end
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:PaintOpacity(bgColor, val, borderColor, titleBarColor)
+        end
+    end
 
     local alphaSlider = OneWoW_GUI:CreateSlider(hoverPanel, {
         minVal = 0.1,
@@ -515,25 +525,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         currentVal = pinAlpha,
         onChange = function(val)
             zoneData.opacity = val
-            if val >= 1.0 then
-                pin:SetBackdrop({
-                    bgFile   = "Interface\\Buttons\\WHITE8X8",
-                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                    tile = false, tileSize = 16, edgeSize = 16,
-                    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-                })
-                pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
-            else
-                pin:SetBackdrop({
-                    bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                    tile = true, tileSize = 16, edgeSize = 16,
-                    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-                })
-                pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], val)
-            end
-            pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
-            hoverPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], val)
+            ApplyAllOpacity(val)
         end,
     })
     pin.alphaSlider = alphaSlider
@@ -567,30 +559,82 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             if ns.WayPinsCompanion then
                 ns.WayPinsCompanion:Sync()
             end
+            if pin.RefreshLayout then
+                pin:RefreshLayout()
+            end
         end,
     })
     pin.showWayPinsCB = showWayPinsCB
 
+    local hideNoteCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
+        label = L["WAYPINS_HIDE_NOTE"],
+        checked = zoneData.hideZoneNote == true,
+        onClick = function(myself)
+            zoneData.hideZoneNote = myself:GetChecked() and true or false
+            ns.Zones:SaveZone(zoneName, zoneData)
+            if pin.RefreshLayout then
+                pin:RefreshLayout()
+            elseif ns.WayPinsCompanion then
+                ns.WayPinsCompanion:ApplyClusterLayout(pin)
+            end
+        end,
+    })
+    pin.hideNoteCB = hideNoteCB
+    if not ns.WayPinsVisual.Enabled() then
+        showWayPinsCB:Hide()
+        hideNoteCB:Hide()
+    end
+
+    pin.ApplyClusterLayout = function(myself)
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:ApplyClusterLayout(myself)
+        end
+    end
+
     local function HideHoverControls()
         hoverPanel:Hide()
     end
+    local function OverCluster()
+        if pin:IsMouseOver() or hoverPanel:IsMouseOver() then
+            return true
+        end
+        if ns.WayPinsCompanion and ns.WayPinsCompanion:IsMouseOver() then
+            return true
+        end
+        return false
+    end
     local function ShowHoverControls()
-        PinSupport.LayoutHoverPanel(hoverPanel, {
+        if ns.WayPinsCompanion then
+            ns.WayPinsCompanion:ApplyClusterLayout(pin)
+        end
+        local items = {
             { control = alphaSlider, fill = true },
             { control = lockMoveCB },
-            { control = showWayPinsCB },
-        })
+        }
+        if ns.WayPinsVisual.Enabled() then
+            tinsert(items, { control = showWayPinsCB })
+            tinsert(items, { control = hideNoteCB })
+        end
+        PinSupport.LayoutHoverPanel(hoverPanel, items)
         hoverPanel:Show()
     end
+    local function HideHoverControlsIfAway()
+        C_Timer.After(0.05, function()
+            if not OverCluster() then
+                HideHoverControls()
+            end
+        end)
+    end
+    pin.ShowHoverControls = ShowHoverControls
+    pin.HideHoverControlsIfAway = HideHoverControlsIfAway
+
+    hoverPanel:EnableMouse(true)
+    hoverPanel:SetScript("OnEnter", ShowHoverControls)
+    hoverPanel:SetScript("OnLeave", HideHoverControlsIfAway)
 
     HideHoverControls()
     pin:SetScript("OnEnter", ShowHoverControls)
-    pin:SetScript("OnLeave", function()
-        C_Timer.After(0.05, function()
-            local overAny = pin:IsMouseOver() or hoverPanel:IsMouseOver()
-            if not overAny then HideHoverControls() end
-        end)
-    end)
+    pin:SetScript("OnLeave", HideHoverControlsIfAway)
 
     -- Restore saved position
     local savedPos = self:GetPinPosition(zoneName)
@@ -668,13 +712,19 @@ function ZonePins:RefreshZonePinColors(zoneName)
     local bgColor     = colorConfig.background
     local borderColor = colorConfig.border
     local pinAlpha    = zoneData.opacity or 0.9
+    local listItemColor = colorConfig.listItem
 
-    pinFrame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], pinAlpha)
-    pinFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    PinSupport.ApplyOpacityBackdrop(pinFrame, bgColor, pinAlpha, borderColor)
 
     if pinFrame.titleBar then
         local titleColor = colorConfig.titleBar
         pinFrame.titleBar:SetBackdropColor(titleColor[1], titleColor[2], titleColor[3], 0.8)
+    end
+    if pinFrame.hoverPanel then
+        PinSupport.ApplyOpacityBackdrop(pinFrame.hoverPanel, listItemColor, pinAlpha, borderColor)
+    end
+    if ns.WayPinsCompanion then
+        ns.WayPinsCompanion:PaintOpacity(bgColor, pinAlpha, borderColor, colorConfig.titleBar)
     end
 
     local noteFontColor = zoneData.fontColor or "match"
@@ -726,14 +776,16 @@ function ZonePins:RefreshSyncPins()
                 local borderColor = colorConfig.border
                 local titleBarColor = colorConfig.titleBar
                 local opacity = zoneData.opacity or 0.9
-
-                if pinFrame:GetBackdropColor() then
-                    pinFrame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], opacity)
-                end
-                pinFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+                PinSupport.ApplyOpacityBackdrop(pinFrame, bgColor, opacity, borderColor)
 
                 if pinFrame.titleBar then
                     pinFrame.titleBar:SetBackdropColor(titleBarColor[1], titleBarColor[2], titleBarColor[3], 0.8)
+                end
+                if pinFrame.hoverPanel then
+                    PinSupport.ApplyOpacityBackdrop(pinFrame.hoverPanel, colorConfig.listItem, opacity, borderColor)
+                end
+                if ns.WayPinsCompanion then
+                    ns.WayPinsCompanion:PaintOpacity(bgColor, opacity, borderColor, titleBarColor)
                 end
 
                 if pinFrame.titleText then
@@ -742,6 +794,30 @@ function ZonePins:RefreshSyncPins()
                     pinFrame.titleText:SetTextColor(titleColor[1], titleColor[2], titleColor[3], 1)
                 end
             end
+        end
+    end
+end
+
+function ZonePins:ApplyWayPinsEnabled()
+    local on = ns.WayPinsVisual.Enabled()
+    if not ns.zonePins then return end
+    for _, pin in pairs(ns.zonePins) do
+        if pin.showWayPinsCB then
+            if on then
+                pin.showWayPinsCB:Show()
+            else
+                pin.showWayPinsCB:Hide()
+            end
+        end
+        if pin.hideNoteCB then
+            if on then
+                pin.hideNoteCB:Show()
+            else
+                pin.hideNoteCB:Hide()
+            end
+        end
+        if pin.RefreshLayout then
+            pin:RefreshLayout()
         end
     end
 end

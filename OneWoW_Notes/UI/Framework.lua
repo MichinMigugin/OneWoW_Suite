@@ -3,6 +3,29 @@ local _, ns = ...
 ns.UI = ns.UI or {}
 
 local OneWoW_GUI = OneWoW_GUI
+
+local mapClickDDs = {}
+
+function ns.UI.BindWaypinMapClickDropdown(dd)
+    local L = ns.L
+    dd:SetOptions({
+        { text = L["WAYPINS_MAP_CLICK_CTRL"], value = "ctrlRight" },
+        { text = L["WAYPINS_MAP_CLICK_RIGHT"], value = "right" },
+    })
+    dd:SetSelected(ns.WayPinsVisual.MapClick())
+    dd.onSelect = function(value)
+        ns.db.global.waypinMapClick = value
+        ns.UI.SyncWaypinMapClick()
+    end
+    tinsert(mapClickDDs, dd)
+end
+
+function ns.UI.SyncWaypinMapClick()
+    local mode = ns.WayPinsVisual.MapClick()
+    for _, dd in ipairs(mapClickDDs) do
+        dd:SetSelected(mode)
+    end
+end
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
 

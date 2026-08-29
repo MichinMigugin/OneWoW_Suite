@@ -850,7 +850,7 @@ local function ShowVendorDetail(panels, vendor)
                 })
                 pinLink:SetPoint("LEFT", infoLine, "RIGHT", 8, 0)
                 tinsert(detailElements, pinLink)
-                if capturedX and capturedX > 0 then
+                if capturedX and capturedX > 0 and ns.Navigation:IsWayPinsEnabled() then
                     local saveLink = OneWoW_GUI:CreateTextLink(parent, {
                         text = L["VENDORS_SAVE_WAYPIN"],
                         fontSize = 11,
@@ -883,7 +883,7 @@ local function ShowVendorDetail(panels, vendor)
                 })
                 pinLink:SetPoint("LEFT", locLine, "RIGHT", 8, 0)
                 tinsert(detailElements, pinLink)
-                if capturedX and capturedX > 0 then
+                if capturedX and capturedX > 0 and ns.Navigation:IsWayPinsEnabled() then
                     local saveLink = OneWoW_GUI:CreateTextLink(parent, {
                         text = L["VENDORS_SAVE_WAYPIN"],
                         fontSize = 11,

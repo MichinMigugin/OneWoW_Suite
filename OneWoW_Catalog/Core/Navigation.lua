@@ -249,6 +249,11 @@ function Navigation:SaveInstanceEntranceWayPin(instData)
     return self:SaveOneWayPin(instData.name, mapID, x, y, "journal", instData.instanceID)
 end
 
+function Navigation:IsWayPinsEnabled()
+    if not OneWoW_Notes_API then return true end
+    return OneWoW_Notes_API.IsWayPinsEnabled()
+end
+
 --- Persist a landmark in Notes OneWay Pins. Coordinates may be 0-1 or 0-100.
 ---@param title string
 ---@param mapID number
@@ -258,6 +263,9 @@ end
 ---@param sourceKey any
 ---@return string|nil pinID
 function Navigation:SaveOneWayPin(title, mapID, x, y, source, sourceKey)
+    if OneWoW_Notes_API and not OneWoW_Notes_API.IsWayPinsEnabled() then
+        return nil
+    end
     OneWoW:BringUp("OneWoW_Notes")
     if not OneWoW_Notes_API or not OneWoW_Notes_API.AddWayPin then
         return nil

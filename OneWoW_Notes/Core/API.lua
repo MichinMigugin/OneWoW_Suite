@@ -416,10 +416,27 @@ end
 -- OneWay Pins
 -- ---------------------------------------------------------------------------
 
+function OneWoW_Notes_API.IsWayPinsEnabled()
+    return ns.WayPinsVisual.Enabled()
+end
+
+--- Turns OneWay Pins on or off. Saved pins stay.
+---@param enabled boolean
+function OneWoW_Notes_API.SetWayPinsEnabled(enabled)
+    ns.db.global.waypinEnabled = enabled and true or false
+    if ns.WayPinsMap then
+        ns.WayPinsMap:ApplyEnabled()
+    end
+    if ns.UI.SyncWayPinSettings then
+        ns.UI.SyncWayPinSettings()
+    end
+end
+
 --- Adds a OneWay Pin. Returns the opaque pin id.
 ---@param fields table
 ---@return string|nil pinID
 function OneWoW_Notes_API.AddWayPin(fields)
+    if not ns.WayPinsVisual.Enabled() then return nil end
     if not ns.WayPins then return nil end
     return ns.WayPins:Add(fields)
 end
@@ -428,6 +445,7 @@ end
 ---@param mapID number
 ---@return table[]
 function OneWoW_Notes_API.GetWayPinsForMap(mapID)
+    if not ns.WayPinsVisual.Enabled() then return {} end
     if not ns.WayPins then return {} end
     return ns.WayPins:GetForMap(mapID)
 end
@@ -436,6 +454,7 @@ end
 ---@param pinID string
 ---@return boolean
 function OneWoW_Notes_API.TrackWayPin(pinID)
+    if not ns.WayPinsVisual.Enabled() then return false end
     if not ns.WayPins then return false end
     return ns.WayPins:Track(pinID)
 end
@@ -453,6 +472,7 @@ end
 ---@param pinID string
 ---@return string|nil noteId
 function OneWoW_Notes_API.AttachWayPinToZoneNotes(pinID)
+    if not ns.WayPinsVisual.Enabled() then return nil end
     if not ns.WayPins then return nil end
     return ns.WayPins:AttachToZoneNotes(pinID)
 end
@@ -460,6 +480,7 @@ end
 --- Open the OneWay Pin editor. `seed` is an existing pin or a coord draft.
 ---@param seed table|nil
 function OneWoW_Notes_API.OpenWayPinEditor(seed)
+    if not ns.WayPinsVisual.Enabled() then return end
     if ns.UI and ns.UI.OpenWayPinDialog then
         ns.UI.OpenWayPinDialog(seed)
     end

@@ -2363,7 +2363,9 @@ function ShowQuestDetail(panels, questData)
             0
         )
         if pinX and pinY then
-            GameTooltip:AddLine(L["JOURNAL_MAP_PIN_SAVE_TT"], 0.8, 0.8, 0.8, true)
+            if ns.Navigation:IsWayPinsEnabled() then
+                GameTooltip:AddLine(L["JOURNAL_MAP_PIN_SAVE_TT"], 0.8, 0.8, 0.8, true)
+            end
         end
 
         GameTooltip:Show()
@@ -2380,7 +2382,7 @@ function ShowQuestDetail(panels, questData)
     mapBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     mapBtn:SetScript("OnClick", function(_, button)
         if button == "RightButton" then
-            if pinX and pinY and ns.Navigation then
+            if pinX and pinY and ns.Navigation and ns.Navigation:IsWayPinsEnabled() then
                 ns.Navigation:SaveOneWayPin(
                     questData.name or (L["QUESTS_QUESTID"] .. " " .. tostring(questID)),
                     displayMapID,

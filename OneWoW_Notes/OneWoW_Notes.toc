@@ -78,5 +78,6 @@ UI\t-settings.lua
 # UI - Dialogs
 UI\ui-notes-dialogs.lua
 UI\ui-waypin-dialog.lua
+UI\ui-waypin-settings.lua
 UI\ui-waypin-find.lua
 UI\ui-category-manager.lua

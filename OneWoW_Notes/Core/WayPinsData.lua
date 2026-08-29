@@ -115,6 +115,7 @@ end
 ---@param fields table
 ---@return string|nil pinID
 function WayPins:Add(fields)
+    if not ns.WayPinsVisual.Enabled() then return nil end
     if type(fields) ~= "table" then return nil end
     local mapID = tonumber(fields.mapID)
     local x = tonumber(fields.x)

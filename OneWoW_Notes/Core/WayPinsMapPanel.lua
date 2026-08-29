@@ -287,7 +287,7 @@ function Panel:Sync()
         self:Hide()
         return
     end
-    if ns.db.global.waypinShowMapPanel == false then
+    if not ns.WayPinsVisual.Enabled() or ns.db.global.waypinShowMapPanel == false then
         self:Hide()
         return
     end

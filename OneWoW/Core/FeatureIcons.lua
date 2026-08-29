@@ -44,7 +44,10 @@ local FEATURE_ICONS = {
     OneWoW_Utility_DevTool = {
         texture = ICONS .. "INV_Gizmo_02",
     },
-    -- Collector extras (not load units).
+    -- Collector extras and in-unit Feature Manager rows (not load units).
+    OneWoW_Notes_WayPins = {
+        texture = ICONS .. "INV_Misc_Map_01",
+    },
     settings = {
         texture = ICONS .. "INV_Misc_Gear_01",
     },

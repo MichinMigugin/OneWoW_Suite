@@ -550,6 +550,7 @@ local function EnsureDialog()
 end
 
 function ns.UI.OpenWayPinFindDialog()
+    if not ns.WayPinsVisual.Enabled() then return end
     EnsureDialog()
     FillCurrentZone()
     fields.filters:SetText("")

@@ -227,16 +227,7 @@ function ns.UI.CreateWayPinsTab(parent)
     local addHereBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["WAYPINS_ADD_HERE"], height = 25 })
     addHereBtn:SetPoint("LEFT", controlPanel, "LEFT", 8, 0)
     addHereBtn:SetScript("OnClick", function()
-        local mapID, x, y = Location.GetPlayerLocation()
-        if not mapID or not x then
-            return
-        end
-        ns.UI.OpenWayPinDialog({
-            mapID  = mapID,
-            x      = x,
-            y      = y,
-            source = "manual",
-        })
+        ns.WayPinsMap:AddHere()
     end)
 
     local findBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["WAYPINS_FIND_LOCATION"], height = 25 })
@@ -271,11 +262,17 @@ function ns.UI.CreateWayPinsTab(parent)
         ns.UI.RefreshWayPinsTab()
     end
 
+    local settingsBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = SETTINGS, height = 25 })
+    settingsBtn:SetPoint("RIGHT", controlPanel, "RIGHT", -8, 0)
+    settingsBtn:SetScript("OnClick", function()
+        ns.UI.OpenWayPinSettings()
+    end)
+
     local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
         placeholderText = SEARCH,
         width = 160,
     })
-    searchBox:SetPoint("RIGHT", controlPanel, "RIGHT", -8, 0)
+    searchBox:SetPoint("RIGHT", settingsBtn, "LEFT", -8, 0)
     searchBox:HookScript("OnTextChanged", function(myself)
         searchFilter = (myself.GetSearchText and myself:GetSearchText() or myself:GetText()):lower()
         ns.UI.RefreshWayPinsTab()
@@ -287,10 +284,13 @@ function ns.UI.CreateWayPinsTab(parent)
     local leftStatusBar = ns.UI.CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT", panels.listPanel, "BOTTOMLEFT", 0, -4)
     leftStatusBar:SetPoint("TOPRIGHT", panels.listPanel, "BOTTOMRIGHT", 0, -4)
-    leftStatusBar:SetHeight(24)
+    leftStatusBar:SetHeight(28)
     leftStatusText = OneWoW_GUI:CreateFS(leftStatusBar, 11)
     leftStatusText:SetPoint("LEFT", 8, 0)
+    leftStatusText:SetJustifyH("LEFT")
+    leftStatusText:SetWordWrap(false)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    leftStatusText:SetPoint("RIGHT", leftStatusBar, "RIGHT", -8, 0)
 
     panels.detailTitle:SetText(L["WAYPINS_DETAIL_TITLE"])
 

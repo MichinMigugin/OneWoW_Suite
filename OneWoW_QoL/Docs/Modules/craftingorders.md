@@ -22,19 +22,44 @@ the overlay is shown. Patron / Guild / Personal are always a flat order list.
   Column headers share the same right-edge lanes as the row widgets.
   Each You Provide / Customer Provides / You Receive cluster is a fixed-width
   lane packed left-to-right, so unused slots cannot slide icons into the next
-  column.
+  column. Features owns the layout: show, hide, and reorder those lanes
+  (Order name stays pinned left). Gold and Profit / Loss start hidden.
+  Icon sizes and "only mats I still need" are sliders and a checkbox on the
+  same panel. Reset restores the default view.
+  The layout applies in place (no frame rebuilds): slider changes resize
+  the existing icons live via `ApplyOverlayLayout`. Icon lanes reserve
+  width only for the icon slots the current entry list actually uses
+  (`SetLaneCounts`, derived on each refresh, min-width floor for header
+  labels); hidden columns cost zero width. Slider values are the
+  preference and render as-is while the visible columns fit the row.
+  When they do not (many columns, large icons), `IconSizes` scales every
+  icon - lanes and product - down by one shared factor, exactly enough
+  that every visible column fits with the Order name at its minimum
+  width (binary search over the factor; `SIZE_MIN` floor). No column
+  ever hides or clips in normal use; the per-row clipping host
+  (`LaneStripBudget`) exists only as a last-resort guard below the size
+  floor. The overlay reports its interior width via `SetRowContentWidth`
+  on create/show/resize.
 - **Mats:** You Provide vs Customer Provides icon columns. Customer Provides is
   every reagent already allocated on the order (`order.reagents` covers that
   slot). You Provide is required recipe slots with no allocation. Owned count
   is bags + character bank + reagent bank + warband bank. Rewards are
-  item/currency/gold icons with counts.
+  item/currency/gold icons with counts. Optional Gold shows the commission as
+  a money string. Optional Profit / Loss is tip minus consortium cut, plus
+  valued reward items, minus valued You Provide reagents (customer mats are
+  not subtracted). Prices come from `OneWoW.ItemPrices` (TSM, Auctionator, or
+  OneWoW scan). A missing price skips that term; nothing is invented.
+  Its header reads `+ / -` (identical in every locale) with the price
+  source's icon flush right: TSM / Auctionator show their addon icon,
+  OneWoW shows the suite icon (`FACTION_ICONS.neutral`). The full
+  "Profit / Loss" name stays on the Features panel.
 - **Cart:** one shopping-cart control per row that still needs crafter mats
   (Missing mats and Recipe Unlearned), in its own column.
 - **Default off:** the overlay is off until you turn the module on in QoL
   Features. That On/Off is account-wide (every character).
 - **Incompatible addons:** if PatronOffers or PublicOrdersReagentsColumn
-  (No Mats No Make) is enabled, the overlay starts off so those addons can
-  run. Features still lets you turn One UI on; it warns first. Off fully
+  (No Mats No Make) is enabled, Crafting Orders cannot be turned on. Features
+  names the addon and asks you to disable it and try again. Off fully
   restores Blizzard's list.
 - **WoW UI:** a **WoW UI** / **One UI** button sits on the order-type tab row
   (and a Features toggle) to swap back to Blizzard's table without disabling
@@ -53,6 +78,9 @@ Khaz Algar fallback). Public claims use `GetOrderClaimInfo`, not the weekly.
 - Shopping List: `OneWoW_ShoppingList_API` (`AddItems`, `CreateNamedList`,
   active list). Call-time presence plus `RegisterDataReadyWatcher`. No
   `OptionalDeps`.
+- Item prices: `OneWoW.ItemPrices:GetUnitAHPriceFrom` for the Profit / Loss
+  column. No direct TSM / Auctionator calls and no `OptionalDeps` for those
+  addons.
 - Storage elsewhere: hover a You Provide icon; uses
   `OneWoW_AltTracker_Storage_API.GetItemIndex()` after data-ready, then
   `RegisterStorageChanged`.
@@ -63,7 +91,10 @@ Click-mirrors Blizzard Start / Create / Complete via
 `InsecureActionButtonTemplate` and a short `/click` chain. The inner click
 target stays shown (alpha 0) because `/click` ignores hidden frames. The
 visible button stays on `OrderInfo` (left) for Start, Craft, and Complete so
-the mouse does not move. Concentration is an icon beside Craft, tooltip only.
+the mouse does not move. It wears the standard suite button chrome by hand
+(`BACKDROP_INNER`, `BTN_NORMAL`/`BTN_HOVER`/`BTN_PRESSED`, themed border,
+muted label when disabled) since it cannot be a `CreateFitTextButton`.
+Concentration is an icon beside Craft, tooltip only.
 Does not call `ClaimOrder` from Lua. Create-time attributes go through
 `RunWhenUnrestricted`; PreClick sets `clickbutton` only when unprotected.
 `OrderView:SetOverrideCastBarActive` is no-op'd while the module is on (restore

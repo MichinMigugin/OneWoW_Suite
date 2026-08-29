@@ -60,15 +60,29 @@ hooksecurefunc("ToggleGameMenu", function()
     end
 end)
 
+local function TabIsHidden(tabInfo)
+    local hidden = tabInfo.hidden
+    if type(hidden) == "function" then
+        return hidden() and true or false
+    end
+    return hidden == true
+end
+
 local function GetSectionTabs(moduleName)
     if moduleName == "settings" then
         return UI.settingsTabs or {}
     end
     local mod = ns.ModuleRegistry:GetModule(moduleName)
-    if mod and mod.tabs then
-        return mod.tabs
+    if not mod or not mod.tabs then
+        return {}
     end
-    return {}
+    local visible = {}
+    for _, tabInfo in ipairs(mod.tabs) do
+        if not TabIsHidden(tabInfo) then
+            tinsert(visible, tabInfo)
+        end
+    end
+    return visible
 end
 
 local function GetTabDisplayName(tabInfo)

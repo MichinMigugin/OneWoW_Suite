@@ -560,7 +560,11 @@ while working.
 Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 `ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
 Manage Features renders manifest `stores` as indented sub-rows under Catalog and
-AltTracker. `storePolicy` is `optional` for both. AltTracker stores (except
+AltTracker. `storePolicy` is `optional` for both. Notes can also list
+`inUnitFeatures` on its CATALOG entry (OneWay Pins today). Those use the same
+sub-row chrome but are **not** load units: Apply calls the feature setter
+(`OneWoW_Notes_API.SetWayPinsEnabled`) instead of `SetFeatureOptOut` /
+`EnsureLoaded`. The row mutes when Notes is unchecked. AltTracker stores (except
 Endgame) and all Catalog packs toggle independently of their owning hub;
 Endgame stays parent-required (`parentRequiredStores` / TOC) and mutes when
 AltTracker is off. Consumer pulls (Bags → Storage/Character, ShoppingList →

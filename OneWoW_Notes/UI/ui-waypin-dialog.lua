@@ -498,6 +498,7 @@ end
 --- Open the create/edit dialog. `seed` may be an existing pin or a coord draft.
 ---@param seed table|nil
 function ns.UI.OpenWayPinDialog(seed)
+    if not ns.WayPinsVisual.Enabled() then return end
     EnsureDialog()
     previewReady = false
     CancelPreviewTimer()

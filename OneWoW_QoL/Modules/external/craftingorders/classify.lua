@@ -134,8 +134,10 @@ local function ClassifyReagents(order)
                 end
                 local short = need - have
                 if short < 0 then short = 0 end
+                local itemLink = itemID and select(2, C_Item.GetItemInfo(itemID)) or nil
                 youOut[#youOut + 1] = {
                     itemID = itemID,
+                    itemLink = itemLink,
                     need = need,
                     have = have,
                     short = short,
@@ -239,6 +241,7 @@ function M:ClassifyOrder(order)
         kp = kp,
         acuity = acuity,
         gold = gold,
+        consortiumCut = order.consortiumCut or 0,
         remaining = RemainingTime(order),
         expirationTime = order.expirationTime,
         orderType = order.orderType,

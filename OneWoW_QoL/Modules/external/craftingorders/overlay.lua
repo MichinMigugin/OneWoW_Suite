@@ -10,20 +10,8 @@ local floor = math.floor
 local SPACING = OneWoW_GUI.Constants.SPACING
 
 local HEADER_H = 24
-local ROW_H = 60
-local ICON_SIZE = 36
-local MAT_SIZE = 24
-local REWARD_SIZE = 24
-local MAX_YOU = 4
-local MAX_CUST = 4
-local MAX_REWARDS = 4
-local MAT_GAP = SPACING.XS
 local STATUS_H = 20
 local COL_H = 32
-local TIME_W = 72
-local CART_W = 40
-local COL_GAP = SPACING.MD
-local COL_PAD = SPACING.SM
 local ROW_INSET = 4
 -- Must match OneWoW_GUI:CreateVirtualizer owned-scroll insets (4 / 14).
 local VIRT_LEFT = 4
@@ -32,24 +20,11 @@ local LIST_LEFT = 2
 local LIST_RIGHT = 4
 local HEADER_LEFT = LIST_LEFT + VIRT_LEFT + ROW_INSET
 local HEADER_RIGHT = LIST_RIGHT + VIRT_RIGHT + ROW_INSET
-
-local function ClusterW(n, size)
-    return n * (size + MAT_GAP) - MAT_GAP
-end
-
-local YOU_W = ClusterW(MAX_YOU, MAT_SIZE)
-local CUST_W = ClusterW(MAX_CUST, MAT_SIZE)
-local REWARD_W = ClusterW(MAX_REWARDS, REWARD_SIZE)
-
--- Same right-edge insets for column labels and row lanes. Each icon
--- cluster lives in a fixed-width lane so unused slots cannot slide
--- visible icons into the next column.
-local COL_TIME_RIGHT = COL_PAD
-local COL_REWARD_RIGHT = COL_TIME_RIGHT + TIME_W + COL_GAP
-local COL_CUST_RIGHT = COL_REWARD_RIGHT + REWARD_W + COL_GAP
-local COL_CART_RIGHT = COL_CUST_RIGHT + CUST_W + COL_GAP
-local COL_YOU_RIGHT = COL_CART_RIGHT + CART_W + COL_GAP
-local COL_ORDER_RIGHT = COL_YOU_RIGHT + YOU_W + COL_GAP
+-- Profit header: punctuation-only, identical in every locale. The localized
+-- "Profit / Loss" name still shows in the Features panel.
+local PROFIT_HEADER = "+ / -"
+-- 14px source icon + 2px gap reserved at the right edge of the profit label.
+local PROFIT_ICON_W = 16
 
 local function PlaceColLabel(fs, parent, rightInset, width, justifyH)
     fs:ClearAllPoints()
@@ -67,6 +42,123 @@ local function PlaceIconLane(frame, parent, rightInset, width, height)
     frame:ClearAllPoints()
     frame:SetPoint("RIGHT", parent, "RIGHT", -rightInset, 0)
     frame:SetSize(width, height)
+end
+
+-- The column strip (everything right of the order name) lives inside a
+-- clipping host anchored to the right edge. Its width is the packed column
+-- width, capped by LaneStripBudget: when the player's columns need more room
+-- than the row has, the strip clips on its LEFT edge instead of overlapping
+-- the order name - the configured icon sizes always render literally.
+local function LaneHostWidth(insets)
+    local w = insets.orderRight
+    local budget = M:LaneStripBudget()
+    if budget and w > budget then
+        w = budget
+    end
+    if w < 1 then
+        w = 1
+    end
+    return w
+end
+
+function M:ApplyHeaderLayout(overlay)
+    if not overlay then return end
+    local insets = M:ComputeInsets()
+    local host = overlay.headerLanes
+    host:SetWidth(LaneHostWidth(insets))
+    overlay.colCraft:ClearAllPoints()
+    overlay.colCraft:SetPoint("LEFT", overlay.headerBar, "LEFT", 4, 0)
+    overlay.colCraft:SetPoint("RIGHT", host, "LEFT", 0, 0)
+    local labels = overlay.colLabels
+    local ids = M:ColumnIds()
+    for i = 1, #ids do
+        local id = ids[i]
+        local fs = labels[id]
+        local spec = insets[id]
+        if spec then
+            fs:Show()
+            if id == "profit" then
+                -- Header reads "+ / - [source icon]"; the icon sits flush
+                -- right, so the label box ends where the icon begins. The
+                -- full "Profit / Loss" name stays in Features (ColumnLabel).
+                fs:SetText(PROFIT_HEADER)
+                PlaceColLabel(fs, host, spec.right + PROFIT_ICON_W, spec.width - PROFIT_ICON_W, spec.justify)
+            else
+                fs:SetText(M:ColumnLabel(id))
+                PlaceColLabel(fs, host, spec.right, spec.width, spec.justify)
+            end
+        else
+            fs:Hide()
+        end
+    end
+    local profitSpec = insets.profit
+    if profitSpec then
+        overlay.profitIcon:Show()
+        overlay.profitIcon:SetTexture(M:PriceSourceIcon(M:GetPriceSource()))
+        overlay.profitIcon:ClearAllPoints()
+        overlay.profitIcon:SetPoint("RIGHT", host, "RIGHT", -profitSpec.right, 0)
+    else
+        overlay.profitIcon:Hide()
+    end
+end
+
+local function ApplyRowLayout(row)
+    local insets = M:ComputeInsets()
+    local host = row.laneHost
+    host:SetWidth(LaneHostWidth(insets))
+    if row.product:IsShown() then
+        row.nameText:ClearAllPoints()
+        row.nameText:SetPoint("LEFT", row.product, "RIGHT", 6, 8)
+        row.nameText:SetPoint("RIGHT", host, "LEFT", -4, 8)
+    end
+    local function placeLane(id, frame)
+        local spec = insets[id]
+        if not spec then
+            frame:Hide()
+            return
+        end
+        frame:Show()
+        if frame.SetJustifyH then
+            PlaceColLabel(frame, host, spec.right, spec.width, spec.justify)
+            frame:SetMaxLines(1)
+            frame:SetWordWrap(false)
+        else
+            PlaceIconLane(frame, host, spec.right, spec.width, spec.height)
+        end
+    end
+    placeLane("you", row.youLane)
+    placeLane("customer", row.customerLane)
+    placeLane("reward", row.rewardLane)
+    placeLane("cart", row.cartLane)
+    placeLane("time", row.timeText)
+    placeLane("gold", row.goldText)
+    placeLane("profit", row.profitText)
+end
+
+local function ResizeStrip(icons, size)
+    for i = 1, #icons do
+        icons[i]:SetSize(size, size)
+    end
+end
+
+-- Layout changes never rebuild frames: skinned icons are anchor-based and
+-- scale with SetSize, lanes re-anchor, and the virtualizer refresh re-derives
+-- row heights. This is what makes slider resizing live.
+function M:ApplyOverlayLayout()
+    local overlay = M._overlay
+    if not overlay or not overlay.virt then return end
+    local sizes = M:IconSizes()
+    local rows = overlay._rows
+    for i = 1, #rows do
+        local row = rows[i]
+        row.product:SetSize(sizes.product, sizes.product)
+        ResizeStrip(row.youMats, sizes.you)
+        ResizeStrip(row.customerMats, sizes.customer)
+        ResizeStrip(row.rewards, sizes.reward)
+        ApplyRowLayout(row)
+    end
+    M:ApplyHeaderLayout(overlay)
+    overlay.virt.Refresh()
 end
 
 local function ModuleOn()
@@ -105,24 +197,18 @@ local function ApplyOverlayTheme(overlay)
     overlay:SetBackdropColor(bgR, bgG, bgB, 0.97)
     overlay:SetBackdropBorderColor(bdR, bdG, bdB, 1)
     overlay.colCraft:SetText(L["CRAFTORDERS_COL_CRAFT"])
-    overlay.colYou:SetText(L["CRAFTORDERS_COL_YOU"])
-    overlay.colCart:SetText(L["CRAFTORDERS_COL_CART"])
-    overlay.colCustomer:SetText(L["CRAFTORDERS_COL_CUSTOMER"])
-    overlay.colReward:SetText(L["CRAFTORDERS_COL_REWARD"])
-    overlay.colTime:SetText(CLOSES_IN)
     local tpR, tpG, tpB = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
     overlay.statusText:SetTextColor(tpR, tpG, tpB)
     overlay.colCraft:SetTextColor(tpR, tpG, tpB)
-    overlay.colYou:SetTextColor(tpR, tpG, tpB)
-    overlay.colCart:SetTextColor(tpR, tpG, tpB)
-    overlay.colCustomer:SetTextColor(tpR, tpG, tpB)
-    overlay.colReward:SetTextColor(tpR, tpG, tpB)
-    overlay.colTime:SetTextColor(tpR, tpG, tpB)
-    overlay.emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    if overlay.headerBar then
-        overlay.headerBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        overlay.headerBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local labels = overlay.colLabels
+    for id, fs in pairs(labels) do
+        fs:SetText(M:ColumnLabel(id))
+        fs:SetTextColor(tpR, tpG, tpB)
     end
+    M:ApplyHeaderLayout(overlay)
+    overlay.emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    overlay.headerBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    overlay.headerBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 end
 
 local function HideBlizzardOrderList()
@@ -290,19 +376,40 @@ local function BindHeader(row, entry)
     end
     row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     row.timeText:SetText("")
+    row.goldText:SetText("")
+    row.profitText:SetText("")
     row.unlearnedText:SetText("")
     row.addBtn:Hide()
     row.addBtn._entry = nil
     HideStrip(row.youMats)
     HideStrip(row.customerMats)
     HideStrip(row.rewards)
+    row.youLane:Hide()
+    row.customerLane:Hide()
+    row.rewardLane:Hide()
+    row.cartLane:Hide()
+    row.timeText:Hide()
+    row.goldText:Hide()
+    row.profitText:Hide()
+end
+
+local function BindMoney(fs, copper, allowNegative)
+    if not copper or (copper == 0 and not allowNegative) then
+        fs:SetText("")
+        return
+    end
+    if copper < 0 then
+        fs:SetText("-" .. GetMoneyString(-copper, true))
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        return
+    end
+    fs:SetText(GetMoneyString(copper, true))
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 end
 
 local function BindRow(row, entry)
     row.product:Show()
-    row.nameText:ClearAllPoints()
-    row.nameText:SetPoint("LEFT", row.product, "RIGHT", 6, 8)
-    row.nameText:SetPoint("RIGHT", row, "RIGHT", -COL_ORDER_RIGHT, 8)
+    ApplyRowLayout(row)
     local icon = entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
     OneWoW_GUI:UpdateIconTexture(row.product, icon)
     OneWoW_GUI:SetIconDesaturated(row.product, not entry.learned)
@@ -326,8 +433,10 @@ local function BindRow(row, entry)
     end
     row.timeText:SetText(FormatTimeLeft(entry))
     row.timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    BindMoney(row.goldText, entry.gold, false)
+    BindMoney(row.profitText, M:ComputeOrderProfit(entry), true)
 
-    BindStrip(row.youMats, entry.youReagents, "you")
+    BindStrip(row.youMats, M:FilterYouReagents(entry.youReagents), "you")
     BindStrip(row.customerMats, entry.customerReagents, "customer")
     BindStrip(row.rewards, entry.rewardIcons, "reward")
 
@@ -350,7 +459,19 @@ function M:EnsureOverlay()
     overlay:SetPoint("BOTTOMRIGHT", browse, "BOTTOMRIGHT")
     overlay:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
     overlay:EnableMouse(true)
+    overlay:SetFrameLevel(browse:GetFrameLevel() + 20)
     overlay:Hide()
+
+    -- Header and rows both span the overlay minus the same 32px of chrome
+    -- (HEADER_LEFT + HEADER_RIGHT == list + scroll + row insets). Columns
+    -- clamp icon lanes against this width so the order name keeps room.
+    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - HEADER_RIGHT)
+    overlay:SetScript("OnSizeChanged", function(myself, width)
+        M:SetRowContentWidth((width or 0) - HEADER_LEFT - HEADER_RIGHT)
+        if M._overlay == myself then
+            M:ApplyOverlayLayout()
+        end
+    end)
     OneWoW_GUI:RegisterFontRoot(overlay, function()
         if M:IsOverlayActive() then
             M:RefreshOverlay()
@@ -371,36 +492,32 @@ function M:EnsureOverlay()
     overlay.headerBar = headerBar
 
     local colCraft = OneWoW_GUI:CreateFS(headerBar, 11)
-    colCraft:SetPoint("LEFT", headerBar, "LEFT", 4, 0)
-    colCraft:SetPoint("RIGHT", headerBar, "RIGHT", -COL_ORDER_RIGHT, 0)
     colCraft:SetJustifyH("LEFT")
     colCraft:SetText(L["CRAFTORDERS_COL_CRAFT"])
     overlay.colCraft = colCraft
 
-    local colTime = OneWoW_GUI:CreateFS(headerBar, 11)
-    PlaceColLabel(colTime, headerBar, COL_TIME_RIGHT, TIME_W, "RIGHT")
-    colTime:SetText(CLOSES_IN)
-    overlay.colTime = colTime
+    -- Clipping host for the header column labels; mirrors row.laneHost so an
+    -- over-wide column strip clips instead of running over the Craft title.
+    local headerLanes = CreateFrame("Frame", nil, headerBar)
+    headerLanes:SetPoint("TOPRIGHT", headerBar, "TOPRIGHT", 0, 0)
+    headerLanes:SetPoint("BOTTOMRIGHT", headerBar, "BOTTOMRIGHT", 0, 0)
+    headerLanes:SetClipsChildren(true)
+    overlay.headerLanes = headerLanes
 
-    local colReward = OneWoW_GUI:CreateFS(headerBar, 11)
-    PlaceColLabel(colReward, headerBar, COL_REWARD_RIGHT, REWARD_W)
-    colReward:SetText(L["CRAFTORDERS_COL_REWARD"])
-    overlay.colReward = colReward
+    local colLabels = {}
+    local colIds = M:ColumnIds()
+    for i = 1, #colIds do
+        local id = colIds[i]
+        local fs = OneWoW_GUI:CreateFS(headerLanes, 11)
+        fs:SetMaxLines(2)
+        fs:SetWordWrap(true)
+        colLabels[id] = fs
+    end
+    overlay.colLabels = colLabels
 
-    local colCustomer = OneWoW_GUI:CreateFS(headerBar, 11)
-    PlaceColLabel(colCustomer, headerBar, COL_CUST_RIGHT, CUST_W)
-    colCustomer:SetText(L["CRAFTORDERS_COL_CUSTOMER"])
-    overlay.colCustomer = colCustomer
-
-    local colCart = OneWoW_GUI:CreateFS(headerBar, 11)
-    PlaceColLabel(colCart, headerBar, COL_CART_RIGHT, CART_W, "CENTER")
-    colCart:SetText(L["CRAFTORDERS_COL_CART"])
-    overlay.colCart = colCart
-
-    local colYou = OneWoW_GUI:CreateFS(headerBar, 11)
-    PlaceColLabel(colYou, headerBar, COL_YOU_RIGHT, YOU_W)
-    colYou:SetText(L["CRAFTORDERS_COL_YOU"])
-    overlay.colYou = colYou
+    local profitIcon = headerLanes:CreateTexture(nil, "ARTWORK")
+    profitIcon:SetSize(14, 14)
+    overlay.profitIcon = profitIcon
 
     local listHost = CreateFrame("Frame", nil, overlay)
     listHost:SetPoint("TOPLEFT", overlay, "TOPLEFT", LIST_LEFT, -(4 + STATUS_H + COL_H))
@@ -416,6 +533,9 @@ function M:EnsureOverlay()
     ApplyOverlayTheme(overlay)
 
     M._entries = {}
+    overlay._rows = {}
+    local lane = M:LaneConstants()
+    local rowH = M:RowHeight()
     local virt = OneWoW_GUI:CreateVirtualizer(listHost, {
         getCount = function()
             return M._entries and #M._entries or 0
@@ -427,19 +547,22 @@ function M:EnsureOverlay()
             return entry and entry.kind ~= "header"
         end,
         rowInset = ROW_INSET,
-        rowHeight = ROW_H,
+        rowHeight = rowH,
         getRowHeight = function(i)
             local entry = M._entries[i]
             if entry and entry.kind == "header" then return HEADER_H end
-            return ROW_H
+            return M:RowHeight()
         end,
         numVisibleRows = 16,
         onSelect = function(_, entry)
             M:OnRowActivate(entry)
         end,
         createRow = function(content)
+            -- Fresh sizes per row: the pool can grow after a resize, and a
+            -- stale capture would build new rows at the old icon size.
+            local sizes = M:IconSizes()
             local row = CreateFrame("Button", nil, content, "BackdropTemplate")
-            row:SetHeight(ROW_H)
+            row:SetHeight(rowH)
             row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -468,8 +591,17 @@ function M:EnsureOverlay()
                 end
             end
 
-            local function MakeIcon(size)
-                local icon = OneWoW_GUI:CreateSkinnedIcon(row, {
+            -- Everything right of the order name parents into this clipping
+            -- host; ApplyRowLayout sets its width (packed columns, capped by
+            -- LaneStripBudget) so overflow clips instead of covering the name.
+            local laneHost = CreateFrame("Frame", nil, row)
+            laneHost:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
+            laneHost:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+            laneHost:SetClipsChildren(true)
+            row.laneHost = laneHost
+
+            local function MakeIcon(size, parent)
+                local icon = OneWoW_GUI:CreateSkinnedIcon(parent, {
                     size = size,
                     preset = "clean",
                     showCount = true,
@@ -484,7 +616,7 @@ function M:EnsureOverlay()
             end
 
             local product = OneWoW_GUI:CreateSkinnedIcon(row, {
-                size = ICON_SIZE,
+                size = sizes.product,
                 preset = "clean",
                 onClick = function(_, button)
                     ActivateRow(button)
@@ -497,8 +629,6 @@ function M:EnsureOverlay()
             row.product = product
 
             local nameText = OneWoW_GUI:CreateFS(row, 12)
-            nameText:SetPoint("LEFT", product, "RIGHT", 6, 8)
-            nameText:SetPoint("RIGHT", row, "RIGHT", -COL_ORDER_RIGHT, 8)
             nameText:SetJustifyH("LEFT")
             row.nameText = nameText
 
@@ -508,36 +638,45 @@ function M:EnsureOverlay()
             unlearnedText:SetJustifyH("LEFT")
             row.unlearnedText = unlearnedText
 
-            local timeText = OneWoW_GUI:CreateFS(row, 11)
-            PlaceColLabel(timeText, row, COL_TIME_RIGHT, TIME_W, "RIGHT")
+            local timeText = OneWoW_GUI:CreateFS(laneHost, 11)
             timeText:SetMaxLines(1)
             timeText:SetWordWrap(false)
             row.timeText = timeText
 
-            local function FillIconLane(count, size, rightInset, width)
-                local lane = CreateFrame("Frame", nil, row)
-                PlaceIconLane(lane, row, rightInset, width, size)
-                lane:SetClipsChildren(true)
+            local goldText = OneWoW_GUI:CreateFS(laneHost, 11)
+            goldText:SetMaxLines(1)
+            goldText:SetWordWrap(false)
+            row.goldText = goldText
+
+            local profitText = OneWoW_GUI:CreateFS(laneHost, 11)
+            profitText:SetMaxLines(1)
+            profitText:SetWordWrap(false)
+            row.profitText = profitText
+
+            local function FillIconLane(count, size)
+                local laneFrame = CreateFrame("Frame", nil, laneHost)
+                laneFrame:SetClipsChildren(true)
                 local icons = {}
                 for i = 1, count do
-                    local icon = MakeIcon(size)
+                    local icon = MakeIcon(size, laneFrame)
                     if i == 1 then
-                        icon:SetPoint("LEFT", lane, "LEFT", 0, 0)
+                        icon:SetPoint("LEFT", laneFrame, "LEFT", 0, 0)
                     else
-                        icon:SetPoint("LEFT", icons[i - 1], "RIGHT", MAT_GAP, 0)
+                        icon:SetPoint("LEFT", icons[i - 1], "RIGHT", lane.matGap, 0)
                     end
                     icons[i] = icon
                 end
-                return icons
+                return laneFrame, icons
             end
 
-            row.rewards = FillIconLane(MAX_REWARDS, REWARD_SIZE, COL_REWARD_RIGHT, REWARD_W)
-            row.customerMats = FillIconLane(MAX_CUST, MAT_SIZE, COL_CUST_RIGHT, CUST_W)
+            row.rewardLane, row.rewards = FillIconLane(lane.maxRewards, sizes.reward)
+            row.customerLane, row.customerMats = FillIconLane(lane.maxCust, sizes.customer)
+            row.youLane, row.youMats = FillIconLane(lane.maxYou, sizes.you)
 
-            local cartLane = CreateFrame("Frame", nil, row)
-            PlaceIconLane(cartLane, row, COL_CART_RIGHT, CART_W, 20)
+            local cartLane = CreateFrame("Frame", nil, laneHost)
+            row.cartLane = cartLane
 
-            local addBtn = OneWoW_GUI:CreateIconButton(row, {
+            local addBtn = OneWoW_GUI:CreateIconButton(cartLane, {
                 atlas = "Perks-ShoppingCart",
                 size = 20,
                 onClick = function(btn, button)
@@ -562,8 +701,8 @@ function M:EnsureOverlay()
             addBtn:SetScript("OnLeave", GameTooltip_Hide)
             row.addBtn = addBtn
 
-            row.youMats = FillIconLane(MAX_YOU, MAT_SIZE, COL_YOU_RIGHT, YOU_W)
-
+            ApplyRowLayout(row)
+            overlay._rows[#overlay._rows + 1] = row
             return row
         end,
         bindRow = function(row, index, entry, state)
@@ -749,6 +888,33 @@ function M:UpdateModeButton()
     end
 end
 
+--- Max icons per lane across the entry list (nil when there are no data
+--- rows, meaning: keep the full-width default).
+local function CountLaneUsage(entries)
+    local any = false
+    local you, customer, reward = 1, 1, 1
+    for i = 1, #entries do
+        local e = entries[i]
+        if e.kind ~= "header" then
+            any = true
+            local mats = M:FilterYouReagents(e.youReagents)
+            if mats and #mats > you then
+                you = #mats
+            end
+            if e.customerReagents and #e.customerReagents > customer then
+                customer = #e.customerReagents
+            end
+            if e.rewardIcons and #e.rewardIcons > reward then
+                reward = #e.rewardIcons
+            end
+        end
+    end
+    if not any then
+        return nil
+    end
+    return { you = you, customer = customer, reward = reward }
+end
+
 function M:RefreshOverlay()
     if not ModuleOn() then return end
     M:EnsureModeButton()
@@ -780,7 +946,13 @@ function M:RefreshOverlay()
     local orderType = page and page.orderType
     local entries, readyN, missingN = M:BuildOverlayEntries(M._rawOrders, M._browseIsBucket, orderType)
     M._entries = entries
-    overlay.virt.Refresh()
+    if M:SetLaneCounts(CountLaneUsage(entries)) then
+        -- Lane widths follow the icons actually shown; re-anchor everything
+        -- when the new entry list changes that usage.
+        M:ApplyOverlayLayout()
+    elseif overlay.virt then
+        overlay.virt.Refresh()
+    end
 
     if M._loading and #entries == 0 then
         overlay.emptyText:SetText(L["CRAFTORDERS_LOADING"])
@@ -808,6 +980,10 @@ function M:ShowOverlay()
     local overlay = M:EnsureOverlay()
     if not overlay then return end
     overlay:Show()
+    -- The overlay can be created while the profession UI is hidden (width
+    -- unknown); re-measure at show time and re-apply geometry in place.
+    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - HEADER_RIGHT)
+    M:ApplyOverlayLayout()
     HideBlizzardOrderList()
     M:RefreshOverlay()
 end

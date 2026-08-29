@@ -176,16 +176,31 @@ function Visual.MinimapSize(pin)
     return Visual.MinimapDefault()
 end
 
+function Visual.Enabled()
+    return ns.db.global.waypinEnabled ~= false
+end
+
+function Visual.MapClickMenu()
+    return ns.db.global.waypinMapClickEnabled ~= false
+end
+
+function Visual.MapClick()
+    if ns.db.global.waypinMapClick == "right" then
+        return "right"
+    end
+    return "ctrlRight"
+end
+
 function Visual.ShowWorld()
-    return ns.db.global.waypinShowWorld ~= false
+    return Visual.Enabled() and ns.db.global.waypinShowWorld ~= false
 end
 
 function Visual.ShowMinimap()
-    return ns.db.global.waypinShowMinimap ~= false
+    return Visual.Enabled() and ns.db.global.waypinShowMinimap ~= false
 end
 
 function Visual.MinimapAnimate()
-    return ns.db.global.waypinMinimapAnimate ~= false
+    return Visual.Enabled() and ns.db.global.waypinMinimapAnimate == true
 end
 
 local function SetupBgAnim(look)

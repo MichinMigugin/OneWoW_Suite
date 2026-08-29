@@ -564,6 +564,20 @@ function ns.UI.CreateNPCsTab(parent)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.alertBtn = alertBtn
 
+            local function ApplyNpcWaypinButton()
+                if ns.WayPinsVisual.Enabled() then
+                    waypinBtn:Show()
+                    alertBtn:ClearAllPoints()
+                    alertBtn:SetPoint("RIGHT", waypinBtn, "LEFT", -2, 0)
+                else
+                    waypinBtn:Hide()
+                    alertBtn:ClearAllPoints()
+                    alertBtn:SetPoint("RIGHT", gotoBtn, "LEFT", -2, 0)
+                end
+            end
+            ns.UI.ApplyNpcWaypinButton = ApplyNpcWaypinButton
+            ApplyNpcWaypinButton()
+
             local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
             favoriteBtn:SetSize(22, 22)
             favoriteBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)

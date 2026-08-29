@@ -256,6 +256,9 @@ local function HandleMatchMount(unit)
 end
 
 local function HandleSelfWayPin()
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.IsWayPinsEnabled() then
+        return
+    end
     OneWoW:BringUp("OneWoW_Notes")
     local mapID, x, y = Location.GetPlayerLocation()
     if not mapID or not x then
@@ -296,7 +299,7 @@ local function PlayerContextMenuHandler(_, rootDescription, contextData)
     rootDescription:CreateDivider()
     rootDescription:CreateTitle(L["UNIT_CTX_HEADER"])
 
-    if isSelf then
+    if isSelf and OneWoW_Notes_API and OneWoW_Notes_API.IsWayPinsEnabled() then
         rootDescription:CreateButton(L["UNIT_CTX_ADD_WAYPIN_HERE"], function()
             HandleSelfWayPin()
         end)
@@ -402,6 +405,9 @@ local function HandleNPCUpdateLocation(_, npcIDNum)
 end
 
 local function HandleNPCWayPin(unit, npcIDNum)
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.IsWayPinsEnabled() then
+        return
+    end
     OneWoW:BringUp("OneWoW_Notes")
     if not OneWoW_Notes_API or not OneWoW_Notes_API.AddWayPin then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
@@ -466,9 +472,11 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
         end
     end
 
-    rootDescription:CreateButton(L["UNIT_CTX_ADD_WAYPIN"], function()
-        HandleNPCWayPin(contextData.unit, npcIDNum)
-    end)
+    if OneWoW_Notes_API and OneWoW_Notes_API.IsWayPinsEnabled() then
+        rootDescription:CreateButton(L["UNIT_CTX_ADD_WAYPIN"], function()
+            HandleNPCWayPin(contextData.unit, npcIDNum)
+        end)
+    end
 
     if hasVendor then
         rootDescription:CreateButton(L["UNIT_CTX_OPEN_VENDOR_DETAILS"], function()

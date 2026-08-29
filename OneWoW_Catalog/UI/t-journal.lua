@@ -557,7 +557,9 @@ local function WireJournalPinButton(btn, getInstData)
         else
             GameTooltip:AddLine(L["JOURNAL_MAP_PIN_TT"], 0.8, 0.8, 0.8, true)
         end
-        GameTooltip:AddLine(L["JOURNAL_MAP_PIN_SAVE_TT"], 0.8, 0.8, 0.8, true)
+        if ns.Navigation:IsWayPinsEnabled() then
+            GameTooltip:AddLine(L["JOURNAL_MAP_PIN_SAVE_TT"], 0.8, 0.8, 0.8, true)
+        end
         GameTooltip:Show()
     end)
 end
@@ -687,7 +689,9 @@ local function CreateInstanceListRow(parent, _)
             return
         end
         if button == "RightButton" then
-            ns.Navigation:SaveInstanceEntranceWayPin(instData)
+            if ns.Navigation:IsWayPinsEnabled() then
+                ns.Navigation:SaveInstanceEntranceWayPin(instData)
+            end
             return
         end
         ns.Navigation:OpenInstanceEntrance(instData.instanceID, instData.entrances)
@@ -2529,7 +2533,9 @@ function ns.UI.CreateJournalTab(parent)
             return
         end
         if button == "RightButton" then
-            ns.Navigation:SaveInstanceEntranceWayPin(instData)
+            if ns.Navigation:IsWayPinsEnabled() then
+                ns.Navigation:SaveInstanceEntranceWayPin(instData)
+            end
             return
         end
         ns.Navigation:OpenInstanceEntrance(instData.instanceID, instData.entrances)

@@ -44,7 +44,7 @@ local function RegisterWithOneWoW()
         { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] end, create = function(p) ns.UI.CreatePlayersTab(p) end },
         { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
         { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   end, create = function(p) ns.UI.CreateZonesTab(p) end },
-        { name = "waypins", displayName = function() return ns.L["TAB_WAYPINS"] end, create = function(p) ns.UI.CreateWayPinsTab(p) end },
+        { name = "waypins", displayName = function() return ns.L["TAB_WAYPINS"] end, create = function(p) ns.UI.CreateWayPinsTab(p) end, hidden = function() return not ns.WayPinsVisual.Enabled() end },
         { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   end, create = function(p) ns.UI.CreateItemsTab(p) end },
         { name = "collectibles", displayName = function() return ns.L["TAB_COLLECTIBLES"] end, create = function(p) ns.UI.CreateCollectiblesTab(p) end },
     }

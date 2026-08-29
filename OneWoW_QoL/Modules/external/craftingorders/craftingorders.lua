@@ -20,13 +20,10 @@ local function AddonIsEnabled(name)
     if not C_AddOns.DoesAddOnExist(name) then
         return false
     end
-    if C_AddOns.IsAddOnLoaded(name) then
-        return true
-    end
     return C_AddOns.GetAddOnEnableState(name) > Enum.AddOnEnableState.None
 end
 
-local function CollectIncompatibleTitles()
+function M:CollectIncompatibleTitles()
     local titles = {}
     for i = 1, #INCOMPATIBLE_ADDONS do
         local name = INCOMPATIBLE_ADDONS[i]
@@ -42,11 +39,11 @@ local function CollectIncompatibleTitles()
 end
 
 local function HasIncompatibleAddons()
-    return #CollectIncompatibleTitles() > 0
+    return #M:CollectIncompatibleTitles() > 0
 end
 
 function M:ShowIncompatibleDialog()
-    local titles = CollectIncompatibleTitles()
+    local titles = M:CollectIncompatibleTitles()
     if #titles == 0 then
         return
     end
@@ -84,28 +81,9 @@ end
 function M:CanEnable()
     if HasIncompatibleAddons() then
         M:ShowIncompatibleDialog()
-        ns.ModuleRegistry:GetModuleBucket("craftingorders").userChoseOn = true
+        return false
     end
     return true
-end
-
-function M:CreateCustomDetail(parent, yOffset)
-    local titles = CollectIncompatibleTitles()
-    if #titles == 0 then
-        return yOffset
-    end
-    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
-    fs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
-    fs:SetJustifyH("LEFT")
-    fs:SetWordWrap(true)
-    local width = parent:GetWidth() or 0
-    if width >= 1 then
-        fs:SetWidth(width)
-    end
-    fs:SetTextColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-    fs:SetText(L["CRAFTORDERS_INCOMPATIBLE_BODY"]:format(table.concat(titles, ", ")))
-    return yOffset - fs:GetStringHeight() - 8
 end
 
 function M:WireProfessions()
@@ -172,8 +150,8 @@ function M:WireProfessions()
     end
 
     M:InstallCastBarNoop()
-    M:EnsureOverlay()
     M:EnsureModeButton()
+    M:EnsureOverlay()
     M:EnsureMagicButton()
 end
 
@@ -208,7 +186,7 @@ function M:EnsureEventFrame()
 end
 
 function M:OnEnable()
-    if HasIncompatibleAddons() and not ns.ModuleRegistry:GetModuleBucket("craftingorders").userChoseOn then
+    if HasIncompatibleAddons() then
         ns.ModuleRegistry:SetEnabled("craftingorders", false)
         return
     end

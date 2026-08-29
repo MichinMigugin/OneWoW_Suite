@@ -316,9 +316,11 @@ Modules\external\craftingorders\rewards.lua
 Modules\external\craftingorders\classify.lua
 Modules\external\craftingorders\shopping.lua
 Modules\external\craftingorders\storage.lua
+Modules\external\craftingorders\columns.lua
 Modules\external\craftingorders\overlay.lua
 Modules\external\craftingorders\magicbutton.lua
 Modules\external\craftingorders\craftingorders.lua
+Modules\external\craftingorders\overlay-settings.lua
 
 Modules\external\afkpanel\module.lua
 Modules\external\afkpanel\Locales\enUS.lua

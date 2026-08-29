@@ -154,6 +154,39 @@ function PinSupport.LayoutHoverPanel(panel, items)
     panel:SetHeight(math.max(total, 36))
 end
 
+local BACKDROP_SOLID = {
+    bgFile   = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = false, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 },
+}
+
+local BACKDROP_FADE = {
+    bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 },
+}
+
+--- Same solid/fade switch for pinned notes, hover bars, and the pins list.
+---@param frame Frame
+---@param color number[]
+---@param alpha number
+---@param borderColor number[]|nil
+function PinSupport.ApplyOpacityBackdrop(frame, color, alpha, borderColor)
+    if not frame then return end
+    if alpha >= 1.0 then
+        frame:SetBackdrop(BACKDROP_SOLID)
+        frame:SetBackdropColor(color[1], color[2], color[3], 1.0)
+    else
+        frame:SetBackdrop(BACKDROP_FADE)
+        frame:SetBackdropColor(color[1], color[2], color[3], alpha)
+    end
+    if borderColor then
+        frame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+    end
+end
+
 function PinSupport.EnsureWorldMapHook()
     if worldMapHooked then return end
     worldMapHooked = true

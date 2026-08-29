@@ -23,10 +23,13 @@ local defaults = {
         waypins                = {},
         waypinWorldSize        = 22,
         waypinMinimapSize      = 16,
+        waypinEnabled          = true,
         waypinShowWorld        = true,
         waypinShowMinimap      = true,
-        waypinMinimapAnimate   = true,
+        waypinMinimapAnimate   = false,
         waypinShowMapPanel     = true,
+        waypinMapClickEnabled  = true,
+        waypinMapClick         = "ctrlRight",
         notesCustomCategories  = {},
         itemCustomCategories   = {},
         zoneCustomCategories   = {},
@@ -260,5 +263,11 @@ function ns:InitializeDatabase()
         savedVar  = "OneWoW_Notes_DB",
         defaults  = defaults,
     })
+    -- Pre-toggle map-click stored Off as a combo value. Split that into the
+    -- boolean and keep Ctrl-Right as the remembered combination.
+    if db.global.waypinMapClick == "off" then
+        db.global.waypinMapClickEnabled = false
+        db.global.waypinMapClick = "ctrlRight"
+    end
     ns.db = db
 end
