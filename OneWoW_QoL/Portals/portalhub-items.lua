@@ -124,22 +124,27 @@ end
 
 function ItemDetection:GetAllItems(showAll, excludeFromOtherCategories)
 	local allItems = {}
+	-- Same item can live in more than one subcategory; keep one copy on the combined list.
+	local seen = {}
 
-	local rings = self:GetRings(showAll)
-	local cloaks = self:GetCloaks(showAll)
-	local tabards = self:GetTabards(showAll)
-	local consumables = self:GetConsumables(showAll)
-	local specials = self:GetSpecialItems(showAll)
+	local function AppendUnique(list)
+		for _, item in ipairs(list) do
+			local key = (item.type or "item") .. ":" .. item.id
+			if not seen[key] then
+				seen[key] = true
+				table.insert(allItems, item)
+			end
+		end
+	end
 
-	for _, item in ipairs(rings) do table.insert(allItems, item) end
-	for _, item in ipairs(cloaks) do table.insert(allItems, item) end
-	for _, item in ipairs(tabards) do table.insert(allItems, item) end
-	for _, item in ipairs(consumables) do table.insert(allItems, item) end
-	for _, item in ipairs(specials) do table.insert(allItems, item) end
+	AppendUnique(self:GetRings(showAll))
+	AppendUnique(self:GetCloaks(showAll))
+	AppendUnique(self:GetTabards(showAll))
+	AppendUnique(self:GetConsumables(showAll))
+	AppendUnique(self:GetSpecialItems(showAll))
 
 	if not excludeFromOtherCategories then
-		local engineering = self:GetEngineeringItems(showAll)
-		for _, item in ipairs(engineering) do table.insert(allItems, item) end
+		AppendUnique(self:GetEngineeringItems(showAll))
 	end
 
 	return allItems

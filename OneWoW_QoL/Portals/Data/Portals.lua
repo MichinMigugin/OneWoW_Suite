@@ -122,6 +122,7 @@ Portals.Items = {
 		{id = 173528, name = "Gilded Hearthstone", type = "item"},
 		{id = 173532, name = "Tirisfal Camp Scroll", type = "item"},
 		{id = 173537, name = "Glowing Hearthstone", type = "item"},
+		{id = 180817, name = "Cypher of Relocation", type = "item"},
 		{id = 181163, name = "Scroll of Teleport: Theater of Pain", type = "item"},
 		{id = 184500, name = "Attendant's Pocket Portal: Bastion", type = "item"},
 		{id = 184501, name = "Attendant's Pocket Portal: Revendreth", type = "item"},
@@ -131,6 +132,7 @@ Portals.Items = {
 		{id = 200613, name = "Aylaag Windstone Fragment", type = "item"},
 		{id = 238727, name = "Nostwin's Voucher", type = "item"},
 		{id = 162515, name = "Midnight Salmon", type = "item"},
+		{id = 279550, name = "Potion of Venomous Return", type = "item"},
 	},
 
 	special_items = {

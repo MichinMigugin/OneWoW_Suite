@@ -29,6 +29,9 @@
 - Craftable now rows have a Craft button on the list. Click Start, then craft, then complete without opening the order. After you start one, that order stays at the top of every tab until you finish it, and the other rows dim. If the order needs Concentration to hit its minimum quality, the button becomes Concentration first. An X beside Craft cancels the started order.
 - Crafting Orders starts on. The One UI list is on, Hide unlearned recipes is on, and Use WoW List is off. Features can change those. Columns default to Cart, You Provide, Gold, Profit / Loss, and Craft, in that order, with icons at 48. Only show mats I still need starts checked, and Profit / Loss prices come from OneWoW. Reset in Features restores this view.
 
+#### Portals
+- Consumables now includes Potion of Venomous Return (Amani Foothold). Cypher of Relocation is listed under both Consumables and Special Items.
+
 #### Fixes
 - If No Mats No Make or PatronOffers is enabled, Crafting Orders starts off so those addons can run. You can still turn One UI on. Turning it off fully restores their list.
 - Crafting Orders icon size sliders resize the list the moment you move them. If you show more columns than fit at your chosen size, all icons shrink together just enough to keep every column and the order name on screen - nothing hides or gets cut off. Hidden columns take no space, and column spacing is tighter.
