@@ -68,6 +68,154 @@ local function CurrentActionButton(view)
     return nil, nil
 end
 
+local function ActionButtonForKind(view, kind)
+    if not view or not kind then
+        return nil
+    end
+    if kind == "complete" then
+        return view.CompleteOrderButton
+    end
+    if kind == "create" then
+        return view.CreateButton
+    end
+    if kind == "concentrate" then
+        return GetConcentrateButton(view)
+    end
+    if kind == "start" then
+        return view.OrderInfo and view.OrderInfo.StartOrderButton
+    end
+    return nil
+end
+
+function M:GetConcentrateToggle(view)
+    return GetConcentrateButton(view or GetOrderView())
+end
+
+--- True when the parked OrderView cannot meet min quality until Concentration
+--- is applied. Optional concentration (Create already enabled) is not a step.
+---@param view Frame|nil
+---@return boolean
+function M:ListCraftNeedsConcentration(view)
+    local ov = view or GetOrderView()
+    local order = ov and ov.order
+    if not order or not order.minQuality or order.minQuality <= 1 then
+        return false
+    end
+    local conc = GetConcentrateButton(ov)
+    if not conc or not conc:IsShown() then
+        return false
+    end
+    if conc.GetChecked and conc:GetChecked() then
+        return false
+    end
+    if conc.AtMaxQuality and conc:AtMaxQuality() then
+        return false
+    end
+    local form = ov.OrderDetails and ov.OrderDetails.SchematicForm
+    local details = form and form.Details
+    local qualityInfo = details and details.GetProjectedQualityInfo and details:GetProjectedQualityInfo()
+    if qualityInfo and qualityInfo.quality and order.minQuality > qualityInfo.quality then
+        return true
+    end
+    local create = ov.CreateButton
+    return create and create:IsShown() and not create:IsEnabled()
+end
+
+local function ApplySecureAttributes(fn)
+    Restriction.RunWhenUnrestricted("protected", "QoL_craftingorders_magic", fn)
+end
+
+local function ApplyRowActionSecureAttributes(fn)
+    Restriction.RunWhenUnrestricted("protected", "QoL_craftingorders_rowaction", fn)
+end
+
+function M:GetOrderView()
+    return GetOrderView()
+end
+
+function M:GetOrderAction(view)
+    return CurrentActionButton(view or GetOrderView())
+end
+
+function M:GetMagicClickMacro()
+    local stop = SLASH_STOPCASTING1
+    local click = SLASH_CLICK1
+    local clickLine = click .. " " .. INNER_NAME
+    return stop .. "\n" .. clickLine .. "\n" .. clickLine .. "\n" .. clickLine
+end
+
+--- Queue the live Blizzard Start / Create / Complete (and optional
+--- concentration toggle) for the next /click of the shared inner button.
+---@param view Frame|nil
+---@param includeConc boolean|nil
+function M:PrepareMagicClick(view, includeConc)
+    wipe(clickQueue)
+    local ov = view or GetOrderView()
+    if includeConc then
+        local conc = GetConcentrateButton(ov)
+        if M._conc and M._conc:IsShown() and conc and conc.GetChecked then
+            local want = M._conc._wanted == true
+            if want ~= conc:GetChecked() then
+                clickQueue[#clickQueue + 1] = conc
+            end
+        end
+    end
+    local action = CurrentActionButton(ov)
+    if action then
+        clickQueue[#clickQueue + 1] = action
+    end
+end
+
+--- Queue Start / Create / Complete from the live claimed order, not from
+--- whichever Blizzard button happens to be shown. After Start, SetOrder of
+--- the browse snapshot keeps Start visible and eats the next clicks.
+---@param entry table
+function M:PrepareListCraftClick(entry)
+    wipe(clickQueue)
+    local order = M:GetListCraftOrder(entry)
+    M:LoadOrderBehindList(order)
+    local view = GetOrderView()
+    local kind = M:GetListCraftKind(entry)
+    if kind == "create" and M:ListCraftNeedsConcentration(view) then
+        kind = "concentrate"
+    end
+    local action = ActionButtonForKind(view, kind)
+    if view and order and (not action or not action:IsShown()) then
+        view:SetOrder(order)
+        M:ParkOrderViewBehindList()
+        kind = M:GetListCraftKind(entry)
+        if kind == "create" and M:ListCraftNeedsConcentration(view) then
+            kind = "concentrate"
+        end
+        action = ActionButtonForKind(view, kind)
+    end
+    if action then
+        clickQueue[#clickQueue + 1] = action
+    end
+end
+
+--- Secure attributes for a list-row click-mirror. Same owner for every row
+--- so a combat-deferred flush applies every button created while locked.
+---@param btn Button
+function M:SecureRowActionButton(btn)
+    M._rowActionPending = M._rowActionPending or {}
+    M._rowActionPending[#M._rowActionPending + 1] = btn
+    ApplyRowActionSecureAttributes(function()
+        local pending = M._rowActionPending
+        if not pending then
+            return
+        end
+        local macro = M:GetMagicClickMacro()
+        for i = 1, #pending do
+            local rowBtn = pending[i]
+            rowBtn:SetAttribute("useOnKeyDown", false)
+            rowBtn:SetAttribute("type", "macro")
+            rowBtn:SetAttribute("macrotext", macro)
+        end
+        wipe(pending)
+    end)
+end
+
 local function SetHiddenChrome(btn, hidden)
     if not btn then return end
     if hidden then
@@ -102,7 +250,7 @@ end
 -- button cannot be a CreateFitTextButton (it must stay an
 -- InsecureActionButtonTemplate for the secure click mirror), so it carries
 -- the same chrome by hand.
-local function ApplyMagicChrome(magic, hover)
+function M:ApplyMagicChrome(magic, hover)
     if not magic:IsEnabled() then
         magic:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         magic:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
@@ -128,10 +276,6 @@ local function PlaceMagic(magic, view)
     magic:SetPoint("BOTTOM", info, "BOTTOM", 0, MAGIC_Y)
     magic:SetSize(MAGIC_W, MAGIC_H)
     magic:SetFrameLevel(info:GetFrameLevel() + 20)
-end
-
-local function ApplySecureAttributes(fn)
-    Restriction.RunWhenUnrestricted("protected", "QoL_craftingorders_magic", fn)
 end
 
 local function NoopCastBar()
@@ -249,23 +393,11 @@ function M:EnsureMagicButton()
     end)
 
     magic:SetScript("PreClick", function()
-        wipe(clickQueue)
-        local ov = GetOrderView()
-        local conc = GetConcentrateButton(ov)
-        if M._conc and M._conc:IsShown() and conc and conc.GetChecked then
-            local want = M._conc._wanted == true
-            if want ~= conc:GetChecked() then
-                clickQueue[#clickQueue + 1] = conc
-            end
-        end
-        local action = CurrentActionButton(ov)
-        if action then
-            clickQueue[#clickQueue + 1] = action
-        end
+        M:PrepareMagicClick(GetOrderView(), true)
     end)
 
     magic:SetScript("OnEnter", function(myself)
-        ApplyMagicChrome(myself, true)
+        M:ApplyMagicChrome(myself, true)
         if Restriction.IsProtectedActionBlocked() then
             GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(SPELL_FAILED_AFFECTING_COMBAT)
@@ -279,7 +411,7 @@ function M:EnsureMagicButton()
         end
     end)
     magic:SetScript("OnLeave", function(myself)
-        ApplyMagicChrome(myself, false)
+        M:ApplyMagicChrome(myself, false)
         GameTooltip_Hide()
     end)
     magic:SetScript("OnMouseDown", function(myself)
@@ -288,7 +420,7 @@ function M:EnsureMagicButton()
     end)
     magic:SetScript("OnMouseUp", function(myself)
         if not myself:IsEnabled() then return end
-        ApplyMagicChrome(myself, myself:IsMouseOver())
+        M:ApplyMagicChrome(myself, myself:IsMouseOver())
     end)
 
     local concBtn = CreateFrame("Button", CONC_NAME, magic)
@@ -362,7 +494,7 @@ function M:ValidateMagicButton()
     else
         magic.label:SetText(action:GetText() or CREATE_PROFESSION)
     end
-    ApplyMagicChrome(magic, magic:IsMouseOver())
+    M:ApplyMagicChrome(magic, magic:IsMouseOver())
 
     local conc = GetConcentrateButton(view)
     local needConc = kind == "create" and conc and conc:IsShown()
@@ -384,6 +516,7 @@ function M:OnOrderViewUpdated()
     if not ModuleOn() then return end
     M:EnsureMagicButton()
     M:ValidateMagicButton()
+    M:ValidateListActionButtons()
 end
 
 function M:HideMagicButton()

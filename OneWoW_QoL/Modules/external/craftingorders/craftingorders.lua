@@ -104,6 +104,13 @@ function M:WireProfessions()
         hooksecurefunc(page, "SendOrderRequest", function(myself, request)
             M:OnOrdersRequestSent(myself, request)
         end)
+        hooksecurefunc(page, "ViewOrder", function()
+            M:StayOnListAfterViewOrder()
+        end)
+        hooksecurefunc(page, "CloseOrder", function()
+            M._listCraftActive = false
+            M:RestoreOrderViewChrome()
+        end)
 
         page:HookScript("OnShow", function()
             if ModuleOn() then
@@ -165,6 +172,8 @@ function M:OnProfessionShown()
 end
 
 function M:OnProfessionClosed()
+    M._listCraftActive = false
+    M:RestoreOrderViewChrome()
     M:HideOverlay()
     M:HideMagicButton()
 end
@@ -180,6 +189,21 @@ function M:EnsureEventFrame()
         end
         M:RefreshOverlay()
         M:ValidateMagicButton()
+        M:ValidateListActionButtons()
+        -- Claim / fulfill update OrderView on the next frame. Re-bind the
+        -- list button after that so Start becomes Create / Complete.
+        if event == "CRAFTINGORDERS_CLAIMED_ORDER_ADDED"
+            or event == "CRAFTINGORDERS_CLAIMED_ORDER_UPDATED"
+            or event == "CRAFTINGORDERS_CLAIMED_ORDER_REMOVED"
+            or event == "CRAFTINGORDERS_FULFILL_ORDER_RESPONSE" then
+            C_Timer.After(0, function()
+                if not ModuleOn() then
+                    return
+                end
+                M:RefreshOverlay()
+                M:ValidateListActionButtons()
+            end)
+        end
     end)
     M._eventFrame = f
     return f
@@ -235,21 +259,28 @@ function M:OnEnable()
     f:RegisterEvent("CRAFTINGORDERS_CAN_REQUEST")
     f:RegisterEvent("CRAFTINGORDERS_UPDATE_CUSTOMER_NAME")
     f:RegisterEvent("CRAFTINGORDERS_UPDATE_REWARDS")
+    f:RegisterEvent("CRAFTINGORDERS_CLAIMED_ORDER_ADDED")
+    f:RegisterEvent("CRAFTINGORDERS_CLAIMED_ORDER_REMOVED")
+    f:RegisterEvent("CRAFTINGORDERS_CLAIMED_ORDER_UPDATED")
+    f:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
     f:RegisterEvent("PLAYER_GUILD_UPDATE")
 
     OneWoW.Restriction.RegisterStateCallback(OWNER, function()
         M:ValidateMagicButton()
+        M:ValidateListActionButtons()
     end)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", M, function()
         if not ModuleOn() then return end
         M:ApplyOverlayTheme()
         M:ValidateMagicButton()
+        M:ValidateListActionButtons()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", M, function()
         if not ModuleOn() then return end
         M:RefreshOverlay()
         M:ValidateMagicButton()
+        M:ValidateListActionButtons()
     end)
 
     if OneWoW.ProfessionRecipe.IsTradeskillOpen() then
@@ -258,11 +289,14 @@ function M:OnEnable()
 end
 
 function M:OnDisable()
+    M._listCraftActive = false
+    M:RestoreOrderViewChrome()
     ns.ModuleRegistry:GetModuleBucket("craftingorders").userChoseOn = nil
     OneWoW.ProfessionRecipe.UnregisterCallback(OWNER)
     OneWoW.Inventory.UnregisterCallback(OWNER)
     OneWoW.Restriction.UnregisterStateCallback(OWNER)
     OneWoW.Restriction.CancelWhenUnrestricted("QoL_craftingorders_magic")
+    OneWoW.Restriction.CancelWhenUnrestricted("QoL_craftingorders_rowaction")
     if M._eventFrame then
         M._eventFrame:UnregisterAllEvents()
     end

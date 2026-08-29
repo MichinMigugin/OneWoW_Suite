@@ -314,6 +314,30 @@ function M:BuildOverlayEntries(rawList, isBucket, orderType)
     sort(missing, sorter)
     sort(unknown, sorter)
 
+    -- A claimed order drops off the browse snapshot and is the only claim
+    -- allowed. Pin it at the top of every tab so Start / Concentration /
+    -- Create / Complete and release stay available until it is finished.
+    local claimed = C_CraftingOrders.GetClaimedOrder()
+    if claimed then
+        local claimedID = claimed.orderID
+        local function strip(list)
+            local i = 1
+            while i <= #list do
+                if list[i].orderID == claimedID then
+                    tremove(list, i)
+                else
+                    i = i + 1
+                end
+            end
+        end
+        strip(ready)
+        strip(missing)
+        strip(unknown)
+        local entry = M:ClassifyOrder(claimed)
+        entry.section = "ready"
+        tinsert(ready, 1, entry)
+    end
+
     local entries = {}
     AppendSection(entries, ready, "ready")
     AppendSection(entries, missing, "missing")

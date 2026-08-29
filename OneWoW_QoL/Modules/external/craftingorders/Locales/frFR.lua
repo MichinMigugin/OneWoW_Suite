@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "frFR", {
 
     ["CRAFTORDERS_TITLE"] = "Commandes d'artisanat",
-    ["CRAFTORDERS_DESC"] = "Remplace la liste des commandes par Faisable maintenant et Matériaux manquants. Ajoutez les réactifs manquants a une liste de courses. Demarrer, fabriquer et terminer avec un seul bouton.",
+    ["CRAFTORDERS_DESC"] = "Remplace la liste des commandes par Faisable maintenant et Matériaux manquants. Ajoutez les réactifs manquants a une liste de courses. Demarrez, fabriquez et terminez les commandes Faisable maintenant depuis la liste.",
     ["CRAFTORDERS_SECTION_READY"] = "Faisable maintenant",
     ["CRAFTORDERS_SECTION_MISSING"] = "Matériaux manquants",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Hebdomadaire : non acceptee",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["CRAFTORDERS_COL_REWARD"] = "Vous recevez",
     ["CRAFTORDERS_COL_GOLD"] = "Or",
     ["CRAFTORDERS_COL_PROFIT"] = "Profit / Perte",
+    ["CRAFTORDERS_COL_ACTION"] = "Fabriquer",
     ["CRAFTORDERS_HIDE_HAVE"] = "N'afficher que les composants qu'il me manque",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "Masquer les composants que vous avez deja dans Vous fournissez.",
     ["CRAFTORDERS_SIZE_ITEM"] = "Icone de commande",

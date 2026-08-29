@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "esMX", {
 
     ["CRAFTORDERS_TITLE"] = "Pedidos de fabricacion",
-    ["CRAFTORDERS_DESC"] = "Sustituye la lista de pedidos por Se puede fabricar ahora y Faltan materiales. Anade los componentes que faltan a una lista de la compra. Empieza, fabrica y completa con un solo boton.",
+    ["CRAFTORDERS_DESC"] = "Sustituye la lista de pedidos por Se puede fabricar ahora y Faltan materiales. Anade los componentes que faltan a una lista de la compra. Empieza, fabrica y completa los pedidos Se puede fabricar ahora desde la lista.",
     ["CRAFTORDERS_SECTION_READY"] = "Se puede fabricar ahora",
     ["CRAFTORDERS_SECTION_MISSING"] = "Faltan materiales",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Semanal: no aceptada",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "esMX", {
     ["CRAFTORDERS_COL_REWARD"] = "Recibes",
     ["CRAFTORDERS_COL_GOLD"] = "Oro",
     ["CRAFTORDERS_COL_PROFIT"] = "Beneficio / Perdida",
+    ["CRAFTORDERS_COL_ACTION"] = "Fabricar",
     ["CRAFTORDERS_HIDE_HAVE"] = "Mostrar solo los materiales que me faltan",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "Ocultar los componentes que ya tienes en Tu aportas.",
     ["CRAFTORDERS_SIZE_ITEM"] = "Icono del pedido",

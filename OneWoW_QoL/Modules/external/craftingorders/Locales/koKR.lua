@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["CRAFTORDERS_TITLE"] = "제작 주문",
-    ["CRAFTORDERS_DESC"] = "제작 주문 목록을 지금 제작 가능과 재료 부족으로 나눕니다. 부족한 재료를 쇼핑 목록에 넣고, 시작/제작/완료를 한 버튼으로 처리합니다.",
+    ["CRAFTORDERS_DESC"] = "제작 주문 목록을 지금 제작 가능과 재료 부족으로 나눕니다. 부족한 재료를 쇼핑 목록에 넣고, 지금 제작 가능 주문을 목록에서 시작/제작/완료합니다.",
     ["CRAFTORDERS_SECTION_READY"] = "지금 제작 가능",
     ["CRAFTORDERS_SECTION_MISSING"] = "재료 부족",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "주간: 수락하지 않음",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["CRAFTORDERS_COL_REWARD"] = "받는 것",
     ["CRAFTORDERS_COL_GOLD"] = "골드",
     ["CRAFTORDERS_COL_PROFIT"] = "이익 / 손실",
+    ["CRAFTORDERS_COL_ACTION"] = "제작",
     ["CRAFTORDERS_HIDE_HAVE"] = "아직 부족한 재료만 표시",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "내가 제공에서 이미 가진 재료를 숨깁니다.",
     ["CRAFTORDERS_SIZE_ITEM"] = "주문 아이콘",

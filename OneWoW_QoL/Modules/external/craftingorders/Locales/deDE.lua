@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "deDE", {
 
     ["CRAFTORDERS_TITLE"] = "Handwerksauftrage",
-    ["CRAFTORDERS_DESC"] = "Ersetzt die Auftragsliste durch Jetzt herstellbar und Fehlende Materialien. Fehlende Reagenzien auf eine Einkaufsliste setzen. Starten, herstellen und abschliessen mit einer Schaltflache.",
+    ["CRAFTORDERS_DESC"] = "Ersetzt die Auftragsliste durch Jetzt herstellbar und Fehlende Materialien. Fehlende Reagenzien auf eine Einkaufsliste setzen. Jetzt herstellbar-Auftrage direkt in der Liste starten, herstellen und abschliessen.",
     ["CRAFTORDERS_SECTION_READY"] = "Jetzt herstellbar",
     ["CRAFTORDERS_SECTION_MISSING"] = "Fehlende Materialien",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Wochentlich: nicht angenommen",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["CRAFTORDERS_COL_REWARD"] = "Ihr erhaltet",
     ["CRAFTORDERS_COL_GOLD"] = "Gold",
     ["CRAFTORDERS_COL_PROFIT"] = "Gewinn / Verlust",
+    ["CRAFTORDERS_COL_ACTION"] = "Herstellen",
     ["CRAFTORDERS_HIDE_HAVE"] = "Nur noch benotigte Materialien anzeigen",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "Reagenzien ausblenden, die Ihr in Ihr liefert bereits habt.",
     ["CRAFTORDERS_SIZE_ITEM"] = "Auftragssymbol",

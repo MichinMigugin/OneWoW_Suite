@@ -174,7 +174,7 @@ Shows a companion panel alongside the profession window with expansion skill bre
 
 ### Crafting Orders
 
-Replaces the right-hand crafting orders table with Craftable now, Missing mats, and Recipe Unlearned for Public, Guild, Personal, and Patron orders. Rows show You provide / Customer mats and reward icons. A WoW UI / One UI button on the order tabs switches back to Blizzard's table. Hide unlearned recipes from Features. Add missing reagents to a Shopping List. Start, craft, and complete from one button.
+Replaces the right-hand crafting orders table with Craftable now, Missing mats, and Recipe Unlearned for Public, Guild, Personal, and Patron orders. On by default. Rows show You Provide, Gold, Profit / Loss, and a Craft button; hide or reorder columns in Features. A WoW UI / One UI button on the order tabs switches back to Blizzard's table. Hide unlearned recipes from Features. Add missing reagents to a Shopping List. Start, craft, and complete from one button.
 
 - **Module id:** `craftingorders` · **Folder:** `Modules/external/craftingorders/` — [details](Docs/Modules/craftingorders.md)
 

@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "zhCN", {
 
     ["CRAFTORDERS_TITLE"] = "制造订单",
-    ["CRAFTORDERS_DESC"] = "用“现在可制造”和“缺少材料”替换订单列表。把缺少的材料加入购物清单。用一个按钮开始、制造并完成。",
+    ["CRAFTORDERS_DESC"] = "用“现在可制造”和“缺少材料”替换订单列表。把缺少的材料加入购物清单。在列表中开始、制造并完成“现在可制造”订单。",
     ["CRAFTORDERS_SECTION_READY"] = "现在可制造",
     ["CRAFTORDERS_SECTION_MISSING"] = "缺少材料",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "周常：未接受",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["CRAFTORDERS_COL_REWARD"] = "你获得",
     ["CRAFTORDERS_COL_GOLD"] = "金币",
     ["CRAFTORDERS_COL_PROFIT"] = "利润 / 亏损",
+    ["CRAFTORDERS_COL_ACTION"] = "制造",
     ["CRAFTORDERS_HIDE_HAVE"] = "只显示我还缺的材料",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "隐藏你提供中已经拥有的材料。",
     ["CRAFTORDERS_SIZE_ITEM"] = "订单图标",

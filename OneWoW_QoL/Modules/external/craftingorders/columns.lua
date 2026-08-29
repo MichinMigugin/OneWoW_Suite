@@ -10,8 +10,9 @@ local CopyTable = CopyTable
 -- Column layout
 -- ============================================================================
 -- Player-owned overlay columns. Order name stays pinned left. Everything else
--- is a right-packed lane list: show, hide, reorder, resize. Defaults match the
--- original overlay so an empty save looks unchanged.
+-- is a right-packed lane list: show, hide, reorder, resize. Bump
+-- LAYOUT_REVISION when factory defaults change so existing preview layouts
+-- pick them up once; later tweaks stay in the player's save.
 -- ============================================================================
 
 local SPACING = OneWoW_GUI.Constants.SPACING
@@ -26,11 +27,14 @@ local TIME_W = 64
 local CART_W = 40
 local GOLD_W = 84
 local PROFIT_W = 100
-local DEFAULT_ROW_H = 60
+-- Fits PROFESSIONS_COMPLETE_ORDER in every locale (e.g. "Terminer la commande").
+local ACTION_W = 140
+local DEFAULT_ROW_H = 64
 local SIZE_MIN = 16
 local SIZE_MAX = 48
-
-local COLUMN_IDS = { "you", "cart", "customer", "reward", "time", "gold", "profit" }
+-- First id sits nearest the order name; last id sits on the right edge.
+local LAYOUT_REVISION = 2
+local COLUMN_IDS = { "cart", "you", "gold", "profit", "action", "customer", "reward", "time" }
 
 local COLUMN_META = {
     you = { kind = "icons", sizeKey = "you", maxIcons = MAX_YOU, labelKey = "CRAFTORDERS_COL_YOU", justify = "LEFT" },
@@ -40,10 +44,11 @@ local COLUMN_META = {
     time = { kind = "text", width = TIME_W, labelKey = nil, justify = "RIGHT" },
     gold = { kind = "text", width = GOLD_W, labelKey = "CRAFTORDERS_COL_GOLD", justify = "RIGHT" },
     profit = { kind = "profit", width = PROFIT_W, labelKey = "CRAFTORDERS_COL_PROFIT", justify = "RIGHT" },
+    action = { kind = "action", width = ACTION_W, labelKey = "CRAFTORDERS_COL_ACTION", justify = "CENTER" },
 }
 
-local DEFAULT_HIDDEN = { gold = true, profit = true }
-local DEFAULT_SIZES = { product = 36, you = 24, customer = 24, reward = 24 }
+local DEFAULT_HIDDEN = { customer = true, reward = true, time = true }
+local DEFAULT_SIZES = { product = 48, you = 48, customer = 48, reward = 48 }
 
 local function ClusterW(n, size)
     return n * (size + MAT_GAP) - MAT_GAP
@@ -51,11 +56,12 @@ end
 
 local function CopyLayoutDefaults()
     return {
+        revision = LAYOUT_REVISION,
         order = CopyTable(COLUMN_IDS),
         hidden = CopyTable(DEFAULT_HIDDEN),
         sizes = CopyTable(DEFAULT_SIZES),
-        hideHaveMats = false,
-        priceSource = nil,
+        hideHaveMats = true,
+        priceSource = "onewow",
     }
 end
 
@@ -72,7 +78,7 @@ end
 
 local function MergeLayout(saved)
     local layout = CopyLayoutDefaults()
-    if type(saved) ~= "table" then
+    if type(saved) ~= "table" or saved.revision ~= LAYOUT_REVISION then
         return layout
     end
     if type(saved.order) == "table" then
@@ -213,6 +219,7 @@ function M:LaneConstants()
         cartW = CART_W,
         goldW = GOLD_W,
         profitW = PROFIT_W,
+        actionW = ACTION_W,
         defaultRowH = DEFAULT_ROW_H,
         sizeMin = SIZE_MIN,
         sizeMax = SIZE_MAX,
@@ -270,6 +277,9 @@ local function LaneHeight(id, sizes)
     end
     if meta.kind == "cart" then
         return 20
+    end
+    if meta.kind == "action" then
+        return 22
     end
     return 16
 end
@@ -478,8 +488,8 @@ function M:PriceSourceIcon(source)
         end
         return "Interface\\Icons\\INV_Misc_Coin_01"
     end
-    -- OneWoW's own addon icon, same as every suite TOC IconTexture.
-    return OneWoW_GUI.Constants.FACTION_ICONS.neutral
+    -- OneWoW's own brand icon, following the player's icon theme setting.
+    return OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
 end
 
 function M:PriceSourceLabel(source)

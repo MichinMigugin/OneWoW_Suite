@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "itIT", {
 
     ["CRAFTORDERS_TITLE"] = "Ordini di creazione",
-    ["CRAFTORDERS_DESC"] = "Sostituisce l'elenco ordini con Creabile ora e Materiali mancanti. Aggiungi i reagenti mancanti a una lista della spesa. Avvia, crea e completa con un solo pulsante.",
+    ["CRAFTORDERS_DESC"] = "Sostituisce l'elenco ordini con Creabile ora e Materiali mancanti. Aggiungi i reagenti mancanti a una lista della spesa. Avvia, crea e completa gli ordini Creabile ora dall'elenco.",
     ["CRAFTORDERS_SECTION_READY"] = "Creabile ora",
     ["CRAFTORDERS_SECTION_MISSING"] = "Materiali mancanti",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Settimanale: non accettata",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["CRAFTORDERS_COL_REWARD"] = "Ricevi",
     ["CRAFTORDERS_COL_GOLD"] = "Oro",
     ["CRAFTORDERS_COL_PROFIT"] = "Profitto / Perdita",
+    ["CRAFTORDERS_COL_ACTION"] = "Crea",
     ["CRAFTORDERS_HIDE_HAVE"] = "Mostra solo i materiali che mi mancano",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "Nascondi i reagenti che hai gia in Fornisci tu.",
     ["CRAFTORDERS_SIZE_ITEM"] = "Icona ordine",

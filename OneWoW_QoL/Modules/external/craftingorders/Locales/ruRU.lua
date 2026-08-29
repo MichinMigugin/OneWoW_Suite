@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "ruRU", {
 
     ["CRAFTORDERS_TITLE"] = "Заказы на предметы",
-    ["CRAFTORDERS_DESC"] = "Заменяет список заказов разделами «Можно сделать сейчас» и «Не хватает материалов». Недостающие реагенты можно добавить в список покупок. Начать, создать и завершить одной кнопкой.",
+    ["CRAFTORDERS_DESC"] = "Заменяет список заказов разделами «Можно сделать сейчас» и «Не хватает материалов». Недостающие реагенты можно добавить в список покупок. Начните, создайте и завершите заказы «Можно сделать сейчас» прямо в списке.",
     ["CRAFTORDERS_SECTION_READY"] = "Можно сделать сейчас",
     ["CRAFTORDERS_SECTION_MISSING"] = "Не хватает материалов",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Еженедельное: не принято",
@@ -24,6 +24,7 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["CRAFTORDERS_COL_REWARD"] = "Вы получаете",
     ["CRAFTORDERS_COL_GOLD"] = "Золото",
     ["CRAFTORDERS_COL_PROFIT"] = "Прибыль / Убыток",
+    ["CRAFTORDERS_COL_ACTION"] = "Создать",
     ["CRAFTORDERS_HIDE_HAVE"] = "Показывать только недостающие материалы",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "Скрыть реагенты, которые у вас уже есть в разделе Вы даете.",
     ["CRAFTORDERS_SIZE_ITEM"] = "Значок заказа",

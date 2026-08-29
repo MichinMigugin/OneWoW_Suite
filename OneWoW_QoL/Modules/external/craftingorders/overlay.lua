@@ -3,6 +3,7 @@ local M, L = ns.ModuleRegistry:Current()
 if not M then return end
 
 local OneWoW_GUI = OneWoW_GUI
+local Restriction = OneWoW.Restriction
 
 local CreateFrame = CreateFrame
 local floor = math.floor
@@ -21,10 +22,10 @@ local LIST_RIGHT = 4
 local HEADER_LEFT = LIST_LEFT + VIRT_LEFT + ROW_INSET
 local HEADER_RIGHT = LIST_RIGHT + VIRT_RIGHT + ROW_INSET
 -- Profit header: punctuation-only, identical in every locale. The localized
--- "Profit / Loss" name still shows in the Features panel.
-local PROFIT_HEADER = "+ / -"
--- 14px source icon + 2px gap reserved at the right edge of the profit label.
-local PROFIT_ICON_W = 16
+-- "Profit / Loss" name still shows in the Features panel. The price-source
+-- icon is embedded in the string (|T markup) so it always renders directly
+-- after the text and updates with the label on every layout pass.
+local PROFIT_HEADER = "+ / - |T%s:0|t"
 
 local function PlaceColLabel(fs, parent, rightInset, width, justifyH)
     fs:ClearAllPoints()
@@ -78,27 +79,47 @@ function M:ApplyHeaderLayout(overlay)
         if spec then
             fs:Show()
             if id == "profit" then
-                -- Header reads "+ / - [source icon]"; the icon sits flush
-                -- right, so the label box ends where the icon begins. The
+                -- Header reads "+ / - [source icon]" as a single string; the
                 -- full "Profit / Loss" name stays in Features (ColumnLabel).
-                fs:SetText(PROFIT_HEADER)
-                PlaceColLabel(fs, host, spec.right + PROFIT_ICON_W, spec.width - PROFIT_ICON_W, spec.justify)
+                fs:SetText(PROFIT_HEADER:format(M:PriceSourceIcon(M:GetPriceSource())))
             else
                 fs:SetText(M:ColumnLabel(id))
-                PlaceColLabel(fs, host, spec.right, spec.width, spec.justify)
             end
+            PlaceColLabel(fs, host, spec.right, spec.width, spec.justify)
         else
             fs:Hide()
         end
     end
-    local profitSpec = insets.profit
-    if profitSpec then
-        overlay.profitIcon:Show()
-        overlay.profitIcon:SetTexture(M:PriceSourceIcon(M:GetPriceSource()))
-        overlay.profitIcon:ClearAllPoints()
-        overlay.profitIcon:SetPoint("RIGHT", host, "RIGHT", -profitSpec.right, 0)
+end
+
+local RELEASE_W = 18
+local RELEASE_GAP = 4
+
+local function LayoutActionLane(row, showRelease)
+    local btn = row.actionBtn
+    if not btn then
+        return
+    end
+    local spec = M:ComputeInsets().action
+    if not spec then
+        return
+    end
+    local release = row.releaseBtn
+    btn:ClearAllPoints()
+    if showRelease and release then
+        release:SetSize(RELEASE_W, 22)
+        release:ClearAllPoints()
+        release:SetPoint("RIGHT", row.actionLane, "RIGHT", 0, 0)
+        btn:SetPoint("LEFT", row.actionLane, "LEFT", 0, 0)
+        btn:SetPoint("RIGHT", release, "LEFT", -RELEASE_GAP, 0)
+        btn:SetHeight(22)
+        release:Show()
     else
-        overlay.profitIcon:Hide()
+        btn:SetPoint("CENTER", row.actionLane, "CENTER")
+        btn:SetSize(spec.width, 22)
+        if release then
+            release:Hide()
+        end
     end
 end
 
@@ -133,6 +154,10 @@ local function ApplyRowLayout(row)
     placeLane("time", row.timeText)
     placeLane("gold", row.goldText)
     placeLane("profit", row.profitText)
+    placeLane("action", row.actionLane)
+    if row.actionBtn then
+        LayoutActionLane(row, row.releaseBtn and row.releaseBtn:IsShown())
+    end
 end
 
 local function ResizeStrip(icons, size)
@@ -177,6 +202,147 @@ end
 local function GetBrowseFrame()
     local page = GetOrdersPage()
     return page and page.BrowseFrame, page
+end
+
+function M:GetClaimedOrderID()
+    local claimed = C_CraftingOrders.GetClaimedOrder()
+    return claimed and claimed.orderID or nil
+end
+
+function M:IsListCraftLocked(entry)
+    local claimedID = M:GetClaimedOrderID()
+    if not claimedID or not entry or entry.kind == "header" then
+        return false
+    end
+    return entry.orderID ~= claimedID
+end
+
+function M:RowShowsListCraft(entry)
+    if not entry or entry.kind ~= "order" or entry.isRecraft then
+        return false
+    end
+    local claimedID = M:GetClaimedOrderID()
+    if claimedID then
+        return entry.orderID == claimedID
+    end
+    return entry.section == "ready"
+end
+
+--- Label/step for the list Craft button. Uses the live claimed order, not
+--- Blizzard button :IsShown() (those lag a frame after Start).
+---@param entry table|nil
+---@return string kind
+function M:GetListCraftKind(entry)
+    if not entry then
+        return "start"
+    end
+    local claimed = C_CraftingOrders.GetClaimedOrder()
+    if not claimed or claimed.orderID ~= entry.orderID then
+        return "start"
+    end
+    if claimed.isFulfillable then
+        return "complete"
+    end
+    local view = M:GetOrderView()
+    if view and view.order and view.order.orderID == claimed.orderID
+        and M:ListCraftNeedsConcentration(view) then
+        return "concentrate"
+    end
+    return "create"
+end
+
+--- Drop the claimed order (same as Blizzard Cancel Order).
+---@param entry table|nil
+function M:ReleaseListCraftOrder(entry)
+    if Restriction.IsProtectedActionBlocked() then
+        return
+    end
+    local claimed = C_CraftingOrders.GetClaimedOrder()
+    if not claimed or not entry or claimed.orderID ~= entry.orderID then
+        return
+    end
+    if claimed.isFulfillable then
+        return
+    end
+    local page = GetOrdersPage()
+    local profession = page and page.professionInfo and page.professionInfo.profession
+    if not profession then
+        return
+    end
+    C_CraftingOrders.ReleaseOrder(claimed.orderID, profession)
+end
+
+--- Browse snapshot after Start is still Created. Load the live claim instead.
+---@param entry table|nil
+---@return table|nil order
+function M:GetListCraftOrder(entry)
+    local claimed = C_CraftingOrders.GetClaimedOrder()
+    if claimed and entry and claimed.orderID == entry.orderID then
+        return claimed
+    end
+    return entry and entry.raw
+end
+
+--- Keep OrderView shown (required for /click) but behind the browse overlay
+--- so list clicks land on the list. Stock ViewOrder hides BrowseFrame.
+function M:ParkOrderViewBehindList()
+    local page = GetOrdersPage()
+    local view = page and page.OrderView
+    local browse = page and page.BrowseFrame
+    if not view or not browse then
+        return
+    end
+    M._listCraftActive = true
+    view:Show()
+    view:SetAlpha(0)
+    local browseLevel = browse:GetFrameLevel()
+    if view:GetFrameLevel() >= browseLevel then
+        view:SetFrameLevel(math.max(1, browseLevel - 2))
+    end
+    if not browse:IsShown() then
+        browse:Show()
+    end
+end
+
+function M:RestoreOrderViewChrome()
+    local page = GetOrdersPage()
+    local view = page and page.OrderView
+    if not view then
+        return
+    end
+    view:SetAlpha(1)
+    if page then
+        view:SetFrameLevel(page:GetFrameLevel() + 10)
+    end
+end
+
+function M:LoadOrderBehindList(order)
+    local page = GetOrdersPage()
+    local view = page and page.OrderView
+    if not page or not view or not order then
+        return
+    end
+    -- Re-SetOrder of the browse snapshot after a claim resets the view to
+    -- Start and eats the next clicks. Skip when this order is already loaded
+    -- in the same state.
+    local current = view.order
+    if not current or current.orderID ~= order.orderID or current.orderState ~= order.orderState then
+        view:SetOrder(order)
+    end
+    M:ParkOrderViewBehindList()
+end
+
+function M:StayOnListAfterViewOrder()
+    if not M:WantsOverlay() then
+        return
+    end
+    if M._openingOrderFromRow then
+        M._listCraftActive = false
+        M:RestoreOrderViewChrome()
+        return
+    end
+    M:ParkOrderViewBehindList()
+    M:ShowOverlay()
 end
 
 local function GetOrderList()
@@ -230,6 +396,11 @@ function M:IsOverlayActive()
 end
 
 local function ApplyRowChrome(row, index, entry, selected, hover)
+    if entry and entry.kind ~= "header" and M:IsListCraftLocked(entry) then
+        row:SetAlpha(0.4)
+    else
+        row:SetAlpha(1)
+    end
     if entry and entry.kind == "header" then
         OneWoW_GUI:ApplyListRowFill(row, { header = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
@@ -362,6 +533,8 @@ local function FormatTimeLeft(entry)
     return SecondsToTime(remaining, noSeconds)
 end
 
+local BindActionButton
+
 local function BindHeader(row, entry)
     row.product:Hide()
     row.nameText:ClearAllPoints()
@@ -388,6 +561,15 @@ local function BindHeader(row, entry)
     row.customerLane:Hide()
     row.rewardLane:Hide()
     row.cartLane:Hide()
+    row.actionLane:Hide()
+    if row.actionBtn then
+        row.actionBtn:Hide()
+        row.actionBtn._entry = nil
+    end
+    if row.releaseBtn then
+        row.releaseBtn:Hide()
+        row.releaseBtn._entry = nil
+    end
     row.timeText:Hide()
     row.goldText:Hide()
     row.profitText:Hide()
@@ -444,6 +626,79 @@ local function BindRow(row, entry)
         and entry.missingReagents and #entry.missingReagents > 0
     row.addBtn._entry = entry
     row.addBtn:SetShown(showAdd)
+    BindActionButton(row, entry)
+end
+
+BindActionButton = function(row, entry)
+    local btn = row.actionBtn
+    if not btn then
+        return
+    end
+    btn._entry = entry
+    if row.releaseBtn then
+        row.releaseBtn._entry = entry
+    end
+    if not M:RowShowsListCraft(entry) then
+        btn:Hide()
+        LayoutActionLane(row, false)
+        return
+    end
+    btn:Show()
+    local kind = M:GetListCraftKind(entry)
+    local claimed = C_CraftingOrders.GetClaimedOrder()
+    local showRelease = claimed and claimed.orderID == entry.orderID and not claimed.isFulfillable
+    LayoutActionLane(row, showRelease)
+    local blocked = Restriction.IsProtectedActionBlocked()
+    if row.releaseBtn then
+        row.releaseBtn:SetEnabled(not blocked)
+        if blocked then
+            row.releaseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            row.releaseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            row.releaseBtn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        else
+            row.releaseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            row.releaseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            row.releaseBtn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+    if kind == "start" then
+        btn:SetEnabled(not blocked)
+    elseif kind == "concentrate" then
+        local conc = M:GetConcentrateToggle()
+        local enough = not conc or not conc.HasEnoughConcentration or conc:HasEnoughConcentration()
+        btn:SetEnabled(not blocked and enough)
+    else
+        local action = select(1, M:GetOrderAction(M:GetOrderView()))
+        btn:SetEnabled(not blocked and (not action or action:IsEnabled()))
+    end
+    if kind == "complete" then
+        btn.label:SetText(PROFESSIONS_COMPLETE_ORDER)
+    elseif kind == "concentrate" then
+        btn.label:SetText(PROFESSIONS_CRAFTING_STAT_CONCENTRATION)
+    elseif kind == "create" then
+        btn.label:SetText(CREATE_PROFESSION)
+    else
+        btn.label:SetText(PROFESSIONS_START_ORDER)
+    end
+    M:ApplyMagicChrome(btn, btn:IsMouseOver())
+end
+
+function M:ValidateListActionButtons()
+    local overlay = M._overlay
+    if not overlay then
+        return
+    end
+    local rows = overlay._rows
+    if not rows then
+        return
+    end
+    for i = 1, #rows do
+        local row = rows[i]
+        if row:IsShown() and row._entry and row._entry.kind ~= "header" then
+            BindActionButton(row, row._entry)
+            ApplyRowChrome(row, row._rowIndex, row._entry, row._selected, row:IsMouseOver())
+        end
+    end
 end
 
 function M:EnsureOverlay()
@@ -514,10 +769,6 @@ function M:EnsureOverlay()
         colLabels[id] = fs
     end
     overlay.colLabels = colLabels
-
-    local profitIcon = headerLanes:CreateTexture(nil, "ARTWORK")
-    profitIcon:SetSize(14, 14)
-    overlay.profitIcon = profitIcon
 
     local listHost = CreateFrame("Frame", nil, overlay)
     listHost:SetPoint("TOPLEFT", overlay, "TOPLEFT", LIST_LEFT, -(4 + STATUS_H + COL_H))
@@ -701,6 +952,124 @@ function M:EnsureOverlay()
             addBtn:SetScript("OnLeave", GameTooltip_Hide)
             row.addBtn = addBtn
 
+            local actionLane = CreateFrame("Frame", nil, laneHost)
+            row.actionLane = actionLane
+            M:EnsureMagicButton()
+            local actionBtn = CreateFrame("Button", nil, actionLane,
+                "InsecureActionButtonTemplate, BackdropTemplate")
+            actionBtn:SetSize(lane.actionW or 140, 22)
+            actionBtn:SetPoint("CENTER", actionLane, "CENTER")
+            actionBtn:RegisterForClicks("LeftButtonUp")
+            actionBtn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
+            actionBtn:SetMotionScriptsWhileDisabled(true)
+            local actionLabel = OneWoW_GUI:CreateFS(actionBtn, 11)
+            actionLabel:SetPoint("LEFT", actionBtn, "LEFT", 4, 0)
+            actionLabel:SetPoint("RIGHT", actionBtn, "RIGHT", -4, 0)
+            actionLabel:SetJustifyH("CENTER")
+            actionLabel:SetWordWrap(false)
+            actionLabel:SetMaxLines(1)
+            actionBtn.label = actionLabel
+            actionBtn:SetScript("PreClick", function(myself)
+                if Restriction.IsProtectedActionBlocked() then
+                    return
+                end
+                local entry = myself._entry
+                if not entry or not M:RowShowsListCraft(entry) or M:IsListCraftLocked(entry) then
+                    return
+                end
+                M:PrepareListCraftClick(entry)
+            end)
+            actionBtn:SetScript("OnEnter", function(myself)
+                M:ApplyMagicChrome(myself, true)
+                if Restriction.IsProtectedActionBlocked() then
+                    GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(SPELL_FAILED_AFFECTING_COMBAT)
+                    GameTooltip:Show()
+                    return
+                end
+                local entry = myself._entry
+                local kind = M:GetListCraftKind(entry)
+                if kind == "concentrate" then
+                    GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(PROFESSIONS_CRAFTING_STAT_CONCENTRATION)
+                    local conc = M:GetConcentrateToggle()
+                    if conc and conc.HasEnoughConcentration and not conc:HasEnoughConcentration() then
+                        local info = conc.GetCurrencyInfo and conc:GetCurrencyInfo()
+                        GameTooltip:AddLine(
+                            PROFESSIONS_CRAFTING_CONCENTRATION_TOGGLE_DISABLED:format(
+                                (info and info.name) or PROFESSIONS_CRAFTING_STAT_CONCENTRATION
+                            ),
+                            OneWoW_GUI:GetThemeColor("TEXT_WARNING")
+                        )
+                    elseif conc and conc.GetConcentrationRequired then
+                        GameTooltip:AddLine(
+                            PROFESSIONS_CRAFTING_CONCENTRATION_TOGGLE_ON_DESC:format(conc:GetConcentrationRequired()),
+                            OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
+                        )
+                    end
+                    GameTooltip:Show()
+                elseif entry and entry.orderID ~= M:GetClaimedOrderID() then
+                    GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(PROFESSIONS_START_ORDER_TOOLTIP)
+                    GameTooltip:Show()
+                end
+            end)
+            actionBtn:SetScript("OnLeave", function(myself)
+                M:ApplyMagicChrome(myself, false)
+                GameTooltip_Hide()
+            end)
+            actionBtn:SetScript("OnMouseDown", function(myself)
+                if not myself:IsEnabled() then return end
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+            end)
+            actionBtn:SetScript("OnMouseUp", function(myself)
+                if not myself:IsEnabled() then return end
+                M:ApplyMagicChrome(myself, myself:IsMouseOver())
+            end)
+            M:SecureRowActionButton(actionBtn)
+            M:ApplyMagicChrome(actionBtn, false)
+            row.actionBtn = actionBtn
+
+            local releaseBtn = CreateFrame("Button", nil, actionLane, "BackdropTemplate")
+            releaseBtn:SetSize(RELEASE_W, 22)
+            releaseBtn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
+            releaseBtn:SetMotionScriptsWhileDisabled(true)
+            local releaseLabel = OneWoW_GUI:CreateFS(releaseBtn, 11)
+            releaseLabel:SetPoint("CENTER")
+            releaseLabel:SetText("X")
+            releaseBtn.label = releaseLabel
+            releaseBtn:SetScript("OnClick", function(myself)
+                if Restriction.IsProtectedActionBlocked() then
+                    return
+                end
+                M:ReleaseListCraftOrder(myself._entry)
+            end)
+            releaseBtn:SetScript("OnEnter", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
+                myself.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                if Restriction.IsProtectedActionBlocked() then
+                    GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(SPELL_FAILED_AFFECTING_COMBAT)
+                    GameTooltip:Show()
+                    return
+                end
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetText(PROFESSIONS_CRAFTER_RELEASE_ORDER)
+                GameTooltip:Show()
+            end)
+            releaseBtn:SetScript("OnLeave", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+                myself.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                GameTooltip_Hide()
+            end)
+            releaseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            releaseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            releaseLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            releaseBtn:Hide()
+            row.releaseBtn = releaseBtn
+
             ApplyRowLayout(row)
             overlay._rows[#overlay._rows + 1] = row
             return row
@@ -745,13 +1114,18 @@ end
 
 function M:OnRowActivate(entry)
     if not entry or entry.kind == "header" then return end
+    if M:IsListCraftLocked(entry) then return end
     local page = GetOrdersPage()
     if not page then return end
     if entry.kind == "bucket" then
         page:SelectRecipeFromBucket(entry.raw)
-    else
-        page:ViewOrder(entry.raw)
+        return
     end
+    M._openingOrderFromRow = true
+    page:ViewOrder(entry.raw)
+    M._openingOrderFromRow = false
+    M._listCraftActive = false
+    M:RestoreOrderViewChrome()
 end
 
 function M:OnRowRightClick(entry)
@@ -992,6 +1366,8 @@ function M:HideOverlay()
     if M._overlay then
         M._overlay:Hide()
     end
+    M._listCraftActive = false
+    M:RestoreOrderViewChrome()
     ShowBlizzardOrderList()
     M:UpdateModeButton()
 end

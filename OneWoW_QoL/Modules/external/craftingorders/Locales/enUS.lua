@@ -4,7 +4,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "enUS", {
 
     ["CRAFTORDERS_TITLE"] = "Crafting Orders",
-    ["CRAFTORDERS_DESC"] = "Replaces the crafting orders list with Craftable now and Missing mats. Add missing reagents to a Shopping List. Start, craft, and complete from one button.",
+    ["CRAFTORDERS_DESC"] = "Replaces the crafting orders list with Craftable now and Missing mats. Add missing reagents to a Shopping List. Start, craft, and complete Craftable now orders from the list.",
     ["CRAFTORDERS_SECTION_READY"] = "Craftable now",
     ["CRAFTORDERS_SECTION_MISSING"] = "Missing mats",
     ["CRAFTORDERS_WEEKLY_NOT_ACCEPTED"] = "Weekly: not accepted",
@@ -23,6 +23,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["CRAFTORDERS_COL_REWARD"] = "You Receive",
     ["CRAFTORDERS_COL_GOLD"] = "Gold",
     ["CRAFTORDERS_COL_PROFIT"] = "Profit / Loss",
+    ["CRAFTORDERS_COL_ACTION"] = "Craft",
     ["CRAFTORDERS_HIDE_HAVE"] = "Only show mats I still need",
     ["CRAFTORDERS_HIDE_HAVE_DESC"] = "Hide reagents you already have in You Provide.",
     ["CRAFTORDERS_SIZE_ITEM"] = "Order icon",

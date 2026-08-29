@@ -23,9 +23,10 @@ the overlay is shown. Patron / Guild / Personal are always a flat order list.
   Each You Provide / Customer Provides / You Receive cluster is a fixed-width
   lane packed left-to-right, so unused slots cannot slide icons into the next
   column. Features owns the layout: show, hide, and reorder those lanes
-  (Order name stays pinned left). Gold and Profit / Loss start hidden.
-  Icon sizes and "only mats I still need" are sliders and a checkbox on the
-  same panel. Reset restores the default view.
+  (Order name stays pinned left). Defaults show Cart, You Provide, Gold,
+  Profit / Loss, and Craft. Customer Provides, rewards, and time start hidden.
+  Icon sizes default to 48. "Only mats I still need" starts on. Profit / Loss
+  prices default to OneWoW. Reset restores the default view.
   The layout applies in place (no frame rebuilds): slider changes resize
   the existing icons live via `ApplyOverlayLayout`. Icon lanes reserve
   width only for the icon slots the current entry list actually uses
@@ -49,14 +50,21 @@ the overlay is shown. Patron / Guild / Personal are always a flat order list.
   valued reward items, minus valued You Provide reagents (customer mats are
   not subtracted). Prices come from `OneWoW.ItemPrices` (TSM, Auctionator, or
   OneWoW scan). A missing price skips that term; nothing is invented.
-  Its header reads `+ / -` (identical in every locale) with the price
-  source's icon flush right: TSM / Auctionator show their addon icon,
-  OneWoW shows the suite icon (`FACTION_ICONS.neutral`). The full
+  Its header reads `+ / - [icon]` as one string (identical in every locale;
+  the source icon is |T-embedded in the label so it always sits directly
+  after the text): TSM / Auctionator show their addon icon, OneWoW shows the
+  brand icon for the player's icon theme (`GetBrandIcon`). The full
   "Profit / Loss" name stays on the Features panel.
+- **Craft column:** Craftable now rows (not recrafts) get the same Start /
+  Craft / Complete click-mirror as the order page. Start loads that order
+  behind the list so you stay on the overlay. Other rows dim until that
+  order is completed. Recrafts and Missing mats stay without this button.
+  Hide or move the column in Features like the others.
 - **Cart:** one shopping-cart control per row that still needs crafter mats
   (Missing mats and Recipe Unlearned), in its own column.
-- **Default off:** the overlay is off until you turn the module on in QoL
-  Features. That On/Off is account-wide (every character).
+- **Default on:** the module starts on in QoL Features (account-wide). Hide
+  unlearned recipes starts on. Use WoW List starts off (One UI list). Turning
+  the module off keeps it off on every character.
 - **Incompatible addons:** if PatronOffers or PublicOrdersReagentsColumn
   (No Mats No Make) is enabled, Crafting Orders cannot be turned on. Features
   names the addon and asks you to disable it and try again. Off fully
@@ -89,9 +97,10 @@ Khaz Algar fallback). Public claims use `GetOrderClaimInfo`, not the weekly.
 
 Click-mirrors Blizzard Start / Create / Complete via
 `InsecureActionButtonTemplate` and a short `/click` chain. The inner click
-target stays shown (alpha 0) because `/click` ignores hidden frames. The
-visible button stays on `OrderInfo` (left) for Start, Craft, and Complete so
-the mouse does not move. It wears the standard suite button chrome by hand
+target stays shown (alpha 0) because `/click` ignores hidden frames. On the
+order page the visible button stays on `OrderInfo` (left) so the mouse does
+not move. The list Craft column uses the same inner `/click`; `OrderView`
+stays shown behind the browse overlay. It wears the standard suite button chrome by hand
 (`BACKDROP_INNER`, `BTN_NORMAL`/`BTN_HOVER`/`BTN_PRESSED`, themed border,
 muted label when disabled) since it cannot be a `CreateFitTextButton`.
 Concentration is an icon beside Craft, tooltip only.
