@@ -77,7 +77,6 @@ Future maintainers and LLMs: these are deliberate, not gaps.
 - **Descriptive phrasings of game concepts** — e.g. "warbound" is rendered as the suite's
   "bound to <Warband>" phrasing rather than swapped for Blizzard's `ITEM_ACCOUNTBOUND` term;
   the embedded Warband term itself *is* aligned to Blizzard (§4).
-- **Internal/dev tools** — `OneWoW_AccountSync` are not localized.
 
 ---
 

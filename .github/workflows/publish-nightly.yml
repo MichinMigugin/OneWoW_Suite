@@ -6,7 +6,6 @@ on:
     paths:
       - "OneWoW/**"
       - "OneWoW_*/**"
-      - "!OneWoW_AccountSync/**"
       - "bin/pack_github_zip.py"
       - "bin/onewow_release_lib.py"
       - ".github/workflows/publish-nightly.yml"

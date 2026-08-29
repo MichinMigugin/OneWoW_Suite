@@ -25,8 +25,3 @@ shipped in this repository.
 ## Fonts
 
 Bundled fonts and their licenses: [OneWoW/Media/Fonts/FONT_LICENSES.txt](OneWoW/Media/Fonts/FONT_LICENSES.txt).
-
-## Account Sync (desktop)
-
-`OneWoW_AccountSync` is a Go + Fyne desktop app. Third-party Go modules are
-declared in `OneWoW_AccountSync/go.mod` and keep their own licenses.

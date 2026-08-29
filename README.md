@@ -119,7 +119,6 @@ Companion addons for [OneWoW_AltTracker](OneWoW_AltTracker/README.md). No standa
 | Addon | Description | Docs |
 |-------|-------------|------|
 | [OneWoW_Utility_DevTool](OneWoW_Utility_DevTool/README.md) | In-game developer inspector (opt-in) | README |
-| [OneWoW_AccountSync](OneWoW_AccountSync/README.md) | Desktop app — sync SavedVariables across Battle.net accounts (Go + Fyne) | README |
 
 ---
 
