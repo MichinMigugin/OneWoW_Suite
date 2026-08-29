@@ -585,7 +585,6 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     local function ApplyAllOpacity(val)
         PinSupport.ApplyOpacityBackdrop(pin, bgColor, val, borderColor)
         PinSupport.ApplyOpacityBackdrop(hoverPanel, listItemColor, val, borderColor)
-        local titleBarColor = colorConfig.titleBar
         if pin.titleBar then
             pin.titleBar:SetBackdropColor(titleBarColor[1], titleBarColor[2], titleBarColor[3], 0.8)
         end

@@ -4,7 +4,7 @@ local L = ns.L
 local Location = OneWoW.Location
 
 local CopyTable = CopyTable
-local pairs, ipairs, type, tonumber = pairs, ipairs, type, tonumber
+local pairs, type, tonumber = pairs, type, tonumber
 local tinsert, sort, format = tinsert, sort, string.format
 local GetServerTime = GetServerTime
 local C_Map = C_Map
