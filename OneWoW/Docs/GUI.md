@@ -1411,6 +1411,10 @@ list.SetSelectedIndex(1)
   title text for hover or select (Catalog Journal / Vendors / Item Search).
 - **`createRow` / `bindRow`:** create widgets once; bind on every visible update.
   Nested controls must read `row.entryIndex` (live), not a closed-over create-time index.
+- **Reorder on a pooled list:** set `row._reorderIndex` in `bindRow` to the data-bag
+  index (not the flattened or pool index). `CreateReorderDrag` prefers that field.
+  Attach once in `createRow`. Rows mid-drag (`_oneWoWReorderOrigPoints`) are skipped
+  so auto-scroll does not steal the ghost.
 - **Tooltips:** set `row._tooltipFullText`; the engine wires `OnEnter`/`OnLeave` when
   the row has no `OnEnter` yet.
 - **Adopted scroll:** pass `scrollFrame` + `content` to host inside `CreateSplitPanel`

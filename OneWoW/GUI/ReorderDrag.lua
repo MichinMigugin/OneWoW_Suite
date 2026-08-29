@@ -31,6 +31,11 @@ local OneWoW_GUI = OneWoW_GUI
 -- automatically so off-screen rows can become drop targets. Supply either a
 -- direct frame reference or a getter for late-bound scroll frames.
 --
+-- Virtualized lists: set item._reorderIndex to the data-bag index (not the
+-- pooled-frame position). BeginDrag / hover / FinishDrag prefer that field so
+-- recycle does not close over a stale Attach index. Leave it nil for full-list
+-- callers; IndexOf(getItems(), frame) stays the default.
+--
 -- Usage:
 --   controller = OneWoW_GUI:CreateReorderDrag({
 --       getItems      = function() return list end,                           -- required
@@ -75,6 +80,21 @@ local function IndexOf(list, item)
         if v == item then return i end
     end
     return nil
+end
+
+--- Data-bag index when `item._reorderIndex` is set (virtualizer pools); else
+--- position in `getItems()`.
+---@param item Frame|nil
+---@param list table|nil
+---@return number|nil
+local function ItemIndex(item, list)
+    if not item then
+        return nil
+    end
+    if item._reorderIndex then
+        return item._reorderIndex
+    end
+    return IndexOf(list, item)
 end
 
 local function CaptureAllAnchorPoints(item)
@@ -314,7 +334,7 @@ local function ClearHover(controller)
     if not hover then return end
     if controller.onUnhover then
         local list = controller.getItems and controller.getItems()
-        controller.onUnhover(hover, IndexOf(list, hover))
+        controller.onUnhover(hover, ItemIndex(hover, list))
     end
     controller._state.hoverItem = nil
 end
@@ -339,25 +359,25 @@ local function FinishDrag(controller, forceCancel)
         end
         if controller.onRestore then
             local list = controller.getItems and controller.getItems()
-            controller.onRestore(sourceItem, IndexOf(list, sourceItem))
+            controller.onRestore(sourceItem, ItemIndex(sourceItem, list))
         end
     end
 
     if not forceCancel and wasActive and sourceItem then
         local list = controller.getItems and controller.getItems()
         if list then
-            local fromIdxCurrent = IndexOf(list, sourceItem) or fromIdx
+            local fromIdxCurrent = ItemIndex(sourceItem, list) or fromIdx
             local dropIdx
             local dropItem
-            for idx, item in ipairs(list) do
+            for _, item in ipairs(list) do
                 if item ~= sourceItem and item.IsMouseOver and item:IsMouseOver() then
-                    dropIdx = idx
+                    dropIdx = ItemIndex(item, list)
                     dropItem = item
                     break
                 end
             end
             if not dropIdx and hoverDrop and hoverDrop ~= sourceItem then
-                dropIdx = IndexOf(list, hoverDrop)
+                dropIdx = ItemIndex(hoverDrop, list)
                 dropItem = hoverDrop
             end
             if dropIdx and fromIdxCurrent and dropIdx ~= fromIdxCurrent and controller.onReorder then
@@ -413,7 +433,7 @@ local function OnUpdate(controller, elapsed)
                 ApplyPickupVisual(controller, st.sourceItem)
                 if controller.onPickup then
                     local list = controller.getItems and controller.getItems()
-                    controller.onPickup(st.sourceItem, IndexOf(list, st.sourceItem))
+                    controller.onPickup(st.sourceItem, ItemIndex(st.sourceItem, list))
                 end
             end
             if GameTooltip then GameTooltip:Hide() end
@@ -440,13 +460,13 @@ local function OnUpdate(controller, elapsed)
             st.hoverItem = newHover
             st.insertBefore = insertBefore
             if controller.onHover then
-                controller.onHover(newHover, IndexOf(list, newHover), insertBefore)
+                controller.onHover(newHover, ItemIndex(newHover, list), insertBefore)
             end
             PositionIndicator(controller, newHover, insertBefore)
         elseif insertBefore ~= st.insertBefore then
             st.insertBefore = insertBefore
             if controller.onHover then
-                controller.onHover(newHover, IndexOf(list, newHover), insertBefore)
+                controller.onHover(newHover, ItemIndex(newHover, list), insertBefore)
             end
             PositionIndicator(controller, newHover, insertBefore)
         end
@@ -479,7 +499,7 @@ function ControllerMethods:Attach(item, index)
     item._oneWoWReorderOnMouseDown = function(myself, button)
         if button ~= "LeftButton" then return end
         local list = controller.getItems and controller.getItems()
-        local idx = index or IndexOf(list, myself)
+        local idx = myself._reorderIndex or index or IndexOf(list, myself)
         if not idx then return end
         BeginDrag(controller, myself, idx)
     end

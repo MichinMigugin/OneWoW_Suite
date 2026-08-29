@@ -28,6 +28,9 @@
 - Hover checkboxes are both "show" now: Show Pins and Show Zone Notes. Checked means that pane is visible. Uncheck Show Zone Notes to keep only the pin list.
 - Hide Scrollbar on that hover bar hides the pin list bar. The list still scrolls with the mouse wheel.
 
+## Collectibles
+- Opening Collectibles stays smooth when you have hundreds of items. Clicking a row no longer rebuilds the whole list.
+
 ## OneWay Pins
 - Pins can have an optional description. Hover a pin in the zone list or map legend to see title, description, and coordinates. Pins saved from Catalog Journal, Vendors, or Quests mention Catalog on the tooltip.
 - The pin icon picker includes Blizzard minimap tracking icons (banker, auctioneer, mailbox, innkeeper, flight master, repair, stable master, trainers, food, reagents, and more).

@@ -12,7 +12,6 @@ ns.UI = ns.UI or {}
 -- selectedKey is the canonical collectible KEY string ("mount:2240"), not a
 -- numeric id — the whole tab is keyed by strings from OneWoW.Collectibles.
 local selectedKey    = nil
-local collListRows   = {}
 local categoryFilter  = "All"
 local typeFilter      = "All"
 local storageFilter   = "All"
@@ -25,12 +24,11 @@ local currentSort    = { by = "name", ascending = true }
 -- is view-only and keyed by the set's collectible key; sets default collapsed.
 local expandedSets       = {}
 local CHILD_ROW_HEIGHT   = 28
-local CHILD_ROW_SPACING  = 32
+local HEADER_ROW_HEIGHT  = 30
 
 local detailPanel    = nil
 local emptyMessage   = nil
 local leftStatusText = nil
-local scrollChild    = nil
 
 -- Intent is the user's plan for a collectible; stored on the record as a plain
 -- token. "none" maps to the Blizzard NONE global; the rest are scoped keys.
@@ -138,54 +136,6 @@ local function FormatCost(entry)
     return table.concat(parts, "  ")
 end
 
--- A compact, read-only child row for a transmog-set member appearance: indented
--- under its set parent, showing the piece's icon + name and a ready-check glyph
--- for its live collected state (color plus glyph, not color alone). Hovering
--- shows the appearance's item tooltip when a link is available.
-local function CreateMemberChildRow(parentFrame, opts)
-    local row = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
-    row:SetPoint("TOPLEFT",  parentFrame, "TOPLEFT",  18, opts.yOffset)
-    row:SetPoint("TOPRIGHT", parentFrame, "TOPRIGHT", 0,  opts.yOffset)
-    row:SetHeight(CHILD_ROW_HEIGHT)
-    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local icon = row:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(20, 20)
-    icon:SetPoint("LEFT", row, "LEFT", 8, 0)
-    icon:SetTexture(opts.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-    icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-
-    local check = row:CreateTexture(nil, "ARTWORK")
-    check:SetSize(16, 16)
-    check:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-    check:SetTexture(opts.collected
-        and "Interface\\RaidFrame\\ReadyCheck-Ready"
-        or  "Interface\\RaidFrame\\ReadyCheck-NotReady")
-
-    local name = OneWoW_GUI:CreateFS(row, 11)
-    name:SetPoint("LEFT",  icon, "RIGHT", 6, 0)
-    name:SetPoint("RIGHT", check, "LEFT", -6, 0)
-    name:SetJustifyH("LEFT")
-    name:SetWordWrap(false)
-    name:SetText(opts.name or UNKNOWN)
-    name:SetTextColor(OneWoW_GUI:GetThemeColor(
-        opts.collected and "TEXT_PRIMARY" or "TEXT_MUTED"))
-
-    if opts.link then
-        row:EnableMouse(true)
-        row:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetHyperlink(opts.link)
-            GameTooltip:Show()
-        end)
-        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    end
-
-    return row
-end
-
 function ns.UI.CreateCollectiblesTab(parent)
     do
         local p = ns.db.global.tabSortPrefs.collectibles
@@ -197,8 +147,8 @@ function ns.UI.CreateCollectiblesTab(parent)
     end
 
     -- Re-resolves display when the item cache fills in (appearance sources are
-    -- commonly uncached on first view). Armed only while the shown editor has
-    -- incomplete display data, disarmed once it resolves.
+    -- commonly uncached on first view). Armed while the open editor or any
+    -- expanded set member is still missing a name.
     local infoWatcher = CreateFrame("Frame")
 
     local controlPanel = ns.UI.CreateThemedBar(nil, parent)
@@ -220,14 +170,31 @@ function ns.UI.CreateCollectiblesTab(parent)
         {text = AUCTION_CATEGORY_RECIPES, value = "recipe"},
     }
 
-    local function EntryMatchesFilters(key, record, name, ignoreDim)
+    local snapshot = {}
+    local flattenedEntries = {}
+    local collectibleBag = {}
+    local pooledRows = {}
+    local searchLower = ""
+    local listNeedsItemInfo = false
+    local listAPI
+    local reorderCtrl
+
+    local function SyncItemInfoWatcher(editorComplete)
+        if editorComplete == false or listNeedsItemInfo then
+            infoWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+        else
+            infoWatcher:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+        end
+    end
+
+    local function EntryMatchesFilters(snap, ignoreDim)
+        local record = snap.data
         if categoryFilter ~= "All" and ignoreDim ~= "category"
             and record.category ~= categoryFilter then
             return false
         end
         if typeFilter ~= "All" and ignoreDim ~= "type" then
-            local descriptor = OneWoW.Collectibles.ParseKey(key)
-            if not descriptor or descriptor.type ~= typeFilter then
+            if snap.collType ~= typeFilter then
                 return false
             end
         end
@@ -236,20 +203,41 @@ function ns.UI.CreateCollectiblesTab(parent)
             return false
         end
         if collectedFilter ~= "All" and ignoreDim ~= "status" then
-            local state = OneWoW.Collectibles.GetCollectionState(key)
-            local isCollected = state and state.collected or false
-            if collectedFilter == "collected" and not isCollected then return false end
-            if collectedFilter == "uncollected" and isCollected then return false end
+            if collectedFilter == "collected" and not snap.collected then return false end
+            if collectedFilter == "uncollected" and snap.collected then return false end
         end
-        if searchFilter ~= "" then
-            if not name:lower():find(searchFilter:lower(), 1, true) then
+        if searchLower ~= "" then
+            if not snap.nameLower:find(searchLower, 1, true) then
                 return false
             end
         end
         return true
     end
 
-    local function CountCollectiblesForFilters(ignoreDim)
+    local function BuildSnapshot()
+        wipe(snapshot)
+        searchLower = searchFilter:lower()
+        local all = ns.Collectibles:GetAll()
+        for key, record in pairs(all) do
+            if type(record) == "table" then
+                local name, icon = ResolveRow(key, record)
+                local descriptor = OneWoW.Collectibles.ParseKey(key)
+                local state = OneWoW.Collectibles.GetCollectionState(key)
+                snapshot[#snapshot + 1] = {
+                    key        = key,
+                    data       = record,
+                    name       = name,
+                    nameLower  = name:lower(),
+                    icon       = icon,
+                    collType   = descriptor and descriptor.type,
+                    descriptor = descriptor,
+                    collected  = state and state.collected or false,
+                }
+            end
+        end
+    end
+
+    local function CountFromSnapshot(ignoreDim)
         local counts = {
             all = 0,
             byCategory = {},
@@ -260,34 +248,27 @@ function ns.UI.CreateCollectiblesTab(parent)
         for _, opt in ipairs(TYPE_FILTER_OPTS) do
             counts.byType[opt.value] = 0
         end
-        local all = ns.Collectibles:GetAll()
-        for key, record in pairs(all) do
-            if type(record) == "table" then
-                local name = select(1, ResolveRow(key, record))
-                if EntryMatchesFilters(key, record, name, ignoreDim) then
-                    counts.all = counts.all + 1
-                    local cat = record.category or "General"
-                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
-                    local stor = record.storage == "character" and "character" or "account"
-                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
-                    counts.byStorage.All = counts.byStorage.All + 1
-                    if ignoreDim == "type" then
-                        local descriptor = OneWoW.Collectibles.ParseKey(key)
-                        if descriptor and descriptor.type then
-                            counts.byType[descriptor.type] = (counts.byType[descriptor.type] or 0) + 1
-                        end
-                        counts.byType.All = counts.byType.All + 1
+        for _, snap in ipairs(snapshot) do
+            if EntryMatchesFilters(snap, ignoreDim) then
+                counts.all = counts.all + 1
+                local cat = snap.data.category or "General"
+                counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                local stor = snap.data.storage == "character" and "character" or "account"
+                counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                counts.byStorage.All = counts.byStorage.All + 1
+                if ignoreDim == "type" then
+                    if snap.collType then
+                        counts.byType[snap.collType] = (counts.byType[snap.collType] or 0) + 1
                     end
-                    if ignoreDim == "status" then
-                        local state = OneWoW.Collectibles.GetCollectionState(key)
-                        local isCollected = state and state.collected or false
-                        if isCollected then
-                            counts.byStatus.collected = counts.byStatus.collected + 1
-                        else
-                            counts.byStatus.uncollected = counts.byStatus.uncollected + 1
-                        end
-                        counts.byStatus.All = counts.byStatus.All + 1
+                    counts.byType.All = counts.byType.All + 1
+                end
+                if ignoreDim == "status" then
+                    if snap.collected then
+                        counts.byStatus.collected = counts.byStatus.collected + 1
+                    else
+                        counts.byStatus.uncollected = counts.byStatus.uncollected + 1
                     end
+                    counts.byStatus.All = counts.byStatus.All + 1
                 end
             end
         end
@@ -295,7 +276,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     end
 
     local function RefreshCatOptions()
-        local catCounts = CountCollectiblesForFilters("category")
+        local catCounts = CountFromSnapshot("category")
         local opts = {{
             text = ALL,
             value = "All",
@@ -332,7 +313,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     local typeDD = ns.UI.CreateThemedDropdown(controlPanel, TYPE, 120, 25)
     typeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     local function RefreshTypeOpts()
-        local typeCounts = CountCollectiblesForFilters("type")
+        local typeCounts = CountFromSnapshot("type")
         local opts = {{
             text = ALL,
             value = "All",
@@ -357,7 +338,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", typeDD, "RIGHT", 4, 0)
     local function RefreshStorageOpts()
-        local storCounts = CountCollectiblesForFilters("storage")
+        local storCounts = CountFromSnapshot("storage")
         storeDD:SetOptions({
             {text = ALL, value = "All",
                 rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
@@ -377,7 +358,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     local collectedDD = ns.UI.CreateThemedDropdown(controlPanel, STATUS, 130, 25)
     collectedDD:SetPoint("LEFT", storeDD, "RIGHT", 4, 0)
     local function RefreshCollectedOpts()
-        local statusCounts = CountCollectiblesForFilters("status")
+        local statusCounts = CountFromSnapshot("status")
         collectedDD:SetOptions({
             {text = ALL, value = "All",
                 rightText = ns.UI.FormatSectionCount(statusCounts.byStatus.All)},
@@ -461,43 +442,33 @@ function ns.UI.CreateCollectiblesTab(parent)
     searchBox:SetPoint("TOPRIGHT", listingPanel, "TOPRIGHT", -8, -30)
 
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
-    scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    local sectionRowFrames = {}
-    local sectionDataBags = {}
-    local sectionReorders = {}
-    local function GetOrCreateSectionReorder(sectionKey)
-        if sectionReorders[sectionKey] then
-            return sectionReorders[sectionKey]
-        end
-        local ctrl = ns.UI.CreateNotesListReorderDrag({
-            getItems = function()
-                return sectionRowFrames[sectionKey]
-            end,
-            getScrollFrame = function()
-                return listScroll.scrollFrame
-            end,
-            onReorder = function(fromIdx, toIdx, insertBefore)
-                local bag = sectionDataBags[sectionKey]
-                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
-                    ns.UI.EnsureCustomSort(sortHandle, currentSort, "collectibles")
-                    parent.RefreshCollectiblesList()
+    local function IsCollectiblesReorderSuppressed()
+        return reorderCtrl and (reorderCtrl:IsActive() or reorderCtrl:ShouldSuppressClick())
+    end
+
+    reorderCtrl = ns.UI.CreateNotesListReorderDrag({
+        getItems = function()
+            local items = {}
+            for _, row in ipairs(pooledRows) do
+                if row:IsShown() and row._reorderIndex then
+                    items[#items + 1] = row
                 end
-            end,
-        })
-        sectionReorders[sectionKey] = ctrl
-        return ctrl
-    end
-    local function IsAnyCollectiblesReorderActive()
-        for _, ctrl in pairs(sectionReorders) do
-            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
-                return true
             end
-        end
-        return false
-    end
+            return items
+        end,
+        getScrollFrame = function()
+            return listScroll.scrollFrame
+        end,
+        onReorder = function(fromIdx, toIdx, insertBefore)
+            if ns.UI.ApplySectionReorder(collectibleBag, fromIdx, toIdx, insertBefore) then
+                ns.UI.EnsureCustomSort(sortHandle, currentSort, "collectibles")
+                parent.RefreshCollectiblesList()
+            end
+        end,
+    })
 
     detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
@@ -720,12 +691,7 @@ function ns.UI.CreateCollectiblesTab(parent)
 
         PopulateSoldBy(ec, record)
 
-        -- Self-arming: keep listening only while this record's display is partial.
-        if complete then
-            infoWatcher:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
-        else
-            infoWatcher:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-        end
+        SyncItemInfoWatcher(complete)
     end
 
     local function HideEditor()
@@ -735,8 +701,8 @@ function ns.UI.CreateCollectiblesTab(parent)
             end
         end
         if detailPanel.contentEditBox then detailPanel.contentEditBox:Hide() end
-        infoWatcher:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
         emptyMessage:Show()
+        SyncItemInfoWatcher(true)
     end
 
     local function DeleteSelected()
@@ -1009,171 +975,425 @@ function ns.UI.CreateCollectiblesTab(parent)
         parent.RefreshCollectiblesList()
     end)
 
-    local function CreateSectionHeader(text, yPos, count)
-        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
-            title = text,
-            yOffset = yPos,
-            rightText = ns.UI.FormatSectionCount(count),
-        })
-        table.insert(collListRows, section)
-        return section
+    local function SortCollectibleSnaps(a, b)
+        local aDel = a.data.intent == "delete"
+        local bDel = b.data.intent == "delete"
+        if aDel ~= bDel then return bDel end
+        if currentSort.by == "category" then
+            local ca = a.data.category or ""
+            local cb = b.data.category or ""
+            if ca == cb then return a.name < b.name end
+            if currentSort.ascending then return ca < cb else return ca > cb end
+        elseif currentSort.by == "custom" then
+            local sa = a.data.sortOrder or 0
+            local sb = b.data.sortOrder or 0
+            if sa == sb then return a.name < b.name end
+            if currentSort.ascending then return sa < sb else return sa > sb end
+        elseif currentSort.by == "modified" then
+            if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
+            else return (a.data.modified or 0) > (b.data.modified or 0) end
+        else
+            if currentSort.ascending then return a.name < b.name else return a.name > b.name end
+        end
     end
 
-    function parent.RefreshCollectiblesList()
-        if scrollChild then
-            scrollChild._onewowZebraSeq = nil
-        end
-        for _, ctrl in pairs(sectionReorders) do
-            ctrl:Cancel()
-        end
-        for _, row in pairs(collListRows) do
-            row:Hide()
-        end
-        collListRows = {}
-        wipe(sectionRowFrames)
-        wipe(sectionDataBags)
-
-        RefreshCatOptions()
-        RefreshTypeOpts()
-        RefreshStorageOpts()
-        RefreshCollectedOpts()
-
-        local all = ns.Collectibles:GetAll()
-        local list = {}
-        for key, record in pairs(all) do
-            if type(record) == "table" then
-                local name = select(1, ResolveRow(key, record))
-                if EntryMatchesFilters(key, record, name, nil) then
-                    list[#list + 1] = { key = key, data = record, name = name }
-                end
+    local function RebuildFlattened()
+        wipe(collectibleBag)
+        wipe(flattenedEntries)
+        listNeedsItemInfo = false
+        for _, snap in ipairs(snapshot) do
+            if EntryMatchesFilters(snap, nil) then
+                collectibleBag[#collectibleBag + 1] = snap
             end
         end
+        table.sort(collectibleBag, SortCollectibleSnaps)
 
-        local function sortEntries(a, b)
-            -- Recycle-bin (delete-intent) rows always sink to the bottom, whatever
-            -- the active sort; within each group the chosen sort applies.
-            local aDel = a.data.intent == "delete"
-            local bDel = b.data.intent == "delete"
-            if aDel ~= bDel then return bDel end
-            if currentSort.by == "category" then
-                local ca = a.data.category or ""
-                local cb = b.data.category or ""
-                if ca == cb then return a.name < b.name end
-                if currentSort.ascending then return ca < cb else return ca > cb end
-            elseif currentSort.by == "custom" then
-                local sa = a.data.sortOrder or 0
-                local sb = b.data.sortOrder or 0
-                if sa == sb then return a.name < b.name end
-                if currentSort.ascending then return sa < sb else return sa > sb end
-            elseif currentSort.by == "modified" then
-                if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
-                else return (a.data.modified or 0) > (b.data.modified or 0) end
-            else
-                if currentSort.ascending then return a.name < b.name else return a.name > b.name end
-            end
-        end
-        table.sort(list, sortEntries)
-
-        local yOffset = 0
-        if #list > 0 then
-            sectionDataBags["all"] = list
-            sectionRowFrames["all"] = {}
-            CreateSectionHeader(L["TAB_COLLECTIBLES"], yOffset, #list)
-            yOffset = yOffset - 30
-        end
-
-        for _, entry in ipairs(list) do
-            local _, icon = ResolveRow(entry.key, entry.data)
-            local state = OneWoW.Collectibles.GetCollectionState(entry.key)
-            local barColor
-            if state then
-                local cr, cg, cb = OneWoW_GUI:GetThemeColor(
-                    state.collected and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED")
-                barColor = { cr, cg, cb }
-            end
-
-            local intent = entry.data.intent or "none"
-            local detailText = intent ~= "none" and IntentLabel(intent) or nil
-
-            local key = entry.key
-            local descriptor = OneWoW.Collectibles.ParseKey(key)
-            local isSet = descriptor and descriptor.type == "set"
-
-            -- A set gets an expand caret; the collected/total rolls up onto the
-            -- parent's detail line so the count reads at a glance while collapsed.
-            local rowDetail = detailText
-            if isSet and state and state.total and state.total > 0 then
-                local prog = string.format("%d/%d", state.numCollected or 0, state.total)
-                rowDetail = detailText and (detailText .. "  " .. prog) or prog
-            end
-
-            local rowOpts = {
-                yOffset     = yOffset,
-                barColor    = barColor,
-                icon        = icon,
-                title       = entry.name,
-                detail      = rowDetail,
-                storageText = entry.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
-                selected    = (selectedKey == key),
-                shouldSuppressSelect = IsAnyCollectiblesReorderActive,
-                onSelect    = function()
-                    selectedKey = key
-                    ShowEditor()
-                    parent.RefreshCollectiblesList()
-                end,
-                delete = {
-                    tooltip = { title = DELETE, desc = L["COLLECTIBLE_DELETE_DESC"] },
-                    onClick = function()
-                        selectedKey = key
-                        DeleteSelected()
-                    end,
-                },
+        if #collectibleBag > 0 then
+            flattenedEntries[#flattenedEntries + 1] = {
+                kind  = "header",
+                title = L["TAB_COLLECTIBLES"],
+                count = #collectibleBag,
             }
-            if isSet then
-                rowOpts.expand = {
-                    expanded = expandedSets[key] == true,
-                    tooltip  = { title = L["COLLECTIBLE_SET_MEMBERS"] },
-                    onToggle = function()
-                        expandedSets[key] = not expandedSets[key]
-                        parent.RefreshCollectiblesList()
-                    end,
-                }
-            end
-
-            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
-            -- Recycle-bin rows read as "on the way out": dimmed but still fully
-            -- interactive (select to restore its intent, or delete now).
-            row:SetAlpha(entry.data.intent == "delete" and 0.5 or 1)
-            table.insert(collListRows, row)
-            local frames = sectionRowFrames["all"]
-            frames[#frames + 1] = row
-            GetOrCreateSectionReorder("all"):Attach(row, #frames)
-            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
-
-            -- Expanded set: render its per-slot member appearances as read-only,
-            -- live child rows (no records, no selection — the set is the record).
-            if isSet and expandedSets[key] then
-                local members = OneWoW.Collectibles.GetSetMembers(descriptor.id)
+        end
+        for i, snap in ipairs(collectibleBag) do
+            local isSet = snap.collType == "set"
+            flattenedEntries[#flattenedEntries + 1] = {
+                kind         = "item",
+                snap         = snap,
+                reorderIndex = i,
+                isSet        = isSet,
+            }
+            if isSet and expandedSets[snap.key] and snap.descriptor then
+                local members = OneWoW.Collectibles.GetSetMembers(snap.descriptor.id)
                 if members then
                     for _, member in ipairs(members) do
-                        local child = CreateMemberChildRow(scrollChild, {
-                            yOffset   = yOffset,
-                            icon      = member.icon,
-                            name      = member.name,
-                            link      = member.link,
-                            collected = member.collected,
-                        })
-                        table.insert(collListRows, child)
-                        yOffset = yOffset - CHILD_ROW_SPACING
+                        if not member.name then
+                            listNeedsItemInfo = true
+                        end
+                        flattenedEntries[#flattenedEntries + 1] = {
+                            kind   = "member",
+                            member = member,
+                        }
                     end
                 end
             end
         end
+    end
 
-        scrollChild:SetHeight(math.abs(yOffset) + 50)
-        if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_COLLECTIBLES"], #list))
+    local function CreateCollectibleListRow(rowParent)
+        local row = CreateFrame("Button", nil, rowParent, "BackdropTemplate")
+        row:SetHeight(ns.UI.LIST_ROW_HEIGHT)
+        row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        row:RegisterForClicks("LeftButtonUp")
+
+        local bar = row:CreateTexture(nil, "ARTWORK")
+        bar:SetPoint("TOPLEFT", row, "TOPLEFT", 2, -3)
+        bar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 2, 3)
+        bar:SetWidth(4)
+        row.colorBar = bar
+
+        local caret = CreateFrame("Button", nil, row)
+        caret:SetSize(16, 20)
+        caret:SetPoint("LEFT", row, "LEFT", 6, 0)
+        local caretFS = OneWoW_GUI:CreateFS(caret, 12)
+        caretFS:SetAllPoints()
+        caretFS:SetJustifyH("CENTER")
+        caretFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        caret.fs = caretFS
+        caret:SetScript("OnClick", function()
+            local entry = flattenedEntries[row.entryIndex]
+            if not entry or not entry.isSet then return end
+            expandedSets[entry.snap.key] = not expandedSets[entry.snap.key]
+            parent.RefreshCollectiblesList()
+        end)
+        caret:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["COLLECTIBLE_SET_MEMBERS"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        caret:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        row.expandBtn = caret
+
+        local icon = row:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(26, 26)
+        icon:SetPoint("LEFT", row, "LEFT", 10, 0)
+        icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        row.iconTexture = icon
+
+        local deleteBtn = OneWoW_GUI:CreateIconButton(row, {
+            iconTexture = MEDIA .. "icon-trash.png",
+            size = 18,
+        })
+        deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -6, 5)
+        deleteBtn:SetScript("OnClick", function()
+            local entry = flattenedEntries[row.entryIndex]
+            if not entry or entry.kind ~= "item" then return end
+            selectedKey = entry.snap.key
+            DeleteSelected()
+        end)
+        deleteBtn:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(DELETE, 1, 1, 1)
+            GameTooltip:AddLine(L["COLLECTIBLE_DELETE_DESC"], 0.8, 0.8, 0.8, true)
+            GameTooltip:Show()
+        end)
+        deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        row.deleteBtn = deleteBtn
+
+        local headerCountFS = OneWoW_GUI:CreateFS(row, 12)
+        headerCountFS:SetPoint("RIGHT", row, "RIGHT", -12, 0)
+        headerCountFS:SetJustifyH("RIGHT")
+        headerCountFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        headerCountFS:Hide()
+        row.headerCountFS = headerCountFS
+
+        local memberCheck = row:CreateTexture(nil, "ARTWORK")
+        memberCheck:SetSize(16, 16)
+        memberCheck:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        memberCheck:Hide()
+        row.memberCheck = memberCheck
+
+        local title = OneWoW_GUI:CreateFS(row, 12)
+        title:SetPoint("TOPLEFT", row, "TOPLEFT", 12, -7)
+        title:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -7)
+        title:SetJustifyH("LEFT")
+        title:SetWordWrap(false)
+        title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        row.titleFS = title
+
+        local storageFS = OneWoW_GUI:CreateFS(row, 10)
+        storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 7)
+        storageFS:SetJustifyH("LEFT")
+        storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        row.storageFS = storageFS
+
+        local detail = OneWoW_GUI:CreateFS(row, 10)
+        detail:SetPoint("BOTTOMLEFT", storageFS, "TOPLEFT", 0, 1)
+        detail:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+        detail:SetJustifyH("LEFT")
+        detail:SetWordWrap(false)
+        detail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.detailFS = detail
+
+        row:SetScript("OnEnter", function(myself)
+            if myself._kind == "member" and myself._memberLink then
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetHyperlink(myself._memberLink)
+                GameTooltip:Show()
+            end
+            if not myself._rowSelected then
+                OneWoW_GUI:ApplyListRowFill(myself, { hover = true })
+            end
+        end)
+        row:SetScript("OnLeave", function(myself)
+            GameTooltip:Hide()
+            if myself._kind == "member" and listAPI then
+                listAPI.Refresh()
+            end
+            if not myself._rowSelected then
+                OneWoW_GUI:ApplyListRowFill(myself, {
+                    zebraIndex = myself._zebraIndex,
+                    header = myself._kind == "header",
+                })
+            end
+        end)
+
+        pooledRows[#pooledRows + 1] = row
+        reorderCtrl:Attach(row)
+        return row
+    end
+
+    local function BindCollectibleListRow(row, _, entry, state)
+        row._kind = entry.kind
+        row._rowSelected = state.selected and true or false
+        row._notesListSelected = row._rowSelected
+        row._memberLink = nil
+        row._reorderIndex = nil
+        row:SetAlpha(1)
+
+        if entry.kind == "header" then
+            row.colorBar:Hide()
+            row.expandBtn:Hide()
+            row.iconTexture:Hide()
+            row.deleteBtn:Hide()
+            row.storageFS:Hide()
+            row.detailFS:Hide()
+            row.memberCheck:Hide()
+            row.headerCountFS:Show()
+            row.headerCountFS:SetText(ns.UI.FormatSectionCount(entry.count))
+            row.titleFS:ClearAllPoints()
+            row.titleFS:SetPoint("LEFT", row, "LEFT", 12, 0)
+            row.titleFS:SetPoint("RIGHT", row.headerCountFS, "LEFT", -8, 0)
+            row.titleFS:SetText(entry.title)
+            row.titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            OneWoW_GUI:ApplyListRowFill(row, { header = true })
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            return
         end
+
+        if entry.kind == "member" then
+            local member = entry.member
+            local display = member.key and OneWoW.Collectibles.ResolveDisplay(member.key)
+            local name = (display and display.name) or member.name or UNKNOWN
+            local icon = (display and display.icon) or member.icon
+            local link = (display and display.link) or member.link
+            if not name or name == UNKNOWN then
+                listNeedsItemInfo = true
+            end
+            row.colorBar:Hide()
+            row.expandBtn:Hide()
+            row.deleteBtn:Hide()
+            row.storageFS:Hide()
+            row.detailFS:Hide()
+            row.headerCountFS:Hide()
+            row.memberCheck:Show()
+            row.memberCheck:SetTexture(member.collected
+                and "Interface\\RaidFrame\\ReadyCheck-Ready"
+                or  "Interface\\RaidFrame\\ReadyCheck-NotReady")
+            row.iconTexture:Show()
+            row.iconTexture:SetSize(20, 20)
+            row.iconTexture:ClearAllPoints()
+            row.iconTexture:SetPoint("LEFT", row, "LEFT", 18, 0)
+            row.iconTexture:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+            row.titleFS:ClearAllPoints()
+            row.titleFS:SetPoint("LEFT", row.iconTexture, "RIGHT", 6, 0)
+            row.titleFS:SetPoint("RIGHT", row.memberCheck, "LEFT", -6, 0)
+            row.titleFS:SetText(name)
+            row.titleFS:SetTextColor(OneWoW_GUI:GetThemeColor(
+                member.collected and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            row._memberLink = link
+            OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = state.zebraIndex })
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            return
+        end
+
+        local snap = entry.snap
+        local key = snap.key
+        local record = snap.data
+        row._reorderIndex = entry.reorderIndex
+
+        local name, icon = ResolveRow(key, record)
+        local stateLive = OneWoW.Collectibles.GetCollectionState(key)
+        if stateLive then
+            local cr, cg, cb = OneWoW_GUI:GetThemeColor(
+                stateLive.collected and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED")
+            row.colorBar:Show()
+            row.colorBar:SetColorTexture(cr, cg, cb, 1)
+        else
+            row.colorBar:Hide()
+        end
+
+        local hasCaret = entry.isSet
+        local caretPad = hasCaret and 18 or 0
+        local iconX = 10 + caretPad
+        local textX = iconX + 26 + 6
+        if hasCaret then
+            row.expandBtn:Show()
+            row.expandBtn.fs:SetText(expandedSets[key] and "v" or ">")
+        else
+            row.expandBtn:Hide()
+        end
+
+        row.headerCountFS:Hide()
+        row.memberCheck:Hide()
+        row.iconTexture:Show()
+        row.iconTexture:SetSize(26, 26)
+        row.iconTexture:ClearAllPoints()
+        row.iconTexture:SetPoint("LEFT", row, "LEFT", iconX, 0)
+        row.iconTexture:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+        row.deleteBtn:Show()
+
+        row.titleFS:ClearAllPoints()
+        row.titleFS:SetPoint("TOPLEFT", row, "TOPLEFT", textX, -7)
+        row.titleFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -7)
+        row.titleFS:SetText(name)
+        row.titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        row.storageFS:Show()
+        row.storageFS:ClearAllPoints()
+        row.storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", textX, 7)
+        row.storageFS:SetText(record.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"])
+
+        local intent = record.intent or "none"
+        local detailText = intent ~= "none" and IntentLabel(intent) or nil
+        if entry.isSet and stateLive and stateLive.total and stateLive.total > 0 then
+            local prog = string.format("%d/%d", stateLive.numCollected or 0, stateLive.total)
+            detailText = detailText and (detailText .. "  " .. prog) or prog
+        end
+        if detailText then
+            row.detailFS:Show()
+            row.detailFS:ClearAllPoints()
+            row.detailFS:SetPoint("BOTTOMLEFT", row.storageFS, "TOPLEFT", 0, 1)
+            row.detailFS:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+            row.detailFS:SetText(detailText)
+        else
+            row.detailFS:Hide()
+        end
+
+        row:SetAlpha(intent == "delete" and 0.5 or 1)
+        OneWoW_GUI:ApplyListRowFill(row, {
+            zebraIndex = state.zebraIndex,
+            selected = row._rowSelected,
+        })
+        if row._rowSelected then
+            row:SetBackdropBorderColor(1, 0.82, 0, 1)
+        else
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        end
+    end
+
+    listAPI = OneWoW_GUI:CreateVirtualizer(listingPanel, {
+        name = "NotesCollectiblesList",
+        rowHeight = ns.UI.LIST_ROW_HEIGHT,
+        minRowHeight = CHILD_ROW_HEIGHT,
+        numVisibleRows = 14,
+        rowInset = 0,
+        scrollFrame = listScroll.scrollFrame,
+        content = listScroll.scrollChild,
+        getCount = function()
+            return #flattenedEntries
+        end,
+        getEntry = function(index)
+            return flattenedEntries[index]
+        end,
+        getRowHeight = function(index)
+            local entry = flattenedEntries[index]
+            if not entry then
+                return ns.UI.LIST_ROW_HEIGHT
+            end
+            if entry.kind == "header" then
+                return HEADER_ROW_HEIGHT
+            end
+            if entry.kind == "member" then
+                return CHILD_ROW_HEIGHT
+            end
+            return ns.UI.LIST_ROW_HEIGHT
+        end,
+        isSelectable = function(_, entry)
+            if IsCollectiblesReorderSuppressed() then
+                return false
+            end
+            return entry and entry.kind == "item"
+        end,
+        onSelect = function(_, entry)
+            if not entry or entry.kind ~= "item" then
+                return
+            end
+            selectedKey = entry.snap.key
+            ShowEditor()
+        end,
+        createRow = CreateCollectibleListRow,
+        bindRow = BindCollectibleListRow,
+        enableKeyboardNav = true,
+        focusCompetitor = searchBox,
+    })
+    listScroll.scrollFrame:HookScript("OnSizeChanged", function(sf)
+        listScroll.scrollChild:SetWidth(math.max(1, sf:GetWidth() - 20))
+    end)
+
+    function parent.RefreshCollectiblesList()
+        BuildSnapshot()
+        RefreshCatOptions()
+        RefreshTypeOpts()
+        RefreshStorageOpts()
+        RefreshCollectedOpts()
+        RebuildFlattened()
+
+        if leftStatusText then
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_COLLECTIBLES"], #collectibleBag))
+        end
+        if not listAPI then
+            return
+        end
+
+        local selIdx
+        if selectedKey then
+            for i, entry in ipairs(flattenedEntries) do
+                if entry.kind == "item" and entry.snap.key == selectedKey then
+                    selIdx = i
+                    break
+                end
+            end
+        end
+        if selIdx then
+            if listAPI.GetSelectedIndex() ~= selIdx then
+                listAPI.SetSelectedIndex(selIdx)
+            else
+                listAPI.Refresh()
+            end
+        else
+            listAPI.SetSelectedIndex(nil)
+        end
+
+        local editorComplete = true
+        if selectedKey then
+            local record = ns.Collectibles:GetCollectible(selectedKey)
+            if record then
+                editorComplete = select(5, ResolveRow(selectedKey, record)) and true or false
+            end
+        end
+        SyncItemInfoWatcher(editorComplete)
     end
 
     local function OpenCollectibleEditor(key)

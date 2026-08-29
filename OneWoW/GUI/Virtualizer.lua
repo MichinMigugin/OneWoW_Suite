@@ -17,6 +17,9 @@ local OneWoW_GUI = OneWoW_GUI
 -- fixed stride, Refresh. Mixed lists (group/section headers + rows) stay on
 -- click-select: pass isSelectable so headers never become selectedIndex.
 --
+-- ReorderDrag ghosts: a pooled row with `_oneWoWReorderOrigPoints` is mid-drag
+-- on UIParent. Skip reposition/bind so auto-scroll does not steal the ghost.
+--
 -- Usage:
 --   api = OneWoW_GUI:CreateVirtualizer(parent, {
 --       getCount = function() return #data end,          -- required
@@ -226,34 +229,38 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         end
 
         for i, row in ipairs(listRows) do
-            local idx = startIdx + i - 1
-            local entry = (idx <= n) and getEntry(idx) or nil
-            if entry then
-                local h = heightOf(idx)
-                local y = topOf(idx)
-                row:ClearAllPoints()
-                row:SetHeight(h)
-                row:SetPoint("TOPLEFT", content, "TOPLEFT", rowInset, -y)
-                row:SetPoint("RIGHT", content, "RIGHT", -rowInset, 0)
-                row.entryIndex = idx
-                row._zebraIndex = idx
-                local rowState = {
-                    selected = state.selectedIndex == idx and rowIsSelectable(idx),
-                    zebraIndex = idx,
-                }
-                -- Match legacy CreateVirtualizedList: selection font before consumer bind.
-                if row.SetNormalFontObject then
-                    row:SetNormalFontObject(rowState.selected and GameFontHighlightSmall or GameFontNormalSmall)
-                end
-                if bindRow then
-                    bindRow(row, idx, entry, rowState)
-                else
-                    defaultBind(row, idx, entry, rowState)
-                end
-                row:Show()
+            if row._oneWoWReorderOrigPoints then
+                -- ReorderDrag ghost: leave parent and anchors alone.
             else
-                row:Hide()
-                row.entryIndex = nil
+                local idx = startIdx + i - 1
+                local entry = (idx <= n) and getEntry(idx) or nil
+                if entry then
+                    local h = heightOf(idx)
+                    local y = topOf(idx)
+                    row:ClearAllPoints()
+                    row:SetHeight(h)
+                    row:SetPoint("TOPLEFT", content, "TOPLEFT", rowInset, -y)
+                    row:SetPoint("RIGHT", content, "RIGHT", -rowInset, 0)
+                    row.entryIndex = idx
+                    row._zebraIndex = idx
+                    local rowState = {
+                        selected = state.selectedIndex == idx and rowIsSelectable(idx),
+                        zebraIndex = idx,
+                    }
+                    -- Match legacy CreateVirtualizedList: selection font before consumer bind.
+                    if row.SetNormalFontObject then
+                        row:SetNormalFontObject(rowState.selected and GameFontHighlightSmall or GameFontNormalSmall)
+                    end
+                    if bindRow then
+                        bindRow(row, idx, entry, rowState)
+                    else
+                        defaultBind(row, idx, entry, rowState)
+                    end
+                    row:Show()
+                else
+                    row:Hide()
+                    row.entryIndex = nil
+                end
             end
         end
     end
