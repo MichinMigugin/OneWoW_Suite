@@ -21,7 +21,7 @@ Use Altoholic if you want that specific addon and nothing else. Use OneWoW if yo
 
 All The Things is the collection-completion addon. OneWoW does not replace it.
 
-[Catalog](Catalog) is an in-game reference: dungeons, raids, Delves, vendors, professions, item sources, and quests. If All The Things is loaded, Journal shows ATT Detected and can add anything All The Things has live. ATT stays the specialist for what is left to collect. Catalog is the suite's map of instances, vendors, recipes, and quests.
+[Catalog](Catalog) is an in-game reference: dungeons, raids, Delves, vendors, professions, item sources, and quests. If All The Things is loaded, Journal shows a shield on the filter bar and can add anything All The Things has live. ATT stays the specialist for what is left to collect. Catalog is the suite's map of instances, vendors, recipes, and quests.
 
 Run both if you want ATT's completion list and OneWoW's hub.
 

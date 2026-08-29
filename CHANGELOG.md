@@ -46,6 +46,8 @@
 ## Journal
 - Instance cards show Transmog, Toy, Housing, and the rest of those tags when the list first appears. Opening a card no longer takes two clicks to fill the tags or the boss and item counts.
 - Quest loot rows show Completed or Not Completed. They no longer print the locale key name over the Type column.
+- Long achievement names stop before Difficulty. They no longer sit on top of H, M, or M+.
+- ATT Detected is a shield on the lower right of the Journal filter bar. Hover it for the extra-data note.
 
 ---
 
