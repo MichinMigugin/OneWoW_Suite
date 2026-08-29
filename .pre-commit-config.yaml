@@ -331,6 +331,15 @@ repos:
         language: python
         files: (^|/)Locales/.*\.lua$
 
+      - id: report-nearby-off
+        name: VersionCheck REPORT_NEARBY must ship false
+        description: |
+          OneWoW/Core/VersionCheck.lua must keep
+          `local REPORT_NEARBY = false`. The nearby chat report is local-only.
+        entry: python bin/run_devs.py check_report_nearby_off.py
+        language: python
+        files: ^OneWoW/Core/VersionCheck\.lua$
+
       - id: tooltip-globalstrings-patterns
         name: TooltipScanner GlobalStrings pattern coverage
         description: |
