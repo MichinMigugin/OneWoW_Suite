@@ -14,7 +14,8 @@ function WindowLayoutController:UpdateFixedWidth(config)
     local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * config.outerPadding)
 
     config.mainWindow:SetWidth(newWidth)
-    config.mainWindow:SetResizeBounds(newWidth, 300, newWidth, GetScreenHeight())
+    local _, screenH = ns.WindowHelpers:ScreenSizeInFrameUnits(config.mainWindow)
+    config.mainWindow:SetResizeBounds(newWidth, 300, newWidth, screenH)
 end
 
 function WindowLayoutController:Refresh(config)

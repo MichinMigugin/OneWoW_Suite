@@ -153,6 +153,9 @@ function BankGUI:InitMainWindow()
         onDragStop = function()
             if isInitialized then ns:RequestLayoutRefresh("bank", "drag_stop") end
         end,
+        getScale = function()
+            return ns.BankController:Get("scale")
+        end,
     })
 
     if not MainWindow then return end
@@ -633,6 +636,8 @@ function BankGUI:Show()
     end
 
     if not MainWindow then return end
+
+    WH:ApplySavedScaleToWindow(self, ns.BankController:Get("scale"))
 
     -- Warm path lays out synchronously below, so suppress the OnShow hook's
     -- redundant coalesced refresh that would otherwise fire during Show().

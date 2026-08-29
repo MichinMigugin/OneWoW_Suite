@@ -591,6 +591,8 @@ width = cols × (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 × oute
 
 `cols` is `bagColumns` or `bankColumns` depending on the window. Vertical resizing adjusts height; horizontal size follows column settings.
 
+Window scale (`bagScale`, `bankScale`, `warbandBankScale`, `guildBankScale`; 50–200%) is a `SetScale` transform on the window root. It does not change grid metrics and does not trigger a layout refresh. Personal and warband share one frame; `BankController:Get("scale")` picks the active mode’s percent. Resize max height uses screen size in the frame’s local units.
+
 ---
 
 ## Event System
@@ -622,7 +624,7 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Display — bags
 
-`viewMode`, `bagColumns`, `scale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `bankShowEmptySlots`, `warbandBankShowEmptySlots`, `guildBankShowEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showCurrencyTrackerCapHighlight`, `showHeaderBar`, `showSearchBar`, `selectedBag`
+`viewMode`, `bagColumns`, `bagScale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showCurrencyTrackerCapHighlight`, `showHeaderBar`, `showSearchBar`, `selectedBag`
 
 ### Search
 
@@ -632,11 +634,11 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Display — personal bank / warband bank / guild bank
 
-Personal bank: `bankViewMode`, `bankColumns`, `bankCompactCategories`, `bankCompactGap`, `bankCategorySpacing`, `showBankCategoryHeaders`, `bankHideScrollBar`, `showBankBagsBar`, `showBankSearchBar`, `showBankHeaderBar`, `bankSelectedTab`, `collapsedBankTabSections`.
+Personal bank: `bankViewMode`, `bankColumns`, `bankScale`, `bankCompactCategories`, `bankCompactGap`, `bankCategorySpacing`, `showBankCategoryHeaders`, `bankHideScrollBar`, `showBankBagsBar`, `showBankSearchBar`, `showBankHeaderBar`, `bankSelectedTab`, `collapsedBankTabSections`, `bankShowEmptySlots`.
 
-Warband bank (parallel keys, selected at runtime by `bankShowWarband`): `warbandBankViewMode`, `warbandBankColumns`, `warbandBankCompactCategories`, `warbandBankCompactGap`, `warbandBankCategorySpacing`, `showWarbandBankCategoryHeaders`, `warbandBankHideScrollBar`, `showWarbandBankBagsBar`, `showWarbandBankSearchBar`, `showWarbandBankHeaderBar`, `warbandBankSelectedTab`, `collapsedWarbandBankTabSections`.
+Warband bank (parallel keys, selected at runtime by `bankShowWarband`): `warbandBankViewMode`, `warbandBankColumns`, `warbandBankScale`, `warbandBankCompactCategories`, `warbandBankCompactGap`, `warbandBankCategorySpacing`, `showWarbandBankCategoryHeaders`, `warbandBankHideScrollBar`, `showWarbandBankBagsBar`, `showWarbandBankSearchBar`, `showWarbandBankHeaderBar`, `warbandBankSelectedTab`, `collapsedWarbandBankTabSections`, `warbandBankShowEmptySlots`.
 
-Guild bank: `guildBankViewMode`, `guildBankSelectedTab`, `guildBankShowEmptySlots`.
+Guild bank: `guildBankViewMode`, `guildBankSelectedTab`, `guildBankShowEmptySlots`, `guildBankScale`.
 
 Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCategorySections` (categories are global across modes).
 
@@ -813,7 +815,7 @@ A wedged scheduler shows as `refreshScheduled=true` with `pending` set but no `f
 - **Settings debounce** on high-churn sliders
 - **Combat-deferred cleanup** via `OneWoW.Restriction.RunWhenUnrestricted("lockdown", ...)` when windows hide during lockdown (re-checks the window is still hidden before releasing pools)
 - **Guild bank refresh coalescing** — `QueueGuildBankRefresh` uses a one-shot OnUpdate driver
-- **Scoped refresh targets** — pure display settings (e.g. `bagColumns`, `scale`) target `"bags"` only; category-affecting settings (e.g. junk/upgrade toggles, `stackItems`, `appliesIn` changes) target `"all"` to keep bags and bank in sync
+- **Scoped refresh targets** — pure display settings (e.g. `bagColumns`) target `"bags"` only; category-affecting settings (e.g. junk/upgrade toggles, `stackItems`, `appliesIn` changes) target `"all"` to keep bags and bank in sync. Window scale is applied immediately via `SetScale` and does not go through the layout refresh path.
 
 ---
 

@@ -39,7 +39,7 @@
 ### Customization Options
 - Adjust icon size (small, medium, large, extra large)
 - Adjust number of columns
-- Change window scale
+- Scale bags, personal bank, warband bank, and guild bank independently
 - 14+ color themes for the UI (suite-wide via **OneWoW** settings)
 
 ### Convenience Features

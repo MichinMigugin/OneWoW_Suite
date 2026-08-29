@@ -55,6 +55,7 @@ function GUI:InitMainWindow()
         onDragStop = function()
             if isInitialized then ns:RequestLayoutRefresh("bags", "drag_stop") end
         end,
+        scaleDBKey = "bagScale",
     })
 
     if not MainWindow then return end

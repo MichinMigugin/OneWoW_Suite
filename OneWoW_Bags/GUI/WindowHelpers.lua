@@ -10,12 +10,17 @@ local SE = OneWoW.SearchExpand
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
 local type, format = type, string.format
-local floor = math.floor
+local floor, min, max = math.floor, math.min, math.max
 local Enum = Enum
 local PixelUtil = PixelUtil
 
 ns.WindowHelpers = {}
 local WH = ns.WindowHelpers
+
+WH.SCALE_MIN = 50
+WH.SCALE_MAX = 200
+WH.SCALE_STEP = 5
+WH.SCALE_DEFAULT = 100
 
 local ITEM_GRID_H_PADDING = 2
 local SCROLLBAR_RESERVE_WIDTH = OneWoW_GUI.Constants.GUI.SCROLLBAR_WIDTH + 2
@@ -190,6 +195,60 @@ function WH:SetPointPixelAligned(region, parent, offsetX, offsetY)
         targetPhysY / pScale - pTop)
 end
 
+--- Clamp a window-scale percent to the supported range.
+---@param percent number|nil
+---@return number
+function WH:ClampScalePercent(percent)
+    return min(WH.SCALE_MAX, max(WH.SCALE_MIN, tonumber(percent) or WH.SCALE_DEFAULT))
+end
+
+--- Screen size in the frame's local units (UIParent size / frame:GetScale).
+---@param frame table|nil
+---@return number width
+---@return number height
+function WH:ScreenSizeInFrameUnits(frame)
+    local scale = 1
+    if frame then
+        scale = frame:GetScale()
+    end
+    if scale <= 0 then scale = 1 end
+    return GetScreenWidth() / scale, GetScreenHeight() / scale
+end
+
+--- Apply a percent scale (50-200) to a window and snap it to a pixel.
+---@param frame table|nil
+---@param percent number|nil
+function WH:ApplyWindowScale(frame, percent)
+    if not frame then return end
+    frame:SetScale(self:ClampScalePercent(percent) / 100)
+    self:SnapFrameToPixel(frame)
+end
+
+--- Resolve the scale percent for a window shell config.
+---@param config table
+---@return number
+function WH:ResolveScalePercent(config)
+    if config.getScale then
+        return self:ClampScalePercent(config.getScale())
+    end
+    if config.scaleDBKey then
+        local db = ns:GetDB()
+        return self:ClampScalePercent(db.global[config.scaleDBKey])
+    end
+    return WH.SCALE_DEFAULT
+end
+
+--- Apply a saved scale to a bags/bank/guild window and refresh width bounds.
+---@param gui table|nil
+---@param percent number|nil
+function WH:ApplySavedScaleToWindow(gui, percent)
+    if not gui then return end
+    local frame = gui:GetMainWindow()
+    if not frame then return end
+    self:ApplyWindowScale(frame, percent)
+    gui:UpdateWindowWidth()
+end
+
 function WH:CreateWindowShell(config)
     local db = ns:GetDB()
     local position = DB:Ensure(db, "global", config.positionDBKey)
@@ -206,8 +265,10 @@ function WH:CreateWindowShell(config)
 
     mainWindow:SetMovable(true)
     mainWindow:SetResizable(true)
-    local maxW = math.min(config.maxWidth or Constants.GUI.WINDOW_WIDTH, GetScreenWidth())
-    local maxH = math.min(config.maxHeight or 1200, GetScreenHeight())
+    self:ApplyWindowScale(mainWindow, self:ResolveScalePercent(config))
+    local screenW, screenH = self:ScreenSizeInFrameUnits(mainWindow)
+    local maxW = min(config.maxWidth or Constants.GUI.WINDOW_WIDTH, screenW)
+    local maxH = min(config.maxHeight or 1200, screenH)
     mainWindow:SetResizeBounds(config.minWidth or Constants.GUI.WINDOW_WIDTH, config.minHeight or 300, maxW, maxH)
     mainWindow:EnableMouse(true)
     mainWindow:RegisterForDrag("LeftButton")

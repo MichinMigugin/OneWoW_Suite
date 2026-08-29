@@ -66,6 +66,7 @@ function GuildBankGUI:InitMainWindow()
         onDragStop = function()
             if isInitialized then ns:RequestLayoutRefresh("guild", "drag_stop") end
         end,
+        scaleDBKey = "guildBankScale",
     })
 
     if not MainWindow then return end

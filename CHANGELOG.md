@@ -69,7 +69,13 @@
 
 ---
 
-*No user-facing changes this release for Home, QoL, Bags, Shopping List, Direct Deposit, or Mail.*
+# Bags
+## Display
+- Bags, personal bank, warband bank, and guild bank each have their own window scale (50% to 200%).
+
+---
+
+*No user-facing changes this release for Home, QoL, Shopping List, Direct Deposit, or Mail.*
 
 ---
 

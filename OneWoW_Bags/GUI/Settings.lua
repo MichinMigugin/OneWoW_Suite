@@ -9,6 +9,7 @@ local abs, floor = math.abs, math.floor
 local C_Timer = C_Timer
 
 local L = ns.L
+local WH = ns.WindowHelpers
 
 ns.Settings = {}
 local Settings = ns.Settings
@@ -664,6 +665,17 @@ local function BuildBagsTab(sc, db)
 
         y = y - 6
 
+        y = BuildSliderRow(content, L["SETTING_SCALE"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = WH.SCALE_MIN, maxVal = WH.SCALE_MAX, step = WH.SCALE_STEP,
+            currentVal = db.global.bagScale,
+            onChange = function(val)
+                ApplySetting("bagScale", val)
+            end,
+            fmt = "%d%%",
+        })
+
         y = BuildSliderRow(content, L["SETTING_BAG_COLUMNS"], y, {
             padX = 12,
             contentWidth = w,
@@ -861,6 +873,7 @@ local MODE_KEYS = {
             compactCategories = "bankCompactCategories",
             compactGap        = "bankCompactGap",
             showEmptySlots    = "bankShowEmptySlots",
+            scale             = "bankScale",
         },
         applier = {
             overlays          = "enableBankOverlays",
@@ -875,6 +888,7 @@ local MODE_KEYS = {
             compactCategories = "bankCompactCategories",
             compactGap        = "bankCompactGap",
             showEmptySlots    = "showBankEmptySlots",
+            scale             = "bankScale",
         },
     },
     warband = {
@@ -892,6 +906,7 @@ local MODE_KEYS = {
             compactCategories = "warbandBankCompactCategories",
             compactGap        = "warbandBankCompactGap",
             showEmptySlots    = "warbandBankShowEmptySlots",
+            scale             = "warbandBankScale",
         },
         applier = {
             overlays          = "enableWarbandBankOverlays",
@@ -906,6 +921,7 @@ local MODE_KEYS = {
             compactCategories = "warbandBankCompactCategories",
             compactGap        = "warbandBankCompactGap",
             showEmptySlots    = "showWarbandBankEmptySlots",
+            scale             = "warbandBankScale",
         },
     },
 }
@@ -1139,6 +1155,19 @@ local function BuildBankTabFor(mode, sc, db)
 
         y = y - 6
 
+        local scaleSliderContainer, scaleSliderLbl
+        y, scaleSliderContainer, scaleSliderLbl = BuildSliderRow(content, L["SETTING_SCALE"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = WH.SCALE_MIN, maxVal = WH.SCALE_MAX, step = WH.SCALE_STEP,
+            currentVal = db.global[dbKeys.scale],
+            onChange = function(val)
+                ApplySetting(applierKeys.scale, val)
+            end,
+            fmt = "%d%%",
+        })
+        addSlider(scaleSliderContainer, scaleSliderLbl)
+
         local colSliderContainer, colSliderLbl
         y, colSliderContainer, colSliderLbl = BuildSliderRow(content, L["SETTING_BANK_COLUMNS"], y, {
             padX = 12,
@@ -1194,9 +1223,20 @@ end
 local function BuildGuildBankTab(sc, db)
     local stack = BeginSettingsCardStack(sc)
 
-    stack:AddCard("bags:guild:display", GUILD_BANK, function(content, w)
-        local y = OneWoW_GUI:CreateToggleRow(content, {
-            yOffset = 0,
+    stack:AddCard("bags:guild:display", DISPLAY, function(content, w)
+        local y = BuildSliderRow(content, L["SETTING_SCALE"], 0, {
+            padX = 12,
+            contentWidth = w,
+            minVal = WH.SCALE_MIN, maxVal = WH.SCALE_MAX, step = WH.SCALE_STEP,
+            currentVal = db.global.guildBankScale,
+            onChange = function(val)
+                ApplySetting("guildBankScale", val)
+            end,
+            fmt = "%d%%",
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
             contentWidth = w,
             label = L["SETTING_SHOW_EMPTY_SLOTS"],
             description = L["DESC_SHOW_EMPTY_SLOTS"],

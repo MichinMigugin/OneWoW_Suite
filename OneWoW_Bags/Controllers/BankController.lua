@@ -34,6 +34,7 @@ local PERSONAL_KEYS = {
     selectedTab      = "bankSelectedTab",
     collapsedTabs    = "collapsedBankTabSections",
     showEmptySlots   = "bankShowEmptySlots",
+    scale            = "bankScale",
 }
 
 local WARBAND_KEYS = {
@@ -52,6 +53,7 @@ local WARBAND_KEYS = {
     selectedTab      = "warbandBankSelectedTab",
     collapsedTabs    = "collapsedWarbandBankTabSections",
     showEmptySlots   = "warbandBankShowEmptySlots",
+    scale            = "warbandBankScale",
 }
 
 BankController.PERSONAL_KEYS = PERSONAL_KEYS
@@ -174,9 +176,7 @@ function BankController:SetBankMode(showWarband)
         self.addon.BankInfoBar:UpdateVisibility()
     end
     if self.addon.BankGUI then
-        if self.addon.BankGUI.UpdateWindowWidth then
-            self.addon.BankGUI:UpdateWindowWidth()
-        end
+        ns.WindowHelpers:ApplySavedScaleToWindow(self.addon.BankGUI, self:Get("scale"))
         self.addon.BankGUI:OnBankTypeChanged()
     end
 end

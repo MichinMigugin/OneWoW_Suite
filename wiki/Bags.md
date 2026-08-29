@@ -11,7 +11,7 @@
 ### One window
 
 * Backpack, character bags, and reagent bag in a single layout
-* Rarity coloring, free-slot count, resize and scale to fit your screen
+* Rarity coloring, free-slot count, resize the window, and scale bags, personal bank, warband bank, and guild bank separately
 * Suite themes from OneWoW settings
 
 ### View modes
@@ -48,7 +48,7 @@ Full reference: [Search syntax](Bags-Search-Syntax).
 
 ### Layout tweaks
 
-* Icon size, columns, window scale
+* Icon size, columns, and a scale slider per window (bags, personal bank, warband bank, guild bank)
 * Sort and grouping options (global and per-category where available)
 * Rarity color intensity and recent-item highlight duration
 

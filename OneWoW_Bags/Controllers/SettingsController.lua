@@ -165,6 +165,10 @@ SettingsController.appliers = {
             self.addon:RequestLayoutRefresh("bags")
         end)
     end,
+    bagScale = function(self, db, value)
+        db.global.bagScale = ns.WindowHelpers:ClampScalePercent(value)
+        ns.WindowHelpers:ApplySavedScaleToWindow(self.addon.GUI, db.global.bagScale)
+    end,
     categorySpacing = function(self, db, value)
         db.global.categorySpacing = value
         self:Debounce("categorySpacing", 0.15, function()
@@ -302,6 +306,12 @@ SettingsController.appliers = {
             self.addon:RequestLayoutRefresh("bank_related")
         end)
     end,
+    bankScale = function(self, db, value)
+        db.global.bankScale = ns.WindowHelpers:ClampScalePercent(value)
+        if not self.addon.BankController:IsWarbandMode() then
+            ns.WindowHelpers:ApplySavedScaleToWindow(self.addon.BankGUI, db.global.bankScale)
+        end
+    end,
     bankCategorySpacing = function(self, db, value)
         db.global.bankCategorySpacing = value
         self:Debounce("bankCategorySpacing", 0.15, function()
@@ -386,6 +396,12 @@ SettingsController.appliers = {
             end
         end)
     end,
+    warbandBankScale = function(self, db, value)
+        db.global.warbandBankScale = ns.WindowHelpers:ClampScalePercent(value)
+        if self.addon.BankController:IsWarbandMode() then
+            ns.WindowHelpers:ApplySavedScaleToWindow(self.addon.BankGUI, db.global.warbandBankScale)
+        end
+    end,
     warbandBankCategorySpacing = function(self, db, value)
         db.global.warbandBankCategorySpacing = value
         self:Debounce("warbandBankCategorySpacing", 0.15, function()
@@ -411,5 +427,9 @@ SettingsController.appliers = {
     showGuildBankEmptySlots = function(self, db, value)
         db.global.guildBankShowEmptySlots = value
         self.addon:RequestLayoutRefresh("guild", "show_empty_slots")
+    end,
+    guildBankScale = function(self, db, value)
+        db.global.guildBankScale = ns.WindowHelpers:ClampScalePercent(value)
+        ns.WindowHelpers:ApplySavedScaleToWindow(self.addon.GuildBankGUI, db.global.guildBankScale)
     end,
 }
