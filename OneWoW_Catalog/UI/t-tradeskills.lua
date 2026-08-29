@@ -574,12 +574,16 @@ local function ApplyRecipeRowChrome(row, selected, zebraIndex)
     if selected then
         OneWoW_GUI:ApplyListRowFill(row, { selected = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        row.selectedAccent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        row.selectedAccent:Show()
     elseif row.entry and row.entry.type == "header" then
         OneWoW_GUI:ApplyListRowFill(row, { header = true })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        row.selectedAccent:Hide()
     else
         OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = zebraIndex or row._zebraIndex })
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        row.selectedAccent:Hide()
     end
 end
 
@@ -620,11 +624,20 @@ local function CreateRecipeListRow(parent, _)
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetHeight(LIST_ROW_STRIDE)
     row:SetBackdrop(BACKDROP_SIMPLE)
+
+    local selectedAccent = row:CreateTexture(nil, "OVERLAY")
+    selectedAccent:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+    selectedAccent:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+    selectedAccent:SetWidth(4)
+    selectedAccent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    selectedAccent:Hide()
+    row.selectedAccent = selectedAccent
+
     ApplyRecipeRowChrome(row, false, false)
 
     local iconFrame = CreateFrame("Frame", nil, row, "BackdropTemplate")
     iconFrame:SetSize(24, 24)
-    iconFrame:SetPoint("LEFT", 4, 0)
+    iconFrame:SetPoint("LEFT", 8, 0)
     iconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     iconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
