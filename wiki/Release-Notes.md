@@ -66,6 +66,7 @@
 - Quest loot rows show Completed or Not Completed. They no longer print the locale key name over the Type column.
 - Long achievement names stop before Difficulty. They no longer sit on top of H, M, or M+.
 - ATT Detected is a shield on the lower right of the Journal filter bar. Hover it for the extra-data note.
+- Map Pin on a Delve opens that zone and marks the door. It no longer errors.
 
 #### Locations
 - Vendors lists 93 more shops, and 358 extra map pins on shops Catalog already had.
