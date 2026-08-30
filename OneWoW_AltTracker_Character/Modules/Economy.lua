@@ -8,6 +8,20 @@ function Module:CollectData(charKey, charData)
 
     charData.money = GetMoney()
 
+    -- GetCurrencyListInfo only walks rows visible in the currency panel, so a
+    -- collapsed header hides every currency under it. Expand collapsed headers
+    -- before collecting, then restore the player's collapsed state after.
+    local reCollapse = {}
+    local i = 1
+    while i <= C_CurrencyInfo.GetCurrencyListSize() do
+        local info = C_CurrencyInfo.GetCurrencyListInfo(i)
+        if info and info.isHeader and not info.isHeaderExpanded then
+            C_CurrencyInfo.ExpandCurrencyList(i, true)
+            reCollapse[info.name] = true
+        end
+        i = i + 1
+    end
+
     local currencies = {}
     local currencyListSize = C_CurrencyInfo.GetCurrencyListSize()
 
@@ -32,6 +46,14 @@ function Module:CollectData(charKey, charData)
                     isAccountTransferDestination = detailedInfo.isAccountTransferDestination,
                 }
             end
+        end
+    end
+
+    -- Restore collapsed headers in reverse so list indices stay valid.
+    for j = C_CurrencyInfo.GetCurrencyListSize(), 1, -1 do
+        local info = C_CurrencyInfo.GetCurrencyListInfo(j)
+        if info and info.isHeader and info.isHeaderExpanded and reCollapse[info.name] then
+            C_CurrencyInfo.ExpandCurrencyList(j, false)
         end
     end
 
