@@ -7,6 +7,9 @@ function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 
     charData.money = GetMoney()
+    -- Personal bank deposited gold (0 when the bank has not been opened this
+    -- session, or when the character bank holds no gold).
+    charData.moneyBank = C_Bank.FetchDepositedMoney(Enum.BankType.Character)
 
     -- GetCurrencyListInfo only walks rows visible in the currency panel, so a
     -- collapsed header hides every currency under it. Expand collapsed headers
