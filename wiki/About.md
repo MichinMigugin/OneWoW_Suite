@@ -30,6 +30,10 @@ If you think the suite is slop, read it. We stand by what is in GitHub.
 
 You do not need every folder. Enable what you use under Manage Features.
 
+## Web armory
+
+A free companion lives at [https://app.onewow.net/](https://app.onewow.net/). Sign in with Battle.net and see your roster, gear, gold, vault, collections, and progress on any device. An optional PC upload fills bags, banks, and lockouts. In-game tracking stays in [AltTracker](AltTracker).
+
 For how OneWoW sits next to Altoholic, All The Things, and Bagnon, see [Compare](Compare).
 
 ## Related

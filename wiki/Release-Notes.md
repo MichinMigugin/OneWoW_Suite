@@ -18,6 +18,9 @@
 ### AltTracker
 - `/1wat status` and its season dialog are gone. `/1wat` still opens AltTracker.
 
+#### Fixes
+- Logging in no longer crashes the game, and the Housing dashboard House Info tab shows your house again.
+
 ---
 
 ### Notes

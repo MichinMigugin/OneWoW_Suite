@@ -39,6 +39,16 @@ function DataManager:RegisterEvents()
         "TIME_PLAYED_MSG",
         "TRAIT_CONFIG_CREATED",
         "TRAIT_CONFIG_UPDATED",
+        "PLAYER_HOUSE_LIST_UPDATED",
+        "CURRENT_HOUSE_INFO_UPDATED",
+        "CURRENT_HOUSE_INFO_RECIEVED",
+        "HOUSE_LEVEL_FAVOR_UPDATED",
+        "HOUSE_LEVEL_CHANGED",
+        "RECEIVED_HOUSE_LEVEL_REWARDS",
+        "NEIGHBORHOOD_INITIATIVE_UPDATED",
+        "INITIATIVE_TASK_COMPLETED",
+        "INITIATIVE_COMPLETED",
+        "HOUSING_STORAGE_UPDATED",
     }
 
     for _, event in ipairs(events) do
@@ -96,6 +106,13 @@ function DataManager:HandleEvent(event, ...)
     elseif event == "TIME_PLAYED_MSG" then
         local totalTime, levelTime = ...
         ns.PlayTime:OnTimePlayedMsg(totalTime, levelTime)
+
+    elseif event == "PLAYER_HOUSE_LIST_UPDATED" or event == "CURRENT_HOUSE_INFO_UPDATED"
+        or event == "CURRENT_HOUSE_INFO_RECIEVED" or event == "HOUSE_LEVEL_FAVOR_UPDATED"
+        or event == "HOUSE_LEVEL_CHANGED" or event == "RECEIVED_HOUSE_LEVEL_REWARDS"
+        or event == "NEIGHBORHOOD_INITIATIVE_UPDATED" or event == "INITIATIVE_TASK_COMPLETED"
+        or event == "INITIATIVE_COMPLETED" or event == "HOUSING_STORAGE_UPDATED" then
+        ns.Housing:OnEvent(event, ...)
     end
 end
 
