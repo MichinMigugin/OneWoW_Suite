@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Version: R6.2608.2902
 ## Title: OneWoW - Data: |cFFFFFFFFCharacter|r
-## Notes: OneWoW Data Addon that: tracks core character data including stats, XP, location, guild, economy, equipment, and action bars.
+## Notes: OneWoW Data Addon that: tracks core character data including stats, XP, location, guild, economy, equipment, action bars, weeklies, and account housing.
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW
@@ -44,6 +44,8 @@ Modules\Guild.lua
 Modules\Economy.lua
 Modules\Equipment.lua
 Modules\ActionBars.lua
+Modules\Housing.lua
+Modules\Weeklies.lua
 
 # Data Manager (orchestrates all modules)
 Modules\DataManager.lua

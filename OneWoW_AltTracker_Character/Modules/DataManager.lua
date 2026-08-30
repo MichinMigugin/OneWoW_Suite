@@ -115,6 +115,9 @@ function DataManager:CollectAllData()
     ns.Economy:CollectData(charKey, charData)
     ns.Equipment:CollectData(charKey, charData)
     ns.PlayTime:CollectData(charKey, charData)
+    ns.Weeklies:CollectData(charKey, charData)
+    ns.Housing:CollectAccount()
+    ns.Weeklies:CollectAccount()
 
     return true
 end

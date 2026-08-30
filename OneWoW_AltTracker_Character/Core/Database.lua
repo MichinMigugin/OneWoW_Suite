@@ -5,6 +5,9 @@ local DB = OneWoW_GUI.DB
 
 ns.DatabaseDefaults = {
     characters = {},
+    -- Account-wide buckets (housing, Trading Post). Kept separate from
+    -- characters so a later Housing load unit can lift this table as-is.
+    account = {},
     settings = {
         enablePlaytimeTracking = true,
         playtimeThrottle = 300,
@@ -41,4 +44,8 @@ end
 
 function ns:GetSettingsProfiles()
     return OneWoW_AltTracker_Character_DB.settingsProfiles
+end
+
+function ns:GetAccountBucket()
+    return OneWoW_AltTracker_Character_DB.account
 end
