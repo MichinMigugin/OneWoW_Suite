@@ -108,8 +108,9 @@ function Location.GetPlayerLocation()
 end
 
 --- Drops a super-tracked user waypoint. x/y accept either coordinate format.
---- Returns false without side effects when the coordinates are incomplete or
---- the map refuses waypoints, so callers must not report success unconditionally.
+--- Returns false when the coordinates are incomplete, outside 0-1 after
+--- normalize, or the map refuses waypoints. Callers must not report success
+--- unconditionally. World-space XY must be converted before this call.
 ---@param mapID number|string|nil
 ---@param x number|string|nil
 ---@param y number|string|nil
@@ -126,7 +127,9 @@ function Location.SetWaypoint(mapID, x, y, opts)
     local fmt = opts and opts.format
     x = Normalize(x, fmt)
     y = Normalize(y, fmt)
-    if not (x and y) then return false end
+    if not (x and y) or x < 0 or x > 1 or y < 0 or y > 1 then
+        return false
+    end
     if not C_Map.CanSetUserWaypointOnMap(mapID) then return false end
 
     C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))

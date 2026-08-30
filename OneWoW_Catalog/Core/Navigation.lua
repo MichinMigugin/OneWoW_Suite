@@ -8,11 +8,11 @@ local L = ns.L
 -- coordinates are known, drops a super-tracked user waypoint.
 --
 -- Coordinate scaling and the waypoint call itself live in OneWoW.Location; this
--- file owns the Catalog-specific half. Journal DB2 doors arrive as continent
--- Map.db2 + world XY from generated JournalInstanceEntrances and are converted
--- here. Wowhead fallbacks already carry uiMapID + 0-100 and skip that
--- conversion, which is why OpenMapPin does not declare a coordinate format.
--- Delve doors use AreaPOI; ContinentID 0 rows fall back to a live POI lookup.
+-- file owns the Catalog-specific half. Journal DB2 and Delve doors arrive as
+-- continent Map.db2 + world XY. Delve rows also carry uiMapID as the outdoor
+-- zone for GetAreaPOIInfo, not as percent coords. Wowhead fallbacks have
+-- uiMapID + 0-100 and no mapID. ContinentID 0 rows fall back to a live POI
+-- lookup.
 -- ============================================================================
 
 local tonumber = tonumber
@@ -84,11 +84,18 @@ end
 ---@param continentID number
 ---@param worldX number
 ---@param worldY number
+---@param preferredUiMapID number|nil outdoor zone to convert onto when known
 ---@return number|nil uiMapID
 ---@return number|nil x
 ---@return number|nil y
-local function ResolveWorldPos(continentID, worldX, worldY)
+local function ResolveWorldPos(continentID, worldX, worldY, preferredUiMapID)
     local worldPos = CreateVector2D(worldX, worldY)
+    if preferredUiMapID then
+        local zoneID, zonePos = C_Map.GetMapPosFromWorldPos(continentID, worldPos, preferredUiMapID)
+        if zoneID and zonePos then
+            return zoneID, zonePos.x, zonePos.y
+        end
+    end
     local uiMapID, mapPos = C_Map.GetMapPosFromWorldPos(continentID, worldPos)
     if not uiMapID or not mapPos then
         return nil
@@ -128,13 +135,13 @@ local function MapPinScore(uiMapID)
 end
 
 --- Midnight delve doors often have ContinentID 0, so world XY cannot convert.
---- Walk the player's map parents for a live AreaPOI position.
+--- Walk from the door's outdoor zone (when known), then the player's map parents.
 ---@param areaPoiID number
+---@param uiMapID number|nil
 ---@return number|nil uiMapID
 ---@return number|nil x
 ---@return number|nil y
-local function ResolveAreaPoiPin(areaPoiID)
-    local uiMapID = C_Map.GetBestMapForUnit("player")
+local function WalkAreaPoiFrom(areaPoiID, uiMapID)
     local seen = {}
     while uiMapID and uiMapID ~= 0 and not seen[uiMapID] do
         seen[uiMapID] = true
@@ -145,6 +152,23 @@ local function ResolveAreaPoiPin(areaPoiID)
         end
         local mapInfo = C_Map.GetMapInfo(uiMapID)
         uiMapID = mapInfo and mapInfo.parentMapID
+    end
+    return nil
+end
+
+---@param areaPoiID number
+---@param startMapID number|nil
+---@return number|nil uiMapID
+---@return number|nil x
+---@return number|nil y
+local function ResolveAreaPoiPin(areaPoiID, startMapID)
+    local uiMapID, x, y = WalkAreaPoiFrom(areaPoiID, startMapID)
+    if uiMapID then
+        return uiMapID, x, y
+    end
+    local playerMap = C_Map.GetBestMapForUnit("player")
+    if playerMap and playerMap ~= startMapID then
+        return WalkAreaPoiFrom(areaPoiID, playerMap)
     end
     return nil
 end
@@ -183,10 +207,13 @@ local function ResolveInstanceEntrance(instanceID, entrances)
     local bestScore, bestMapID, bestX, bestY, bestContinent, bestPoiID = -1, nil, nil, nil, -1, nil
     for _, row in ipairs(candidates) do
         local uiMapID, x, y
-        if row.uiMapID then
+        -- Delve/DB2 doors always have continent mapID + world XY. uiMapID on
+        -- those rows is the outdoor zone for POI lookup, not percent coords.
+        -- Wowhead fallbacks have uiMapID + 0-100 and no mapID.
+        if row.mapID and row.mapID ~= 0 then
+            uiMapID, x, y = ResolveWorldPos(row.mapID, row.x, row.y, row.uiMapID)
+        elseif row.mapID == nil and row.uiMapID then
             uiMapID, x, y = row.uiMapID, row.x, row.y
-        elseif row.mapID and row.mapID ~= 0 then
-            uiMapID, x, y = ResolveWorldPos(row.mapID, row.x, row.y)
         end
         if uiMapID then
             local score = MapPinScore(uiMapID)
@@ -199,7 +226,7 @@ local function ResolveInstanceEntrance(instanceID, entrances)
     if not bestMapID then
         for _, row in ipairs(candidates) do
             if row.areaPoiID then
-                local uiMapID, x, y = ResolveAreaPoiPin(row.areaPoiID)
+                local uiMapID, x, y = ResolveAreaPoiPin(row.areaPoiID, row.uiMapID)
                 if uiMapID then
                     return uiMapID, x, y, row.areaPoiID
                 end
