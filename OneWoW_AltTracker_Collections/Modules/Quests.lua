@@ -19,12 +19,25 @@ function Module:CollectData(charKey, charData)
     for i = 1, numEntries do
         local info = C_QuestLog.GetInfo(i)
         if info and not info.isHeader then
-            table.insert(activeQuests, {
+            local objectives = {}
+            local objs = C_QuestLog.GetQuestObjectives(info.questID)
+            if objs then
+                for _, obj in ipairs(objs) do
+                    tinsert(objectives, {
+                        text = obj.text or "",
+                        finished = obj.finished == true,
+                        numFulfilled = obj.numFulfilled or 0,
+                        numRequired = obj.numRequired or 0,
+                    })
+                end
+            end
+            tinsert(activeQuests, {
                 questID  = info.questID,
                 title    = info.title,
                 isDaily  = info.frequency == Enum.QuestFrequency.Daily,
                 isWeekly = info.frequency == Enum.QuestFrequency.Weekly,
                 isComplete = info.isComplete,
+                objectives = objectives,
             })
         end
     end
