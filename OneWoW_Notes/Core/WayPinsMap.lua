@@ -11,7 +11,7 @@ local C_Map, C_Timer, C_Navigation, C_Minimap = C_Map, C_Timer, C_Navigation, C_
 local GetCVar, GetPlayerFacing, IsControlKeyDown = GetCVar, GetPlayerFacing, IsControlKeyDown
 local MenuUtil, GameTooltip, GameTooltip_Hide = MenuUtil, GameTooltip, GameTooltip_Hide
 local GetCursorPosition, UIParent = GetCursorPosition, UIParent
-local OpenWorldMap = OpenWorldMap
+local OpenWorldMap, securecallfunction, securecallmethod = OpenWorldMap, securecallfunction, securecallmethod
 local LibStub = LibStub
 local CreateFromMixins, Mixin = CreateFromMixins, Mixin
 local CreateUnsecuredRegionPoolInstance = CreateUnsecuredRegionPoolInstance
@@ -293,9 +293,13 @@ end
 ---@param pin table
 function WayPinsMap:ShowOnMap(pin)
     if type(pin) ~= "table" or not pin.mapID then return end
-    OpenWorldMap(pin.mapID)
-    WorldMapFrame:SetMapID(pin.mapID)
-    QuestMapFrame:SetDisplayMode(QuestLogDisplayMode.MapLegend)
+    securecallfunction(OpenWorldMap, pin.mapID)
+    if WorldMapFrame then
+        securecallmethod(WorldMapFrame, "SetMapID", pin.mapID)
+    end
+    if QuestMapFrame then
+        securecallmethod(QuestMapFrame, "SetDisplayMode", QuestLogDisplayMode.MapLegend)
+    end
     self:TrackPin(pin)
 end
 

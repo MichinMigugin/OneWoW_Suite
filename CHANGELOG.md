@@ -87,6 +87,7 @@
 
 # QoL
 - Weekly Reset Day moved to Settings > Trackers.
+- Hovering map pins (delves, events, and similar) and trait currencies no longer errors.
 
 ---
 

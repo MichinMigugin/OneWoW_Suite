@@ -27,6 +27,10 @@ local _, ns = ...
 -- is not isotropic, so those distances are an approximation of world range,
 -- not a substitute for it.
 --
+-- OpenWorldMap is invoked via securecallfunction so OnMapChanged / AcquirePin
+-- do not inherit addon taint. Tainted OpenWorldMap SetScripts OnEnter on every
+-- Blizzard AreaPOI and vignette pin; widget tooltips then error on secret sizes.
+--
 -- World helpers (GetWorldPos / WorldDelta / MinimapOffset) convert stored
 -- points through C_Map.GetWorldPosFromMapPos so pin placement can use real
 -- yards. Pin frames, tooltips, and MapCanvas stay in the feature units.
@@ -37,7 +41,7 @@ local _, ns = ...
 local tonumber = tonumber
 local sqrt, cos, sin = math.sqrt, math.cos, math.sin
 local C_Map, C_SuperTrack = C_Map, C_SuperTrack
-local UiMapPoint, OpenWorldMap = UiMapPoint, OpenWorldMap
+local UiMapPoint, OpenWorldMap, securecallfunction = UiMapPoint, OpenWorldMap, securecallfunction
 local CreateVector2D = CreateVector2D
 
 local scratchMapPos = CreateVector2D(0, 0)
@@ -121,7 +125,7 @@ function Location.SetWaypoint(mapID, x, y, opts)
     if not mapID or mapID == 0 then return false end
 
     if opts and opts.openMap then
-        OpenWorldMap(mapID)
+        securecallfunction(OpenWorldMap, mapID)
     end
 
     local fmt = opts and opts.format

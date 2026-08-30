@@ -465,21 +465,31 @@ if TalentDisplayMixin then
     end)
 end
 
--- Map pins
-if AreaPOIPinMixin then
-    hook(AreaPOIPinMixin, "TryShowTooltip", function(pin)
-        if pin and pin.areaPoiID then
-            AddHookIDBlock(GameTooltip, { areaPoiID = pin.areaPoiID })
-        end
-    end)
-end
-if VignettePinMixin then
-    hook(VignettePinMixin, "OnMouseEnter", function(pin)
-        if pin and pin.vignetteInfo and pin.vignetteInfo.vignetteID then
-            AddHookIDBlock(GameTooltip, { vignetteID = pin.vignetteInfo.vignetteID })
-        end
-    end)
-end
+-- Map pin IDs. Do not hooksecurefunc OnMouseEnter / TryShowTooltip on pin
+-- mixins: MapCanvas SetScript's those methods onto pins, so the wrapper taints
+-- widget layout (secret string heights). AreaPOI fires after the tooltip;
+-- vignettes append on the next frame after GameTooltip:Show.
+EventRegistry:RegisterCallback("AreaPOIPin.MouseOver", function(_, _, tooltipShown, areaPoiID)
+    if tooltipShown and areaPoiID then
+        AddHookIDBlockDeferred(GameTooltip, { areaPoiID = areaPoiID })
+    end
+end)
+
+hooksecurefunc(GameTooltip, "Show", function(tooltip)
+    if not tooltip or tooltip:IsForbidden() then return end
+    if tooltip._onewowMapPinIDs then return end
+    local owner = tooltip:GetOwner()
+    local info = owner and owner.vignetteInfo
+    if not (info and info.vignetteID) then return end
+    tooltip._onewowMapPinIDs = true
+    AddHookIDBlockDeferred(tooltip, { vignetteID = info.vignetteID })
+end)
+
+hooksecurefunc(GameTooltip, "Hide", function(tooltip)
+    if tooltip then
+        tooltip._onewowMapPinIDs = nil
+    end
+end)
 
 -- Quest list (side of map) and quest POIs on map
 hook(_G, "QuestMapLogTitleButton_OnEnter", function(btn)
