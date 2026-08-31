@@ -26,7 +26,9 @@ local activeRows = {}
 local pendingSearch = nil
 local accentBar = nil
 
-local ROW_H = 46
+local DROP_W = 340
+local TEXT_PAD = 8
+local TEXT_GAP = 3
 local PAD = 6
 local DEBOUNCE = 0.05
 local MIN_CHARS = 2
@@ -84,6 +86,10 @@ local function ReleaseRows()
     wipe(activeRows)
 end
 
+local function PaintMuted(fs)
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+end
+
 local function AcquireRow(parent)
     local row = tremove(rowPool)
     if row then
@@ -93,21 +99,22 @@ local function AcquireRow(parent)
     end
 
     row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    row:SetHeight(ROW_H)
     row:SetBackdrop(BACKDROP_SIMPLE)
     row:SetBackdropColor(0, 0, 0, 0)
 
     row.pathText = OneWoW_GUI:CreateFS(row, 10)
-    row.pathText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -8)
     row.pathText:SetJustifyH("LEFT")
+    row.pathText:SetJustifyV("TOP")
+    row.pathText:SetWordWrap(false)
 
     row.badge = OneWoW_GUI:CreateFS(row, 10)
-    row.badge:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -8)
+    row.badge:SetJustifyH("RIGHT")
+    row.badge:SetJustifyV("TOP")
 
     row.descText = OneWoW_GUI:CreateFS(row, 10)
-    row.descText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 8)
-    row.descText:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 8)
     row.descText:SetJustifyH("LEFT")
+    row.descText:SetJustifyV("TOP")
+    row.descText:SetWordWrap(true)
 
     row.sep = row:CreateTexture(nil, "ARTWORK")
     row.sep:SetHeight(1)
@@ -118,28 +125,76 @@ local function AcquireRow(parent)
     return row
 end
 
-local function LayoutRow(row, parent, index)
+local function AnchorRow(row, parent, y)
     row:ClearAllPoints()
-    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 1, -(PAD + (index - 1) * ROW_H))
-    row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -1, -(PAD + (index - 1) * ROW_H))
+    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 1, y)
+    row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -1, y)
 end
 
-local function PaintMuted(fs)
-    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+---@param row Frame
+---@param path string
+---@param desc string|nil
+---@param installed boolean
+---@return number
+local function FitRow(row, path, desc, installed)
+    if installed then
+        row.badge:SetText("")
+        row.badge:Hide()
+    else
+        row.badge:SetText(ADDON_MISSING)
+        row.badge:Show()
+        PaintMuted(row.badge)
+    end
+
+    local innerW = DROP_W - 2 - TEXT_PAD * 2
+    if not installed then
+        innerW = innerW - (row.badge:GetStringWidth() or 0) - TEXT_PAD
+    end
+
+    row.pathText:ClearAllPoints()
+    row.pathText:SetPoint("TOPLEFT", row, "TOPLEFT", TEXT_PAD, -TEXT_PAD)
+    row.pathText:SetWidth(innerW)
+    row.pathText:SetText(path or "")
+
+    row.badge:ClearAllPoints()
+    row.badge:SetPoint("TOPRIGHT", row, "TOPRIGHT", -TEXT_PAD, -TEXT_PAD)
+
+    local pathH = row.pathText:GetStringHeight()
+    if pathH < 1 then
+        pathH = 12
+    end
+
+    local h = TEXT_PAD * 2 + pathH
+    if desc and desc ~= "" then
+        row.descText:Show()
+        row.descText:ClearAllPoints()
+        row.descText:SetPoint("TOPLEFT", row.pathText, "BOTTOMLEFT", 0, -TEXT_GAP)
+        row.descText:SetWidth(innerW)
+        row.descText:SetText(desc)
+        local descH = row.descText:GetStringHeight()
+        if descH < 1 then
+            descH = 12
+        end
+        h = h + TEXT_GAP + descH
+    else
+        row.descText:SetText("")
+        row.descText:Hide()
+    end
+
+    row:SetHeight(h)
+    return h
 end
 
 local function ShowEmpty()
     ReleaseRows()
     local row = AcquireRow(resultsFrame)
-    LayoutRow(row, resultsFrame, 1)
-    row.pathText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-    row.pathText:SetText(ns.L["SEARCH_NO_RESULTS"])
+    AnchorRow(row, resultsFrame, -PAD)
+    row:Show()
+    local h = FitRow(row, ns.L["SEARCH_NO_RESULTS"], "", true)
     PaintMuted(row.pathText)
-    row.descText:SetText("")
-    row.badge:SetText("")
     row.sep:Hide()
     row:Show()
-    resultsFrame:SetHeight(ROW_H + PAD * 2)
+    resultsFrame:SetHeight(h + PAD * 2)
     resultsFrame:Show()
 end
 
@@ -155,34 +210,21 @@ local function ShowResults(hits)
         return
     end
 
-    resultsFrame:SetHeight(#hits * ROW_H + PAD * 2)
-
+    local y = -PAD
+    local total = PAD
     for i, data in ipairs(hits) do
         local entry = data.entry
         local installed = data.installed
         local row = AcquireRow(resultsFrame)
-        LayoutRow(row, resultsFrame, i)
+        AnchorRow(row, resultsFrame, y)
+        row:Show()
 
-        local rightPad = installed and -8 or -90
-        row.pathText:SetPoint("RIGHT", row, "RIGHT", rightPad, 0)
-        row.pathText:SetText(data.path)
+        local h = FitRow(row, data.path, data.desc, installed)
         if installed then
             row.pathText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        else
-            PaintMuted(row.pathText)
-        end
-
-        if installed then
-            row.badge:SetText("")
-        else
-            row.badge:SetText(ADDON_MISSING)
-            PaintMuted(row.badge)
-        end
-
-        row.descText:SetText(data.desc or "")
-        if installed then
             row.descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         else
+            PaintMuted(row.pathText)
             PaintMuted(row.descText)
         end
 
@@ -206,9 +248,11 @@ local function ShowResults(hits)
             end)
         end
 
-        row:Show()
+        y = y - h
+        total = total + h
     end
 
+    resultsFrame:SetHeight(total + PAD)
     resultsFrame:Show()
 end
 
@@ -343,7 +387,7 @@ function Search:Init(parent, rightAnchor)
     searchBox = box
 
     local drop = CreateFrame("Frame", "OneWoWSearchResults", UIParent, "BackdropTemplate")
-    drop:SetWidth(340)
+    drop:SetWidth(DROP_W)
     drop:SetHeight(50)
     drop:SetFrameStrata("FULLSCREEN_DIALOG")
     drop:SetFrameLevel(100)
