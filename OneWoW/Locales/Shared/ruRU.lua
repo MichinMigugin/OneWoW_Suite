@@ -58,8 +58,9 @@ ns.Locale:RegisterShared("ruRU", {
     ["VALUE_DISPLAY_SECTION"] = "Отображение ценности",
     ["VALUE_DISPLAY_DESC"] = "Как золото и цены показываются в OneWoW (сумки, AltTracker, Catalog, подсказки, трекер ценности фарма и т. д.).",
     ["VALUE_DISPLAY_LETTERS"] = "Показывать буквы з, с, м (вместо значков монет)",
+    ["VALUE_DISPLAY_GROUPING"] = "Показывать разделители тысяч",
     ["VALUE_DISPLAY_REGIONAL"] = "Использовать региональную группировку цифр (язык клиента)",
-    ["VALUE_DISPLAY_WHITE"] = "Использовать белые значения (режим букв; классический вид, если выключено)",
+    ["VALUE_DISPLAY_WHITE"] = "Использовать белые значения (классический вид, если выключено)",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",

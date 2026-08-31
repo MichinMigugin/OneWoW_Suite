@@ -841,6 +841,12 @@ function OneWoW_Bags:OnAddonLoaded()
         if ns.GuildBankBar and ns.GuildBankBar.UpdateGold then
             ns.GuildBankBar:UpdateGold()
         end
+        if ns.GuildBankLog then
+            local logFrame = ns.GuildBankLog:GetFrame()
+            if logFrame and logFrame:IsShown() then
+                ns.GuildBankLog:Refresh()
+            end
+        end
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)

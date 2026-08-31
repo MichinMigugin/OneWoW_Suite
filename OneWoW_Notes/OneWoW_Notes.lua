@@ -95,6 +95,11 @@ local function OnInitialize()
             ns.ZonePins:RefreshAllPinFonts()
         end
     end)
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", OneWoW_Notes, function()
+        if ns.UI and ns.UI.RefreshCollectiblesList then
+            ns.UI.RefreshCollectiblesList()
+        end
+    end)
     OneWoW:RegisterLoadComponent("Notes",  OneWoW:GetAddonVersion(ADDON_NAME), "/1wn", ADDON_NAME)
 end
 

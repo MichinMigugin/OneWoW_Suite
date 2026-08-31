@@ -448,9 +448,9 @@ local function OnDataIconEnter(icon)
             GameTooltip:AddLine("x" .. icon._count, OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     elseif icon._gold then
-        GameTooltip:SetText(GetMoneyString(icon._gold, true))
+        GameTooltip:SetText(OneWoW.Format.FormatGold(icon._gold))
         if icon._tipAvg and icon._tipMax then
-            GameTooltip:AddLine(GetMoneyString(icon._tipAvg, true) .. " / " .. GetMoneyString(icon._tipMax, true), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            GameTooltip:AddLine(OneWoW.Format.FormatGold(icon._tipAvg) .. " / " .. OneWoW.Format.FormatGold(icon._tipMax), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
     else
         GameTooltip:Hide()
@@ -580,12 +580,11 @@ local function BindMoney(fs, copper, allowNegative)
         fs:SetText("")
         return
     end
+    fs:SetText(OneWoW.Format.FormatGold(copper))
     if copper < 0 then
-        fs:SetText("-" .. GetMoneyString(-copper, true))
         fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         return
     end
-    fs:SetText(GetMoneyString(copper, true))
     fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 end
 

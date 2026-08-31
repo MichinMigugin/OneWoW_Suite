@@ -58,8 +58,9 @@ ns.Locale:RegisterShared("zhCN", {
     ["VALUE_DISPLAY_SECTION"] = "价值显示",
     ["VALUE_DISPLAY_DESC"] = "金币和价格在 OneWoW 中的显示方式（背包、AltTracker、Catalog、提示框、农场价值追踪器等）。",
     ["VALUE_DISPLAY_LETTERS"] = "显示字母 g、s、c（代替硬币图标）",
+    ["VALUE_DISPLAY_GROUPING"] = "显示千位分隔符",
     ["VALUE_DISPLAY_REGIONAL"] = "使用区域数字分组（客户端区域设置）",
-    ["VALUE_DISPLAY_WHITE"] = "使用白色数值（字母模式；关闭时为经典外观）",
+    ["VALUE_DISPLAY_WHITE"] = "使用白色数值（关闭时为经典外观）",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",

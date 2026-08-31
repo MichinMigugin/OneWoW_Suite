@@ -1833,7 +1833,7 @@ function VendorPanel:UpdatePreviewPanel()
     if #noValueJunkItems > 0 then yOffset = self:CreateCategory(scrollChild, noValueJunkItems, yOffset, L["VENDOR_JUNK_NO_VALUE"], {r=1, g=0.4, b=0.4}, "noValueJunk", false, false, true) end
 
     scrollChild:SetHeight(math.max(yOffset, 1))
-    state.junkPreviewPanel.totalValueText:SetText(string.format(L["VENDOR_TOTAL"], VPFilters.FormatMoney(totalValue)))
+    state.junkPreviewPanel.totalValueText:SetText(string.format(L["VENDOR_TOTAL"], OneWoW.Format.FormatGold(totalValue)))
 
     local sellableCount, destroyableCount = 0, 0
     for _, list in ipairs({grayItems, markedItems, ilvlGearItems, reagentItems, customItems}) do
@@ -1876,7 +1876,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
 
     local headerText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     headerText:SetPoint("LEFT", indicator, "RIGHT", 5, 0)
-    headerText:SetText(title .. " (" .. #items .. ") - " .. VPFilters.FormatMoney(categoryTotal))
+    headerText:SetText(title .. " (" .. #items .. ") - " .. OneWoW.Format.FormatGold(categoryTotal))
     headerText:SetTextColor(color.r * 1.1, color.g * 1.1, color.b * 1.1, 1)
 
     if isOneTime then
@@ -2005,7 +2005,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
                 totalPriceBox:SetScript("OnLeave", function(myself) myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")); GameTooltip:Hide() end)
             else
                 local totalPriceText = itemFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                totalPriceText:SetText(VPFilters.FormatMoney(item.totalValue))
+                totalPriceText:SetText(OneWoW.Format.FormatGold(item.totalValue))
                 totalPriceText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 local totalWidth = totalPriceText:GetStringWidth() + 12
                 totalPriceBox = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")
@@ -2022,7 +2022,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
 
             if item.stackCount > 1 and not item.noSellPrice then
                 local eaPriceText = itemFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                eaPriceText:SetText(VPFilters.FormatMoney(item.sellPrice) .. " ea")
+                eaPriceText:SetText(OneWoW.Format.FormatGold(item.sellPrice) .. " ea")
                 eaPriceText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 local eaWidth = eaPriceText:GetStringWidth() + 10
                 local eaPriceBox = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")

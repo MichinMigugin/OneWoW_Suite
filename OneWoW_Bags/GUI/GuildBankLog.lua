@@ -193,7 +193,7 @@ function GuildBankLog:RefreshGold()
         local txType, name, amount, year, month, day, hour = GetGuildBankMoneyTransaction(i)
         if not name then name = UNKNOWN end
         name = NORMAL_FONT_COLOR_CODE .. name .. FONT_COLOR_CODE_CLOSE
-        local money = GetMoneyString(amount, true)
+        local money = OneWoW.Format.FormatGold(amount)
         if txType == "deposit" then
             msg = msg .. format(GUILDBANK_DEPOSIT_MONEY_FORMAT, name, money)
         elseif txType == "withdraw" then

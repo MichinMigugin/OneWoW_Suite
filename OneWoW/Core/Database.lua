@@ -20,8 +20,9 @@ local DEFAULTS = {
     },
     moneyDisplay = {
         useLetters = false,
+        useGrouping = true,
         useRegionalNumbers = true,
-        useWhiteValues = true,
+        useWhiteValues = false,
     },
     mainFrameSize = {
         width = 1400,

@@ -10,6 +10,10 @@
   - Bag Bar is `/1wbb` (`/bagbar` and `/owbb` are gone)
   - Copy Text is `/1wcopytext` or `/1wct` (`/copytext` and `/ct` are gone)
 
+### Value display
+- Large gold amounts show separators (2,127,634 instead of 2127634). Value display in OneWoW Settings now applies to bags, Vendor Panel, Crafting Orders, Notes collectibles, Auto Repair, Direct Deposit, AFK, the ESC character panel, and the guild bank log.
+- Value display shows a live example as you change the options. Turn thousand separators off if you want a plain number. White values apply to coin icons as well as letters, and start off so you get classic gold/silver/copper numbers.
+
 ---
 
 ### DevTool
@@ -96,7 +100,7 @@
 
 ---
 
-*No user-facing changes this release for Home, Shopping List, Direct Deposit, or Mail.*
+*No user-facing changes this release for Home, Shopping List, or Mail.*
 
 ---
 

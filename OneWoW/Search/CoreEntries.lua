@@ -103,7 +103,7 @@ local displayRows = {
         id = "settings:money",
         title = Shared("VALUE_DISPLAY_SECTION"),
         description = Shared("VALUE_DISPLAY_DESC"),
-        tags = { "gold", "money", "copper", "silver" },
+        tags = { "gold", "money", "copper", "silver", "comma", "separator", "thousands" },
     },
 }
 

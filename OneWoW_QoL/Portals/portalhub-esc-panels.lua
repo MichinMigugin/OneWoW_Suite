@@ -332,12 +332,7 @@ local function BuildCharacterInfoPanel(container, anchorPanel, hMode)
 	panel.iLevelText:SetFormattedText("iLevel: %d", char.itemLevel)
 	panel.mplusText:SetFormattedText("M+ Score: %d", char.mythicPlusRating)
 
-	local gold   = math.floor(char.money / 10000)
-	local silver = math.floor((char.money % 10000) / 100)
-	local copper = char.money % 100
-	panel.goldText:SetFormattedText(
-		"Gold: %s|TInterface\\MoneyFrame\\UI-GoldIcon:14:14:2:0|t %s|TInterface\\MoneyFrame\\UI-SilverIcon:14:14:2:0|t %s|TInterface\\MoneyFrame\\UI-CopperIcon:14:14:2:0|t",
-		BreakUpLargeNumbers(gold), silver, copper)
+	panel.goldText:SetFormattedText("Gold: %s", OneWoW.Format.FormatGold(char.money))
 
 	panel:Show()
 	return panel

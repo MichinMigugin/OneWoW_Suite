@@ -282,6 +282,10 @@ function M:OnEnable()
         M:ValidateMagicButton()
         M:ValidateListActionButtons()
     end)
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", M, function()
+        if not ModuleOn() then return end
+        M:RefreshOverlay()
+    end)
 
     if OneWoW.ProfessionRecipe.IsTradeskillOpen() then
         M:OnProfessionShown()

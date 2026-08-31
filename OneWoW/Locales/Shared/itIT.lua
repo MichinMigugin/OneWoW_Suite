@@ -58,8 +58,9 @@ ns.Locale:RegisterShared("itIT", {
     ["VALUE_DISPLAY_SECTION"] = "Visualizzazione valori",
     ["VALUE_DISPLAY_DESC"] = "Come oro e prezzi vengono mostrati in OneWoW (borse, AltTracker, Catalog, descrizioni, tracciatore del valore di farm, ecc.).",
     ["VALUE_DISPLAY_LETTERS"] = "Mostra le lettere o, a, r (invece delle icone delle monete)",
+    ["VALUE_DISPLAY_GROUPING"] = "Mostra i separatori delle migliaia",
     ["VALUE_DISPLAY_REGIONAL"] = "Usa il raggruppamento numerico regionale (lingua del client)",
-    ["VALUE_DISPLAY_WHITE"] = "Usa valori bianchi (modalità lettere; aspetto classico se disattivato)",
+    ["VALUE_DISPLAY_WHITE"] = "Usa valori bianchi (aspetto classico se disattivato)",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",

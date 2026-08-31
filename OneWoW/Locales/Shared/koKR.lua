@@ -58,8 +58,9 @@ ns.Locale:RegisterShared("koKR", {
     ["VALUE_DISPLAY_SECTION"] = "재화 표시",
     ["VALUE_DISPLAY_DESC"] = "OneWoW 전반에서 골드와 가격이 표시되는 방식입니다 (가방, AltTracker, Catalog, 툴팁, 농사 가치 추적기 등).",
     ["VALUE_DISPLAY_LETTERS"] = "동전 아이콘 대신 g, s, c 문자 표시",
+    ["VALUE_DISPLAY_GROUPING"] = "천 단위 구분 기호 표시",
     ["VALUE_DISPLAY_REGIONAL"] = "지역 숫자 구분 사용 (클라이언트 로캘)",
-    ["VALUE_DISPLAY_WHITE"] = "흰색 수치 사용 (문자 모드, 끄면 클래식 모양)",
+    ["VALUE_DISPLAY_WHITE"] = "흰색 수치 사용 (끄면 클래식 모양)",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",

@@ -58,8 +58,9 @@ ns.Locale:RegisterShared("deDE", {
     ["VALUE_DISPLAY_SECTION"] = "Wertanzeige",
     ["VALUE_DISPLAY_DESC"] = "Wie Gold und Preise in OneWoW angezeigt werden (Taschen, AltTracker, Catalog, Tooltips, Farmwert-Tracker usw.).",
     ["VALUE_DISPLAY_LETTERS"] = "Buchstaben g, s, k anzeigen (statt Münzsymbolen)",
+    ["VALUE_DISPLAY_GROUPING"] = "Tausendertrennzeichen anzeigen",
     ["VALUE_DISPLAY_REGIONAL"] = "Regionale Zifferngruppierung verwenden (Client-Sprache)",
-    ["VALUE_DISPLAY_WHITE"] = "Weiße Werte verwenden (Buchstabenmodus; klassische Optik wenn aus)",
+    ["VALUE_DISPLAY_WHITE"] = "Weiße Werte verwenden (klassische Optik wenn aus)",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",

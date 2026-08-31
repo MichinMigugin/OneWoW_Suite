@@ -308,7 +308,7 @@ function DirectDeposit:NormalizeGold()
             C_Bank.DepositMoney(bankType, excess)
 
             local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
-            print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFFE67E22Deposited|r |cFFFFFFFF" .. GetMoneyString(excess, true) .. " to |cFF50C878Warband Bank|r")
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFFE67E22Deposited|r " .. OneWoW.Format.FormatGold(excess) .. " to |cFF50C878Warband Bank|r")
         end
     end
 
@@ -322,7 +322,7 @@ function DirectDeposit:NormalizeGold()
                 C_Bank.WithdrawMoney(bankType, toWithdraw)
 
                 local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
-                print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFF4A90E2Withdrew|r |cFFFFFFFF" .. GetMoneyString(toWithdraw, true) .. " from |cFF50C878Warband Bank|r")
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFF4A90E2Withdrew|r " .. OneWoW.Format.FormatGold(toWithdraw) .. " from |cFF50C878Warband Bank|r")
             end
         end
     end

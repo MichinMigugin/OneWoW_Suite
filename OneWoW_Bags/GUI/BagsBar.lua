@@ -267,6 +267,7 @@ function BagsBar:Create(parent)
 
     local goldText = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldText:SetPoint("RIGHT", goldBtn, "RIGHT", 0, 0)
+    goldText:SetTextColor(1, 1, 1)
     bagsBarFrame.goldText = goldText
     BagsBar:UpdateGoldDisplay()
 

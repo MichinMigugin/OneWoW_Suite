@@ -704,7 +704,7 @@ function UI:BuildSharedSettingsPanel(parent, yOffset)
     local valuePanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     valuePanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     valuePanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    valuePanel:SetHeight(158)
+    valuePanel:SetHeight(236)
     valuePanel:SetBackdrop(panelBackdrop)
     valuePanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     valuePanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -722,38 +722,79 @@ function UI:BuildSharedSettingsPanel(parent, yOffset)
     valueDesc:SetJustifyH("LEFT")
     valueDesc:SetWordWrap(true)
 
+    -- 123,456g 78s 90c in copper. FormatGold applies the live Value display settings.
+    local VALUE_PREVIEW_COPPER = 123456 * 10000 + 78 * 100 + 90
+
     local lettersChecked = OneWoW_GUI:GetSetting("moneyDisplay.useLetters") and true or false
+    local groupingChecked = OneWoW_GUI:GetSetting("moneyDisplay.useGrouping") ~= false
     local regionalChecked = OneWoW_GUI:GetSetting("moneyDisplay.useRegionalNumbers") ~= false
-    local whiteValuesChecked = OneWoW_GUI:GetSetting("moneyDisplay.useWhiteValues") ~= false
+    local whiteValuesChecked = OneWoW_GUI:GetSetting("moneyDisplay.useWhiteValues") and true or false
 
     local lettersCb = OneWoW_GUI:CreateCheckbox(valuePanel, {
         label = L["VALUE_DISPLAY_LETTERS"],
     })
     lettersCb:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 12, -72)
     lettersCb:SetChecked(lettersChecked)
-    lettersCb:SetScript("OnClick", function(cb)
-        OneWoW_GUI:SetSetting("moneyDisplay.useLetters", cb:GetChecked())
-    end)
+
+    local groupingCb = OneWoW_GUI:CreateCheckbox(valuePanel, {
+        label = L["VALUE_DISPLAY_GROUPING"],
+    })
+    groupingCb:SetPoint("TOPLEFT", lettersCb, "BOTTOMLEFT", 0, -6)
+    groupingCb:SetChecked(groupingChecked)
 
     local regionalCb = OneWoW_GUI:CreateCheckbox(valuePanel, {
         label = L["VALUE_DISPLAY_REGIONAL"],
     })
-    regionalCb:SetPoint("TOPLEFT", lettersCb, "BOTTOMLEFT", 0, -6)
+    regionalCb:SetPoint("TOPLEFT", groupingCb, "BOTTOMLEFT", 0, -6)
     regionalCb:SetChecked(regionalChecked)
-    regionalCb:SetScript("OnClick", function(cb)
-        OneWoW_GUI:SetSetting("moneyDisplay.useRegionalNumbers", cb:GetChecked())
-    end)
 
     local whiteValuesCb = OneWoW_GUI:CreateCheckbox(valuePanel, {
         label = L["VALUE_DISPLAY_WHITE"],
     })
     whiteValuesCb:SetPoint("TOPLEFT", regionalCb, "BOTTOMLEFT", 0, -6)
     whiteValuesCb:SetChecked(whiteValuesChecked)
+
+    local previewLabel = valuePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    previewLabel:SetPoint("TOPLEFT", whiteValuesCb, "BOTTOMLEFT", 4, -10)
+    previewLabel:SetText(PREVIEW)
+    previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local previewGold = valuePanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    previewGold:SetPoint("LEFT", previewLabel, "RIGHT", 8, 0)
+    previewGold:SetTextColor(1, 1, 1)
+
+    local function RefreshValuePreview()
+        previewGold:SetTextColor(1, 1, 1)
+        previewGold:SetText(OneWoW.Format.FormatGold(VALUE_PREVIEW_COPPER))
+        local groupingOn = OneWoW_GUI:GetSetting("moneyDisplay.useGrouping")
+        if groupingOn then
+            regionalCb:Enable()
+            regionalCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            regionalCb:Disable()
+            regionalCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+
+    lettersCb:SetScript("OnClick", function(cb)
+        OneWoW_GUI:SetSetting("moneyDisplay.useLetters", cb:GetChecked())
+        RefreshValuePreview()
+    end)
+    groupingCb:SetScript("OnClick", function(cb)
+        OneWoW_GUI:SetSetting("moneyDisplay.useGrouping", cb:GetChecked())
+        RefreshValuePreview()
+    end)
+    regionalCb:SetScript("OnClick", function(cb)
+        OneWoW_GUI:SetSetting("moneyDisplay.useRegionalNumbers", cb:GetChecked())
+        RefreshValuePreview()
+    end)
     whiteValuesCb:SetScript("OnClick", function(cb)
         OneWoW_GUI:SetSetting("moneyDisplay.useWhiteValues", cb:GetChecked())
+        RefreshValuePreview()
     end)
+    RefreshValuePreview()
 
-    yOffset = yOffset - 178
+    yOffset = yOffset - 256
 
     local function refreshThemePickerLabels()
         OneWoW_GUI:ApplyTheme()

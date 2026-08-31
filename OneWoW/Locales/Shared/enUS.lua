@@ -58,8 +58,9 @@ ns.Locale:RegisterShared("enUS", {
     ["VALUE_DISPLAY_SECTION"] = "Value display",
     ["VALUE_DISPLAY_DESC"] = "How gold and prices are shown across OneWoW (bags, AltTracker, Catalog, tooltips, farm value tracker, etc.).",
     ["VALUE_DISPLAY_LETTERS"] = "Show letters g, s, c (instead of coin icons)",
+    ["VALUE_DISPLAY_GROUPING"] = "Show thousand separators",
     ["VALUE_DISPLAY_REGIONAL"] = "Use regional number grouping (client locale)",
-    ["VALUE_DISPLAY_WHITE"] = "Use white values (letter mode; classic look when off)",
+    ["VALUE_DISPLAY_WHITE"] = "Use white values (classic look when off)",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",

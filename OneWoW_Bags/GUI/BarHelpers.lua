@@ -23,6 +23,7 @@ end
 function BH:CreateGoldDisplay(bar, anchorTo)
     local goldText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldText:SetPoint("RIGHT", anchorTo, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    goldText:SetTextColor(1, 1, 1)
     bar.goldText = goldText
 
     local freeSlots = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

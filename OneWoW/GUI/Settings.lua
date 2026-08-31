@@ -38,10 +38,12 @@ function OneWoW_GUI:GetSetting(key)
     elseif key == "minimap.theme" then return db.minimap.theme
     elseif key == "moneyDisplay.useLetters" then
         return db.moneyDisplay.useLetters == true
+    elseif key == "moneyDisplay.useGrouping" then
+        return db.moneyDisplay.useGrouping ~= false
     elseif key == "moneyDisplay.useRegionalNumbers" then
         return db.moneyDisplay.useRegionalNumbers ~= false
     elseif key == "moneyDisplay.useWhiteValues" then
-        return db.moneyDisplay.useWhiteValues ~= false
+        return db.moneyDisplay.useWhiteValues == true
     end
 end
 
@@ -72,6 +74,9 @@ function OneWoW_GUI:SetSetting(key, value)
         FireCallbacks("OnIconThemeChanged", value)
     elseif key == "moneyDisplay.useLetters" then
         db.moneyDisplay.useLetters = value and true or false
+        FireCallbacks("OnMoneyDisplayChanged", value)
+    elseif key == "moneyDisplay.useGrouping" then
+        db.moneyDisplay.useGrouping = value and true or false
         FireCallbacks("OnMoneyDisplayChanged", value)
     elseif key == "moneyDisplay.useRegionalNumbers" then
         db.moneyDisplay.useRegionalNumbers = value and true or false
@@ -106,6 +111,7 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
     end
     if sourceGlobal.moneyDisplay then
         if sourceGlobal.moneyDisplay.useLetters ~= nil then db.moneyDisplay.useLetters = sourceGlobal.moneyDisplay.useLetters end
+        if sourceGlobal.moneyDisplay.useGrouping ~= nil then db.moneyDisplay.useGrouping = sourceGlobal.moneyDisplay.useGrouping end
         if sourceGlobal.moneyDisplay.useRegionalNumbers ~= nil then db.moneyDisplay.useRegionalNumbers = sourceGlobal.moneyDisplay.useRegionalNumbers end
         if sourceGlobal.moneyDisplay.useWhiteValues ~= nil then db.moneyDisplay.useWhiteValues = sourceGlobal.moneyDisplay.useWhiteValues end
     end
