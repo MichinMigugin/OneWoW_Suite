@@ -380,7 +380,7 @@ local function SummarizePunchList(candidates, tooltipData, cacheItemID)
         local itemID = nameIndex[name]
         if itemID then
             local status = Collectibles.GetItemCollectionStatus(itemID, nil, { light = true })
-            if status then
+            if status and status.applicable then
                 matched = matched + 1
                 if not status.collected then
                     missing[#missing + 1] = MissingRow(itemID, name)
@@ -412,7 +412,7 @@ local function SummarizeDirect(candidates, cacheItemID)
             anyUncachedName = true
         end
         local status = Collectibles.GetItemCollectionStatus(itemID, nil, { light = true })
-        if status then
+        if status and status.applicable then
             matched = matched + 1
             if not status.collected then
                 missing[#missing + 1] = MissingRow(
@@ -540,13 +540,16 @@ function Collectibles.DumpPunchListDebug(cacheItemID)
         local allowed = GearProficiency.ClassAllowsItem(itemID)
         local status = Collectibles.GetItemCollectionStatus(itemID, nil, { light = true })
         local statusBits
-        if status then
+        if status and status.applicable then
             statusBits = format("status collected=%s", tostring(status.collected))
             if status.collected then
                 collectedN = collectedN + 1
             else
                 missingN = missingN + 1
             end
+        elseif status then
+            statusBits = "status=notApplicable"
+            noStatus = noStatus + 1
         else
             statusBits = "status=nil"
             noStatus = noStatus + 1

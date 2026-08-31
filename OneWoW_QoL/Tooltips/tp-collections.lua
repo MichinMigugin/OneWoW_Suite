@@ -65,8 +65,15 @@ local function CollectionsProvider(_, context)
         tooltipData = context.data,
         light = true,
     })
-    if status then
-        local text = GetCollectionStatusText(status) .. " | " .. typeString
+    local showNonCollectable = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "collections").showNonCollectable == true
+    local statusText
+    if status and status.applicable then
+        statusText = GetCollectionStatusText(status)
+    elseif showNonCollectable then
+        statusText = "|cFFFFD700" .. L["TIPS_COLLECTIONS_NOT_COLLECTABLE"] .. "|r"
+    end
+    if statusText then
+        local text = statusText .. " | " .. typeString
         lines[#lines + 1] = {
             type = "headerRight",
             text = text,

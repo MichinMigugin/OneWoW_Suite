@@ -95,8 +95,13 @@
 ---
 
 ### QoL
+#### Settings
 - Weekly Reset Day moved to Settings > Trackers.
+
+#### Fixes
 - Hovering map pins (delves, events, and similar) and trait currencies no longer errors.
+- Starter profession tools (Blacksmith Hammer, Mining Pick, and the like) no longer show as uncollected transmog. Equipping them never added an appearance; the overlay stays off.
+- Collections tooltip has Show status for non-collectable items (off by default). Turn it on to show gold Not Collectable on the type line for items that are not a collectible.
 
 ---
 

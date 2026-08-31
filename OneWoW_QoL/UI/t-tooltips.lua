@@ -1168,12 +1168,19 @@ end
 
 local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local toggleBtnSets = {}
 
     yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
         selectedRow = selectedRow,
         isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
         onToggle = function(newState)
             OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = Registry:GetFeatureSettings("tooltips", "collections").showNonCollectable == true
+                tbs.refresh(newState, val)
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            end
         end,
     })
 
@@ -1191,6 +1198,27 @@ local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
     local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
+
+    stack:AddCard("tips:col:noncollectable", L["TIPS_COLLECTIONS_SHOW_NONCOLLECTABLE"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_COLLECTIONS_SHOW_NONCOLLECTABLE_DESC"], 0, contentWidth)
+        local colSettings = Registry:GetFeatureSettings("tooltips", "collections")
+        local _, rowRefresh, refs
+        rowY, rowRefresh, refs = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = rowY,
+            contentWidth = contentWidth,
+            label = L["TIPS_COLLECTIONS_SHOW_NONCOLLECTABLE"],
+            value = colSettings.showNonCollectable == true,
+            isEnabled = isEnabled,
+            onLabel = L["TIPS_TOGGLE_ON"],
+            offLabel = L["TIPS_TOGGLE_OFF"],
+            buttonWidth = 50,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "collections", "showNonCollectable", newVal == true)
+            end,
+        })
+        tinsert(toggleBtnSets, { label = refs.label, refresh = rowRefresh })
+        return math.max(1, math.abs(rowY))
+    end)
 
     stack:AddCard("tips:col:recipe_alt", L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY"], function(content, contentWidth)
         local rowY = PlaceCardSectionDesc(content, L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY_DESC"], 0, contentWidth)

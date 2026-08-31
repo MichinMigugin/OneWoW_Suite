@@ -251,8 +251,8 @@ local function ResolveAppearanceSource(id)
     }
 end
 
--- Item-keyed appearance for dressable items whose sourceID cannot be resolved
--- live (profession fishing poles: GetItemInfo/TryOn fail, PlayerHasTransmog works).
+-- Stored `appearance:item:<itemID>` keys (ResolveKeyFromItem no longer mints these).
+-- Collection truth is PlayerHasTransmog(itemID).
 local function ResolveAppearanceItem(id)
     local itemName, itemLink, _, _, _, _, itemSubType, _, _, itemIcon = C_Item.GetItemInfo(id)
     local icon = itemIcon or select(5, C_Item.GetItemInfoInstant(id))
@@ -549,8 +549,11 @@ end
 local BATTLE_PET_CAGE_ID = 82800
 
 --- Whether an item grants a collectible and if the current character owns it.
---- Returns nil when the item is not a collectible (no collection UI). Otherwise
---- `{ applicable = true, collected = bool, key = string, type = string, ... }`
+--- Returns nil when the item has no collection relationship. A wardrobe-rejected
+--- transmog source (starter profession tools) returns
+--- `{ applicable = false, collected = false, type = "appearance" }` so tooltips
+--- can show Not Collectable without treating the item as `#transmog` / `#uncollected`.
+--- Otherwise `{ applicable = true, collected = bool, key = string, type = string, ... }`
 --- with type-specific fields merged from `GetCollectionState`.
 ---@param itemID number
 ---@param hyperlink string|nil
@@ -570,8 +573,17 @@ function Collectibles.GetItemCollectionStatus(itemID, hyperlink, context)
         context.light = true
     end
 
-    local key = Collectibles.ResolveKeyFromItem(itemID, hyperlink)
-    if not key then return nil end
+    local key, uncollectableAppearance = Collectibles.ResolveKeyFromItem(itemID, hyperlink)
+    if not key then
+        if uncollectableAppearance then
+            return {
+                applicable = false,
+                collected = false,
+                type = "appearance",
+            }
+        end
+        return nil
+    end
 
     local descriptor = Collectibles.ParseKey(key)
     if not descriptor then return nil end
@@ -725,12 +737,31 @@ local function ResolveArtifactSourceID(itemID)
     return nil
 end
 
---- Live `itemModifiedAppearanceID` for a dressable item, or nil when not collectible.
+-- Dressable items still get a source ID for preview. Starter profession tools
+-- (Blacksmith Hammer, Mining Pick, …) are NotValidForTransmog / CantCollect:
+-- they never enter the wardrobe. IsDressableItemByID is not collectability.
+-- If GetSourceInfo has not loaded yet, keep the source rather than dropping a
+-- real appearance.
+---@param sourceID number
+---@return boolean
+local function IsCollectableTransmogSource(sourceID)
+    local info = C_TransmogCollection.GetSourceInfo(sourceID)
+    if not info then return true end
+    local sourceType = info.sourceType
+    if sourceType == Enum.TransmogSource.NotValidForTransmog
+        or sourceType == Enum.TransmogSource.CantCollect then
+        return false
+    end
+    return true
+end
+
+--- Live `itemModifiedAppearanceID` plus whether that source can enter the wardrobe.
 --- Tries hyperlink, bare itemID, DressUpModel TryOn, then artifact link synthesis.
----@param itemID number
+---@param itemID number|nil
 ---@param hyperlink string|nil
 ---@return number|nil sourceID
-function Collectibles.ResolveTransmogSourceID(itemID, hyperlink)
+---@return boolean|nil collectable false when a source exists but cannot enter the collection
+local function ResolveTransmogSourceIDEx(itemID, hyperlink)
     itemID = CoerceID(itemID)
     if not itemID and not hyperlink then return nil end
 
@@ -750,6 +781,21 @@ function Collectibles.ResolveTransmogSourceID(itemID, hyperlink)
     if not sourceID and itemID then
         sourceID = ResolveArtifactSourceID(itemID)
     end
+    if not sourceID then return nil end
+    if not IsCollectableTransmogSource(sourceID) then
+        return sourceID, false
+    end
+    return sourceID, true
+end
+
+--- Live `itemModifiedAppearanceID` for a wardrobe-collectable item, or nil
+--- when the item has no source or the source cannot enter the collection.
+---@param itemID number
+---@param hyperlink string|nil
+---@return number|nil sourceID
+function Collectibles.ResolveTransmogSourceID(itemID, hyperlink)
+    local sourceID, collectable = ResolveTransmogSourceIDEx(itemID, hyperlink)
+    if collectable == false then return nil end
     return sourceID
 end
 
@@ -764,10 +810,13 @@ end
 --- housing-decor recipe teaches a craft (it does not itself grant the decor).
 --- A housing decor item maps to `decor:<recordID>`.
 --- `sourceID == itemModifiedAppearanceID`, so an equippable item with a
---- transmog source maps straight to `appearance:source:<id>`.
+--- wardrobe-collectable source maps to `appearance:source:<id>`.
+--- A second return of true means a transmog source exists but cannot enter the
+--- wardrobe (NotValidForTransmog / CantCollect) — not a collectible key.
 ---@param itemID number
 ---@param hyperlink string|nil battle-pet cage links need the hyperlink for species
 ---@return string|nil key
+---@return boolean|nil uncollectableAppearance
 function Collectibles.ResolveKeyFromItem(itemID, hyperlink)
     itemID = CoerceID(itemID)
     if not itemID then return nil end
@@ -814,16 +863,12 @@ function Collectibles.ResolveKeyFromItem(itemID, hyperlink)
         return Collectibles.BuildKey("set", setID)
     end
 
-    local sourceID = Collectibles.ResolveTransmogSourceID(itemID, hyperlink)
-    if sourceID then
+    local sourceID, collectable = ResolveTransmogSourceIDEx(itemID, hyperlink)
+    if sourceID and collectable then
         return Collectibles.BuildKey("appearance", "source", sourceID)
     end
-
-    -- Dressable but source-less: profession tools whose GetItemInfo/TryOn fail
-    -- (fishing poles). Collection truth is PlayerHasTransmog(itemID).
-    local tryLink = hyperlink or ("item:%d"):format(itemID)
-    if C_Item.IsDressableItemByID(tryLink) then
-        return Collectibles.BuildKey("appearance", "item", itemID)
+    if collectable == false then
+        return nil, true
     end
 
     return nil

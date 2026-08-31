@@ -368,6 +368,7 @@ local DEFAULTS = {
             collections = {
                 enabled = true,
                 recipeAltDisplay = "differentiated",
+                showNonCollectable = false,
             },
             customnotes = { enabled = true },
             enhancements = {

@@ -209,7 +209,7 @@ These follow the **tooltip’s current bind line** (so something that was BoE an
 | `#collected` | You already own/learned it (`#collectionknown`) |
 | `#uncollected` | Collectible you are missing (`#collectionmissing`) — not random non-collectibles |
 | `#alreadyknown` | Tooltip “Already known” (different from `#collected`) |
-| `#transmog` | Has a transmog appearance |
+| `#transmog` | Has a wardrobe appearance you can collect |
 | `#knowntransmog` / `#unknowntransmog` | Appearance collected or not |
 | `#ensemble` | Teaches a transmog set |
 

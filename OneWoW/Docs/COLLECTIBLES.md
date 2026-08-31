@@ -38,6 +38,7 @@ today stays valid as resolution is extended to more types.
 | mount | `mount:<mountID>` | `C_MountJournal.GetMountInfoByID` |
 | appearance | `appearance:source:<sourceID>` | `PlayerHasTransmogItemModifiedAppearance` |
 | appearance (alt) | `appearance:ima:<imaID>` | reserved (grammar only) |
+| appearance (item) | `appearance:item:<itemID>` | stored keys only (`PlayerHasTransmog`); `ResolveKeyFromItem` no longer mints these |
 | pet | `pet:<speciesID>` | `C_PetJournal.GetNumCollectedInfo` |
 | toy | `toy:<itemID>` | `PlayerHasToy` |
 | heirloom | `heirloom:<itemID>` | `C_Heirloom` |
@@ -49,7 +50,8 @@ today stays valid as resolution is extended to more types.
 `sourceID` and `itemModifiedAppearanceID` are the same identifier; the `source`
 subtype uses it directly.
 
-**Resolved today:** `mount`, `appearance:source`, `pet`, `toy`, `heirloom`,
+**Resolved today:** `mount`, `appearance:source`, `appearance:item` (stored
+keys only; not minted from items), `pet`, `toy`, `heirloom`,
 `set` (transmog set / "ensemble"), `decor` (housing catalog), and `recipe`
 (profession recipe items). `campsite` is a
 valid key with no `ResolveDisplay` / `GetCollectionState` implementation yet — it
@@ -90,9 +92,9 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `BuildLink(key)` | `(collectible=<key>)` token or `nil` | Token grammar only; Notes renders the clickable link |
 | `ResolveDisplay(key)` | `{ name, icon, link, sourceText?, type }` or `nil` | Live per-type resolution |
 | `GetCollectionState(key)` | type-specific table or `nil` | Live; never persisted |
-| `GetItemCollectionStatus(itemID, hyperlink?, context?)` | `{ applicable, collected, collectedByAlt?, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible. Optional `context` = `{ bagID?, slotID?, tooltipData?, hyperlink? }` for player-evaluated tooltip lines (recipe “Already known”, legacy profession books). `collectedByAlt` is recipe-only |
-| `ResolveKeyFromItem(itemID, hyperlink?)` | canonical key string or `nil` | Maps an item → the collectible it grants (mount/toy/pet/heirloom/**recipe**/**set**/**decor**/appearance) |
-| `ResolveTransmogSourceID(itemID, hyperlink?)` | `sourceID` or `nil` | `itemModifiedAppearanceID` via GetItemInfo, TryOn, or artifact link synthesis |
+| `GetItemCollectionStatus(itemID, hyperlink?, context?)` | `{ applicable, collected, collectedByAlt?, key, type, … }` or `nil` | Item-facing facade. `nil` when the item has no collection relationship. `{ applicable = false, collected = false, type = "appearance" }` when a transmog source exists but cannot enter the wardrobe (tooltip Not Collectable; not `#transmog` / `#uncollected`). Otherwise `applicable = true`. Optional `context` = `{ bagID?, slotID?, tooltipData?, hyperlink? }` for player-evaluated tooltip lines (recipe “Already known”, legacy profession books). `collectedByAlt` is recipe-only |
+| `ResolveKeyFromItem(itemID, hyperlink?)` | canonical key string or `nil`; second return `true` when a transmog source exists but cannot enter the wardrobe | Maps an item → the collectible it grants (mount/toy/pet/heirloom/**recipe**/**set**/**decor**/appearance) |
+| `ResolveTransmogSourceID(itemID, hyperlink?)` | `sourceID` or `nil` | `itemModifiedAppearanceID` via GetItemInfo, TryOn, or artifact link synthesis; `nil` when the source is `NotValidForTransmog` or `CantCollect` |
 | `GetOfferAffordability(offer)` | `{ affordable, requirements = { … } }` or `nil` | Live check of a vendor offer vs. player gold / currencies / items; never persisted |
 | `GetEnsembleMemberKeys(setID)` | `{ "appearance:source:<id>", … }` or `nil` | All set sources (incl. alternates) as collectible keys |
 | `GetEnsembleProgress(setID)` | `{ collected, total, name }` or `nil` | Live set completion; matches Blizzard's Sets tab (primary appearances) |
@@ -105,6 +107,7 @@ plus type-specific detail (so callers never branch on the return **type**):
 
 - `mount` → `{ collected }`
 - `appearance:source` → `{ collected, bySource, byItem? }` (`collected == bySource`)
+- `appearance:item` → `{ collected, byItem }` (`collected == byItem`; stored keys only)
 - `pet` → `{ collected, numCollected, limit? }` (`collected == numCollected > 0`)
 - `toy` → `{ collected }`
 - `heirloom` → `{ collected }`
@@ -147,21 +150,24 @@ live so it can never drift from the game state.
 `GetItemCollectionStatus(itemID, hyperlink?, context?)` is the item-facing entry point:
 tooltips, `#collected` / `#collectionknown`, `#altcollected`, and
 `props.isCollected` all read through it (key resolution via `ResolveKeyFromItem`,
-state via `GetCollectionState`). Pass `context` when the caller has bag/slot or
+state via `GetCollectionState`). Callers that mean "this is a collectible" must
+check `status.applicable`. Pass `context` when the caller has bag/slot or
 live tooltip data — required for legacy recipe items (e.g. Master Cookbook **27736**)
 where `C_TooltipInfo.GetItemByID` omits player-evaluated `ITEM_SPELL_KNOWN` lines.
 For recipes, `collected` is the logged-in character only; `collectedByAlt` is true
 when a scoped alt in Recipe Knowledge's `altScope` knows the recipe and you do not.
 
-Appearance resolution in `ResolveKeyFromItem` calls
+Appearance resolution in `ResolveKeyFromItem` uses the same lookup as
 `Collectibles.ResolveTransmogSourceID(itemID, hyperlink)`: hyperlink, bare
 itemID, DressUpModel TryOn (Remix / poisoned links), then artifact link
-synthesis when quality is Artifact. When a dressable item still has no
-sourceID, it falls back to `appearance:item:<itemID>` — used by profession
-fishing poles where `GetItemInfo`/`TryOn` fail but `PlayerHasTransmog(itemID)`
-is authoritative. TryOn falls back to `C_Transmog.GetSlotForInventoryType` for
-inv types outside the static slot map (via `C_Item.GetItemInventoryTypeByID` →
-`C_Transmog.GetSlotForInventoryType`).
+synthesis when quality is Artifact. A resolved source whose
+`GetSourceInfo().sourceType` is `Enum.TransmogSource.NotValidForTransmog` or
+`CantCollect` is not a wardrobe collectible (starter profession tools still
+have a preview source): no collectible key, overlay/`#transmog` stay off, and
+`GetItemCollectionStatus` returns `applicable = false` so a tooltip can show Not Collectable when QoL Tooltips > Collections > Show status for non-collectable items is on. `C_Item.IsDressableItemByID` is not collectability and
+does not mint `appearance:item` keys. TryOn falls back to
+`C_Transmog.GetSlotForInventoryType` for inv types outside the static slot map
+(via `C_Item.GetItemInventoryTypeByID` → `C_Transmog.GetSlotForInventoryType`).
 
 ## Punch-list / container contents
 

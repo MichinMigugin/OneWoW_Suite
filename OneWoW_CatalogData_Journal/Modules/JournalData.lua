@@ -341,8 +341,11 @@ function JournalData:IsItemCollected(itemID, itemData, specialType)
     end
 
     local status = OneWoW.Collectibles.GetItemCollectionStatus(itemID)
-    if status then
+    if status and status.applicable then
         return status.collected == true
+    end
+    if status then
+        return nil
     end
 
     -- No resolvable collectible key: hide the badge for recipes (indeterminate),

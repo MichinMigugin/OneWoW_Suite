@@ -227,7 +227,7 @@ local function IsAlreadyKnown(itemLink)
         light = true,
     })
     local known = false
-    if status then
+    if status and status.applicable then
         known = status.collected == true
     else
         local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemLink)

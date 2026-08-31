@@ -623,7 +623,7 @@ These keywords are intended to pair naturally with `#pet`.
 
 | Keyword | What it matches |
 |---|---|
-| `#transmog` | Items with a transmog appearance |
+| `#transmog` | Items with a wardrobe appearance you can collect |
 | `#ensemble` | Items that teach a transmog set (`Collectibles` key `set:<setID>`) |
 | `#knowntransmog` | Items whose appearance you've collected |
 | `#unknowntransmog` | Items whose appearance you haven't collected |

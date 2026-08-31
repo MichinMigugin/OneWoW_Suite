@@ -999,7 +999,8 @@ end
 -- ---- 7.16  Collectible keywords ----
 -- Tri-state collection ownership for collectible-shaped items only. Backed by
 -- `OneWoW.Collectibles.GetItemCollectionStatus` (true = owned, false = missing,
--- nil = not a collectible). Cached on props as 0/1/2.
+-- nil = not a collectible, including wardrobe-rejected appearances). Cached on
+-- props as 0/1/2.
 local function GetCollectionContext(props)
     if not props then return nil end
     local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
@@ -1022,7 +1023,7 @@ local function ResolveCollectionStatus(p)
 
     local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink, GetCollectionContext(p))
     local status
-    if st then
+    if st and st.applicable then
         status = st.collected == true
     end
 
@@ -1450,7 +1451,7 @@ end
 ---@return boolean
 local function ItemCollectionOwned(itemID, hyperlink)
     local st = OneWoW.Collectibles.GetItemCollectionStatus(itemID, hyperlink)
-    return st and st.collected == true or false
+    return st and st.applicable and st.collected == true or false
 end
 
 -- ---------- ResolveTooltipFields ----------
@@ -2112,7 +2113,7 @@ local function TeachableStillLearnable(itemID, hyperlink, bagID, slotID)
         slotID = slotID,
         hyperlink = hyperlink,
     })
-    if not status then return nil end
+    if not status or not status.applicable then return nil end
     if status.limit then
         return (status.numCollected or 0) < status.limit
     end
