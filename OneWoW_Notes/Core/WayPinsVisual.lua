@@ -2,6 +2,7 @@ local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local OverlayIcons = OneWoW.OverlayIcons
+local format = string.format
 
 -- ============================================================================
 -- WayPinsVisual
@@ -360,6 +361,33 @@ local function ApplyBackground(look, bg, size, effect)
         look.bgAnim:Play()
     end
     look.bgFrame:Show()
+end
+
+--- Fingerprint of painted look. Minimap pins skip Apply when this is unchanged.
+---@param pin table|nil
+---@param size number|nil
+---@param animate boolean|nil
+---@param tracked boolean|nil
+---@return string
+function Visual.PaintSignature(pin, size, animate, tracked)
+    pin = pin or {}
+    local icon = pin.icon
+    local bg = pin.bg
+    local tint = icon and icon.tint
+    return format("%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s:%s",
+        icon and icon.kind or "",
+        icon and icon.value or "",
+        tint and tostring(tint[1]) or "",
+        tint and tostring(tint[2]) or "",
+        tint and tostring(tint[3]) or "",
+        bg and tostring(bg.enabled) or "",
+        bg and (bg.style or "") or "",
+        bg and (bg.effect or "") or "",
+        bg and tostring(bg.scale or "") or "",
+        pin.effect or "",
+        tostring(size or ""),
+        tostring(animate),
+        tostring(tracked))
 end
 
 --- Paint icon / background and size the button.

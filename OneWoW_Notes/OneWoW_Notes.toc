@@ -47,6 +47,7 @@ Core\ZonePins.lua
 Core\ItemsData.lua
 Core\ZonesData.lua
 Core\WayPinsData.lua
+Core\WayPinPacks.lua
 Core\WayPinsTooltip.lua
 Core\WayPinsVisual.lua
 Core\WayPinsMap.lua
@@ -80,6 +81,8 @@ UI\t-settings.lua
 UI\ui-notes-dialogs.lua
 UI\ui-waypin-dialog.lua
 UI\ui-waypin-settings.lua
+UI\ui-waypin-pack-dialogs.lua
+UI\ui-waypin-pack-detail.lua
 UI\ui-waypin-find.lua
 UI\ui-category-manager.lua
 

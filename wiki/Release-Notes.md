@@ -53,7 +53,13 @@
 - Minimap pins stay on the landmark while you walk. Pins outside the current zoom sit on the rim.
 - Saving the same vendor, quest, or instance again does not create a second pin. Deleting that pin also removes leftover copies of the same location.
 - Opening the world map (Pin on a vendor, or the map with pins on it) no longer errors.
-- Zone defaults to This Map. The count under the list is Showing X of Y pins, so an empty list does not look like you have no pins. The list says No pins on this map when none match this zone.
+- Zone defaults to This Map. The count under the list is Showing X of Y, so an empty list does not look like you have no pins. The list says No pins on this map when none match this zone.
+- Pin Packs group many pins behind one row on the Pins tab. Turn a pack off to hide every pin in it on the world map, minimap, map legend, and zone list.
+- Import or export a pack as a paste string. Send a personal pin into a pack; it uses the pack look until you give that pin its own. Show Disabled Packs stays on so you can turn a pack back on.
+- Drag pack pins to reorder them (Lock order turns that off). Expansion is a list of current expansions. Pack Look uses the same icon, background, and effect options as a pin. A pin can keep the pack look or use its own. Changing the look updates the maps without turning the pack off.
+- Imported packs work like packs you made. Add pins, rename them, reorder, and delete. With a pack selected, Add Here and Find Location add into that pack. New pack makes an empty pack.
+- Right-click a pin or a pack for Go, Show Map, Edit, Send to Pack, enable or disable, and delete. Delete is also on the list and in the pack pane. Remove from Pack returns a pin to My Pins.
+- Opening a pin pack no longer errors.
 
 ---
 

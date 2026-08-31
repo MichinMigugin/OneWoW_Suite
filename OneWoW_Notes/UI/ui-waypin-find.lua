@@ -28,6 +28,7 @@ local COSMIC_MAP = 946
 local dialog
 local fields = {}
 local resultRows = {}
+local findPackId
 local resultChild
 local resultStatus
 local searchTimer
@@ -348,14 +349,24 @@ local function PaintResults(list, catalogOk, total)
             addBtn:SetScript("OnClick", function(myself)
                 local data = myself:GetParent().hit
                 if not data then return end
-                local pinID = ns.WayPins:Add({
-                    title = data.title,
-                    mapID = data.mapID,
-                    x = data.x,
-                    y = data.y,
-                    source = data.source,
-                    sourceKey = data.sourceKey,
-                })
+                local pinID
+                if findPackId then
+                    pinID = ns.WayPinPacks:AddPin(findPackId, {
+                        title = data.title,
+                        mapID = data.mapID,
+                        x = data.x,
+                        y = data.y,
+                    })
+                else
+                    pinID = ns.WayPins:Add({
+                        title = data.title,
+                        mapID = data.mapID,
+                        x = data.x,
+                        y = data.y,
+                        source = data.source,
+                        sourceKey = data.sourceKey,
+                    })
+                end
                 local pin = pinID and ns.WayPins:GetPin(pinID)
                 if pin then
                     ns.UI.OpenWayPinDialog(pin)
@@ -549,8 +560,10 @@ local function EnsureDialog()
     return dialog
 end
 
-function ns.UI.OpenWayPinFindDialog()
+---@param packId string|nil
+function ns.UI.OpenWayPinFindDialog(packId)
     if not ns.WayPinsVisual.Enabled() then return end
+    findPackId = packId
     EnsureDialog()
     FillCurrentZone()
     fields.filters:SetText("")

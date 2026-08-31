@@ -265,6 +265,31 @@ function WayPinsMap:TrackPin(pin)
     return true
 end
 
+--- Return a pack pin to My Pins after confirm.
+---@param pin table
+function WayPinsMap:ConfirmReturnFromPack(pin)
+    if type(pin) ~= "table" or not pin.id then return end
+    if not ns.WayPinPacks:IsPackPinId(pin.id) then return end
+    local pinID = pin.id
+    local title = pin.title or L["WAYPINS_UNTITLED"]
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        title = L["WAYPINS_REMOVE_FROM_PACK"],
+        message = string.format(L["WAYPINS_REMOVE_FROM_PACK_CONFIRM"], title),
+        buttons = {
+            {
+                text = L["WAYPINS_REMOVE_FROM_PACK"],
+                color = { 0.8, 0.2, 0.2 },
+                onClick = function(dlg)
+                    ns.WayPinPacks:ReturnPinToPersonal(pinID)
+                    dlg:Hide()
+                end,
+            },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
+        },
+    })
+    result.frame:Show()
+end
+
 function WayPinsMap:ConfirmDelete(pin)
     if type(pin) ~= "table" or not pin.id then return end
     local pinID = pin.id
@@ -303,18 +328,25 @@ function WayPinsMap:ShowOnMap(pin)
     self:TrackPin(pin)
 end
 
-function WayPinsMap:AddHere()
+--- Open the create dialog at the player's feet. `packId` adds the pin into that pack.
+---@param packId string|nil
+function WayPinsMap:AddHere(packId)
     if not Visual.Enabled() then return end
     local mapID, x, y = Location.GetPlayerLocation()
     if not mapID or not x then
         return
     end
-    ns.UI.OpenWayPinDialog({
+    local seed = {
         mapID  = mapID,
         x      = x,
         y      = y,
         source = "manual",
-    })
+    }
+    if packId then
+        seed.packId = packId
+        seed.usePackLook = true
+    end
+    ns.UI.OpenWayPinDialog(seed)
 end
 
 function WayPinsMap:ShowAddMenu(owner)
@@ -339,33 +371,32 @@ function WayPinsMap:OpenPinTab(pinID)
     end
 end
 
----@param owner Frame
----@param data table
-function WayPinsMap:ShowListMenu(owner, data)
-    if not data then return end
-    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
-        rootDescription:CreateButton(L["WAYPINS_MENU_GO"], function()
-            WayPinsMap:TrackPin(data)
-        end)
-        rootDescription:CreateButton(SHOW_MAP, function()
-            WayPinsMap:ShowOnMap(data)
-        end)
-        rootDescription:CreateButton(EDIT, function()
-            ns.UI.OpenWayPinDialog(data)
-        end)
-        rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
-            WayPinsMap:OpenPinTab(data.id)
-        end)
-        rootDescription:CreateButton(DELETE, function()
-            WayPinsMap:ConfirmDelete(data)
-        end)
+local function AddSendToPackMenu(rootDescription, pinID)
+    local sendSub = rootDescription:CreateButton(L["WAYPINS_SEND_TO_PACK"], function() end)
+    sendSub:CreateButton(L["WAYPINS_PACK_NEW"], function()
+        ns.UI.OpenWayPinSendToPack(pinID)
     end)
+    local skipPackId
+    if ns.WayPinPacks:IsPackPinId(pinID) then
+        skipPackId = select(1, ns.WayPinPacks:ParseDisplayId(pinID))
+    end
+    for _, pack in ipairs(ns.WayPinPacks:GetAllPacks()) do
+        if pack.id ~= skipPackId then
+            local destId = pack.id
+            sendSub:CreateButton(pack.name or destId, function()
+                ns.WayPinPacks:MovePinToPack(pinID, destId)
+                ns.UI.SelectWayPinPack(destId)
+            end)
+        end
+    end
 end
 
 ---@param owner Frame
 ---@param data table
-function WayPinsMap:ShowPinMenu(owner, data)
+---@param opts table|nil
+function WayPinsMap:ShowPinMenu(owner, data, opts)
     if not data then return end
+    opts = opts or {}
     MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
         rootDescription:CreateButton(L["WAYPINS_MENU_GO"], function()
             WayPinsMap:TrackPin(data)
@@ -376,9 +407,11 @@ function WayPinsMap:ShowPinMenu(owner, data)
         rootDescription:CreateButton(EDIT, function()
             ns.UI.OpenWayPinDialog(data)
         end)
-        rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
-            WayPinsMap:OpenPinTab(data.id)
-        end)
+        if not opts.hideOpenTab then
+            rootDescription:CreateButton(L["WAYPINS_OPEN_TAB"], function()
+                WayPinsMap:OpenPinTab(data.id)
+            end)
+        end
         rootDescription:CreateButton(L["WAYPINS_ADD_TO_ZONE"], function()
             ns.WayPins:AttachToZoneNotes(data.id)
         end)
@@ -391,8 +424,54 @@ function WayPinsMap:ShowPinMenu(owner, data)
                 WayPinsMap:ToggleSolo(data.id)
             end)
         end
+        AddSendToPackMenu(rootDescription, data.id)
+        if ns.WayPinPacks:IsPackPinId(data.id) then
+            rootDescription:CreateButton(L["WAYPINS_REMOVE_FROM_PACK"], function()
+                WayPinsMap:ConfirmReturnFromPack(data)
+            end)
+        end
         rootDescription:CreateButton(DELETE, function()
             WayPinsMap:ConfirmDelete(data)
+        end)
+    end)
+end
+
+---@param owner Frame
+---@param data table
+function WayPinsMap:ShowListMenu(owner, data)
+    self:ShowPinMenu(owner, data)
+end
+
+---@param owner Frame
+---@param packId string
+function WayPinsMap:ShowPackMenu(owner, packId)
+    local pack = ns.WayPinPacks:GetPack(packId)
+    if not pack then return end
+    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+        rootDescription:CreateTitle(pack.name or L["WAYPINS_PACK_BADGE"])
+        if pack.enabled ~= false then
+            rootDescription:CreateButton(DISABLE, function()
+                ns.WayPinPacks:SetEnabled(packId, false)
+            end)
+        else
+            rootDescription:CreateButton(ENABLE, function()
+                ns.WayPinPacks:SetEnabled(packId, true)
+            end)
+        end
+        rootDescription:CreateButton(L["WAYPINS_PACK_LOOK"], function()
+            ns.UI.OpenWayPinPackLook(packId)
+        end)
+        rootDescription:CreateButton(L["WAYPINS_ADD_HERE"], function()
+            WayPinsMap:AddHere(packId)
+        end)
+        rootDescription:CreateButton(L["WAYPINS_FIND_LOCATION"], function()
+            ns.UI.OpenWayPinFindDialog(packId)
+        end)
+        rootDescription:CreateButton(L["WAYPINS_EXPORT"], function()
+            ns.UI.OpenWayPinPackExport(packId)
+        end)
+        rootDescription:CreateButton(DELETE, function()
+            ns.UI.OpenWayPinPackRemove(packId)
         end)
     end)
 end
@@ -570,7 +649,7 @@ local function SyncMinimapPinSet(mapID)
                 pin._keep = true
                 pin.pinID = key
                 pin.pinData = data
-                local paintKey = key .. ":" .. tostring(livePinID) .. ":" .. Visual.MinimapSize(data) .. ":" .. tostring(animate)
+                local paintKey = key .. ":" .. tostring(livePinID) .. ":" .. Visual.PaintSignature(data, Visual.MinimapSize(data), animate, livePinID == data.id)
                 if pin._paintKey ~= paintKey then
                     Visual.Apply(pin, data, {
                         size = Visual.MinimapSize(data),

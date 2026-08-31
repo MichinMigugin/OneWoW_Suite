@@ -59,6 +59,14 @@ function WayPinsTooltip.Fill(tooltip, pin, extraLine)
         tooltip:AddLine(L["WAYPINS_CATALOG_HINT"], r, g, b, true)
     end
 
+    if pin.packId and ns.WayPinPacks then
+        local pack = ns.WayPinPacks:GetPack(pin.packId)
+        if pack then
+            r, g, b = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+            tooltip:AddLine(format("%s: %s", L["WAYPINS_PACK_BADGE"], pack.name or pin.packId), r, g, b)
+        end
+    end
+
     if type(extraLine) == "string" and extraLine ~= "" then
         r, g, b = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
         tooltip:AddLine(extraLine, r, g, b, true)

@@ -72,8 +72,14 @@ local function CopyEffect(effect)
     return nil
 end
 
-local function NotifyChanged()
-    WayPins:InvalidateCache()
+local notifyDepth = 0
+
+function WayPins:NotifyChanged()
+    if notifyDepth > 0 then
+        return
+    end
+    notifyDepth = notifyDepth + 1
+    self:InvalidateCache()
     if ns.WayPinsMap then
         ns.WayPinsMap:Refresh()
     end
@@ -86,6 +92,11 @@ local function NotifyChanged()
     if ns.UI and ns.UI.RefreshWayPinsTab then
         ns.UI.RefreshWayPinsTab()
     end
+    notifyDepth = notifyDepth - 1
+end
+
+local function NotifyChanged()
+    WayPins:NotifyChanged()
 end
 
 function WayPins:MakeNewId()
@@ -95,7 +106,14 @@ end
 
 function WayPins:GetPin(pinID)
     if not pinID then return nil end
-    return self:GetAll()[pinID]
+    local personal = self:GetAll()[pinID]
+    if personal then
+        return personal
+    end
+    if ns.WayPinPacks then
+        return ns.WayPinPacks:GetDisplayPinById(pinID)
+    end
+    return nil
 end
 
 local function SourceKeyMatch(a, b)
@@ -146,6 +164,9 @@ function WayPins:GetForMap(mapID)
         if type(pin) == "table" and tonumber(pin.mapID) == mapID then
             tinsert(out, pin)
         end
+    end
+    if ns.WayPinPacks then
+        ns.WayPinPacks:AppendEnabledPinsForMap(out, mapID)
     end
     sort(out, function(a, b)
         local ta = a.title or ""
@@ -215,6 +236,10 @@ end
 
 function WayPins:Save(pinID, pin)
     if not pinID or type(pin) ~= "table" then return end
+    if ns.WayPinPacks and ns.WayPinPacks:IsPackPinId(pinID) then
+        ns.WayPinPacks:SaveDisplayPin(pin)
+        return
+    end
     pin.id = pinID
     pin.mapID = tonumber(pin.mapID) or pin.mapID
     pin.x = tonumber(pin.x) or pin.x
@@ -240,6 +265,10 @@ end
 
 function WayPins:Remove(pinID)
     if not pinID then return end
+    if ns.WayPinPacks and ns.WayPinPacks:IsPackPinId(pinID) then
+        ns.WayPinPacks:DeletePinByDisplayId(pinID)
+        return
+    end
     local pin = self:GetPin(pinID)
     if pin and pin.source and pin.sourceKey ~= nil then
         local source, sourceKey, mapID = pin.source, pin.sourceKey, pin.mapID

@@ -67,6 +67,21 @@ for i = 1, #waypinRows do
 end
 
 Search:Register({
+    id = "notes:waypins-packs",
+    title = "WAYPINS_PACK_BADGE",
+    description = "WAYPINS_PACKS_SEARCH_DESC",
+    scope = "OneWoW_Notes",
+    tags = { "pin pack", "import", "export", "group", "pins" },
+    addonKey = "OneWoW_Notes",
+    path = {
+        SR.ModuleLabel("notes"),
+        SR.TabLabel("notes", "waypins"),
+        function() return ns.L["WAYPINS_PACK_BADGE"] end,
+    },
+    nav = { module = "notes", subtab = "waypins" },
+})
+
+Search:Register({
     id = "notes:zone-pin-window",
     title = "TOOLTIP_ZONE_PIN",
     description = "TOOLTIP_ZONE_PIN_DESC",

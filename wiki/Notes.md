@@ -55,7 +55,12 @@ Use the **minimize** button on the title bar (or double-click / Shift-click the 
 ### Maps and the list
 
 * Pins stay on the world map, minimap, and the OneWay Pins tab until you delete them
-* The tab defaults to **This Map**. The count under the list is **Showing X of Y pins**. An empty list means none on this zone, not that you have no pins. Switch Zone to **All** to see every pin. Search or storage filters that match nothing say No matching pins.
+* The tab defaults to **This Map**. The count under the list is **Showing X of Y**. An empty list means none on this zone, not that you have no pins. Switch Zone to **All** to see every pin. Search or storage filters that match nothing say No matching pins.
+* **Pin Packs** group many pins behind one row (for example moths or trainers). The pack stays one row even if it has dozens of pins. Turn a pack off to hide every pin in it on the world map, minimap, map legend, and zone list. **Show Disabled Packs** stays on so you can turn a pack back on; uncheck it to hide those rows.
+* **Import** pastes a pack string. **Export** copies the selected pack to share. **New pack** makes an empty pack you can fill. An imported pack works like one you made: rename it, add or delete pins, drag to reorder, and change Pack Look. **Send to Pack** moves a pin (yours or from another pack) into a pack; it then uses that pack's look until you edit the pin. Removing a pack can return those pins to your list or delete them with the pack. **Remove from Pack** on one pin returns it to My Pins. **Delete** removes that pin.
+* Right-click a pin (list, pack list, or map) for Go, Show Map, Edit, Send to Pack, Remove from Pack, or Delete. Right-click a pack to enable or disable it, add pins, export, or delete. Delete is also on the list row and in the pack pane.
+* With a pack selected, **Add Here** and **Find Location** add into that pack.
+* Pack **Expansion** is a list of current expansions. **Pack Look** is the same icon, background, effect, and size options as a personal pin. Each pin can keep that look or use its own. Drag pins in the pack list to reorder them; **Lock order** turns that off.
 * Minimap pins stay on the landmark as you walk. Pins outside the current zoom sit on the rim
 * Each row has **Go** (live waypoint) and **Show Map** (open that pin's zone and set a live waypoint; other pins stay visible)
 * The world map **Map Legend** can list OneWay Pins for the map you are viewing (OneWay Pins settings or the map button). Hover a name to highlight that pin. Opening the map hides pinned zone notes until you close it
