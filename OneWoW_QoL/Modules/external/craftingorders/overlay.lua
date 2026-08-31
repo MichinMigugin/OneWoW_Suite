@@ -15,28 +15,49 @@ local STATUS_H = 20
 local COL_H = 32
 local ROW_INSET = 4
 -- Must match OneWoW_GUI:CreateVirtualizer owned-scroll insets (4 / 14).
+-- Right inset drops to 4 when the bar is hidden (option, or nothing to scroll).
 local VIRT_LEFT = 4
-local VIRT_RIGHT = 14
+local VIRT_RIGHT_BAR = 14
+local VIRT_RIGHT_CLEAR = 4
 local LIST_LEFT = 2
 local LIST_RIGHT = 4
 local HEADER_LEFT = LIST_LEFT + VIRT_LEFT + ROW_INSET
-local HEADER_RIGHT = LIST_RIGHT + VIRT_RIGHT + ROW_INSET
+
+-- nil until the first measure: reserve the bar gutter so columns do not
+-- jump wider, then narrower, when the list first fills.
+local function OverlayVirtRight()
+    if M._scrollBarShown == false then
+        return VIRT_RIGHT_CLEAR
+    end
+    return VIRT_RIGHT_BAR
+end
+
+local function OverlayChromeRight()
+    return LIST_RIGHT + OverlayVirtRight() + ROW_INSET
+end
 -- Profit header: punctuation-only, identical in every locale. The localized
 -- "Profit / Loss" name still shows in the Features panel. The price-source
 -- icon is embedded in the string (|T markup) so it always renders directly
 -- after the text and updates with the label on every layout pass.
 local PROFIT_HEADER = "+ / - |T%s:0|t"
 
-local function PlaceColLabel(fs, parent, rightInset, width, justifyH)
-    fs:ClearAllPoints()
+local function PlaceColLabel(host, parent, rightInset, width, justifyH)
+    host:ClearAllPoints()
     -- TOPRIGHT/BOTTOMRIGHT give the label the parent's height. RIGHT is a
     -- single midpoint, so TOP+BOTTOM on it would collapse the fontstring.
-    fs:SetPoint("TOPLEFT", parent, "TOPRIGHT", -(rightInset + width), 0)
-    fs:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -rightInset, 0)
-    fs:SetJustifyH(justifyH or "LEFT")
-    fs:SetJustifyV("MIDDLE")
-    fs:SetWordWrap(true)
-    fs:SetMaxLines(2)
+    host:SetPoint("TOPLEFT", parent, "TOPRIGHT", -(rightInset + width), 0)
+    host:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -rightInset, 0)
+    local fs = host.text or host
+    if fs.SetJustifyH then
+        fs:SetJustifyH(justifyH or "LEFT")
+        fs:SetJustifyV("MIDDLE")
+        fs:SetWordWrap(true)
+        fs:SetMaxLines(2)
+        if fs ~= host then
+            fs:ClearAllPoints()
+            fs:SetAllPoints(host)
+        end
+    end
 end
 
 local function PlaceIconLane(frame, parent, rightInset, width, height)
@@ -47,9 +68,9 @@ end
 
 -- The column strip (everything right of the order name) lives inside a
 -- clipping host anchored to the right edge. Its width is the packed column
--- width, capped by LaneStripBudget: when the player's columns need more room
--- than the row has, the strip clips on its LEFT edge instead of overlapping
--- the order name - the configured icon sizes always render literally.
+-- width, capped by LaneStripBudget. Fit-all already shrinks icons, then
+-- text lanes, then the name; this host only trims the LEFT edge if the
+-- strip still overflows after those floors.
 local function LaneHostWidth(insets)
     local w = insets.orderRight
     local budget = M:LaneStripBudget()
@@ -78,12 +99,13 @@ function M:ApplyHeaderLayout(overlay)
         local spec = insets[id]
         if spec then
             fs:Show()
+            local text = fs.text or fs
             if id == "profit" then
                 -- Header reads "+ / - [source icon]" as a single string; the
                 -- full "Profit / Loss" name stays in Features (ColumnLabel).
-                fs:SetText(PROFIT_HEADER:format(M:PriceSourceIcon(M:GetPriceSource())))
+                text:SetText(PROFIT_HEADER:format(M:PriceSourceIcon(M:GetPriceSource())))
             else
-                fs:SetText(M:ColumnLabel(id))
+                text:SetText(M:ColumnLabel(id))
             end
             PlaceColLabel(fs, host, spec.right, spec.width, spec.justify)
         else
@@ -104,19 +126,20 @@ local function LayoutActionLane(row, showRelease)
     if not spec then
         return
     end
+    local actionH = M:ColumnHeight("action")
     local release = row.releaseBtn
     btn:ClearAllPoints()
     if showRelease and release then
-        release:SetSize(RELEASE_W, 22)
+        release:SetSize(RELEASE_W, actionH)
         release:ClearAllPoints()
         release:SetPoint("RIGHT", row.actionLane, "RIGHT", 0, 0)
         btn:SetPoint("LEFT", row.actionLane, "LEFT", 0, 0)
         btn:SetPoint("RIGHT", release, "LEFT", -RELEASE_GAP, 0)
-        btn:SetHeight(22)
+        btn:SetHeight(actionH)
         release:Show()
     else
         btn:SetPoint("CENTER", row.actionLane, "CENTER")
-        btn:SetSize(spec.width, 22)
+        btn:SetSize(spec.width, actionH)
         if release then
             release:Hide()
         end
@@ -128,9 +151,18 @@ local function ApplyRowLayout(row)
     local host = row.laneHost
     host:SetWidth(LaneHostWidth(insets))
     if row.product:IsShown() then
+        local tight = M:IsTight()
+        local nameY = tight and 0 or 8
         row.nameText:ClearAllPoints()
-        row.nameText:SetPoint("LEFT", row.product, "RIGHT", 6, 8)
-        row.nameText:SetPoint("RIGHT", host, "LEFT", -4, 8)
+        row.nameText:SetPoint("LEFT", row.product, "RIGHT", 6, nameY)
+        row.nameText:SetPoint("RIGHT", host, "LEFT", -4, nameY)
+        row.nameText:SetMaxLines(1)
+        row.nameText:SetWordWrap(false)
+        if tight then
+            row.unlearnedText:Hide()
+        else
+            row.unlearnedText:Show()
+        end
     end
     local function placeLane(id, frame)
         local spec = insets[id]
@@ -139,7 +171,15 @@ local function ApplyRowLayout(row)
             return
         end
         frame:Show()
-        if frame.SetJustifyH then
+        if frame.text then
+            PlaceIconLane(frame, host, spec.right, spec.width, spec.height)
+            frame.text:ClearAllPoints()
+            frame.text:SetAllPoints(frame)
+            frame.text:SetJustifyH(spec.justify or "LEFT")
+            frame.text:SetJustifyV("MIDDLE")
+            frame.text:SetMaxLines(1)
+            frame.text:SetWordWrap(false)
+        elseif frame.SetJustifyH then
             PlaceColLabel(frame, host, spec.right, spec.width, spec.justify)
             frame:SetMaxLines(1)
             frame:SetWordWrap(false)
@@ -151,9 +191,9 @@ local function ApplyRowLayout(row)
     placeLane("customer", row.customerLane)
     placeLane("reward", row.rewardLane)
     placeLane("cart", row.cartLane)
-    placeLane("time", row.timeText)
-    placeLane("gold", row.goldText)
-    placeLane("profit", row.profitText)
+    placeLane("time", row.timeLane)
+    placeLane("gold", row.goldLane)
+    placeLane("profit", row.profitLane)
     placeLane("action", row.actionLane)
     if row.actionBtn then
         LayoutActionLane(row, row.releaseBtn and row.releaseBtn:IsShown())
@@ -169,9 +209,7 @@ end
 -- Layout changes never rebuild frames: skinned icons are anchor-based and
 -- scale with SetSize, lanes re-anchor, and the virtualizer refresh re-derives
 -- row heights. This is what makes slider resizing live.
-function M:ApplyOverlayLayout()
-    local overlay = M._overlay
-    if not overlay or not overlay.virt then return end
+local function ApplyOverlayGeometry(overlay)
     local sizes = M:IconSizes()
     local rows = overlay._rows
     for i = 1, #rows do
@@ -180,10 +218,57 @@ function M:ApplyOverlayLayout()
         ResizeStrip(row.youMats, sizes.you)
         ResizeStrip(row.customerMats, sizes.customer)
         ResizeStrip(row.rewards, sizes.reward)
+        if row.addBtn then
+            local cartH = M:ColumnHeight("cart")
+            row.addBtn:SetSize(cartH, cartH)
+        end
         ApplyRowLayout(row)
     end
     M:ApplyHeaderLayout(overlay)
+end
+
+function M:SyncOverlayScrollBar()
+    local overlay = M._overlay
+    if not overlay or not overlay.virt then
+        return false
+    end
+    local scroll = overlay.virt.listScroll
+    local sb = scroll.ScrollBar
+    local hideWanted = M:IsHideScrollBar()
+    local contentH = overlay.virt.listContent:GetHeight()
+    local viewH = scroll:GetHeight()
+    local shown = (not hideWanted) and contentH > viewH + 0.5
+    local prevShown = M._scrollBarShown
+    local prevW = M._rowContentW
+    M._scrollBarShown = shown
+    if shown then
+        sb:Show()
+    else
+        sb:Hide()
+    end
+    scroll:ClearAllPoints()
+    scroll:SetPoint("TOPLEFT", 4, -4)
+    scroll:SetPoint("BOTTOMRIGHT", shown and -VIRT_RIGHT_BAR or -VIRT_RIGHT_CLEAR, 4)
+    scroll:EnableMouseWheel(true)
+    overlay.headerBar:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", -OverlayChromeRight(), -(4 + STATUS_H))
+    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - OverlayChromeRight())
+    return prevShown ~= shown or prevW ~= M._rowContentW
+end
+
+local function FinishOverlayList(overlay)
     overlay.virt.Refresh()
+    if M:SyncOverlayScrollBar() then
+        ApplyOverlayGeometry(overlay)
+        overlay.virt.Refresh()
+        M:SyncOverlayScrollBar()
+    end
+end
+
+function M:ApplyOverlayLayout()
+    local overlay = M._overlay
+    if not overlay or not overlay.virt then return end
+    ApplyOverlayGeometry(overlay)
+    FinishOverlayList(overlay)
 end
 
 local function ModuleOn()
@@ -367,9 +452,9 @@ local function ApplyOverlayTheme(overlay)
     overlay.statusText:SetTextColor(tpR, tpG, tpB)
     overlay.colCraft:SetTextColor(tpR, tpG, tpB)
     local labels = overlay.colLabels
-    for id, fs in pairs(labels) do
-        fs:SetText(M:ColumnLabel(id))
-        fs:SetTextColor(tpR, tpG, tpB)
+    for _, host in pairs(labels) do
+        local text = host.text or host
+        text:SetTextColor(tpR, tpG, tpB)
     end
     M:ApplyHeaderLayout(overlay)
     overlay.emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -426,6 +511,130 @@ local function HideStrip(icons)
     end
 end
 
+local function TooltipRGB(key)
+    local r, g, b = OneWoW_GUI:GetThemeColor(key)
+    return r, g, b
+end
+
+local function AddMoneyLine(label, copper, valueKey)
+    local lr, lg, lb = TooltipRGB("TEXT_SECONDARY")
+    local vr, vg, vb = TooltipRGB(valueKey or "TEXT_PRIMARY")
+    GameTooltip:AddDoubleLine(label, OneWoW.Format.FormatGold(copper or 0), lr, lg, lb, vr, vg, vb)
+end
+
+local function QtyLabel(name, count)
+    count = count or 1
+    if count ~= 1 then
+        return ("%s x%d"):format(name, count)
+    end
+    return name
+end
+
+local function AppendGoldBreakdown(net, gross, cut, tipAvg, tipMax)
+    AddMoneyLine(PROFESSIONS_CRAFTER_FORM_TIP, gross)
+    AddMoneyLine(CRAFTING_ORDER_CONSORTIUM_CUT, cut)
+    AddMoneyLine(CRAFTING_ORDER_FINAL_TIP, net)
+    if tipAvg and tipAvg > 0 and tipAvg ~= gross then
+        AddMoneyLine(L["CRAFTORDERS_TIP_AVG"], tipAvg)
+    end
+    if tipMax and tipMax > 0 and tipMax ~= gross then
+        AddMoneyLine(MAXIMUM, tipMax)
+    end
+end
+
+local function ShowGoldBreakdownTooltip(owner, net, gross, cut, tipAvg, tipMax)
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(L["CRAFTORDERS_COL_GOLD"])
+    AppendGoldBreakdown(net, gross, cut, tipAvg, tipMax)
+    GameTooltip:Show()
+end
+
+local function AppendPriceSourceLines()
+    local src = M:GetPriceSource()
+    GameTooltip:AddLine(M:PriceSourceLabel(src), TooltipRGB("TEXT_PRIMARY"))
+    if src == "tsm" then
+        GameTooltip:AddLine(M:GetTSMPriceString(), TooltipRGB("TEXT_SECONDARY"))
+        local hr, hg, hb = TooltipRGB("TEXT_MUTED")
+        GameTooltip:AddLine(L["CRAFTORDERS_PROFIT_TSM_HINT"], hr, hg, hb, true)
+    end
+end
+
+local function ShowProfitSourceTooltip(owner)
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(L["CRAFTORDERS_COL_PROFIT"])
+    AppendPriceSourceLines()
+    GameTooltip:Show()
+end
+
+local function AppendPricedLines(rows, negate)
+    local mr, mg, mb = TooltipRGB("TEXT_MUTED")
+    for i = 1, #rows do
+        local row = rows[i]
+        local label = QtyLabel(row.name, row.count)
+        if row.copper then
+            local copper = row.copper * (row.count or 1)
+            if negate then
+                copper = -copper
+            end
+            local valueKey = (negate or copper < 0) and "TEXT_WARNING" or "TEXT_PRIMARY"
+            AddMoneyLine(label, copper, valueKey)
+        else
+            GameTooltip:AddDoubleLine(label, UNKNOWN, mr, mg, mb, mr, mg, mb)
+        end
+    end
+end
+
+local function ShowProfitBreakdownTooltip(owner, entry)
+    local bd = M:ComputeOrderProfitBreakdown(entry)
+    if not bd then
+        ShowProfitSourceTooltip(owner)
+        return
+    end
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(L["CRAFTORDERS_COL_PROFIT"])
+    AppendGoldBreakdown(bd.net, bd.gross, bd.cut, entry.tipAvg, entry.tipMax)
+    if #bd.rewards > 0 then
+        GameTooltip:AddLine(L["CRAFTORDERS_COL_REWARD"], TooltipRGB("TEXT_ACCENT"))
+        AppendPricedLines(bd.rewards, false)
+    end
+    if #bd.mats > 0 then
+        GameTooltip:AddLine(L["CRAFTORDERS_COL_YOU"], TooltipRGB("TEXT_ACCENT"))
+        AppendPricedLines(bd.mats, true)
+    end
+    local totalKey = (bd.profit or 0) < 0 and "TEXT_WARNING" or "TEXT_PRIMARY"
+    AddMoneyLine(TOTAL, bd.profit, totalKey)
+    GameTooltip:AddLine(" ")
+    AppendPriceSourceLines()
+    GameTooltip:Show()
+end
+
+local function FormatCompactDuration(seconds)
+    seconds = floor(seconds)
+    if seconds <= 0 then
+        return ""
+    end
+    local days = floor(seconds / 86400)
+    seconds = seconds - days * 86400
+    local hours = floor(seconds / 3600)
+    seconds = seconds - hours * 3600
+    local minutes = floor(seconds / 60)
+    seconds = seconds - minutes * 60
+    local parts = {}
+    if days > 0 then
+        parts[#parts + 1] = DAY_ONELETTER_ABBR:format(days)
+    end
+    if hours > 0 then
+        parts[#parts + 1] = HOUR_ONELETTER_ABBR:format(hours)
+    end
+    if minutes > 0 then
+        parts[#parts + 1] = MINUTE_ONELETTER_ABBR:format(minutes)
+    end
+    if #parts == 0 then
+        parts[1] = SECOND_ONELETTER_ABBR:format(seconds)
+    end
+    return table.concat(parts, TIME_UNIT_DELIMITER)
+end
+
 local function OnDataIconEnter(icon)
     GameTooltip:SetOwner(icon, "ANCHOR_RIGHT")
     if icon._itemLink then
@@ -441,6 +650,9 @@ local function OnDataIconEnter(icon)
         elseif icon._customerProvide then
             GameTooltip:AddLine(PROFESSIONS_CUSTOMER_ORDER_REAGENT_PROVIDED, OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
+        if icon._subtitle and icon._subtitle ~= "" then
+            GameTooltip:AddLine(icon._subtitle, OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        end
     elseif icon._currencyType then
         local info = C_CurrencyInfo.GetCurrencyInfo(icon._currencyType)
         GameTooltip:SetText(info and info.name or "")
@@ -448,10 +660,8 @@ local function OnDataIconEnter(icon)
             GameTooltip:AddLine("x" .. icon._count, OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     elseif icon._gold then
-        GameTooltip:SetText(OneWoW.Format.FormatGold(icon._gold))
-        if icon._tipAvg and icon._tipMax then
-            GameTooltip:AddLine(OneWoW.Format.FormatGold(icon._tipAvg) .. " / " .. OneWoW.Format.FormatGold(icon._tipMax), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        end
+        ShowGoldBreakdownTooltip(icon, icon._gold, icon._commission, icon._consortiumCut, icon._tipAvg, icon._tipMax)
+        return
     else
         GameTooltip:Hide()
         return
@@ -475,6 +685,8 @@ local function BindDataIcon(icon, data, role)
     icon._itemLink = nil
     icon._currencyType = nil
     icon._gold = nil
+    icon._commission = nil
+    icon._consortiumCut = nil
     icon._count = nil
     icon._tipAvg = nil
     icon._tipMax = nil
@@ -489,6 +701,8 @@ local function BindDataIcon(icon, data, role)
     if data.kind == "gold" then
         OneWoW_GUI:UpdateIconTexture(icon, data.icon)
         icon._gold = data.amount
+        icon._commission = data.commission
+        icon._consortiumCut = data.consortiumCut
         icon._tipAvg = data.tipAvg
         icon._tipMax = data.tipMax
         local goldAmt = floor((data.amount or 0) / COPPER_PER_GOLD)
@@ -526,11 +740,11 @@ local function BindStrip(icons, list, role)
 end
 
 local function FormatTimeLeft(entry)
-    if entry.kind == "bucket" then return "" end
+    if entry.kind == "bucket" then return "", "" end
     local remaining = entry.remaining or 0
-    if remaining <= 0 then return "" end
+    if remaining <= 0 then return "", "" end
     local noSeconds = true
-    return SecondsToTime(remaining, noSeconds)
+    return FormatCompactDuration(remaining), SecondsToTime(remaining, noSeconds)
 end
 
 local BindActionButton
@@ -552,6 +766,7 @@ local function BindHeader(row, entry)
     row.goldText:SetText("")
     row.profitText:SetText("")
     row.unlearnedText:SetText("")
+    row.product._subtitle = nil
     row.addBtn:Hide()
     row.addBtn._entry = nil
     HideStrip(row.youMats)
@@ -570,9 +785,16 @@ local function BindHeader(row, entry)
         row.releaseBtn:Hide()
         row.releaseBtn._entry = nil
     end
-    row.timeText:Hide()
-    row.goldText:Hide()
-    row.profitText:Hide()
+    row.timeLane:Hide()
+    row.goldLane:Hide()
+    row.profitLane:Hide()
+    row.timeLane._fullTime = nil
+    row.goldLane._net = nil
+    row.goldLane._gross = nil
+    row.goldLane._cut = nil
+    row.goldLane._tipAvg = nil
+    row.goldLane._tipMax = nil
+    row.profitLane._entry = nil
 end
 
 local function BindMoney(fs, copper, allowNegative)
@@ -588,6 +810,14 @@ local function BindMoney(fs, copper, allowNegative)
     fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 end
 
+--- Cart button only on orders that still need crafter mats.
+---@param entry table|nil
+---@return boolean
+function M:RowShowsCart(entry)
+    return entry and entry.kind == "order" and entry.section ~= "ready"
+        and entry.missingReagents and #entry.missingReagents > 0
+end
+
 local function BindRow(row, entry)
     row.product:Show()
     ApplyRowLayout(row)
@@ -597,32 +827,46 @@ local function BindRow(row, entry)
     row.product._itemID = entry.itemID
     row.nameText:SetText(entry.name or "")
     row.nameText:SetTextColor(QualityColor(entry.quality))
+    local subtitle = ""
     if not entry.learned then
-        row.unlearnedText:SetText(PROFESSIONS_CRAFTER_CANT_CLAIM_UNLEARNED)
+        subtitle = PROFESSIONS_CRAFTER_CANT_CLAIM_UNLEARNED
+        row.unlearnedText:SetText(subtitle)
         row.unlearnedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     elseif entry.isRecraft then
-        row.unlearnedText:SetText(PROFESSIONS_CRAFTING_RECRAFT)
+        subtitle = PROFESSIONS_CRAFTING_RECRAFT
+        row.unlearnedText:SetText(subtitle)
         row.unlearnedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     elseif entry.kind == "bucket" then
-        row.unlearnedText:SetText(L["CRAFTORDERS_BUCKET_COUNT"]:format(entry.numAvailable or 0))
+        subtitle = L["CRAFTORDERS_BUCKET_COUNT"]:format(entry.numAvailable or 0)
+        row.unlearnedText:SetText(subtitle)
         row.unlearnedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     elseif entry.customerName and entry.customerName ~= "" then
-        row.unlearnedText:SetText(entry.customerName)
+        subtitle = entry.customerName
+        row.unlearnedText:SetText(subtitle)
         row.unlearnedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     else
         row.unlearnedText:SetText("")
     end
-    row.timeText:SetText(FormatTimeLeft(entry))
+    row.product._subtitle = M:IsTight() and subtitle or nil
+    local compact, fullTime = FormatTimeLeft(entry)
+    row.timeText:SetText(compact)
+    row.timeLane._fullTime = fullTime
     row.timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    BindMoney(row.goldText, entry.gold, false)
+    local net, gross, cut = M:GetGoldReceived(entry.gold, entry.consortiumCut)
+    BindMoney(row.goldText, net, false)
+    row.goldLane._net = net
+    row.goldLane._gross = gross
+    row.goldLane._cut = cut
+    row.goldLane._tipAvg = entry.tipAvg
+    row.goldLane._tipMax = entry.tipMax
     BindMoney(row.profitText, M:ComputeOrderProfit(entry), true)
+    row.profitLane._entry = entry
 
     BindStrip(row.youMats, M:FilterYouReagents(entry.youReagents), "you")
     BindStrip(row.customerMats, entry.customerReagents, "customer")
     BindStrip(row.rewards, entry.rewardIcons, "reward")
 
-    local showAdd = entry.kind == "order" and entry.section ~= "ready"
-        and entry.missingReagents and #entry.missingReagents > 0
+    local showAdd = M:RowShowsCart(entry)
     row.addBtn._entry = entry
     row.addBtn:SetShown(showAdd)
     BindActionButton(row, entry)
@@ -716,12 +960,11 @@ function M:EnsureOverlay()
     overlay:SetFrameLevel(browse:GetFrameLevel() + 20)
     overlay:Hide()
 
-    -- Header and rows both span the overlay minus the same 32px of chrome
-    -- (HEADER_LEFT + HEADER_RIGHT == list + scroll + row insets). Columns
-    -- clamp icon lanes against this width so the order name keeps room.
-    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - HEADER_RIGHT)
+    -- Header and rows both span the overlay minus list + scroll + row insets.
+    -- Columns clamp icon lanes against this width so the order name keeps room.
+    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - OverlayChromeRight())
     overlay:SetScript("OnSizeChanged", function(myself, width)
-        M:SetRowContentWidth((width or 0) - HEADER_LEFT - HEADER_RIGHT)
+        M:SetRowContentWidth((width or 0) - HEADER_LEFT - OverlayChromeRight())
         if M._overlay == myself then
             M:ApplyOverlayLayout()
         end
@@ -740,7 +983,7 @@ function M:EnsureOverlay()
 
     local headerBar = CreateFrame("Frame", nil, overlay, "BackdropTemplate")
     headerBar:SetPoint("TOPLEFT", overlay, "TOPLEFT", HEADER_LEFT, -(4 + STATUS_H))
-    headerBar:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", -HEADER_RIGHT, -(4 + STATUS_H))
+    headerBar:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", -OverlayChromeRight(), -(4 + STATUS_H))
     headerBar:SetHeight(COL_H)
     headerBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
     overlay.headerBar = headerBar
@@ -762,10 +1005,36 @@ function M:EnsureOverlay()
     local colIds = M:ColumnIds()
     for i = 1, #colIds do
         local id = colIds[i]
-        local fs = OneWoW_GUI:CreateFS(headerLanes, 11)
+        local host = CreateFrame("Frame", nil, headerLanes)
+        host:EnableMouse(true)
+        local fs = OneWoW_GUI:CreateFS(host, 11)
+        fs:SetAllPoints(host)
         fs:SetMaxLines(2)
         fs:SetWordWrap(true)
-        colLabels[id] = fs
+        host.text = fs
+        if id == "gold" then
+            host:SetScript("OnEnter", function(myself)
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["CRAFTORDERS_COL_GOLD"])
+                GameTooltip:AddLine(L["CRAFTORDERS_COL_GOLD_TIP"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                GameTooltip:Show()
+            end)
+            host:SetScript("OnLeave", GameTooltip_Hide)
+        elseif id == "profit" then
+            host:SetScript("OnEnter", function(myself)
+                ShowProfitSourceTooltip(myself)
+            end)
+            host:SetScript("OnLeave", GameTooltip_Hide)
+        elseif id == "time" then
+            host:SetScript("OnEnter", function(myself)
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetText(CLOSES_IN)
+                GameTooltip:AddLine(L["CRAFTORDERS_COL_TIME_TIP"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                GameTooltip:Show()
+            end)
+            host:SetScript("OnLeave", GameTooltip_Hide)
+        end
+        colLabels[id] = host
     end
     overlay.colLabels = colLabels
 
@@ -888,19 +1157,59 @@ function M:EnsureOverlay()
             unlearnedText:SetJustifyH("LEFT")
             row.unlearnedText = unlearnedText
 
-            local timeText = OneWoW_GUI:CreateFS(laneHost, 11)
-            timeText:SetMaxLines(1)
-            timeText:SetWordWrap(false)
+            local function MakeTextLane()
+                local textLane = CreateFrame("Frame", nil, laneHost)
+                textLane:EnableMouse(true)
+                local fs = OneWoW_GUI:CreateFS(textLane, 11)
+                fs:SetAllPoints(textLane)
+                fs:SetMaxLines(1)
+                fs:SetWordWrap(false)
+                textLane.text = fs
+                textLane:SetScript("OnMouseUp", function(_, button)
+                    ActivateRow(button)
+                end)
+                return textLane, fs
+            end
+
+            local timeLane, timeText = MakeTextLane()
+            timeLane:SetScript("OnEnter", function(myself)
+                if myself._fullTime and myself._fullTime ~= "" then
+                    GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(myself._fullTime)
+                    GameTooltip:Show()
+                end
+            end)
+            timeLane:SetScript("OnLeave", GameTooltip_Hide)
+            row.timeLane = timeLane
             row.timeText = timeText
 
-            local goldText = OneWoW_GUI:CreateFS(laneHost, 11)
-            goldText:SetMaxLines(1)
-            goldText:SetWordWrap(false)
+            local goldLane, goldText = MakeTextLane()
+            goldLane:SetScript("OnEnter", function(myself)
+                if myself._net ~= nil then
+                    ShowGoldBreakdownTooltip(
+                        myself,
+                        myself._net,
+                        myself._gross,
+                        myself._cut,
+                        myself._tipAvg,
+                        myself._tipMax
+                    )
+                end
+            end)
+            goldLane:SetScript("OnLeave", GameTooltip_Hide)
+            row.goldLane = goldLane
             row.goldText = goldText
 
-            local profitText = OneWoW_GUI:CreateFS(laneHost, 11)
-            profitText:SetMaxLines(1)
-            profitText:SetWordWrap(false)
+            local profitLane, profitText = MakeTextLane()
+            profitLane:SetScript("OnEnter", function(myself)
+                if myself._entry then
+                    ShowProfitBreakdownTooltip(myself, myself._entry)
+                else
+                    ShowProfitSourceTooltip(myself)
+                end
+            end)
+            profitLane:SetScript("OnLeave", GameTooltip_Hide)
+            row.profitLane = profitLane
             row.profitText = profitText
 
             local function FillIconLane(count, size)
@@ -1091,6 +1400,7 @@ function M:EnsureOverlay()
     overlay.virt = virt
     M._overlay = overlay
     M._virt = virt
+    virt.listScroll:EnableMouseWheel(true)
     virt.listScroll:HookScript("OnVerticalScroll", function()
         local page = GetOrdersPage()
         if page then
@@ -1266,6 +1576,7 @@ end
 local function CountLaneUsage(entries)
     local any = false
     local you, customer, reward = 1, 1, 1
+    local cart = false
     for i = 1, #entries do
         local e = entries[i]
         if e.kind ~= "header" then
@@ -1280,12 +1591,15 @@ local function CountLaneUsage(entries)
             if e.rewardIcons and #e.rewardIcons > reward then
                 reward = #e.rewardIcons
             end
+            if M:RowShowsCart(e) then
+                cart = true
+            end
         end
     end
     if not any then
         return nil
     end
-    return { you = you, customer = customer, reward = reward }
+    return { you = you, customer = customer, reward = reward, cart = cart }
 end
 
 function M:RefreshOverlay()
@@ -1324,7 +1638,7 @@ function M:RefreshOverlay()
         -- when the new entry list changes that usage.
         M:ApplyOverlayLayout()
     elseif overlay.virt then
-        overlay.virt.Refresh()
+        FinishOverlayList(overlay)
     end
 
     if M._loading and #entries == 0 then
@@ -1355,7 +1669,7 @@ function M:ShowOverlay()
     overlay:Show()
     -- The overlay can be created while the profession UI is hidden (width
     -- unknown); re-measure at show time and re-apply geometry in place.
-    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - HEADER_RIGHT)
+    M:SetRowContentWidth((overlay:GetWidth() or 0) - HEADER_LEFT - OverlayChromeRight())
     M:ApplyOverlayLayout()
     HideBlizzardOrderList()
     M:RefreshOverlay()

@@ -84,10 +84,14 @@ function M:BuildRewardIcons(order, opts)
         end
     end
     local gold = opts.gold or (order and order.tipAmount) or 0
-    if gold > 0 then
+    local cut = opts.consortiumCut or (order and order.consortiumCut) or 0
+    local received = M:GetGoldReceived(gold, cut)
+    if received > 0 then
         icons[#icons + 1] = {
             kind = "gold",
-            amount = gold,
+            amount = received,
+            commission = gold,
+            consortiumCut = cut,
             tipAvg = opts.tipAvg,
             tipMax = opts.tipMax,
             icon = GOLD_ICON,

@@ -6,9 +6,10 @@ if not M then return end
 -- Crafting Orders — Features layout editor
 -- ============================================================================
 -- Vertical column list (show/hide + CreateReorderDrag), icon-size sliders,
--- hide-have-mats, and the profit price-source picker. Overlay header drag is
--- not in this pass. Features On/Off only enables the existing controls;
--- rebuilding the card stack from that click broke the toggle.
+-- column-width sliders, Compact View, Hide scrollbar, hide-have-mats, and
+-- the profit price-source picker. Overlay header drag is not in this pass.
+-- Features On/Off only enables the existing controls; rebuilding the card
+-- stack from that click broke the toggle.
 -- ============================================================================
 
 local OneWoW_GUI = OneWoW_GUI
@@ -49,9 +50,38 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
 
     local widgets = {
         sliders = {},
+        widthSliders = {},
+        widthLabels = {},
     }
     local refreshLayoutWidgets
     local applyEnabled
+
+    local function SyncSizeControls()
+        local sizesOn = IsDetailEnabled() and not M:IsTight()
+        if widgets.tightCb then
+            widgets.tightCb:SetChecked(M:IsTight())
+            SetControlEnabled(widgets.tightCb, IsDetailEnabled())
+        end
+        for i = 1, #widgets.sliders do
+            SetControlEnabled(widgets.sliders[i].slider, sizesOn)
+        end
+        if widgets.sizeLabels then
+            local color = sizesOn and "TEXT_PRIMARY" or "TEXT_MUTED"
+            for i = 1, #widgets.sizeLabels do
+                widgets.sizeLabels[i]:SetTextColor(OneWoW_GUI:GetThemeColor(color))
+            end
+        end
+    end
+
+    local function RefreshShownSliders()
+        if widgets.relayoutSizeSliders then
+            widgets.relayoutSizeSliders()
+        end
+        if widgets.relayoutWidthSliders then
+            widgets.relayoutWidthSliders()
+        end
+        stack:Relayout()
+    end
 
     local incompat = M:CollectIncompatibleTitles()
     if #incompat > 0 then
@@ -132,11 +162,23 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
                     checked = layout.hidden[id] ~= true,
                     onClick = function(myself)
                         M:SetColumnHidden(id, not myself:GetChecked())
+                        RefreshShownSliders()
                     end,
                 })
                 cb:SetPoint("LEFT", row, "LEFT", 4, 0)
                 row.cb = cb
                 SetControlEnabled(cb, IsDetailEnabled())
+
+                local gripA = row:CreateTexture(nil, "ARTWORK")
+                gripA:SetSize(2, 12)
+                gripA:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+                gripA:SetColorTexture(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                gripA:SetAlpha(0.55)
+                local gripB = row:CreateTexture(nil, "ARTWORK")
+                gripB:SetSize(2, 12)
+                gripB:SetPoint("RIGHT", gripA, "LEFT", -3, 0)
+                gripB:SetColorTexture(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                gripB:SetAlpha(0.55)
 
                 rows[#rows + 1] = row
                 if reorderCtrl then
@@ -171,7 +213,7 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
                 tinsert(order, destIdx, id)
                 M:SetColumnOrder(order)
                 RebuildRows()
-                stack:Relayout()
+                RefreshShownSliders()
             end,
             onPickup = function(row)
                 row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
@@ -205,8 +247,15 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
                 local sl = widgets.sliders[i]
                 sl.slider:SetValue(layout.sizes[sl._sizeKey])
             end
+            for i = 1, #widgets.widthSliders do
+                local sl = widgets.widthSliders[i]
+                sl.slider:SetValue(layout.widths[sl._widthId])
+            end
             if widgets.hideHaveCb then
                 widgets.hideHaveCb:SetChecked(layout.hideHaveMats == true)
+            end
+            if widgets.hideScrollCb then
+                widgets.hideScrollCb:SetChecked(layout.hideScrollBar == true)
             end
             if widgets.profitDd then
                 local src = M:GetPriceSource()
@@ -214,24 +263,84 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
                 widgets.profitDdText:SetText(M:PriceSourceLabel(src))
                 widgets.profitIcon:SetTexture(M:PriceSourceIcon(src))
             end
-            stack:Relayout()
+            if widgets.updateProfitSourceDetail then
+                widgets.updateProfitSourceDetail()
+            end
+            SyncSizeControls()
+            RefreshShownSliders()
         end
 
         return hintH + 8 + host:GetHeight() + 8 + 22
     end)
 
-    stack:AddCard("craftingorders:sizes", L["CRAFTORDERS_LAYOUT_SIZES"], function(content, _)
+    widgets.sizeCard = stack:AddCard("craftingorders:sizes", L["CRAFTORDERS_LAYOUT_SIZES"], function(content, contentWidth)
         wipe(widgets.sliders)
         local layout = M:GetLayout()
         local y = 0
+
+        local tightCb = OneWoW_GUI:CreateCheckbox(content, {
+            label = L["CRAFTORDERS_TIGHT"],
+            checked = layout.tight == true,
+            onClick = function(myself)
+                M:SetTight(myself:GetChecked())
+                SyncSizeControls()
+            end,
+        })
+        tightCb:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        SetControlEnabled(tightCb, IsDetailEnabled())
+        widgets.tightCb = tightCb
+        y = y - 28
+
+        local tightDesc = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        tightDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        tightDesc:SetJustifyH("LEFT")
+        tightDesc:SetWordWrap(true)
+        local descW = tonumber(contentWidth) or 0
+        if descW >= 1 then
+            tightDesc:SetWidth(descW)
+        else
+            tightDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        end
+        tightDesc:SetText(L["CRAFTORDERS_TIGHT_DESC"])
+        tightDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        y = y - (tightDesc:GetStringHeight() or 14) - 10
+
+        local hideScrollCb = OneWoW_GUI:CreateCheckbox(content, {
+            label = L["CRAFTORDERS_HIDE_SCROLLBAR"],
+            checked = layout.hideScrollBar == true,
+            onClick = function(myself)
+                M:SetHideScrollBar(myself:GetChecked())
+            end,
+        })
+        hideScrollCb:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        SetControlEnabled(hideScrollCb, IsDetailEnabled())
+        widgets.hideScrollCb = hideScrollCb
+        y = y - 28
+
+        local hideScrollDesc = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        hideScrollDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        hideScrollDesc:SetJustifyH("LEFT")
+        hideScrollDesc:SetWordWrap(true)
+        if descW >= 1 then
+            hideScrollDesc:SetWidth(descW)
+        else
+            hideScrollDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        end
+        hideScrollDesc:SetText(L["CRAFTORDERS_HIDE_SCROLLBAR_DESC"])
+        hideScrollDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        widgets.hideScrollDesc = hideScrollDesc
+        y = y - (hideScrollDesc:GetStringHeight() or 14) - 10
+        local sizeStartY = y
+
         local keys = {
             { key = "product", label = L["CRAFTORDERS_SIZE_ITEM"] },
-            { key = "you", label = L["CRAFTORDERS_SIZE_YOU"] },
-            { key = "customer", label = L["CRAFTORDERS_SIZE_CUSTOMER"] },
-            { key = "reward", label = L["CRAFTORDERS_SIZE_REWARD"] },
+            { key = "you", label = L["CRAFTORDERS_SIZE_YOU"], colId = "you" },
+            { key = "customer", label = L["CRAFTORDERS_SIZE_CUSTOMER"], colId = "customer" },
+            { key = "reward", label = L["CRAFTORDERS_SIZE_REWARD"], colId = "reward" },
         }
         local lane = M:LaneConstants()
         widgets.sizeLabels = {}
+        widgets.sizeRows = {}
         for i = 1, #keys do
             local spec = keys[i]
             local lbl = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -254,11 +363,120 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
             })
             sl:SetPoint("TOPLEFT", content, "TOPLEFT", 12, y)
             sl._sizeKey = spec.key
-            SetControlEnabled(sl.slider, IsDetailEnabled())
             widgets.sliders[#widgets.sliders + 1] = sl
+            widgets.sizeRows[#widgets.sizeRows + 1] = { lbl = lbl, sl = sl, colId = spec.colId }
             y = y - 42
         end
-        return math.max(1, -y)
+        SyncSizeControls()
+
+        widgets.relayoutSizeSliders = function()
+            local shown = M:GetLayout()
+            local nextY = sizeStartY
+            for i = 1, #widgets.sizeRows do
+                local row = widgets.sizeRows[i]
+                local show = not row.colId or shown.hidden[row.colId] ~= true
+                if show then
+                    row.lbl:Show()
+                    row.sl:Show()
+                    row.lbl:ClearAllPoints()
+                    row.lbl:SetPoint("TOPLEFT", content, "TOPLEFT", 0, nextY)
+                    nextY = nextY - (row.lbl:GetStringHeight() or 14) - 4
+                    row.sl:ClearAllPoints()
+                    row.sl:SetPoint("TOPLEFT", content, "TOPLEFT", 12, nextY)
+                    nextY = nextY - 42
+                else
+                    row.lbl:Hide()
+                    row.sl:Hide()
+                end
+            end
+            local h = math.max(1, -nextY)
+            if widgets.sizeCard then
+                widgets.sizeCard:SetContentHeight(h)
+            end
+            return h
+        end
+        return widgets.relayoutSizeSliders()
+    end)
+
+    widgets.widthCard = stack:AddCard("craftingorders:widths", L["CRAFTORDERS_LAYOUT_WIDTHS"], function(content, contentWidth)
+        wipe(widgets.widthSliders)
+        wipe(widgets.widthLabels)
+        widgets.widthById = {}
+        local layout = M:GetLayout()
+        local y = 0
+
+        local hint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        hint:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        hint:SetJustifyH("LEFT")
+        hint:SetWordWrap(true)
+        local hintW = tonumber(contentWidth) or 0
+        if hintW >= 1 then
+            hint:SetWidth(hintW)
+        else
+            hint:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        end
+        hint:SetText(L["CRAFTORDERS_WIDTH_HINT"])
+        hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        y = y - (hint:GetStringHeight() or 14) - 10
+        local widthStartY = y
+
+        local ids = M:ColumnIds()
+        for i = 1, #ids do
+            local id = ids[i]
+            local minW, maxW = M:ColumnWidthRange(id)
+            local lbl = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            lbl:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+            lbl:SetText(M:ColumnLabel(id))
+            lbl:SetTextColor(OneWoW_GUI:GetThemeColor(IsDetailEnabled() and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            widgets.widthLabels[#widgets.widthLabels + 1] = lbl
+            y = y - (lbl:GetStringHeight() or 14) - 4
+
+            local sl = OneWoW_GUI:CreateSlider(content, {
+                minVal = minW,
+                maxVal = maxW,
+                step = 1,
+                currentVal = layout.widths[id],
+                width = 240,
+                fmt = "%.0f",
+                onChange = function(val)
+                    M:SetColumnWidth(id, val)
+                end,
+            })
+            sl:SetPoint("TOPLEFT", content, "TOPLEFT", 12, y)
+            sl._widthId = id
+            SetControlEnabled(sl.slider, IsDetailEnabled())
+            widgets.widthSliders[#widgets.widthSliders + 1] = sl
+            widgets.widthById[id] = { lbl = lbl, sl = sl }
+            y = y - 42
+        end
+
+        widgets.relayoutWidthSliders = function()
+            local shown = M:GetLayout()
+            local nextY = widthStartY
+            for i = 1, #shown.order do
+                local id = shown.order[i]
+                local row = widgets.widthById[id]
+                if shown.hidden[id] ~= true then
+                    row.lbl:Show()
+                    row.sl:Show()
+                    row.lbl:ClearAllPoints()
+                    row.lbl:SetPoint("TOPLEFT", content, "TOPLEFT", 0, nextY)
+                    nextY = nextY - (row.lbl:GetStringHeight() or 14) - 4
+                    row.sl:ClearAllPoints()
+                    row.sl:SetPoint("TOPLEFT", content, "TOPLEFT", 12, nextY)
+                    nextY = nextY - 42
+                else
+                    row.lbl:Hide()
+                    row.sl:Hide()
+                end
+            end
+            local h = math.max(1, -nextY)
+            if widgets.widthCard then
+                widgets.widthCard:SetContentHeight(h)
+            end
+            return h
+        end
+        return widgets.relayoutWidthSliders()
     end)
 
     stack:AddCard("craftingorders:mats", L["CRAFTORDERS_LAYOUT_MATS"], function(content, contentWidth)
@@ -289,7 +507,7 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
         return 32 + (desc:GetStringHeight() or 14)
     end)
 
-    stack:AddCard("craftingorders:profit", L["CRAFTORDERS_LAYOUT_PROFIT"], function(content, _)
+    stack:AddCard("craftingorders:profit", L["CRAFTORDERS_LAYOUT_PROFIT"], function(content, contentWidth)
         local src = M:GetPriceSource()
         local icon = content:CreateTexture(nil, "ARTWORK")
         icon:SetSize(18, 18)
@@ -330,6 +548,9 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
                 dd._activeValue = value
                 ddText:SetText(text)
                 icon:SetTexture(M:PriceSourceIcon(value))
+                if widgets.updateProfitSourceDetail then
+                    widgets.updateProfitSourceDetail()
+                end
                 M:ApplyOverlayLayout()
             end,
         })
@@ -342,7 +563,43 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
             dd:Disable()
             ddText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
-        return 28 + 26 + 4
+
+        local tsmLine = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        tsmLine:SetPoint("TOPLEFT", dd, "BOTTOMLEFT", 0, -8)
+        tsmLine:SetJustifyH("LEFT")
+        widgets.profitTsmLine = tsmLine
+
+        local tsmHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        tsmHint:SetPoint("TOPLEFT", tsmLine, "BOTTOMLEFT", 0, -4)
+        tsmHint:SetJustifyH("LEFT")
+        tsmHint:SetWordWrap(true)
+        local hintW = tonumber(contentWidth) or 0
+        if hintW >= 1 then
+            tsmHint:SetWidth(hintW)
+        else
+            tsmHint:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+        end
+        tsmHint:SetText(L["CRAFTORDERS_PROFIT_TSM_HINT"])
+        tsmHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        widgets.profitTsmHint = tsmHint
+
+        local function UpdateProfitSourceDetail()
+            local cur = M:GetPriceSource()
+            if cur == "tsm" then
+                tsmLine:SetText(M:GetTSMPriceString())
+                tsmLine:SetTextColor(OneWoW_GUI:GetThemeColor(IsDetailEnabled() and "TEXT_PRIMARY" or "TEXT_MUTED"))
+                tsmLine:Show()
+                tsmHint:Show()
+            else
+                tsmLine:SetText("")
+                tsmLine:Hide()
+                tsmHint:Hide()
+            end
+        end
+        widgets.updateProfitSourceDetail = UpdateProfitSourceDetail
+        UpdateProfitSourceDetail()
+
+        return 28 + 26 + 8 + 18 + 4 + (tsmHint:GetStringHeight() or 14)
     end)
 
     applyEnabled = function(enabled)
@@ -356,22 +613,27 @@ local function BuildContent(cardsHost, isEnabled, applyHostHeight)
             end
         end
         SetControlEnabled(widgets.resetBtn, detailEnabled)
-        for i = 1, #widgets.sliders do
-            SetControlEnabled(widgets.sliders[i].slider, detailEnabled)
+        SyncSizeControls()
+        SetControlEnabled(widgets.hideHaveCb, detailEnabled)
+        SetControlEnabled(widgets.hideScrollCb, detailEnabled)
+        for i = 1, #widgets.widthSliders do
+            SetControlEnabled(widgets.widthSliders[i].slider, detailEnabled)
         end
-        if widgets.sizeLabels then
+        if widgets.widthLabels then
             local color = detailEnabled and "TEXT_PRIMARY" or "TEXT_MUTED"
-            for i = 1, #widgets.sizeLabels do
-                widgets.sizeLabels[i]:SetTextColor(OneWoW_GUI:GetThemeColor(color))
+            for i = 1, #widgets.widthLabels do
+                widgets.widthLabels[i]:SetTextColor(OneWoW_GUI:GetThemeColor(color))
             end
         end
-        SetControlEnabled(widgets.hideHaveCb, detailEnabled)
         if widgets.profitLbl then
             widgets.profitLbl:SetTextColor(OneWoW_GUI:GetThemeColor(detailEnabled and "TEXT_PRIMARY" or "TEXT_MUTED"))
         end
         if widgets.profitDd then
             SetControlEnabled(widgets.profitDd, detailEnabled)
             widgets.profitDdText:SetTextColor(OneWoW_GUI:GetThemeColor(detailEnabled and "TEXT_PRIMARY" or "TEXT_MUTED"))
+        end
+        if widgets.updateProfitSourceDetail then
+            widgets.updateProfitSourceDetail()
         end
 
         local incompatCard = widgets.incompatCard

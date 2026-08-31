@@ -93,6 +93,18 @@
 ---
 
 # QoL
+## Crafting Orders
+- Gold is the amount you receive after the Consortium Cut. Hover Gold on a row for commission, Consortium Cut, and Your Cut (public recipe groups also show the average).
+- Hover Profit / Loss on a row for that gold breakdown, each priced reward and You Provide material, and the total. Items with no price still show as Unknown. The + / - header still shows the price source (and the TSM string from QoL > Tooltips > Value).
+- Compact View matches Blizzard's original row height. Icons shrink to fit. Icon size sliders apply when Compact View is off. Column width sliders still apply.
+- The default view is Compact View on; columns You Provide, Cart, Profit / Loss, Time, and Craft (in that order); icons at 27; Profit / Loss prices from OneWoW; Hide unlearned recipes on; Only show mats I still need on. Gold, Customer Provides, and You Receive start hidden. Crafting Orders itself starts on. Reset in Features restores this view.
+- Features has a width slider for each column you have shown. Those are maximums: columns shrink together if they do not all fit beside the order name. Hiding a column hides its slider.
+- Hide list scrollbar in Features. The list still scrolls with the mouse wheel, and the bar hides when there is nothing to scroll.
+- Dragging a column row in Features now changes the order. Use the handle on the right of the row.
+- Cart takes no space on Craftable now (or public recipe groups) when no row can add mats.
+- Time Left uses a short form (6 d 15 h 10 m) and no longer clips. Hover a row for the full duration.
+- Opening professions or bag changes no longer error while Crafting Orders is on.
+
 ## Settings
 - Weekly Reset Day moved to Settings > Trackers.
 
