@@ -13,11 +13,11 @@
 * Create lists by type: guide, daily, weekly, todo, repeating, or farm value. Repeating lists clear after a custom hour interval you set.
 * Organize with categories (topic folders, not daily/weekly cadence), favorites, and filters. Hide Done drops finished lists; Hide completed on an open list (and on its pin) hides finished steps and empty sections. Clear resets search, type, category, and Hide Done.
 * Author sections and steps; import, export, and share lists. The step editor covers every shipped step type, including nested objectives. Typing an ID shows the name. Faction, profession, and holiday gates hide steps that do not apply; required steps must be done before you can check one off.
-* Start from bundled presets and examples
+* Start from bundled presets and examples. Midnight Zone Rares builds a daily list of outdoor rares grouped by zone.
 
 ### Auto-tracking
 
-Many step types complete themselves from game events — quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, timers, and more. Open-world rares use Kill a Rare or Boss (Fill from target). Dungeon and raid bosses use Kill a Dungeon or Raid Boss (Fill from current encounter during the fight or just after you win). Choose daily, weekly, repeating (hour interval), or one-time resets; progress can be character- or account-scoped where the list allows.
+Many step types complete themselves from game events — quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, timers, and more. Open-world rares use Kill a Rare or Boss (Fill from target). Dungeon and raid bosses use Kill a Dungeon or Raid Boss (Fill from current encounter during the fight or just after you win). Rare Quest tracks the hidden loot lock on a zone rare: Fill from target or search by name, or start from the Midnight Zone Rares preset. Choose daily, weekly, repeating (hour interval), or one-time resets; progress can be character- or account-scoped where the list allows.
 
 ### Overlays and map
 
@@ -44,7 +44,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 * Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub.
 * Dungeon and raid bosses cannot be filled from your target. Blizzard does not let addons read that target inside an instance. Add Kill a Dungeon or Raid Boss and use Fill from current encounter during the fight or just after you defeat it (still works after you leave, until you reload). A fight with two bosses (for example Twin Fangs) is still one encounter.
-* Open-world rares still use Kill a Rare or Boss and Fill from target.
+* Open-world rares still use Kill a Rare or Boss and Fill from target. Rare Quest is the loot lock (once per day or week), not the kill itself.
 * Drag a section header or a step to reorder. Drop a step on another section to move it there.
 * Hover a section or step for add, edit, and delete. List actions sit under the title.
 * Farm value is strongest with Auction House or TSM pricing turned on under QoL > Tooltips > Value.

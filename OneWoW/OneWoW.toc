@@ -140,6 +140,7 @@ Services\ItemDataLoader.lua
 Services\ProfessionRecipe.lua
 Services\RecipeKnownUtil.lua
 Services\Collectibles.lua
+Data\Generated\RareLocks.lua
 Services\GearProficiency.lua
 Services\CollectiblesPunchLists.lua
 Services\ChunkedJob.lua

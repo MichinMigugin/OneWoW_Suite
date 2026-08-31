@@ -52,16 +52,20 @@ can see these, which is why they live here.
 
 ### P-1 · Curated collectible-key → hidden-quest-ID map
 
-**Unblocks three ideas across two legs:** Collectibles §2 (daily loot-locks), Trackers §8
-(rare packs as a set of `rare_quest`s), Trackers §9 (rare-pin loot-lock status line).
+**Shipped (this slice):** generated lock table on core `OneWoW.Collectibles`
+(`GetRareLockByNpc` / `GetRareLockByKey` / `GetRareLocks` / `IsRareLockCompleted`).
+Trackers Rare Quest can fill from your target or search by name. Midnight
+zone-rares preset builds at create time from the table. Cadence (`daily` /
+`weekly`) is on the mined row, not QuestV2. Completion is live current-character
+`IsQuestFlaggedCompleted` — do not use CompletionTracker snapshots as loot-lock
+truth (append-only).
 
-Blizzard gates once-per-day loot with hidden tracking quests. We can already read the flag
-(`C_QuestLog.IsQuestFlaggedCompleted`, wrapped by Collections `_API`) and already answer it
-cross-alt (see P-2). The only missing piece is the map itself.
+**Still deferred:** Notes “still lootable today” on a wanted key; RareScanner /
+SilverDragon subscribe (Trackers §9).
 
-Budget it as **data, not derivation** — same maintenance shape as the punch-list content
-groups we already accepted. Mine it rather than taking a live dependency; the Workspace repo
-already has the machinery (`bin/journal_extras.py`, `.warehouse/Sources/Wago` extracts). Degrade gracefully when a key has no mapping.
+Blizzard gates once-per-day loot with hidden tracking quests. Coverage churn is
+new rares and rare Midnight-beta rebuilds — regenerate the table, do not ask
+players to remine. Degrade gracefully when a key has no mapping.
 
 ### P-2 · Cross-alt quest completion — already shipped, consume it
 

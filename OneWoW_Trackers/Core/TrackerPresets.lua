@@ -1,9 +1,11 @@
 local _, ns = ...
+local L = ns.L
 
 ns.TrackerPresets = {}
 local TP = ns.TrackerPresets
 
-local tinsert, wipe = tinsert, wipe
+local tinsert, wipe, ipairs, sort, format = tinsert, wipe, ipairs, sort, format
+local C_Map = C_Map
 
 local SECTION_PRESETS = {
     {
@@ -46,6 +48,12 @@ local SECTION_PRESETS = {
                 },
             },
         },
+    },
+    {
+        id = "midnight_rares",
+        titleKey = "TRACKER_QS_MIDNIGHT_RARES_TITLE",
+        listType = "daily",
+        category = "General",
     },
     {
         id = "prey_system",
@@ -136,6 +144,90 @@ local PROFESSION_PRESETS = {
     { name = "Cooking",        baseSkillLineID = 185,  currencyConc = nil,  skillVariant = nil },
 }
 
+local function RareStepLabel(lock)
+    local name = OneWoW.Collectibles.ResolveNPCName(lock.npcID)
+    if name then return name end
+    return format(L["TRACKER_RARE_FALLBACK"], lock.npcID)
+end
+
+local function RareStep(lock)
+    return {
+        label = RareStepLabel(lock),
+        trackType = "rare_quest",
+        trackParams = { questIDs = { lock.questID } },
+        max = 1,
+    }
+end
+
+local function MapName(mapID)
+    local info = C_Map.GetMapInfo(mapID)
+    return info and info.name or nil
+end
+
+local function BuildMidnightRareSections()
+    local locks = OneWoW.Collectibles.GetRareLocks({ expansion = Enum.ExpansionLevel.Midnight })
+    local dailyByMap = {}
+    local dailyOrder = {}
+    local weekly = {}
+    local noMap = {}
+    for _, lock in ipairs(locks) do
+        if lock.reset == "weekly" then
+            tinsert(weekly, lock)
+        elseif lock.mapID then
+            if not dailyByMap[lock.mapID] then
+                dailyByMap[lock.mapID] = {}
+                tinsert(dailyOrder, lock.mapID)
+            end
+            tinsert(dailyByMap[lock.mapID], lock)
+        else
+            tinsert(noMap, lock)
+        end
+    end
+    sort(dailyOrder, function(a, b)
+        return (MapName(a) or "") < (MapName(b) or "")
+    end)
+
+    local sections = {}
+    for _, mapID in ipairs(dailyOrder) do
+        local steps = {}
+        for _, lock in ipairs(dailyByMap[mapID]) do
+            tinsert(steps, RareStep(lock))
+        end
+        tinsert(sections, {
+            label = MapName(mapID) or L["TRACKER_PRESET_RARES_OTHER_ZONE"],
+            steps = steps,
+        })
+    end
+    if #noMap > 0 then
+        local steps = {}
+        for _, lock in ipairs(noMap) do
+            tinsert(steps, RareStep(lock))
+        end
+        tinsert(sections, {
+            label = L["TRACKER_PRESET_RARES_OTHER_ZONE"],
+            steps = steps,
+        })
+    end
+    if #weekly > 0 then
+        local steps = {}
+        for _, lock in ipairs(weekly) do
+            tinsert(steps, RareStep(lock))
+        end
+        tinsert(sections, {
+            label = L["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"],
+            steps = steps,
+        })
+    end
+    return sections
+end
+
+for _, preset in ipairs(SECTION_PRESETS) do
+    if preset.id == "midnight_rares" then
+        preset.buildSections = BuildMidnightRareSections
+        break
+    end
+end
+
 function TP:GetSectionPresets()
     return SECTION_PRESETS
 end
@@ -206,14 +298,19 @@ function TP:CreateListFromPreset(presetID)
 
     for _, preset in ipairs(SECTION_PRESETS) do
         if preset.id == presetID then
+            local title = preset.titleKey and L[preset.titleKey] or preset.label
             local list = TD:CreateList({
-                title = preset.label,
+                title = title,
                 listType = preset.listType,
                 category = preset.category or "General",
             })
             if not list then return nil end
 
-            for _, secData in ipairs(preset.sections) do
+            local sections = preset.sections or {}
+            if preset.buildSections then
+                sections = preset.buildSections()
+            end
+            for _, secData in ipairs(sections) do
                 local sec = TD:AddSection(list.id, { label = secData.label })
                 if sec then
                     for _, stepData in ipairs(secData.steps or {}) do

@@ -24,6 +24,9 @@ local _, ns = ...
 -- every planned type so keys built now stay valid as resolution is extended
 -- (`campsite` lands later).
 --
+-- Rare loot-locks: generated `npcID` / collectible-key -> hidden tracking quest
+-- (`GetRareLockByNpc`, `IsRareLockCompleted`). Names resolve at runtime.
+--
 -- A `set` is a first-class *acquisition* record (it is the single thing a vendor
 -- sells and the thing you link/want), but collection *truth* for it stays a view:
 -- GetCollectionState/`set` derives from the set's member appearances, never a
@@ -83,7 +86,11 @@ local dressUpModel
 -- no room for the entry type, and rooms aren't collectible records).
 local DECOR_ENTRY_TYPE = Enum.HousingCatalogEntryType.Decor
 
-local ipairs, tonumber, type, select, floor = ipairs, tonumber, type, select, math.floor
+local ipairs, pairs, tonumber, type, select, floor = ipairs, pairs, tonumber, type, select, math.floor
+local sort = sort
+local C_QuestLog = C_QuestLog
+local C_TooltipInfo = C_TooltipInfo
+local RETRIEVING_DATA = RETRIEVING_DATA
 local strsplit, strtrim = strsplit, strtrim
 
 -- ---------------------------------------------------------------------------
@@ -1045,4 +1052,99 @@ function Collectibles.GetContainingSets(key)
     local setIDs = C_TransmogSets.GetSetsContainingSourceID(descriptor.id)
     if not setIDs or #setIDs == 0 then return nil end
     return setIDs
+end
+
+-- ---------------------------------------------------------------------------
+-- Rare loot-locks (generated npcID / collectible-key -> hidden tracking quest)
+-- ---------------------------------------------------------------------------
+-- Cadence (daily/weekly) is on the mined row. Completion is live
+-- C_QuestLog.IsQuestFlaggedCompleted for the current character; v1 is not
+-- account-wide and does not read CompletionTracker snapshots.
+
+local npcNameCache = {}
+
+local function RareLockView(npcID, row)
+    return {
+        npcID = npcID,
+        questID = row.questID,
+        reset = row.reset,
+        expansion = row.expansion,
+        mapID = row.mapID,
+    }
+end
+
+--- Look up a rare loot-lock by creature id.
+---@param npcID number
+---@return table|nil lock { npcID, questID, reset?, expansion?, mapID? }
+function Collectibles.GetRareLockByNpc(npcID)
+    npcID = CoerceID(npcID)
+    if not npcID then return nil end
+    local row = ns.CollectiblesRareLockData.byNpc[npcID]
+    if not row then return nil end
+    return RareLockView(npcID, row)
+end
+
+--- Look up a rare loot-lock by collectible key (`mount:`, `toy:`, `pet:`).
+---@param key string
+---@return table|nil lock
+function Collectibles.GetRareLockByKey(key)
+    local canonical = Collectibles.CanonicalizeKey(key)
+    if not canonical then return nil end
+    local npcID = ns.CollectiblesRareLockData.byKey[canonical]
+    if not npcID then return nil end
+    return Collectibles.GetRareLockByNpc(npcID)
+end
+
+--- All rare locks, optionally filtered by expansion / mapID / reset.
+---@param filter table|nil { expansion?, mapID?, reset? }
+---@return table locks array of lock rows
+function Collectibles.GetRareLocks(filter)
+    filter = filter or {}
+    local out = {}
+    for npcID, row in pairs(ns.CollectiblesRareLockData.byNpc) do
+        if (filter.expansion == nil or row.expansion == filter.expansion)
+            and (filter.mapID == nil or row.mapID == filter.mapID)
+            and (filter.reset == nil or row.reset == filter.reset)
+        then
+            out[#out + 1] = RareLockView(npcID, row)
+        end
+    end
+    sort(out, function(a, b) return a.npcID < b.npcID end)
+    return out
+end
+
+--- Live current-character loot-lock. `npcIDOrKey` is a creature id or collectible key.
+---@param npcIDOrKey number|string
+---@return boolean|nil completed false when the flag is clear; nil when unmapped
+function Collectibles.IsRareLockCompleted(npcIDOrKey)
+    local lock
+    if type(npcIDOrKey) == "string" then
+        lock = Collectibles.GetRareLockByKey(npcIDOrKey)
+    else
+        lock = Collectibles.GetRareLockByNpc(npcIDOrKey)
+    end
+    if not lock then return nil end
+    return C_QuestLog.IsQuestFlaggedCompleted(lock.questID)
+end
+
+--- Creature name from a unit hyperlink tooltip. Nil while the client is still retrieving.
+---@param npcID number
+---@return string|nil name
+function Collectibles.ResolveNPCName(npcID)
+    npcID = CoerceID(npcID)
+    if not npcID then return nil end
+    local cached = npcNameCache[npcID]
+    if cached then return cached end
+    local tooltipData = C_TooltipInfo.GetHyperlink(("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID))
+    if not tooltipData or not tooltipData.lines then
+        return nil
+    end
+    for i = 1, #tooltipData.lines do
+        local text = tooltipData.lines[i].leftText
+        if text and text ~= "" and text ~= RETRIEVING_DATA then
+            npcNameCache[npcID] = text
+            return text
+        end
+    end
+    return nil
 end

@@ -10,12 +10,13 @@ ns.TrackerEditor = {}
 local TE_UI = ns.TrackerEditor
 
 local tinsert, tremove, tonumber, tostring = tinsert, tremove, tonumber, tostring
-local strtrim, sort, pairs, ipairs = strtrim, sort, pairs, ipairs
+local strtrim, sort, pairs, ipairs, format = strtrim, sort, pairs, ipairs, format
 local floor = math.floor
 local CreateVector2D = CreateVector2D
 local C_MapExplorationInfo = C_MapExplorationInfo
 local UnitExists, UnitGUID, UnitName = UnitExists, UnitGUID, UnitName
-local GetInstanceInfo = GetInstanceInfo
+local GetInstanceInfo, GetExpansionLevel = GetInstanceInfo, GetExpansionLevel
+local C_Map = C_Map
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
@@ -63,6 +64,65 @@ local function FillCreatureFromTarget(card, fieldKey, isKill)
     end
     local box = card["_field_" .. fieldKey]
     if box then box:SetText(tostring(cid)) end
+end
+
+local function WriteQuestID(card, questID)
+    local text = tostring(questID)
+    if card._field_questIDs then card._field_questIDs:SetText(text) end
+    if card._field_questID then card._field_questID:SetText(text) end
+end
+
+local function RareLabel(lock)
+    local name = OneWoW.Collectibles.ResolveNPCName(lock.npcID)
+    if not name then
+        name = format(L["TRACKER_RARE_FALLBACK"], lock.npcID)
+    end
+    if lock.mapID then
+        local info = C_Map.GetMapInfo(lock.mapID)
+        if info and info.name then
+            return info.name .. " - " .. name, name
+        end
+    end
+    return name, name
+end
+
+local function RareSearchOptions()
+    local opts = {}
+    local locks = OneWoW.Collectibles.GetRareLocks({ expansion = GetExpansionLevel() })
+    for _, lock in ipairs(locks) do
+        local text = RareLabel(lock)
+        tinsert(opts, { value = lock.npcID, text = text })
+    end
+    sort(opts, function(a, b) return a.text < b.text end)
+    return opts
+end
+
+local function FillRareFromTarget(card)
+    local cid, reason = GetTargetCreatureID()
+    if not cid then
+        if reason == "restricted" then
+            FillMsg("TRACKER_FILL_TARGET_RESTRICTED")
+        else
+            FillMsg("TRACKER_FILL_NO_TARGET")
+        end
+        return
+    end
+    local lock = OneWoW.Collectibles.GetRareLockByNpc(cid)
+    if not lock then
+        FillMsg("TRACKER_FILL_NO_RARE_LOCK")
+        return
+    end
+    WriteQuestID(card, lock.questID)
+    local nameBox = card._nameBox
+    local _, shortName = RareLabel(lock)
+    local targetName = UnitName("target")
+    if nameBox then
+        if targetName and not OneWoW.Restriction.IsSecret(targetName) then
+            nameBox:SetText(targetName)
+        elseif shortName then
+            nameBox:SetText(shortName)
+        end
+    end
 end
 
 local function UpdateTitleFromTarget(nameBox)
@@ -281,6 +341,47 @@ local FIELD_ROW_GAP = 20
 local FIELD_ROW_H = 38
 local FIELD_ENTITY_ROW_H = 56
 local SAVE_ROW_H = 26
+-- Title pad + 12pt title + gap before desc. Nested type-card wrap is narrower
+-- than the dialog hero (LEFT+RIGHT is not laid out at measure time).
+local CARD_TITLE_H = 28
+local CARD_DESC_PAD = 14
+local TYPE_CARD_DESC_WRAP = 500
+
+local function CardHeaderHeight(descHeight)
+    return CARD_TITLE_H + (descHeight or 14) + CARD_DESC_PAD
+end
+
+local function RecalcQuestRareUI(card)
+    local isRare = card._scopeDD and card._scopeDD:GetValue() == "rare_quest"
+    local pane = card._rarePane
+    if pane then
+        if isRare then
+            pane:Show()
+            pane:SetHeight(FIELD_ROW_H)
+            if card._rareSearch then
+                card._rareSearch:SetOptions(RareSearchOptions())
+            end
+        else
+            pane:Hide()
+            pane:SetHeight(0)
+        end
+    end
+    if card._fillBtn then
+        if isRare and card._expanded then
+            card._fillBtn:Show()
+        else
+            card._fillBtn:Hide()
+        end
+    end
+    if card._fieldRow then
+        local paneH = (isRare and pane) and FIELD_ROW_H or 0
+        card._expandedHeight = CardHeaderHeight(card._descHeight) + card._fieldRow:GetHeight() + paneH + SAVE_ROW_H
+        if card._expanded then
+            card:SetHeight(card._expandedHeight)
+            if card._reflow then card._reflow() end
+        end
+    end
+end
 
 local function FieldSlotHeight(field)
     if field.widgetType == "entityId" and OneWoW_GUI:HasEntityResolver(field.entityKind) then
@@ -685,6 +786,37 @@ local function AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
         local idsWidget = CreateFieldWidget(fieldRow, LIST_FIELD_QUEST_IDS, idsVal, isNew)
         card._field_questIDs = idsWidget
         PlaceFieldSlot(layout, fieldRow, LIST_FIELD_QUEST_IDS, idsWidget)
+
+        local rarePane = CreateFrame("Frame", nil, card)
+        rarePane:SetHeight(0)
+        card._rarePane = rarePane
+
+        local rareLabel = OneWoW_GUI:CreateFS(rarePane, 10)
+        rareLabel:SetPoint("TOPLEFT", rarePane, "TOPLEFT", 0, 0)
+        rareLabel:SetText(L["TRACKER_FL_RARE_SEARCH"] .. ":")
+        rareLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+        local rareSearch = CreateDropdown(rarePane, 320, 22, true)
+        rareSearch:SetPoint("TOPLEFT", rareLabel, "BOTTOMLEFT", 0, -1)
+        rareSearch:SetOptions(RareSearchOptions())
+        if rareSearch._text then
+            rareSearch._text:SetText(L["TRACKER_FH_RARE_SEARCH"])
+        end
+        rareSearch.onSelect = function(npcID)
+            local lock = OneWoW.Collectibles.GetRareLockByNpc(npcID)
+            if not lock then return end
+            WriteQuestID(card, lock.questID)
+            local nameBox = card._nameBox
+            if nameBox then
+                local _, shortName = RareLabel(lock)
+                nameBox:SetText(shortName)
+            end
+        end
+        card._rareSearch = rareSearch
+
+        scopeDD.onSelect = function()
+            RecalcQuestRareUI(card)
+        end
         return
     end
 
@@ -1217,6 +1349,15 @@ local QUICK_START = {
         listType = "weekly",
         category = "General",
         preset = "midnight_weeklies",
+    },
+    {
+        key = "midnight_rares",
+        titleKey = "TRACKER_QS_MIDNIGHT_RARES_TITLE",
+        descKey = "TRACKER_QS_MIDNIGHT_RARES_DESC",
+        icon = "Interface\\Icons\\INV_Misc_Head_Dragon_01",
+        listType = "daily",
+        category = "General",
+        preset = "midnight_rares",
     },
     {
         key = "daily",
@@ -2198,7 +2339,8 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 if c._saveFieldBtn then c._saveFieldBtn:Hide() end
                 if c._fillBtn then c._fillBtn:Hide() end
                 if c._titleBtn then c._titleBtn:Hide() end
-                local baseH = 28 + (c._descHeight or 14) + 8
+                if c._rarePane then c._rarePane:Hide() end
+                local baseH = CardHeaderHeight(c._descHeight)
                 c:SetHeight(baseH)
                 c:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 c:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -2250,12 +2392,14 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         descFS:SetText(L[descKey])
         descFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        local descHeight = descFS:GetStringHeight() or 14
-        local cardHeight = 28 + descHeight + 8
+        local descHeight = HintHeight(descFS, TYPE_CARD_DESC_WRAP)
+        local cardHeight = CardHeaderHeight(descHeight)
 
         card._cat = cat
         card._descHeight = descHeight
         card._titleFS = titleFS
+        card._nameBox = nameBox
+        card._reflow = ReflowCards
 
         if CardHasEditor(cat, fields) then
             local fieldY = -(cardHeight)
@@ -2285,7 +2429,14 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
             fieldRow:SetHeight(FieldLayoutHeight(layout))
 
-            saveFieldBtn:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, -4)
+            local rarePane = card._rarePane
+            if rarePane then
+                rarePane:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, 0)
+                rarePane:SetPoint("TOPRIGHT", fieldRow, "BOTTOMRIGHT", 0, 0)
+                saveFieldBtn:SetPoint("TOPLEFT", rarePane, "BOTTOMLEFT", 0, -4)
+            else
+                saveFieldBtn:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, -4)
+            end
             local expandedHeight = cardHeight + fieldRow:GetHeight() + SAVE_ROW_H
             card._expandedHeight = expandedHeight
 
@@ -2299,6 +2450,11 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                         FillSharedWaypoint(dialog)
                     end
                 end)
+                card._fillBtn = fillBtn
+            elseif cat.extra == "quest" then
+                fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L["TRACKER_FILL_FROM_TARGET"], height = 22 })
+                fillBtn:SetPoint("LEFT", saveFieldBtn, "RIGHT", 8, 0)
+                fillBtn:SetScript("OnClick", function() FillRareFromTarget(card) end)
                 card._fillBtn = fillBtn
             end
 
@@ -2321,6 +2477,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 saveFieldBtn:Hide()
                 if fillBtn then fillBtn:Hide() end
                 if titleBtn then titleBtn:Hide() end
+                if rarePane then rarePane:Hide() end
             end
 
             card._doSave = function()
@@ -2383,6 +2540,10 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
         card:SetHeight(cardHeight)
         card._expanded = isActive
+        if isActive and cat.extra == "quest" then
+            RecalcQuestRareUI(card)
+            card:SetHeight(card._expandedHeight or cardHeight)
+        end
 
         card:SetScript("OnClick", function(myself)
             if not CardHasEditor(cat, fields) then
@@ -2406,9 +2567,9 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 dialog._activeCard = myself
                 if myself._fieldRow then myself._fieldRow:Show() end
                 if myself._saveFieldBtn then myself._saveFieldBtn:Show() end
-                if myself._fillBtn then myself._fillBtn:Show() end
                 if myself._titleBtn then myself._titleBtn:Show() end
-                myself:SetHeight(myself._expandedHeight or (28 + descHeight + 8 + FIELD_ROW_H + SAVE_ROW_H))
+                RecalcQuestRareUI(myself)
+                myself:SetHeight(myself._expandedHeight or (CardHeaderHeight(descHeight) + FIELD_ROW_H + SAVE_ROW_H))
                 myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))

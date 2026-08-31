@@ -101,6 +101,11 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `GetSetMembers(setID)` | `{ { key?, name?, icon?, link?, collected }, … }` or `nil` | Live, read-only per-slot member rows for the set's detail/tree view (never persisted) |
 | `GetContainingSets(key)` | `{ setID, … }` or `nil` | Sets that contain an `appearance:source` key |
 | `GetPunchListSummary(cacheItemID, tooltipData?)` | `{ cacheName, missing = { { itemID, name }, … } }` or `nil` | Container footers: class-filtered content group via `punchList` (tooltip name match) or `direct` (full pool). `missing` empty when every evaluated collectible is owned (see Punch-list / container contents) |
+| `GetRareLockByNpc(npcID)` | `{ npcID, questID, reset?, expansion?, mapID? }` or `nil` | Mined outdoor rare loot-lock |
+| `GetRareLockByKey(key)` | same or `nil` | `mount:` / `toy:` / `pet:` keys that drop from a mapped rare |
+| `GetRareLocks(filter?)` | array of lock rows | Filter by `expansion`, `mapID`, `reset` (`daily` / `weekly`) |
+| `IsRareLockCompleted(npcID or key)` | `true` / `false` / `nil` | Live `IsQuestFlaggedCompleted` for the current character; `nil` if unmapped |
+| `ResolveNPCName(npcID)` | name string or `nil` | Creature hyperlink tooltip; not shipped, not cached across sessions |
 
 `GetCollectionState` always returns a table with a common `collected` boolean
 plus type-specific detail (so callers never branch on the return **type**):
@@ -146,6 +151,23 @@ total (each slot's alternate sources) and disagrees with Blizzard's UI.
 status is **never** persisted as truth in SavedVariables — a note may record
 that a collectible is wanted, but whether it is *collected* is always answered
 live so it can never drift from the game state.
+
+## Rare loot-locks
+
+Outdoor rares often gate loot with a hidden tracking quest that flags completed
+on kill/loot and clears on daily or weekly reset. The map lives in generated
+`OneWoW/Data/Generated/RareLocks.lua` (regenerate with
+`python bin/rare_lock_tools.py generate`). Cadence (`reset = daily` / `weekly`)
+is on that row — it is **not** in QuestV2. Completion is live
+`C_QuestLog.IsQuestFlaggedCompleted` for the current character
+(`IsRareLockCompleted`); do not treat CompletionTracker snapshots as loot-lock
+truth (those are append-only). Names are not shipped; `ResolveNPCName` walks a
+creature hyperlink tooltip at runtime.
+
+`GetRareLockByKey` covers collectible keys that extras loot joined onto a mapped
+NPC (`mount:<id>`, `toy:<itemID>`, `pet:<speciesID>`). Appearances without a
+`sourceID` stay unmapped. Notes “still lootable today” on a wanted key is a
+later slice.
 
 `GetItemCollectionStatus(itemID, hyperlink?, context?)` is the item-facing entry point:
 tooltips, `#collected` / `#collectionknown`, `#altcollected`, and
