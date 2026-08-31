@@ -75,9 +75,10 @@
 - Map Pin on a Delve opens that zone and marks the door. It no longer errors.
 
 ## Locations
-- Vendors lists 95 more shops, and 358 extra map pins on shops Catalog already had.
-- 212 more quests have a start pin.
-- Journal extras added 3283 drops the Adventure Guide does not list. 8301 extra rows now have map coordinates.
+- Vendors lists 95 more shops, and 358 extra map pins on shops Catalog already had. 53 shops Catalog already had gained 1077 housing decor items.
+- 312 more quests have a start pin.
+- Journal extras added 3283 drops the Adventure Guide does not list. 13415 extra rows now have map coordinates.
+- 20 more profession recipes have a learn location on the map.
 
 ## Vendors
 - Zone, coordinates, Pin, and Save Pin sit on their own row under the NPC id, so long zone names no longer clip Save Pin at the minimum window width.
