@@ -25,7 +25,8 @@ local _, ns = ...
 -- (`campsite` lands later).
 --
 -- Rare loot-locks: generated `npcID` / collectible-key -> hidden tracking quest
--- (`GetRareLockByNpc`, `IsRareLockCompleted`). Names resolve at runtime.
+-- (`GetRareLockByNpc`, `IsRareLockCompleted`). Optional spawn `x`/`y` (0-100).
+-- Names resolve at runtime.
 --
 -- A `set` is a first-class *acquisition* record (it is the single thing a vendor
 -- sells and the thing you link/want), but collection *truth* for it stays a view:
@@ -1070,12 +1071,14 @@ local function RareLockView(npcID, row)
         reset = row.reset,
         expansion = row.expansion,
         mapID = row.mapID,
+        x = row.x,
+        y = row.y,
     }
 end
 
 --- Look up a rare loot-lock by creature id.
 ---@param npcID number
----@return table|nil lock { npcID, questID, reset?, expansion?, mapID? }
+---@return table|nil lock { npcID, questID, reset?, expansion?, mapID?, x?, y? }
 function Collectibles.GetRareLockByNpc(npcID)
     npcID = CoerceID(npcID)
     if not npcID then return nil end

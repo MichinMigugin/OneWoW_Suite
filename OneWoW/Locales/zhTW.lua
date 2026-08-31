@@ -182,7 +182,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 圖示瀏覽器",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能現已包含圖示瀏覽器。選擇巨集、銀行分頁、公會銀行分頁、裝備設定或塑形套裝圖示時可搜尋並篩選。",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "進度團隊依團隊進度和冒險指南計算首領。浪縛岩窟包含每週世界擊殺。傳奇鑰石欄使用本賽季地圖，因此不必對照英文名稱也能顯示最佳紀錄。",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "稀有任務步驟可依名稱選擇稀有，或從目標填入。Midnight地帶稀有預設會為你建立清單。",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "稀有任務步驟可依名稱選擇稀有，或從目標填入。點一下稀有可設定路徑點。Midnight地帶稀有預設會為你建立清單，已知時會附上出現座標。",
     ["WHATS_NEW_H_WAYPINS_TITLE"] = "新功能 - OneWay Pins",
     ["WHATS_NEW_H_WAYPINS_BODY"] = "儲存銀行、製作台、商人以及任何你還會再去的地標。圖釘用你自己的圖示留在世界地圖與小地圖上。打開 Notes >> OneWay Pins，或世界地圖上的 OneWoW 圖釘按鈕。右鍵自己的單位框架可在腳下插針，右鍵任何 NPC 的目標框架可釘住該 NPC。尋找地點可搜尋區域內的 NPC。新增至區域筆記可在你進入該區域時彈出圖釘清單。隱藏區域筆記則只留下該清單。小地圖圖釘動畫預設關閉。在功能管理的 Notes 下開關 OneWay Pins。地圖、點擊與大小選項在 OneWay Pins 設定面板中。可在該面板關閉地圖點擊選單。開啟時，從世界地圖新增預設為 Ctrl-右鍵。",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "資料庫已更新",

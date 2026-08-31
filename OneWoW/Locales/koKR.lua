@@ -182,7 +182,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 아이콘 브라우저",
     ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 기능에 아이콘 브라우저가 있습니다. 매크로, 은행 탭, 길드 은행 탭, 장비 구성, 형상변환 복장 아이콘을 고를 때 검색하고 필터할 수 있습니다.",
     ["WHATS_NEW_H_ALTTRACKER_BODY"] = "Progress 공격대는 공격대 귀속과 모험 안내서로 우두머리를 셉니다. 해일결속 동굴은 주간 세계 처치를 포함합니다. 신화+ 열은 이번 시즌 지도를 쓰므로 영어 이름과 맞추지 않아도 최고 기록이 나옵니다.",
-    ["WHATS_NEW_H_TRACKERS_BODY"] = "희귀 퀘스트 단계는 이름으로 희귀를 고르거나 대상에서 채울 수 있습니다. Midnight 지역 희귀 서식이 목록을 만들어 줍니다.",
+    ["WHATS_NEW_H_TRACKERS_BODY"] = "희귀 퀘스트 단계는 이름으로 희귀를 고르거나 대상에서 채울 수 있습니다. 희귀를 클릭하면 위치 표시가 설정됩니다. Midnight 지역 희귀 서식이 목록을 만들어 주며, 알려진 출현 좌표가 들어갑니다.",
     ["WHATS_NEW_H_WAYPINS_TITLE"] = "신규 기능 - OneWay Pins",
     ["WHATS_NEW_H_WAYPINS_BODY"] = "은행, 제작대, 상인 등 다시 찾을 장소를 저장합니다. 핀은 직접 고른 아이콘으로 세계 지도와 미니맵에 남습니다. Notes >> OneWay Pins 탭이나 세계 지도의 OneWoW 핀 단추에서 엽니다. 자기 유닛 프레임을 오른쪽 클릭하면 발밑에 핀을 놓고, NPC 대상 프레임을 오른쪽 클릭하면 그 NPC를 고정합니다. 위치 찾기로 지역 안 NPC를 찾습니다. 지역 메모에 추가는 그 지역에 들어갈 때 핀 목록을 띄울 수 있습니다. 지역 메모 숨기기는 그 목록만 남깁니다. 미니맵 핀 애니메이션은 기본으로 꺼져 있습니다. 기능 관리의 Notes에서 OneWay Pins를 켜거나 끕니다. 지도, 클릭, 크기 옵션은 OneWay Pins 설정 패널에 있습니다. 지도 클릭 메뉴는 그 패널에서 끌 수 있습니다. 켜져 있으면 세계 지도에서 추가는 기본이 Ctrl-오른쪽입니다.",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "데이터베이스 업데이트",

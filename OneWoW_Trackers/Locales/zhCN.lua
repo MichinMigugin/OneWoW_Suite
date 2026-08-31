@@ -210,7 +210,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRACKER_QS_WEEKLY_TITLE"]             = "每周清单",
     ["TRACKER_QS_WEEKLY_DESC"]             = "追踪每周任务，如宏伟宝库、世界首领和每周任务。在你所在区域的每周重置日重置。",
     ["TRACKER_QS_MIDNIGHT_RARES_TITLE"] = "Midnight地带稀有",
-    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Midnight户外稀有的每日清单，按地区分组。拾取后可隐藏已完成；每日重置后会再出现。",
+    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Midnight户外稀有的每日清单，按地区分组。已知刷新坐标时可点击稀有设置路径点。拾取后可隐藏已完成；每日重置后会再出现。",
     ["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"] = "每周稀有",
     ["TRACKER_PRESET_RARES_OTHER_ZONE"] = "其他地区",
     ["TRACKER_QS_DAILY_TITLE"]             = "每日任务",

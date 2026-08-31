@@ -54,7 +54,7 @@
 
 # Trackers
 ## Rare Quest
-- Rare Quest steps can pick a rare by name or fill from your target. A Midnight zone-rares preset builds a daily list grouped by zone.
+- Rare Quest steps can pick a rare by name or fill from your target. Click a rare to set a waypoint. A Midnight zone-rares preset builds a daily list grouped by zone, with spawn coords when known.
 
 ## Settings
 - Trackers has a Settings page. Scale all pinned lists (50% to 200%). Weekly Reset Day lives here.

@@ -13,11 +13,11 @@
 * Create lists by type: guide, daily, weekly, todo, repeating, or farm value. Repeating lists clear after a custom hour interval you set.
 * Organize with categories (topic folders, not daily/weekly cadence), favorites, and filters. Hide Done drops finished lists; Hide completed on an open list (and on its pin) hides finished steps and empty sections. Clear resets search, type, category, and Hide Done.
 * Author sections and steps; import, export, and share lists. The step editor covers every shipped step type, including nested objectives. Typing an ID shows the name. Faction, profession, and holiday gates hide steps that do not apply; required steps must be done before you can check one off.
-* Start from bundled presets and examples. Midnight Zone Rares builds a daily list of outdoor rares grouped by zone.
+* Start from bundled presets and examples. Midnight Zone Rares builds a daily list of outdoor rares grouped by zone. Click a rare to set a waypoint when spawn coords are known. Create the list again if you already have one from before waypoints.
 
 ### Auto-tracking
 
-Many step types complete themselves from game events — quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, timers, and more. Open-world rares use Kill a Rare or Boss (Fill from target). Dungeon and raid bosses use Kill a Dungeon or Raid Boss (Fill from current encounter during the fight or just after you win). Rare Quest tracks the hidden loot lock on a zone rare: Fill from target or search by name, or start from the Midnight Zone Rares preset. Choose daily, weekly, repeating (hour interval), or one-time resets; progress can be character- or account-scoped where the list allows.
+Many step types complete themselves from game events — quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, timers, and more. Open-world rares use Kill a Rare or Boss (Fill from target). Dungeon and raid bosses use Kill a Dungeon or Raid Boss (Fill from current encounter during the fight or just after you win). Rare Quest tracks the hidden loot lock on a zone rare: Fill from target or search by name, or start from the Midnight Zone Rares preset. Click a rare to set a waypoint when spawn coords are known. Choose daily, weekly, repeating (hour interval), or one-time resets; progress can be character- or account-scoped where the list allows.
 
 ### Overlays and map
 

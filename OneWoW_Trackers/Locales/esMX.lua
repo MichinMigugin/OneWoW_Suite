@@ -210,7 +210,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Lista semanal",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Rastrea tareas semanales como Gran cámara, jefes de mundo y misiones semanales. Se reinicia el día de reinicio semanal de tu región.",
     ["TRACKER_QS_MIDNIGHT_RARES_TITLE"] = "Raros de zona de Midnight",
-    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Una lista diaria de raros de Midnight al aire libre, agrupados por zona. Oculta los completados después de despojar; vuelven tras el reinicio diario.",
+    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Una lista diaria de raros de Midnight al aire libre, agrupados por zona. Haz clic en un raro para fijar un punto de ruta cuando se conocen las coordenadas. Oculta los completados después de despojar; vuelven tras el reinicio diario.",
     ["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"] = "Raros semanales",
     ["TRACKER_PRESET_RARES_OTHER_ZONE"] = "Otras zonas",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tareas diarias",

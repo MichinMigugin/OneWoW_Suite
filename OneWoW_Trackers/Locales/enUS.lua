@@ -213,7 +213,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_QS_WEEKLY_TITLE"]         = "Weekly Checklist",
     ["TRACKER_QS_WEEKLY_DESC"]          = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets on your region's weekly reset day.",
     ["TRACKER_QS_MIDNIGHT_RARES_TITLE"] = "Midnight Zone Rares",
-    ["TRACKER_QS_MIDNIGHT_RARES_DESC"]  = "A daily list of Midnight outdoor rares, grouped by zone. Hide completed after you loot; they come back after daily reset.",
+    ["TRACKER_QS_MIDNIGHT_RARES_DESC"]  = "A daily list of Midnight outdoor rares, grouped by zone. Click a rare to set a waypoint when spawn coords are known. Hide completed after you loot; they come back after daily reset.",
     ["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"] = "Weekly rares",
     ["TRACKER_PRESET_RARES_OTHER_ZONE"] = "Other zones",
     ["TRACKER_QS_DAILY_TITLE"]          = "Daily Tasks",

@@ -72,6 +72,19 @@ local function WriteQuestID(card, questID)
     if card._field_questID then card._field_questID:SetText(text) end
 end
 
+local function WriteLockWaypoint(card, lock)
+    if not lock.mapID or not lock.x or not lock.y then return end
+    if card._wpMap then card._wpMap:SetText(tostring(lock.mapID)) end
+    if card._wpX then
+        card._wpX:SetText(format("%.1f", lock.x))
+        card._wpX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+    if card._wpY then
+        card._wpY:SetText(format("%.1f", lock.y))
+        card._wpY:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+end
+
 local function RareLabel(lock)
     local name = OneWoW.Collectibles.ResolveNPCName(lock.npcID)
     if not name then
@@ -113,6 +126,7 @@ local function FillRareFromTarget(card)
         return
     end
     WriteQuestID(card, lock.questID)
+    WriteLockWaypoint(card, lock)
     local nameBox = card._nameBox
     local _, shortName = RareLabel(lock)
     local targetName = UnitName("target")
@@ -806,6 +820,7 @@ local function AttachCardExtra(card, cat, fieldRow, layout, existing, isNew)
             local lock = OneWoW.Collectibles.GetRareLockByNpc(npcID)
             if not lock then return end
             WriteQuestID(card, lock.questID)
+            WriteLockWaypoint(card, lock)
             local nameBox = card._nameBox
             if nameBox then
                 local _, shortName = RareLabel(lock)
@@ -2399,6 +2414,9 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         card._descHeight = descHeight
         card._titleFS = titleFS
         card._nameBox = nameBox
+        card._wpMap = dialog._wpMap
+        card._wpX = dialog._wpX
+        card._wpY = dialog._wpY
         card._reflow = ReflowCards
 
         if CardHasEditor(cat, fields) then

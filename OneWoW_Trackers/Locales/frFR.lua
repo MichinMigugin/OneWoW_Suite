@@ -210,7 +210,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Liste hebdomadaire",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Suivez les tâches hebdomadaires comme la grande chambre forte, les boss de monde et les quêtes hebdomadaires. Se réinitialise le jour de reset hebdomadaire de votre région.",
     ["TRACKER_QS_MIDNIGHT_RARES_TITLE"] = "Rares de zone de Midnight",
-    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Une liste quotidienne des rares extérieurs de Midnight, groupés par zone. Masquez les terminés après le butin ; ils reviennent après le reset quotidien.",
+    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Une liste quotidienne des rares extérieurs de Midnight, groupés par zone. Cliquez un rare pour poser un point de passage quand les coordonnées sont connues. Masquez les terminés après le butin ; ils reviennent après le reset quotidien.",
     ["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"] = "Rares hebdomadaires",
     ["TRACKER_PRESET_RARES_OTHER_ZONE"] = "Autres zones",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tâches quotidiennes",

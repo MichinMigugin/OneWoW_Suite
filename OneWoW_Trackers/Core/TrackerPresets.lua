@@ -151,12 +151,18 @@ local function RareStepLabel(lock)
 end
 
 local function RareStep(lock)
-    return {
+    local step = {
         label = RareStepLabel(lock),
         trackType = "rare_quest",
         trackParams = { questIDs = { lock.questID } },
         max = 1,
     }
+    if lock.mapID and lock.x and lock.y then
+        step.mapID = lock.mapID
+        step.coordX = lock.x
+        step.coordY = lock.y
+    end
+    return step
 end
 
 local function MapName(mapID)
@@ -316,11 +322,15 @@ function TP:CreateListFromPreset(presetID)
                     for _, stepData in ipairs(secData.steps or {}) do
                         TD:AddStep(list.id, sec.key, {
                             label = stepData.label,
+                            description = stepData.description,
                             trackType = stepData.trackType or "manual",
                             trackParams = stepData.trackParams or {},
                             max = stepData.max or 1,
                             noMax = stepData.noMax or false,
                             resetOverride = stepData.resetOverride,
+                            mapID = stepData.mapID,
+                            coordX = stepData.coordX,
+                            coordY = stepData.coordY,
                         })
                     end
                 end

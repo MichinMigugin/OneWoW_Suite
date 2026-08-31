@@ -101,7 +101,7 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `GetSetMembers(setID)` | `{ { key?, name?, icon?, link?, collected }, … }` or `nil` | Live, read-only per-slot member rows for the set's detail/tree view (never persisted) |
 | `GetContainingSets(key)` | `{ setID, … }` or `nil` | Sets that contain an `appearance:source` key |
 | `GetPunchListSummary(cacheItemID, tooltipData?)` | `{ cacheName, missing = { { itemID, name }, … } }` or `nil` | Container footers: class-filtered content group via `punchList` (tooltip name match) or `direct` (full pool). `missing` empty when every evaluated collectible is owned (see Punch-list / container contents) |
-| `GetRareLockByNpc(npcID)` | `{ npcID, questID, reset?, expansion?, mapID? }` or `nil` | Mined outdoor rare loot-lock |
+| `GetRareLockByNpc(npcID)` | `{ npcID, questID, reset?, expansion?, mapID?, x?, y? }` or `nil` | Mined outdoor rare loot-lock. `x`/`y` are 0-100 spawn percents when known |
 | `GetRareLockByKey(key)` | same or `nil` | `mount:` / `toy:` / `pet:` keys that drop from a mapped rare |
 | `GetRareLocks(filter?)` | array of lock rows | Filter by `expansion`, `mapID`, `reset` (`daily` / `weekly`) |
 | `IsRareLockCompleted(npcID or key)` | `true` / `false` / `nil` | Live `IsQuestFlaggedCompleted` for the current character; `nil` if unmapped |
@@ -162,7 +162,8 @@ is on that row — it is **not** in QuestV2. Completion is live
 `C_QuestLog.IsQuestFlaggedCompleted` for the current character
 (`IsRareLockCompleted`); do not treat CompletionTracker snapshots as loot-lock
 truth (those are append-only). Names are not shipped; `ResolveNPCName` walks a
-creature hyperlink tooltip at runtime.
+creature hyperlink tooltip at runtime. When the mined row has a spawn point,
+`x` / `y` are 0-100 map percents (first representative pin).
 
 `GetRareLockByKey` covers collectible keys that extras loot joined onto a mapped
 NPC (`mount:<id>`, `toy:<itemID>`, `pet:<speciesID>`). Appearances without a

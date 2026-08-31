@@ -210,7 +210,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_QS_WEEKLY_TITLE"]             = "Wöchentliche Checkliste",
     ["TRACKER_QS_WEEKLY_DESC"]             = "Verfolge wöchentliche Aufgaben wie Große Schatzkammer, Weltbosse und wöchentliche Quests. Setzt am wöchentlichen Reset-Tag deiner Region zurück.",
     ["TRACKER_QS_MIDNIGHT_RARES_TITLE"] = "Midnight-Zonenrares",
-    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Eine tägliche Liste der Midnight-Rares im Freien, nach Zone gruppiert. Blende Erledigte nach dem Loot aus; sie kommen nach dem täglichen Reset zurück.",
+    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Eine tägliche Liste der Midnight-Rares im Freien, nach Zone gruppiert. Klicke einen Rare, um einen Wegpunkt zu setzen, wenn Spawnpunkte bekannt sind. Blende Erledigte nach dem Loot aus; sie kommen nach dem täglichen Reset zurück.",
     ["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"] = "Wöchentliche Rares",
     ["TRACKER_PRESET_RARES_OTHER_ZONE"] = "Andere Zonen",
     ["TRACKER_QS_DAILY_TITLE"]             = "Tägliche Aufgaben",

@@ -210,7 +210,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_QS_WEEKLY_TITLE"]             = "주간 체크리스트",
     ["TRACKER_QS_WEEKLY_DESC"]             = "위대한 금고, 월드 보스, 주간 퀘스트 같은 주간 과제를 추적합니다. 지역 주간 초기화 요일에 초기화됩니다.",
     ["TRACKER_QS_MIDNIGHT_RARES_TITLE"] = "Midnight 지역 희귀",
-    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Midnight 야외 희귀의 일일 목록이며 지역별로 묶입니다. 전리품을 얻은 뒤 완료를 숨기면 일일 초기화 후 다시 나타납니다.",
+    ["TRACKER_QS_MIDNIGHT_RARES_DESC"] = "Midnight 야외 희귀의 일일 목록이며 지역별로 묶입니다. 출현 좌표가 있으면 희귀를 클릭해 위치 표시를 설정할 수 있습니다. 전리품을 얻은 뒤 완료를 숨기면 일일 초기화 후 다시 나타납니다.",
     ["TRACKER_PRESET_MIDNIGHT_RARES_WEEKLY"] = "주간 희귀",
     ["TRACKER_PRESET_RARES_OTHER_ZONE"] = "기타 지역",
     ["TRACKER_QS_DAILY_TITLE"]             = "일일 과제",
