@@ -27,7 +27,7 @@ local SERVICE_KEYS = {
     "Format",
     "CopyPaste",
     "Search",
-    "SearchData",
+    "SearchRegistry",
     "Minimap",
     "ModuleManifest",
     "LoadOrchestrator",

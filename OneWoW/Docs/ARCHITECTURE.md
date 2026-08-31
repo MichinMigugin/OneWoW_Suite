@@ -633,7 +633,7 @@ The hub chrome under the title bar is a **toolbar**: a **section dropdown** (L1)
 on the left (Home → always-show hub modules by `tabOrder` → Settings), then a
 mirrored breadcrumb chevron and **context sub-nav dropdown** (L2) for the active
 section’s tabs, a **favorite star** that pins the current sub-tab, and **search**
-on the right. Selecting a section calls `UI:SelectModuleTab`. Unloaded modules
+on the right (live index; see §5.3). Selecting a section calls `UI:SelectModuleTab`. Unloaded modules
 still appear (placeholders unchanged). L2 + star hide when the section has ≤1
 sub-tab (e.g. Home). Row 2 shows **favorites-only** pins for the active section
 (shorter strip; empty when none); drag-reorder via `CreateReorderDrag`; pins that
@@ -717,6 +717,33 @@ pointer from AltTracker settings.
 A sub-addon may register both a hub tab and a standalone window. The **Pin** pattern
 in `ModuleRegistry` promotes a hub item to a small standalone window — user-controlled,
 shared theme/GUI primitives.
+
+### 5.3 Hub title-bar search
+
+The title-bar search box (`Search/SearchFrame.lua`) queries
+`OneWoW.SearchRegistry` — a flat index of settings, hub tabs, QoL modules,
+overlay presets, CVars, and leftover windows. Features register as they already
+do (`RegisterModule`, `RegisterSettingsPanel`, `SettingsFeatureRegistry:Register`,
+QoL `Define`); leftover rows call `OneWoW.Search:Register`. Query time is a
+linear scan with tokenized AND matching. It does not walk widgets or AceConfig
+trees.
+
+Haystacks store locale keys and are rebuilt on `Locale:OnApply`. English
+synonym `tags` are extra (for example `popup` / `pins` on zone-window rows).
+Clicking a hit calls `SelectModuleTab` and any `nav.open`.
+
+Optional QoL module `tags` on `Define` are merged into that module's search
+row. See `OneWoW_QoL/DEVELOPERS.md`.
+
+**Automatic vs leftover.** Hub tabs, Settings panels, SettingsFeatureRegistry
+rows, QoL `Define` (module + toggles), overlay presets, and CVar rows register
+themselves. A custom settings window that is not in those hooks needs
+`OneWoW.Search:Register` in that addon's `Search.lua`.
+
+**Player phrasing** is two tables in `Search/SearchRegistry.lua` (edit there
+only): `STOPWORDS` are dropped; `INTENT` verbs boost a hit but are never
+required. Keys must be quoted when they are Lua reserved words (`do`, `for`,
+`in`, `and`, `or`).
 
 ---
 
@@ -891,6 +918,8 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | Service | File | Consumed by |
 |---|---|---|
 | `OneWoW.PredicateEngine` | `Services/PredicateEngine.lua` | Bags (search/categories), AltTracker, ShoppingList, DirectDeposit, QoL; core overlay + tooltip engines |
+| `OneWoW.SearchRegistry` | `Search/SearchRegistry.lua` | Hub title-bar search index. Features register here (or via RegisterModule / SFR / QoL Define). Query is a linear scan; see §5.3 |
+| `OneWoW.Search` | `Search/SearchFrame.lua` | Title-bar search box + `Search:Register` leftover proxy |
 | `OneWoW.SearchCatalog` | `Services/SearchCatalog.lua` | Registry of named search expressions across kinds (`token` = `#alias`, `saved` = `SAVED(Name)`, `category` = Bags rules via a registered provider). Stable ids plus former-name redirects, so renaming never rewrites stored expression text. `WithBatch` coalesces bulk mutations into one change notification |
 | `OneWoW.SearchExpand` | `Services/SearchExpand.lua` | Suite-wide `SAVED`/`CATEGORY` expand + compile wrappers over the catalog; supplies PredicateEngine's `#token` resolver so the engine holds no user state |
 | `OneWoW.TooltipScanner` | `Services/TooltipScanner.lua` | `C_TooltipInfo` routing, tooltip caches, structured line extractors — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) |
@@ -1374,7 +1403,10 @@ guild bank is open).
 | `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, `RegisterUnit` / `ResolveUnit`, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
 | `OneWoW/Core/Facade.lua` | Curated `OneWoW` orchestrator global (colon API + public services; `GetPortalHub` / `GetCoreGlobal`) |
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores (registers units privately) |
-| `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
+| `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration (also feeds SearchRegistry) |
+| `OneWoW/Search/SearchRegistry.lua` | Hub title-bar search index (§5.3) |
+| `OneWoW/Search/SearchFrame.lua` | Hub title-bar search box |
+| `OneWoW/Search/CoreEntries.lua` | Core search rows (Home, Display, standalone windows, overlay presets) |
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |

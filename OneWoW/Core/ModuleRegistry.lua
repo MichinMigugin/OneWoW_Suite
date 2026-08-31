@@ -19,6 +19,8 @@ function ns:RegisterModule(moduleInfo)
         tabs = moduleInfo.tabs or {},
     }
 
+    ns.SearchRegistry:RegisterHubModule(registeredModules[moduleInfo.name])
+
     -- MainWindow builds row-1 tabs once at first open; mid-session loads (e.g. a
     -- soft-disabled unit re-enabled via Load Addon) register here after init.
     EventRegistry:TriggerEvent("ns.ModuleRegistered", moduleInfo.name)
@@ -62,6 +64,8 @@ function ns:RegisterSettingsPanel(panelInfo)
         order = panelInfo.order or 99,
         create = panelInfo.create,
     }
+
+    ns.SearchRegistry:RegisterSettingsPanelEntry(registeredSettingsPanels[panelInfo.name])
 end
 
 function Registry:GetSettingsPanels()

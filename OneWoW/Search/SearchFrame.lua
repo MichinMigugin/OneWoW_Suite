@@ -1,3 +1,10 @@
+-- ============================================================================
+-- SearchFrame
+-- ============================================================================
+-- Hub title-bar search box. Queries SearchRegistry (flat list, no widget walk).
+-- Result rows are pooled; typing is debounced so a long question does not hitch.
+-- ============================================================================
+
 local _, ns = ...
 
 ns.Search = {}
@@ -8,13 +15,27 @@ local OneWoW_GUI = OneWoW_GUI
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
 
+local CreateFrame = CreateFrame
+local ipairs = ipairs
+local tinsert, tremove, wipe = tinsert, tremove, wipe
+
 local searchBox = nil
 local resultsFrame = nil
-local resultRows = {}
+local rowPool = {}
+local activeRows = {}
+local pendingSearch = nil
+local accentBar = nil
 
-local function IsInstalled(addonKey)
-    if not addonKey then return true end
-    return C_AddOns.DoesAddOnExist(addonKey) and C_AddOns.GetAddOnEnableState(addonKey) ~= 0
+local ROW_H = 46
+local PAD = 6
+local DEBOUNCE = 0.05
+local MIN_CHARS = 2
+
+--- Add or replace a leftover search row. Features that already RegisterModule /
+--- Define do not need this.
+---@param entry table
+function Search:Register(entry)
+    ns.SearchRegistry:Register(entry)
 end
 
 local function NavigateTo(entry)
@@ -24,186 +45,228 @@ local function NavigateTo(entry)
     end
     if resultsFrame then
         resultsFrame:Hide()
+        resultsFrame:SetScript("OnUpdate", nil)
     end
 
-    if entry.navType == "module" then
-        if not ns.UI then return end
-        local gui = ns.UI
-        gui:Show()
-        C_Timer.After(0.05, function()
-            gui:SelectModuleTab(entry.module, entry.subtab)
-        end)
-    elseif entry.navType == "external" and entry.navFunc then
-        entry.navFunc()
-    end
-end
-
-local function ClearResultRows()
-    for _, row in ipairs(resultRows) do
-        row:Hide()
-        row:SetParent(nil)
-    end
-    resultRows = {}
-end
-
-local function ShowResults(results)
-    if not resultsFrame then return end
-
-    ClearResultRows()
-
-    if #results == 0 then
-        resultsFrame:Hide()
+    local nav = entry.nav
+    if not nav then
         return
     end
 
-    local rowH = 46
-    local pad = 6
-    local totalH = #results * rowH + pad * 2
-    resultsFrame:SetHeight(totalH)
+    if nav.module then
+        local gui = ns.UI
+        gui:Show()
+        C_Timer.After(DEBOUNCE, function()
+            gui:SelectModuleTab(nav.module, nav.subtab)
+            if nav.open then
+                nav.open()
+            end
+        end)
+        return
+    end
 
-    for i, data in ipairs(results) do
+    if nav.open then
+        nav.open()
+    end
+end
+
+local function ReleaseRows()
+    for i = 1, #activeRows do
+        local row = activeRows[i]
+        row:Hide()
+        row:EnableMouse(false)
+        row:SetScript("OnMouseUp", nil)
+        row:SetScript("OnEnter", nil)
+        row:SetScript("OnLeave", nil)
+        row:SetBackdropColor(0, 0, 0, 0)
+        tinsert(rowPool, row)
+    end
+    wipe(activeRows)
+end
+
+local function AcquireRow(parent)
+    local row = tremove(rowPool)
+    if row then
+        row:SetParent(parent)
+        tinsert(activeRows, row)
+        return row
+    end
+
+    row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    row:SetHeight(ROW_H)
+    row:SetBackdrop(BACKDROP_SIMPLE)
+    row:SetBackdropColor(0, 0, 0, 0)
+
+    row.pathText = OneWoW_GUI:CreateFS(row, 10)
+    row.pathText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -8)
+    row.pathText:SetJustifyH("LEFT")
+
+    row.badge = OneWoW_GUI:CreateFS(row, 10)
+    row.badge:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -8)
+
+    row.descText = OneWoW_GUI:CreateFS(row, 10)
+    row.descText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 8)
+    row.descText:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 8)
+    row.descText:SetJustifyH("LEFT")
+
+    row.sep = row:CreateTexture(nil, "ARTWORK")
+    row.sep:SetHeight(1)
+    row.sep:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 4, 0)
+    row.sep:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 0)
+
+    tinsert(activeRows, row)
+    return row
+end
+
+local function LayoutRow(row, parent, index)
+    row:ClearAllPoints()
+    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 1, -(PAD + (index - 1) * ROW_H))
+    row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -1, -(PAD + (index - 1) * ROW_H))
+end
+
+local function PaintMuted(fs)
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+end
+
+local function ShowEmpty()
+    ReleaseRows()
+    local row = AcquireRow(resultsFrame)
+    LayoutRow(row, resultsFrame, 1)
+    row.pathText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+    row.pathText:SetText(ns.L["SEARCH_NO_RESULTS"])
+    PaintMuted(row.pathText)
+    row.descText:SetText("")
+    row.badge:SetText("")
+    row.sep:Hide()
+    row:Show()
+    resultsFrame:SetHeight(ROW_H + PAD * 2)
+    resultsFrame:Show()
+end
+
+local function ShowResults(hits)
+    if not resultsFrame then
+        return
+    end
+
+    ReleaseRows()
+
+    if #hits == 0 then
+        ShowEmpty()
+        return
+    end
+
+    resultsFrame:SetHeight(#hits * ROW_H + PAD * 2)
+
+    for i, data in ipairs(hits) do
         local entry = data.entry
         local installed = data.installed
+        local row = AcquireRow(resultsFrame)
+        LayoutRow(row, resultsFrame, i)
 
-        local row = CreateFrame("Frame", nil, resultsFrame, "BackdropTemplate")
-        row:SetHeight(rowH)
-        row:SetPoint("TOPLEFT", resultsFrame, "TOPLEFT", 1, -(pad + (i - 1) * rowH))
-        row:SetPoint("TOPRIGHT", resultsFrame, "TOPRIGHT", -1, -(pad + (i - 1) * rowH))
-        row:SetBackdrop(BACKDROP_SIMPLE)
-        row:SetBackdropColor(0, 0, 0, 0)
-
-        local pathStr = type(entry.path) == "function" and entry.path() or entry.path
-        local descStr = type(entry.desc) == "function" and entry.desc() or entry.desc
-
-        local pathText = OneWoW_GUI:CreateFS(row, 10)
-        pathText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -8)
-        pathText:SetPoint("RIGHT", row, "RIGHT", installed and -8 or -90, 0)
-        pathText:SetJustifyH("LEFT")
-        pathText:SetText(pathStr)
+        local rightPad = installed and -8 or -90
+        row.pathText:SetPoint("RIGHT", row, "RIGHT", rightPad, 0)
+        row.pathText:SetText(data.path)
         if installed then
-            pathText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            row.pathText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            pathText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            PaintMuted(row.pathText)
         end
 
-        if not installed then
-            local badge = OneWoW_GUI:CreateFS(row, 10)
-            badge:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -8)
-            badge:SetText("Not Installed")
-            badge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-
-        local descText = OneWoW_GUI:CreateFS(row, 10)
-        descText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 8)
-        descText:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 8)
-        descText:SetJustifyH("LEFT")
-        descText:SetText(descStr)
         if installed then
-            descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            row.badge:SetText("")
         else
-            descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            row.badge:SetText(ADDON_MISSING)
+            PaintMuted(row.badge)
         end
 
-        if i < #results then
-            local sep = resultsFrame:CreateTexture(nil, "ARTWORK")
-            sep:SetHeight(1)
-            sep:SetPoint("TOPLEFT", resultsFrame, "TOPLEFT", 4, -(pad + i * rowH))
-            sep:SetPoint("TOPRIGHT", resultsFrame, "TOPRIGHT", -4, -(pad + i * rowH))
-            sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        row.descText:SetText(data.desc or "")
+        if installed then
+            row.descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        else
+            PaintMuted(row.descText)
+        end
+
+        if i < #hits then
+            row.sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            row.sep:Show()
+        else
+            row.sep:Hide()
         end
 
         if installed then
             row:EnableMouse(true)
-            row:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            row:SetScript("OnEnter", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
             end)
-            row:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0, 0, 0, 0)
+            row:SetScript("OnLeave", function(myself)
+                myself:SetBackdropColor(0, 0, 0, 0)
             end)
             row:SetScript("OnMouseUp", function()
                 NavigateTo(entry)
             end)
         end
 
-        table.insert(resultRows, row)
+        row:Show()
     end
 
     resultsFrame:Show()
 end
 
 local function DoSearch(query)
-    if not ns.SearchData then return end
-    query = query:lower():match("^%s*(.-)%s*$")
-    if #query < 2 then
-        if resultsFrame then resultsFrame:Hide() end
-        return
-    end
+    ShowResults(ns.SearchRegistry:Query(query, 8))
+end
 
-    local hits = {}
-    for _, entry in ipairs(ns.SearchData) do
-        local score = 0
-        for _, kw in ipairs(entry.keywords) do
-            local kwL = kw:lower()
-            if kwL == query then
-                score = math.max(score, 100)
-            elseif kwL:sub(1, #query) == query then
-                score = math.max(score, 80)
-            elseif kwL:find(query, 1, true) then
-                score = math.max(score, 50)
-            end
-        end
-        local entryPath = type(entry.path) == "function" and entry.path() or entry.path
-        if entryPath:lower():find(query, 1, true) then
-            score = math.max(score, 40)
-        end
-        if score > 0 then
-            table.insert(hits, {
-                entry = entry,
-                score = score,
-                installed = IsInstalled(entry.addonKey),
-            })
-        end
+local function CancelPending()
+    if pendingSearch then
+        pendingSearch:Cancel()
+        pendingSearch = nil
     end
+end
 
-    table.sort(hits, function(a, b)
-        if a.installed ~= b.installed then
-            return a.installed
-        end
-        return a.score > b.score
+local function ScheduleSearch(query)
+    CancelPending()
+    pendingSearch = C_Timer.After(DEBOUNCE, function()
+        pendingSearch = nil
+        DoSearch(query)
     end)
+end
 
-    local out = {}
-    for i = 1, math.min(6, #hits) do
-        table.insert(out, hits[i])
+local function HideResults()
+    CancelPending()
+    if resultsFrame then
+        resultsFrame:Hide()
+        resultsFrame:SetScript("OnUpdate", nil)
     end
-
-    ShowResults(out)
 end
 
 local function StartDismissWatcher()
-    if not resultsFrame then return end
-    resultsFrame:SetScript("OnUpdate", function(self, elapsed)
+    if not resultsFrame then
+        return
+    end
+    resultsFrame:SetScript("OnUpdate", function(myself, elapsed)
         if not searchBox then
-            self:Hide()
-            self:SetScript("OnUpdate", nil)
+            myself:Hide()
+            myself:SetScript("OnUpdate", nil)
             return
         end
         if searchBox:HasFocus() then
-            self.timeOutside = nil
+            myself.timeOutside = nil
             return
         end
         local overBox = searchBox:IsMouseOver()
-        local overResults = self:IsMouseOver()
+        local overResults = myself:IsMouseOver()
         if not overBox and not overResults then
-            if not self.timeOutside then self.timeOutside = 0 end
-            self.timeOutside = self.timeOutside + elapsed
-            if self.timeOutside > 0.4 then
-                self:Hide()
-                self:SetScript("OnUpdate", nil)
-                self.timeOutside = nil
+            if not myself.timeOutside then
+                myself.timeOutside = 0
+            end
+            myself.timeOutside = myself.timeOutside + elapsed
+            if myself.timeOutside > 0.4 then
+                myself:Hide()
+                myself:SetScript("OnUpdate", nil)
+                myself.timeOutside = nil
             end
         else
-            self.timeOutside = nil
+            myself.timeOutside = nil
         end
     end)
 end
@@ -221,8 +284,8 @@ function Search:Init(parent, rightAnchor)
     box:SetTextInsets(6, 6, 0, 0)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
-    box:SetMaxLetters(50)
-    box.placeholderText = "Search..."
+    box:SetMaxLetters(80)
+    box.placeholderText = ns.L["SEARCH"]
     box:SetText(box.placeholderText)
     box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -251,34 +314,29 @@ function Search:Init(parent, rightAnchor)
         myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         isPlaceholder = true
         myself:ClearFocus()
-        if resultsFrame then
-            resultsFrame:Hide()
-            resultsFrame:SetScript("OnUpdate", nil)
-        end
+        HideResults()
     end)
 
     box:SetScript("OnTextChanged", function(myself, userInput)
-        if not userInput then return end
-        if isPlaceholder then return end
+        if not userInput then
+            return
+        end
+        if isPlaceholder then
+            return
+        end
         local q = myself:GetText()
-        if #q >= 2 then
-            DoSearch(q)
+        if #q >= MIN_CHARS then
+            ScheduleSearch(q)
             StartDismissWatcher()
         else
-            if resultsFrame then
-                resultsFrame:Hide()
-                resultsFrame:SetScript("OnUpdate", nil)
-            end
+            HideResults()
         end
     end)
 
     OneWoW_GUI:AttachClearButton(box, {
         onClear = function()
             isPlaceholder = true
-            if resultsFrame then
-                resultsFrame:Hide()
-                resultsFrame:SetScript("OnUpdate", nil)
-            end
+            HideResults()
         end,
     })
 
@@ -294,7 +352,7 @@ function Search:Init(parent, rightAnchor)
     drop:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     drop:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -2)
 
-    local accentBar = drop:CreateTexture(nil, "OVERLAY")
+    accentBar = drop:CreateTexture(nil, "OVERLAY")
     accentBar:SetHeight(2)
     accentBar:SetPoint("TOPLEFT", drop, "TOPLEFT", 1, -1)
     accentBar:SetPoint("TOPRIGHT", drop, "TOPRIGHT", -1, -1)
@@ -303,5 +361,16 @@ function Search:Init(parent, rightAnchor)
     drop:Hide()
 
     resultsFrame = drop
+
+    ns.Locale:OnApply(function()
+        if not searchBox then
+            return
+        end
+        searchBox.placeholderText = ns.L["SEARCH"]
+        if isPlaceholder then
+            searchBox:SetText(searchBox.placeholderText)
+        end
+    end)
+
     return box
 end

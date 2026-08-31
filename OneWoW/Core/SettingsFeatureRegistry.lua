@@ -95,6 +95,7 @@ end
 function reg:Register(tabName, featureData)
     featuresByTab[tabName] = featuresByTab[tabName] or {}
     tinsert(featuresByTab[tabName], featureData)
+    ns.SearchRegistry:RegisterFeature(tabName, featureData)
 end
 
 --- Sorted copy of a tab's catalog ("general" first). Allocates a new table;

@@ -57,6 +57,7 @@ function Registry:Register(moduleData)
     if modules[moduleData.id] then return end
     modules[moduleData.id] = moduleData
     table.insert(moduleOrder, moduleData.id)
+    OneWoW.SearchRegistry:RegisterQoLModule(moduleData)
 end
 
 function Registry:GetAll()

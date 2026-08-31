@@ -45,8 +45,8 @@ Hover over any item to see extra helpful information:
 - Item categories and types
 - For developers: Technical item/spell IDs when needed
 
-### Universal Search
-Quickly search through all your items, portals, and data without opening menus.
+### Title-bar search
+Type in the search box on the OneWoW window to jump to a setting, feature, or standalone window (Bags, Mail, and similar). Short questions work.
 
 ---
 

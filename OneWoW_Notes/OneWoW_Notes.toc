@@ -82,3 +82,6 @@ UI\ui-waypin-dialog.lua
 UI\ui-waypin-settings.lua
 UI\ui-waypin-find.lua
 UI\ui-category-manager.lua
+
+# Hub search leftovers (WayPins settings, zone window, pinned scale)
+Search.lua

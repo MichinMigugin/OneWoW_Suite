@@ -1,5 +1,8 @@
 # OneWoW Suite Changelog
 
+## Hub search
+- The search box on the OneWoW title bar now follows live settings, features, and windows. Type a name or a short question (for example popup pins) to open the right page.
+
 ## Slash commands
 - Some chat commands changed. If you used the old names in macros, update them.
   - Bag Bar is `/1wbb` (`/bagbar` and `/owbb` are gone)

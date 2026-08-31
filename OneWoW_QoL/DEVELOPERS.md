@@ -72,6 +72,14 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
 
 `module.lua` holds metadata only - no logic, no frames. Runtime state and methods live in your code files.
 
+`Define` also registers the module (and each toggle) with hub title-bar search. Optional extra English synonyms:
+
+```lua
+    tags = { "popup", "pins" },
+```
+
+Those tags sit beside the localized title and description, so a short English question can still find the row.
+
 ---
 
 ## Step 2 - yourmodule.lua (logic)

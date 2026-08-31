@@ -116,6 +116,7 @@ GUI\ImportPreview.lua
 GUI\CleanupPreview.lua
 GUI\CategoryManager.lua
 GUI\Settings.lua
+Search.lua
 GUI\MainWindow.lua
 
 # Main

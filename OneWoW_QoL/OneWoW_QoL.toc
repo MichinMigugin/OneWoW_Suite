@@ -90,6 +90,7 @@ Portals\portalhub.lua
 Portals\portalhub-esc.lua
 Portals\portalhub-esc-panels.lua
 UI\t-portals.lua
+Search.lua
 
 # Overlay feature content (engine, icons, and detection stay in core as
 # OneWoW.OverlayEngine / OneWoW.OverlayIcons / OneWoW.UpgradeDetection /

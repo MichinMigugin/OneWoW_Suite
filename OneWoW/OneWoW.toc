@@ -182,7 +182,8 @@ Integrations\ElvUI.lua
 UI\Framework.lua
 
 # Search
-Search\SearchData.lua
+Search\SearchRegistry.lua
+Search\CoreEntries.lua
 Search\SearchFrame.lua
 
 # Hub UI

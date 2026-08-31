@@ -175,6 +175,10 @@ local CVAR_DATA = {
 
 ns.GetCVarList = function() return CVAR_DATA end
 
+for i = 1, #CVAR_DATA do
+    OneWoW.SearchRegistry:RegisterCVarRow(CVAR_DATA[i])
+end
+
 local selectedRow = nil
 local favMigrationDone = false
 
