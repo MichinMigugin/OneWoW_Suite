@@ -19,8 +19,8 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["MMBTNS_AUTO_CLOSE_DELAY"] = "Verzögerung für Auto-Schließen (Sekunden)",
 
     ["MMBTNS_ENHANCED_MENU"] = "Erweitertes OneWoW-Menü",
-    ["MMBTNS_ENHANCED_MENU_DESC"] = "Fügt eine obere Zeile mit Schnellstart-Symbolen für geladene OneWoW-Addons hinzu.",
-    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Schaltet unten zusätzliche Starter ein oder aus. Mail erscheint nur, wenn Mail geladen ist.",
+    ["MMBTNS_ENHANCED_MENU_DESC"] = "Fügt eine obere Zeile mit OneWoW-Schnellstart-Symbolen hinzu. Wähle darunter, welche angezeigt werden.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Jedes OneWoW-Symbol ist aufgeführt. Deaktiviere alle, die du in dieser Zeile nicht willst. Ein Symbol erscheint nur, wenn sein Addon geladen ist.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Max. Spalten",
     ["MMBTNS_MAX_ROWS"] = "Max. Zeilen",

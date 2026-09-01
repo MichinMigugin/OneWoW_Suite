@@ -1431,6 +1431,20 @@ M.RefreshElements = ApplyElementVisibility
 
 -- ─── Hide Addon Icons (LibDBIcon ShowOnEnter) ───────────────────────────────
 
+-- Collector stamps _OneWoWMBBCollected on buttons it reparents into the panel.
+-- Those must not use ShowOnEnter fade — the animation ignores SetAlpha noops
+-- and makes panel icons vanish after you move the mouse off the minimap.
+---@param ldbName string
+---@return boolean
+local function IsCollectedByMinimapButtons(ldbName)
+    if not ns.ModuleRegistry:IsEnabled("minimapbuttons") then
+        return false
+    end
+    local ldbi = LibStub("LibDBIcon-1.0", true)
+    local btn = ldbi and ldbi.GetMinimapButton and ldbi:GetMinimapButton(ldbName)
+    return btn and btn._OneWoWMBBCollected == true
+end
+
 local function ApplyHideAddonIcons()
     -- LibDBIcon is optional at runtime.
     local ldbi = LibStub("LibDBIcon-1.0", true)
@@ -1440,18 +1454,29 @@ local function ApplyHideAddonIcons()
     local list = ldbi:GetButtonList()
     if list then
         for _, bname in ipairs(list) do
-            ldbi:ShowOnEnter(bname, hide)
+            if IsCollectedByMinimapButtons(bname) then
+                ldbi:ShowOnEnter(bname, false)
+            else
+                ldbi:ShowOnEnter(bname, hide)
+            end
         end
     end
 
     if hide and not M._addonIconCB then
         M._addonIconCB = true
         ldbi.RegisterCallback(M, "LibDBIcon_IconCreated", function(_, _, buttonName)
-            if GetToggle("hideAddonIcons") then
+            if not GetToggle("hideAddonIcons") then return end
+            if IsCollectedByMinimapButtons(buttonName) then
+                ldbi:ShowOnEnter(buttonName, false)
+            else
                 ldbi:ShowOnEnter(buttonName, true)
             end
         end)
     end
+end
+
+function M:ApplyHideAddonIcons()
+    ApplyHideAddonIcons()
 end
 
 -- ─── Icon Reparent (detach / attach) ────────────────────────────────────────

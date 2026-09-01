@@ -19,8 +19,8 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["MMBTNS_AUTO_CLOSE_DELAY"] = "Задержка автозакрытия (секунды)",
 
     ["MMBTNS_ENHANCED_MENU"] = "Улучшенное меню OneWoW",
-    ["MMBTNS_ENHANCED_MENU_DESC"] = "Добавляет верхний ряд значков быстрого запуска для загруженных аддонов OneWoW.",
-    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Включайте или отключайте дополнительные ярлыки ниже. Mail появляется только когда Mail загружен.",
+    ["MMBTNS_ENHANCED_MENU_DESC"] = "Добавляет верхний ряд значков быстрого запуска OneWoW. Выберите ниже, какие показывать.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "В списке все значки OneWoW. Снимите те, которые не нужны в этом ряду. Значок появляется только когда его аддон загружен.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Макс. столбцов",
     ["MMBTNS_MAX_ROWS"] = "Макс. строк",

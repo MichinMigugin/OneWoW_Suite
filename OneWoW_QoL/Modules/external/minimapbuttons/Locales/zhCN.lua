@@ -19,8 +19,8 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["MMBTNS_AUTO_CLOSE_DELAY"] = "自动关闭延迟（秒）",
 
     ["MMBTNS_ENHANCED_MENU"] = "增强的 OneWoW 菜单",
-    ["MMBTNS_ENHANCED_MENU_DESC"] = "为已加载的 OneWoW 插件添加一排顶部快速启动图标。",
-    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "在下方打开或关闭额外的快捷启动项。仅在已加载 Mail 时显示 Mail。",
+    ["MMBTNS_ENHANCED_MENU_DESC"] = "添加一行 OneWoW 快速启动图标。在下方选择要显示的图标。",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "列出全部 OneWoW 图标。取消勾选你不想出现在该行的图标。仅在对应插件已加载时显示。",
 
     ["MMBTNS_MAX_COLUMNS"] = "最大列数",
     ["MMBTNS_MAX_ROWS"] = "最大行数",

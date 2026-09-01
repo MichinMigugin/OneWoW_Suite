@@ -132,6 +132,9 @@
 - Hovering map pins (delves, events, and similar) and trait currencies no longer errors.
 - Starter profession tools (Blacksmith Hammer, Mining Pick, and the like) no longer show as uncollected transmog. Equipping them never added an appearance; the overlay stays off.
 - Collections tooltip has Show status for non-collectable items (off by default). Turn it on to show gold Not Collectable on the type line for items that are not a collectible.
+- Addon icons in the Minimap Button Collector stay visible. They no longer fade away when you move the mouse off the minimap or off another icon (including when Mini Tools Hide Addon Icons is on).
+- The OneWoW icon row in the collector uses the same columns and icon size as the addon icons below it. Max Columns applies to that row too.
+- Enhanced OneWoW Menu lists every OneWoW icon (not only Mail, Settings, and Portals). Uncheck any you do not want on that row.
 
 ---
 
@@ -139,7 +142,7 @@
 
 ---
 
-- **Last Updated**: Aug 31, 2026
+- **Last Updated**: Sep 1, 2026
 
 ## R6.2608.2902
 

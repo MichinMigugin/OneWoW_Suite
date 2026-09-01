@@ -18,8 +18,8 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_AUTO_CLOSE_DELAY"] = "Auto-Close Delay (seconds)",
 
     ["MMBTNS_ENHANCED_MENU"] = "Enhanced OneWoW Menu",
-    ["MMBTNS_ENHANCED_MENU_DESC"] = "Adds a top row of quick-launch icons for loaded OneWoW addons.",
-    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Turn extra launchers on or off below. Mail only appears when Mail is loaded.",
+    ["MMBTNS_ENHANCED_MENU_DESC"] = "Adds a top row of OneWoW quick-launch icons. Pick which ones to show below.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Every OneWoW icon is listed. Uncheck any you do not want on that row. An icon only appears when its addon is loaded.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Max Columns",
     ["MMBTNS_MAX_ROWS"] = "Max Rows",

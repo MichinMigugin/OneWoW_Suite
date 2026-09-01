@@ -45,6 +45,7 @@ local autoCloseTimer   = nil
 local _layouting       = false
 local _relayoutTimer   = nil
 local _compartmentHooksRegistered = false
+local _minimapFadeHooks = false
 
 -- ─── Blizzard frames that must never be collected ───────────────────────────
 
@@ -91,6 +92,15 @@ local function GetSettings()
     if s.enhancedMail     == nil then s.enhancedMail     = true        end
     if s.enhancedSettings == nil then s.enhancedSettings = true        end
     if s.enhancedPortals  == nil then s.enhancedPortals  = true        end
+    -- Exclusive per-icon list for the OneWoW launcher row. Missing ids default
+    -- to shown. First load copies the old Mail / Settings / Portals checkboxes.
+    if not s.enhancedTiles then
+        s.enhancedTiles = {
+            settings = s.enhancedSettings ~= false,
+            portals = s.enhancedPortals ~= false,
+            OneWoW_Mail = s.enhancedMail ~= false,
+        }
+    end
     if s.maxColumns      == nil then s.maxColumns      = 6           end
     if s.maxRows         == nil then s.maxRows         = 0           end
     if s.buttonSize      == nil then s.buttonSize      = 34          end
@@ -401,6 +411,50 @@ function MinimapButtonsModule:ApplyButtonScale()
     self:LayoutContainer()
 end
 
+-- LibDBIcon ShowOnEnter (and Mini Tools "Hide Addon Icons") plays a C-side
+-- Alpha animation (fadeOut) when the mouse leaves the minimap or any LDB
+-- button. SetAlpha = noop does not stop that, so collected icons appeared
+-- then faded out. Clear the mouseover flag and stop the group while collected.
+---@param frame table
+local function SuppressLibDBIconMouseoverFade(frame)
+    if frame.showOnMouseover then
+        frame._OneWoWMBBStashedShowOnMouseover = true
+        frame.showOnMouseover = false
+    end
+    if frame.fadeOut and frame.fadeOut.Stop then
+        frame.fadeOut:Stop()
+    end
+end
+
+local function RestoreLibDBIconMouseoverFade(frame)
+    if frame._OneWoWMBBStashedShowOnMouseover then
+        frame.showOnMouseover = true
+        frame._OneWoWMBBStashedShowOnMouseover = nil
+    end
+end
+
+-- LibDBIcon OnEnter/OnLeave fades every showOnMouseover button, not just
+-- the one under the cursor. Re-pin the whole collected set after those run.
+local function PinAllCollectedLibDBIconFades()
+    for _, btn in ipairs(collectedButtons) do
+        if btn and btn._OneWoWMBBCollected then
+            SuppressLibDBIconMouseoverFade(btn)
+            RawSetAlpha(btn, 1)
+        end
+    end
+end
+
+-- Mini Tools reapplies ShowOnEnter from its hide-addon-icons toggle. Call after
+-- collect / uncollect so map-pref buttons pick up that fade again and panel
+-- buttons stay excluded.
+local function SyncMiniToolsHideAddonIcons()
+    if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+    local mtm = ns.ModuleRegistry:GetById("map_mini_tools")
+    if mtm then
+        mtm:ApplyHideAddonIcons()
+    end
+end
+
 -- Force a collected button's stacking + visibility to our panel's values via the
 -- Raw* UIParent methods, bypassing both any fixed-frame locks a rival collector
 -- set and our own noop'd instance methods. Clears the SetFixedFrame* locks first
@@ -412,6 +466,7 @@ local function PinCollectedStacking(frame)
     RawSetFixedFrameLevel(frame, false)
     RawSetFrameStrata(frame, CONTAINER_STRATA)
     RawSetFrameLevel(frame, CONTAINER_LEVEL + 2)
+    SuppressLibDBIconMouseoverFade(frame)
     RawSetAlpha(frame, 1)
 end
 
@@ -470,12 +525,14 @@ local function CollectButton(frame)
     frame._OneWoWMBBOrigLeave = origLeave
     frame:SetScript("OnEnter", function(self)
         if frame._OneWoWMBBOrigEnter then frame._OneWoWMBBOrigEnter(self) end
+        PinAllCollectedLibDBIconFades()
         if not GetSettings().showTooltips then
             GameTooltip:Hide()
         end
     end)
     frame:SetScript("OnLeave", function(self)
         if frame._OneWoWMBBOrigLeave then frame._OneWoWMBBOrigLeave(self) end
+        PinAllCollectedLibDBIconFades()
         if not GetSettings().showTooltips then
             GameTooltip:Hide()
         end
@@ -507,6 +564,7 @@ local function UncollectButton(frame)
     frame.SetFixedFrameLevel  = nil
     RawSetScale(frame, 1)
     RawSetAlpha(frame, 1)
+    RestoreLibDBIconMouseoverFade(frame)
 
     frame:SetScript("OnEnter", frame._OneWoWMBBOrigEnter)
     frame:SetScript("OnLeave", frame._OneWoWMBBOrigLeave)
@@ -973,6 +1031,7 @@ function MinimapButtonsModule:ApplyButtonPref(frameName, pref)
     ApplyPrefImmediate(frameName, pref)
     self:LayoutContainer()
     self:UpdateBadge()
+    SyncMiniToolsHideAddonIcons()
 end
 
 function MinimapButtonsModule:CollectAll()
@@ -1015,6 +1074,7 @@ function MinimapButtonsModule:CollectAll()
 
     self:LayoutContainer()
     self:UpdateBadge()
+    SyncMiniToolsHideAddonIcons()
 end
 
 -- ─── Enhanced OneWoW Row ────────────────────────────────────────────────────
@@ -1142,28 +1202,86 @@ local function OpenPortalHub()
     OneWoW.UI:Show("qol")
 end
 
--- Optional extras sit behind collector checkboxes so they are not a second
--- copy of a loaded-component tile. Mail is skipped in the companion loop.
-local function AppendExtraLaunchers(s)
-    if s.enhancedMail and C_AddOns.IsAddOnLoaded("OneWoW_Mail") then
-        AddEnhancedButton({
-            name  = MAIL_LABEL,
-            addon = "OneWoW_Mail",
-            cmd   = "/1wmail",
-        })
+local ENHANCED_TILE_SETTINGS = "settings"
+local ENHANCED_TILE_PORTALS  = "portals"
+
+local function EnhancedTileId(comp)
+    if not comp then return nil end
+    if comp.addon == ENHANCED_TILE_SETTINGS or comp.addon == ENHANCED_TILE_PORTALS then
+        return comp.addon
     end
-    if s.enhancedSettings then
+    return comp.addon or comp.name
+end
+
+local function IsEnhancedTileShown(id)
+    if not id then return false end
+    local v = GetSettings().enhancedTiles[id]
+    if v == nil then return true end
+    return v == true
+end
+
+function MinimapButtonsModule:IsEnhancedTileShown(id)
+    return IsEnhancedTileShown(id)
+end
+
+function MinimapButtonsModule:SetEnhancedTileShown(id, shown)
+    if not id then return end
+    GetSettings().enhancedTiles[id] = shown and true or false
+    self:Refresh()
+end
+
+-- Exclusive catalog: Core + every manifest load unit + Settings + Portals,
+-- plus any loaded component that is not already on that list (except GUI).
+function MinimapButtonsModule:GetEnhancedTileCatalog()
+    local seen = {}
+    local out = {}
+
+    local function add(id, label, available)
+        if not id or seen[id] then return end
+        seen[id] = true
+        out[#out + 1] = {
+            id = id,
+            label = label,
+            available = available == true,
+            shown = IsEnhancedTileShown(id),
+        }
+    end
+
+    add("OneWoW", "Core", C_AddOns.IsAddOnLoaded("OneWoW"))
+
+    for _, entry in ipairs(OneWoW.ModuleManifest) do
+        local label = entry.display
+        if entry.addon == "OneWoW_Mail" then
+            label = MAIL_LABEL
+        end
+        add(entry.addon, label, C_AddOns.IsAddOnLoaded(entry.addon))
+    end
+
+    for _, comp in ipairs(OneWoW:GetLoadedComponents()) do
+        if comp.name ~= "GUI" then
+            add(EnhancedTileId(comp), comp.name, true)
+        end
+    end
+
+    add(ENHANCED_TILE_SETTINGS, SETTINGS, true)
+    add(ENHANCED_TILE_PORTALS, ns.L["PORTALS_SUBTAB"], C_AddOns.IsAddOnLoaded("OneWoW_QoL"))
+
+    return out
+end
+
+local function AppendHubLaunchers()
+    if IsEnhancedTileShown(ENHANCED_TILE_SETTINGS) then
         AddEnhancedButton({
             name  = SETTINGS,
-            addon = "settings",
+            addon = ENHANCED_TILE_SETTINGS,
         }, function()
             OneWoW.UI:Show("settings")
         end)
     end
-    if s.enhancedPortals then
+    if IsEnhancedTileShown(ENHANCED_TILE_PORTALS) then
         AddEnhancedButton({
             name  = ns.L["PORTALS_SUBTAB"],
-            addon = "portals",
+            addon = ENHANCED_TILE_PORTALS,
         }, OpenPortalHub)
     end
 end
@@ -1183,13 +1301,12 @@ local function BuildEnhancedRow()
 
     for _, comp in ipairs(companions) do
         -- GUI only opens the main OneWoW window, identical to the Core tile.
-        -- Mail is an optional extra (AppendExtraLaunchers), not an auto tile.
-        if comp.name ~= "GUI" and comp.addon ~= "OneWoW_Mail" then
+        if comp.name ~= "GUI" and IsEnhancedTileShown(EnhancedTileId(comp)) then
             AddEnhancedButton(comp)
         end
     end
 
-    AppendExtraLaunchers(GetSettings())
+    AppendHubLaunchers()
 end
 
 -- ─── Container Layout ───────────────────────────────────────────────────────
@@ -1238,8 +1355,11 @@ function MinimapButtonsModule:LayoutContainer()
     local maxW = 0
 
     if s.enhancedMenu and #enhancedRow > 0 then
-        local owSize = 28
-        local owSpacing = 2
+        -- Same cell size and column count as the collected grid so Max Columns
+        -- applies to the OneWoW row. A fixed 28px pitch left an empty last
+        -- column once the panel grew to the collected-button width.
+        local owSize = btnSize
+        local owSpacing = spacing
         local owCols = math.min(#enhancedRow, maxCols)
         local owRows = math.ceil(#enhancedRow / owCols)
 
@@ -1574,6 +1694,15 @@ function MinimapButtonsModule:ApplyTheme()
     end
 end
 
+-- LibDBIcon hooks Minimap OnEnter/OnLeave to fade showOnMouseover buttons.
+-- Register after that library so we run last and re-pin collected icons.
+local function RegisterMinimapFadeHooks()
+    if _minimapFadeHooks then return end
+    _minimapFadeHooks = true
+    Minimap:HookScript("OnEnter", PinAllCollectedLibDBIconFades)
+    Minimap:HookScript("OnLeave", PinAllCollectedLibDBIconFades)
+end
+
 -- ─── Lifecycle ──────────────────────────────────────────────────────────────
 
 function MinimapButtonsModule:OnEnable()
@@ -1585,6 +1714,7 @@ function MinimapButtonsModule:OnEnable()
     end
 
     self:RegisterEvents()
+    RegisterMinimapFadeHooks()
 
     C_Timer.After(0, function() self:CollectAll() end)
     C_Timer.After(1, function() self:CollectAll() end)
@@ -1630,9 +1760,11 @@ function MinimapButtonsModule:OnDisable()
     end
 
     RefreshAllLibDBIcons()
+    SyncMiniToolsHideAddonIcons()
     C_Timer.After(0, function()
         SyncLibDBIconRadiusToMinimapShape()
         RefreshAllLibDBIcons()
+        SyncMiniToolsHideAddonIcons()
     end)
 
     if containerFrame then

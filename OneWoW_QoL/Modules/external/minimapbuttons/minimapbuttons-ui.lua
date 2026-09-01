@@ -322,22 +322,21 @@ local function BuildContent(container, onRelayout)
             local _, extrasCy = AddDescription(content, cy, L["MMBTNS_ENHANCED_EXTRAS_DESC"], contentWidth)
             cy = extrasCy
 
-            local function AddExtraCB(label, key)
+            for _, tile in ipairs(MinimapButtonsModule:GetEnhancedTileCatalog()) do
+                local capturedId = tile.id
                 local cb = OneWoW_GUI:CreateCheckbox(content, {
-                    label   = label,
-                    checked = s[key],
-                    onClick = function(self)
-                        s[key] = self:GetChecked()
-                        MinimapButtonsModule:Refresh()
+                    label   = tile.label,
+                    checked = tile.shown,
+                    onClick = function(myself)
+                        MinimapButtonsModule:SetEnhancedTileShown(capturedId, myself:GetChecked())
                     end,
                 })
                 cb:SetPoint("TOPLEFT", content, "TOPLEFT", 36, cy)
+                if not tile.available then
+                    cb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
                 cy = cy - ROW_HEIGHT
             end
-
-            AddExtraCB(MAIL_LABEL, "enhancedMail")
-            AddExtraCB(SETTINGS, "enhancedSettings")
-            AddExtraCB(ns.L["PORTALS_SUBTAB"], "enhancedPortals")
         end
 
         local lockCB = OneWoW_GUI:CreateCheckbox(content, {

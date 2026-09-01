@@ -19,8 +19,8 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["MMBTNS_AUTO_CLOSE_DELAY"] = "Délai de fermeture automatique (secondes)",
 
     ["MMBTNS_ENHANCED_MENU"] = "Menu OneWoW amélioré",
-    ["MMBTNS_ENHANCED_MENU_DESC"] = "Ajoute une rangée supérieure d'icônes de lancement rapide pour les addons OneWoW chargés.",
-    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Activez ou désactivez les lanceurs supplémentaires ci-dessous. Mail n'apparaît que lorsque Mail est chargé.",
+    ["MMBTNS_ENHANCED_MENU_DESC"] = "Ajoute une rangée supérieure d'icônes de lancement rapide OneWoW. Choisissez ci-dessous celles à afficher.",
+    ["MMBTNS_ENHANCED_EXTRAS_DESC"] = "Toutes les icônes OneWoW sont listées. Décochez celles que vous ne voulez pas sur cette rangée. Une icône n'apparaît que lorsque son addon est chargé.",
 
     ["MMBTNS_MAX_COLUMNS"] = "Colonnes max.",
     ["MMBTNS_MAX_ROWS"] = "Lignes max.",
