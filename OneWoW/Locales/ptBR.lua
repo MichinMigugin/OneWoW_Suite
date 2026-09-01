@@ -171,7 +171,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_QUESTS_BODY"] = "O pacote de missoes e Midnight e The War Within. Classico ate Dragonflight carregam do Arquivo de missoes ao navegar nessas expansoes. As listas de Classico ate Midnight (patch 12.1) tem os pinos e o texto que temos. Abrir uma missao, mudar expansao ou filtros de conclusao, falar com dadores de missao e entregar recompensas nao trava mais.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",
     ["WHATS_NEW_H_VENDORS_BODY"] = "A aba Vendors lista as lojas de Classic ate Midnight antes de voce visita-las. Nomes, zonas e nomes de itens preenchem enquanto voce olha, e o preco em ouro aparece nos itens de loja normais. Lojas de moradia, intendente, JxJ, guilda e imersoes vem com um tipo. Abrir um mercador ainda preenche o resto. Filtre por expansao, zona, moeda ou tipo.",
-    ["WHATS_NEW_H_MAIL_BODY"] = "As abas do Correio e os rótulos traduzidos mostram de novo o idioma certo em vez de caracteres ilegíveis. A janela do Correio segue a fonte da suíte quando você a altera, sem recarregar.",
+    ["WHATS_NEW_H_MAIL_BODY"] = "Na caixa de correio, WoW UI / One UI alterna para a caixa de correio WoW padrão e volta sem desativar Correio. WoW UI ignora a coleta automática e o envio automático de remessas. /1wmail ou o minimapa volta para One UI.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montaria automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montaria automática pausa em combate e em outras situações com auras restritas, detecta furtividade sem varrer bônus secretos e não dá mais erro quando os dados de aura estão restritos. As dicas de Montarias dos jogadores usam a mesma proteção.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",

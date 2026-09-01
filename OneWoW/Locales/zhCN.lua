@@ -171,7 +171,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_QUESTS_BODY"] = "任务数据包是至暗之夜和地心之战。从经典旧世到巨龙时代会在浏览那些资料片时从任务归档加载。从经典旧世到至暗之夜（补丁 12.1）已填入我们现有的坐标和文本。打开任务、切换资料片或完成筛选、与任务给予者对话以及交任务领奖不再卡顿。",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",
     ["WHATS_NEW_H_VENDORS_BODY"] = "商人标签会在你拜访之前列出从经典旧世到至暗之夜的商店。名称、区域和物品名会在你查看时填入，普通商店物品会显示金币价格。住宅、军需官、PvP、公会和地下堡商店会带有类型。打开商人仍会补全其余信息。可按资料片、区域、货币或类型筛选。",
-    ["WHATS_NEW_H_MAIL_BODY"] = "邮件标签页和翻译后的文字再次显示正确语言，而不再是乱码。更改套件字体后邮件窗口会跟随，无需重载。",
+    ["WHATS_NEW_H_MAIL_BODY"] = "在邮箱处，WoW UI / One UI 可切换到默认魔兽邮箱再切回来，无需关闭邮件。WoW UI 下不会自动收取，也不会自动运行发件计划。/1wmail 或微缩地图可回到 One UI。",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自动坐骑",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自动坐骑会在战斗及其他光环受限情况下暂停，无需扫描保密增益即可检测潜行，并在光环数据受限时不再报错。玩家坐骑的鼠标提示使用同样的保护。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",

@@ -171,7 +171,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_QUESTS_BODY"] = "任務資料包是至暗之夜和地心之戰。從艾澤拉斯到巨龍崛起會在瀏覽那些資料片時從任務封存載入。從艾澤拉斯到至暗之夜（更新檔 12.1）已填入我們現有的座標和文字。開啟任務、切換資料片或完成篩選、與任務給予者對話以及回報任務領獎不再卡住。",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",
     ["WHATS_NEW_H_VENDORS_BODY"] = "商人分頁會在你拜訪之前列出從經典舊世到至暗之夜的商店。名稱、地區和物品名稱會在你查看時填入，一般商店物品會顯示金幣價格。房屋、補給官、PvP、公會和探究商店會附帶類型。打開商人仍會補齊其餘資訊。可依資料片、地區、貨幣或類型篩選。",
-    ["WHATS_NEW_H_MAIL_BODY"] = "郵件分頁和翻譯後的文字再次顯示正確語言，而不再是亂碼。變更套件字型後郵件視窗會跟隨，無需重載。",
+    ["WHATS_NEW_H_MAIL_BODY"] = "在郵箱處，WoW UI / One UI 可切換到預設魔獸郵箱再切回來，無需關閉郵件。WoW UI 下不會自動收取，也不會自動執行寄件計畫。/1wmail 或小地圖可回到 One UI。",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自動坐騎",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自動坐騎會在戰鬥及其他光環受限情況下暫停，無需掃描保密增益即可偵測潛行，並在光環資料受限時不再出錯。玩家坐騎的滑鼠提示使用同樣的保護。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",

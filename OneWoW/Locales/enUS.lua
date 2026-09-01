@@ -171,7 +171,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_QUESTS_BODY"] = "The Quests pack is Midnight and The War Within. Classic through Dragonflight load from Quest Archive when you browse those expansions. Classic through Midnight (patch 12.1) lists have the pins and text we have. Opening a quest, changing expansion or completion filters, talking to quest givers, and turning in rewards no longer hitch.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",
     ["WHATS_NEW_H_VENDORS_BODY"] = "The Vendors tab lists shops from Classic through Midnight before you visit them. Names, zones, and item names fill in as you look, and gold prices show for normal shop items. Housing, Quartermaster, PvP, Guild, and Delve shops ship with a type. Opening a merchant still fills the rest. Filter by expansion, zone, currency, or type.",
-    ["WHATS_NEW_H_MAIL_BODY"] = "Mail tabs and translated labels show the right language again instead of garbled characters. The Mail window follows the suite font when you change it, with no reload needed.",
+    ["WHATS_NEW_H_MAIL_BODY"] = "At the mailbox, WoW UI / One UI switches to the default WoW mailbox and back without turning Mail off. WoW UI skips auto-collect and shipment auto-run. /1wmail or the minimap returns to One UI.",
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto Mount",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto Mount pauses in combat and other aura-restricted situations, detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
