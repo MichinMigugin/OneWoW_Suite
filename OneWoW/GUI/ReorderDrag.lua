@@ -498,11 +498,15 @@ function ControllerMethods:Attach(item, index)
     if index then
         item._reorderIndex = index
     end
+    -- Hook once. Detach only clears this flag so a later Attach does not
+    -- stack another HookScript. Frame widgets have no UnhookScript.
+    item._oneWoWReorderEnabled = true
     if item._oneWoWReorderOnMouseDown then
         return
     end
     local controller = self
     item._oneWoWReorderOnMouseDown = function(myself, button)
+        if not myself._oneWoWReorderEnabled then return end
         if button ~= "LeftButton" then return end
         local list = controller.getItems and controller.getItems()
         local idx = myself._reorderIndex or IndexOf(list, myself)
@@ -517,11 +521,7 @@ function ControllerMethods:Detach(item)
     if self._state.sourceItem == item then
         FinishDrag(self, true)
     end
-    local handler = item._oneWoWReorderOnMouseDown
-    if handler then
-        item:UnhookScript("OnMouseDown", handler)
-        item._oneWoWReorderOnMouseDown = nil
-    end
+    item._oneWoWReorderEnabled = nil
 end
 
 function ControllerMethods:Cancel()

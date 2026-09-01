@@ -35,9 +35,84 @@ local previewTimer
 local SchedulePreview
 local LayoutDialog
 local PREVIEW_DELAY = 1
+-- True while OpenWayPinDialog writes seed values. Slider SetValue fires
+-- onChange; that must not treat the seed as a custom-look pick.
+local seeding = false
 
 local function DefaultIcon()
     return { kind = "list", value = "VignetteEvent-SuperTracked" }
+end
+
+local function AsNumber(v)
+    if type(v) == "number" then
+        return v
+    end
+    if type(v) == "string" then
+        return tonumber(v)
+    end
+    return nil
+end
+
+local function IconEquals(a, b)
+    if type(a) ~= "table" or type(b) ~= "table" then
+        return false
+    end
+    return (a.kind or "list") == (b.kind or "list") and a.value == b.value
+end
+
+--- Picking a look on a pack pin means that pin keeps its own look.
+local function MarkCustomLook()
+    if seeding or not fields.packPin or not fields.usePackLook then
+        return
+    end
+    fields.usePackLook = false
+    if fields.usePackLookCb then
+        fields.usePackLookCb:SetChecked(false)
+    end
+    if LayoutDialog then
+        LayoutDialog()
+    end
+end
+
+local function SyncUsePackLook()
+    if fields.usePackLookCb and fields.usePackLookCb:IsShown() then
+        fields.usePackLook = fields.usePackLookCb:GetChecked() and true or false
+    end
+end
+
+local function HonorPickedIcon(look)
+    if not fields.packPin or not fields.usePackLook or not fields.packId or not look then
+        return
+    end
+    local pack = ns.WayPinPacks:GetPack(fields.packId)
+    if not pack then
+        return
+    end
+    local packLook = ns.WayPinPacks:LookForPaint(pack)
+    if not IconEquals(look.icon, packLook.icon) then
+        fields.usePackLook = false
+        if fields.usePackLookCb then
+            fields.usePackLookCb:SetChecked(false)
+        end
+    end
+end
+
+local function ClearEditorFocus()
+    if fields.title then
+        fields.title:ClearFocus()
+    end
+    if fields.description then
+        fields.description:ClearFocus()
+    end
+    if fields.mapID then
+        fields.mapID:ClearFocus()
+    end
+    if fields.x then
+        fields.x:ClearFocus()
+    end
+    if fields.y then
+        fields.y:ClearFocus()
+    end
 end
 
 local function PaintIconCell(btn, spec, selected)
@@ -70,6 +145,7 @@ local function RebuildIconGrid()
                 btn.tex = tex
                 btn:SetScript("OnClick", function(myself)
                     selectedIcon = { kind = "list", value = myself.iconName }
+                    MarkCustomLook()
                     RebuildIconGrid()
                     SchedulePreview()
                 end)
@@ -116,6 +192,7 @@ local function RebuildBgGrid()
             btn.tex = tex
             btn:SetScript("OnClick", function(myself)
                 selectedBg = myself.styleName
+                MarkCustomLook()
                 RebuildBgGrid()
                 SchedulePreview()
             end)
@@ -142,8 +219,8 @@ local function RebuildBgGrid()
     dialog.bgChild:SetHeight(math.max(rows * (BG_CELL + ICON_PAD), 1))
 end
 
-local function ReadNumber(box)
-    return tonumber(box:GetSearchText())
+local function ReadNumber(box, fallback)
+    return AsNumber(box:GetSearchText()) or fallback
 end
 
 local function CancelPreviewTimer()
@@ -173,15 +250,15 @@ local function CollectLook()
     return look
 end
 
-local function CollectDraft()
-    local mapID = ReadNumber(fields.mapID)
-    local x = ReadNumber(fields.x)
-    local y = ReadNumber(fields.y)
+local function CollectDraft(look)
+    local mapID = ReadNumber(fields.mapID, fields.mapIDValue)
+    local x = ReadNumber(fields.x, fields.xValue)
+    local y = ReadNumber(fields.y, fields.yValue)
     if not mapID or not x or not y then
         return nil
     end
-    local look = CollectLook()
-    local draft = {
+    look = look or CollectLook()
+    return {
         id          = editingID,
         title       = fields.title:GetSearchText(),
         description = fields.description:GetSearchText(),
@@ -200,15 +277,6 @@ local function CollectDraft()
         packPinId   = fields.packPinId,
         usePackLook = fields.packPin and fields.usePackLook,
     }
-    if fields.packPin and fields.usePackLook and fields.packId then
-        local packLook = ns.WayPinPacks:LookForPaint(ns.WayPinPacks:GetPack(fields.packId))
-        draft.icon = packLook.icon
-        draft.bg = packLook.bg
-        draft.effect = packLook.effect
-        draft.mapSize = packLook.mapSize
-        draft.minimapSize = packLook.minimapSize
-    end
-    return draft
 end
 
 local function ApplyPreviewDraft()
@@ -221,6 +289,17 @@ local function ApplyPreviewDraft()
         ns.WayPinsMap:ClearPreviewDraft()
         return
     end
+    if fields.packPin and fields.usePackLook and fields.packId then
+        local pack = ns.WayPinPacks:GetPack(fields.packId)
+        if pack then
+            local packLook = ns.WayPinPacks:LookForPaint(pack)
+            draft.icon = packLook.icon
+            draft.bg = packLook.bg
+            draft.effect = packLook.effect
+            draft.mapSize = packLook.mapSize
+            draft.minimapSize = packLook.minimapSize
+        end
+    end
     ns.WayPinsMap:SetPreviewDraft(draft)
 end
 
@@ -231,16 +310,20 @@ SchedulePreview = function()
 end
 
 local function SaveFromDialog()
+    ClearEditorFocus()
+    local look = CollectLook()
+    SyncUsePackLook()
+    HonorPickedIcon(look)
     CancelPreviewTimer()
     ns.WayPinsMap:ClearPreviewDraft()
     if fields.packLook then
         if fields.packId then
-            ns.WayPinPacks:SetLook(fields.packId, CollectLook())
+            ns.WayPinPacks:SetLook(fields.packId, look)
         end
         dialog.frame:Hide()
         return
     end
-    local payload = CollectDraft()
+    local payload = CollectDraft(look)
     if not payload then
         return
     end
@@ -333,18 +416,36 @@ local function EnsureDialog()
 
     fields.mapID = OneWoW_GUI:CreateEditBox(content, {
         width = 90, maxLetters = 8, showClear = false,
-        onTextChanged = function() SchedulePreview() end,
+        onTextChanged = function()
+            local n = AsNumber(fields.mapID:GetSearchText())
+            if n then
+                fields.mapIDValue = n
+            end
+            SchedulePreview()
+        end,
     })
     fields.mapID:SetNumeric(true)
 
     fields.x = OneWoW_GUI:CreateEditBox(content, {
         width = 90, maxLetters = 8, showClear = false,
-        onTextChanged = function() SchedulePreview() end,
+        onTextChanged = function()
+            local n = AsNumber(fields.x:GetSearchText())
+            if n then
+                fields.xValue = n
+            end
+            SchedulePreview()
+        end,
     })
 
     fields.y = OneWoW_GUI:CreateEditBox(content, {
         width = 90, maxLetters = 8, showClear = false,
-        onTextChanged = function() SchedulePreview() end,
+        onTextChanged = function()
+            local n = AsNumber(fields.y:GetSearchText())
+            if n then
+                fields.yValue = n
+            end
+            SchedulePreview()
+        end,
     })
 
     local storeDD = ns.UI.CreateThemedDropdown(content, L["LABEL_STORAGE"], 180, 24)
@@ -374,6 +475,7 @@ local function EnsureDialog()
         fmt = "%.0f",
         onChange = function(val)
             fields.mapSize = val
+            MarkCustomLook()
             SchedulePreview()
         end,
     })
@@ -387,6 +489,7 @@ local function EnsureDialog()
         fmt = "%.0f",
         onChange = function(val)
             fields.minimapSize = val
+            MarkCustomLook()
             SchedulePreview()
         end,
     })
@@ -413,6 +516,7 @@ local function EnsureDialog()
             if not bgEnabled then
                 fields.effectDD:ClosePopup()
             end
+            MarkCustomLook()
             LayoutDialog()
             SchedulePreview()
         end,
@@ -437,6 +541,7 @@ local function EnsureDialog()
     })
     fields.effectDD.onSelect = function(value)
         fields.bgEffect = value
+        MarkCustomLook()
         SchedulePreview()
     end
 
@@ -457,6 +562,7 @@ local function EnsureDialog()
         fmt = "%.1f",
         onChange = function(val)
             fields.bgScale = val
+            MarkCustomLook()
             SchedulePreview()
         end,
     })
@@ -482,7 +588,7 @@ local function EnsureDialog()
         local packLook = fields.packLook
         local packPin = fields.packPin
         local showIdentity = not packLook
-        local showVisuals = packLook or not packPin or not fields.usePackLook
+        local showVisuals = true
 
         fields.nameLabel:SetShown(showIdentity)
         fields.title:SetShown(showIdentity)
@@ -624,6 +730,7 @@ function ns.UI.OpenWayPinDialog(seed)
     CancelPreviewTimer()
     ns.WayPinsMap:ClearPreviewDraft()
     seed = seed or {}
+    seeding = true
     editingID = seed.packLook and nil or seed.id
     fields.packLook = seed.packLook == true
     fields.packPin = seed.packId ~= nil and not fields.packLook
@@ -642,6 +749,9 @@ function ns.UI.OpenWayPinDialog(seed)
     selectedBg = (seed.bg and seed.bg.style) or "Solid-Circle"
     fields.mapSize = seed.mapSize or ns.WayPinsVisual.WorldDefault()
     fields.minimapSize = seed.minimapSize or ns.WayPinsVisual.MinimapDefault()
+    fields.mapIDValue = AsNumber(seed.mapID)
+    fields.xValue = AsNumber(seed.x)
+    fields.yValue = AsNumber(seed.y)
     local effect = (seed.bg and seed.bg.effect) or seed.effect or "none"
     if effect ~= "spinning" and effect ~= "zooming" and effect ~= "both" then
         effect = "none"
@@ -651,15 +761,16 @@ function ns.UI.OpenWayPinDialog(seed)
 
     fields.title:SetText(seed.title or "")
     fields.description:SetText(seed.description or "")
-    fields.mapID:SetText(seed.mapID and tostring(seed.mapID) or "")
-    fields.x:SetText(seed.x and string.format("%.2f", seed.x) or "")
-    fields.y:SetText(seed.y and string.format("%.2f", seed.y) or "")
+    fields.mapID:SetText(fields.mapIDValue and tostring(fields.mapIDValue) or "")
+    fields.x:SetText(fields.xValue and string.format("%.2f", fields.xValue) or "")
+    fields.y:SetText(fields.yValue and string.format("%.2f", fields.yValue) or "")
     fields.sizeSlider.slider:SetValue(fields.mapSize)
     fields.minimapSizeSlider.slider:SetValue(fields.minimapSize)
     fields.bgScaleSlider.slider:SetValue(fields.bgScale)
     fields.effectDD:SetSelected(fields.bgEffect)
     fields.bgCheck:SetChecked(bgEnabled)
     fields.usePackLookCb:SetChecked(fields.usePackLook)
+    seeding = false
 
     if fields.packLook then
         fields.deleteBtn:Hide()

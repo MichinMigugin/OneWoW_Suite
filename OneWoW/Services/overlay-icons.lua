@@ -301,10 +301,13 @@ function OverlayIcons:ApplyToTexture(texture, iconName)
         texture:SetAlpha(0)
         return
     end
+    texture:SetAlpha(1)
     if self:IsCustomTexture(iconName) then
+        texture:SetAtlas("")
         local path = self:GetTexturePath(iconName)
         if path then texture:SetTexture(path) end
     else
+        texture:SetTexture(nil)
         texture:SetAtlas(iconName, false)
     end
 end
@@ -361,16 +364,20 @@ function OverlayIcons:ApplyIconSpec(texture, spec)
         return false
     end
 
+    texture:SetAlpha(1)
+
     if kind == "atlas" then
         if not self:IsValidAtlas(value) then
             texture:SetTexture(nil)
             texture:SetAlpha(0)
             return false
         end
+        texture:SetTexture(nil)
         texture:SetAtlas(value, false)
     elseif kind == "file" then
         -- SetTexture returns false when the file does not exist; render
         -- nothing rather than a green placeholder square.
+        texture:SetAtlas("")
         if not texture:SetTexture(self:GetCustomFilePath(value)) then
             texture:SetTexture(nil)
             texture:SetAlpha(0)

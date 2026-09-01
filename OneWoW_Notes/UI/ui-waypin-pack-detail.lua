@@ -111,29 +111,8 @@ local function LayoutPinRows(pack)
                 Visual.Attach(preview)
                 row.preview = preview
 
-                local goBtn = OneWoW_GUI:CreateFitTextButton(row, { text = L["WAYPINS_GO"], height = 20, minWidth = 32 })
-                goBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-                goBtn:SetScript("OnClick", function(myself)
-                    local id = myself:GetParent().displayId
-                    if id then
-                        ns.WayPins:Track(id)
-                    end
-                end)
-                row.goBtn = goBtn
-
-                local mapBtn = OneWoW_GUI:CreateFitTextButton(row, { text = SHOW_MAP, height = 20, minWidth = 64 })
-                mapBtn:SetPoint("RIGHT", goBtn, "LEFT", -4, 0)
-                mapBtn:SetScript("OnClick", function(myself)
-                    local id = myself:GetParent().displayId
-                    local data = id and ns.WayPins:GetPin(id)
-                    if data then
-                        ns.WayPinsMap:ShowOnMap(data)
-                    end
-                end)
-                row.mapBtn = mapBtn
-
                 local editBtn = OneWoW_GUI:CreateFitTextButton(row, { text = EDIT, height = 20, minWidth = 36 })
-                editBtn:SetPoint("RIGHT", mapBtn, "LEFT", -4, 0)
+                editBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
                 editBtn:SetScript("OnClick", function(myself)
                     local id = myself:GetParent().displayId
                     local data = id and ns.WayPins:GetPin(id)
@@ -143,27 +122,16 @@ local function LayoutPinRows(pack)
                 end)
                 row.editBtn = editBtn
 
-                local delBtn = OneWoW_GUI:CreateFitTextButton(row, { text = DELETE, height = 20, minWidth = 40 })
-                delBtn:SetPoint("RIGHT", editBtn, "LEFT", -4, 0)
-                delBtn:SetScript("OnClick", function(myself)
-                    local id = myself:GetParent().displayId
-                    local data = id and ns.WayPins:GetPin(id)
-                    if data then
-                        ns.WayPinsMap:ConfirmDelete(data)
-                    end
-                end)
-                row.delBtn = delBtn
-
                 local title = OneWoW_GUI:CreateFS(row, 12)
                 title:SetPoint("LEFT", preview, "RIGHT", 8, 4)
-                title:SetPoint("RIGHT", delBtn, "LEFT", -6, 4)
+                title:SetPoint("RIGHT", editBtn, "LEFT", -6, 4)
                 title:SetJustifyH("LEFT")
                 title:SetWordWrap(false)
                 row.title = title
 
                 local sub = OneWoW_GUI:CreateFS(row, 10)
                 sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -1)
-                sub:SetPoint("RIGHT", delBtn, "LEFT", -6, 0)
+                sub:SetPoint("RIGHT", editBtn, "LEFT", -6, 0)
                 sub:SetJustifyH("LEFT")
                 sub:SetWordWrap(false)
                 row.sub = sub
@@ -261,7 +229,7 @@ local function EnsurePane(parent)
     end)
     widgets.nameBox = nameBox
 
-    local expDD = ns.UI.CreateThemedDropdown(header, L["EXPANSION"], 240, 24)
+    local expDD = ns.UI.CreateThemedDropdown(header, L["EXPANSION"], 240, 24, ns.UI.GetWayPinExpansionMenuHeight())
     expDD:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -6)
     expDD:SetOptions(ns.UI.GetWayPinExpansionOptions())
     expDD.onSelect = function()
@@ -373,9 +341,18 @@ local function EnsurePane(parent)
     pinCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     widgets.pinCount = pinCount
 
+    local listHint = OneWoW_GUI:CreateFS(pane, 11)
+    listHint:SetPoint("TOPLEFT", listHeader, "BOTTOMLEFT", 0, -4)
+    listHint:SetPoint("RIGHT", pane, "RIGHT", -4, 0)
+    listHint:SetJustifyH("LEFT")
+    listHint:SetWordWrap(false)
+    listHint:SetText(L["MINIMAP_RIGHT_CLICK"])
+    listHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    widgets.listHint = listHint
+
     local pinScroll, pinChild = OneWoW_GUI:CreateScrollFrame(pane, {})
     pinScroll:ClearAllPoints()
-    pinScroll:SetPoint("TOPLEFT", listHeader, "BOTTOMLEFT", 0, -6)
+    pinScroll:SetPoint("TOPLEFT", listHint, "BOTTOMLEFT", 0, -6)
     pinScroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
     widgets.pinScroll = pinScroll
     widgets.pinChild = pinChild

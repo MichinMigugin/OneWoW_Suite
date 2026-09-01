@@ -55,7 +55,7 @@ end
 
 local _openDropdowns = {}
 
-function ns.UI.CreateThemedDropdown(parent, labelPrefix, width, height)
+function ns.UI.CreateThemedDropdown(parent, labelPrefix, width, height, menuHeight)
     width  = width  or 150
     height = height or 26
 
@@ -108,6 +108,7 @@ function ns.UI.CreateThemedDropdown(parent, labelPrefix, width, height)
 
     OneWoW_GUI:AttachFilterMenu(dropdown, {
         searchable = false,
+        menuHeight = menuHeight,
         buildItems = function()
             local items = {}
             for _, opt in ipairs(dropdown._options) do

@@ -19,6 +19,11 @@ function ns.UI.GetWayPinExpansionOptions()
     return items
 end
 
+-- Filter-menu default height (314) clips later expansions. 26px row + 2px gap.
+function ns.UI.GetWayPinExpansionMenuHeight()
+    return #ns.UI.GetWayPinExpansionOptions() * 28 + 8
+end
+
 local exportDialog
 local exportBox
 local importDialog
@@ -241,7 +246,7 @@ local function EnsureSendDialog()
     expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     sendWidgets.expLabel = expLabel
 
-    local expDD = ns.UI.CreateThemedDropdown(content, "", 280, 26)
+    local expDD = ns.UI.CreateThemedDropdown(content, "", 280, 26, ns.UI.GetWayPinExpansionMenuHeight())
     expDD:SetPoint("TOPLEFT", 14, -162)
     expDD:SetOptions(ns.UI.GetWayPinExpansionOptions())
     sendWidgets.expDD = expDD
@@ -377,7 +382,7 @@ local function EnsureCreateDialog()
     expLabel:SetText(L["EXPANSION"])
     expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local expDD = ns.UI.CreateThemedDropdown(content, "", 280, 26)
+    local expDD = ns.UI.CreateThemedDropdown(content, "", 280, 26, ns.UI.GetWayPinExpansionMenuHeight())
     expDD:SetPoint("TOPLEFT", 14, -84)
     expDD:SetOptions(ns.UI.GetWayPinExpansionOptions())
     createWidgets.expDD = expDD

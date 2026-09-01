@@ -253,6 +253,11 @@ function Packs:GetPack(packId)
     if type(pack) == "table" then
         return pack
     end
+    for _, row in pairs(Store()) do
+        if type(row) == "table" and row.id == packId then
+            return row
+        end
+    end
     return nil
 end
 
@@ -362,17 +367,11 @@ function Packs:BuildDisplayPin(pack, pin)
 end
 
 function Packs:GetDisplayPinById(pinID)
-    local packId, pinId = self:ParseDisplayId(pinID)
-    local pack = packId and self:GetPack(packId)
-    if not pack then
+    local pack, pin = self:ResolvePackedPin(pinID)
+    if not pack or not pin then
         return nil
     end
-    for _, pin in ipairs(pack.pins) do
-        if pin.id == pinId then
-            return self:BuildDisplayPin(pack, pin)
-        end
-    end
-    return nil
+    return self:BuildDisplayPin(pack, pin)
 end
 
 function Packs:AppendEnabledPinsForMap(out, mapID)
@@ -489,15 +488,53 @@ function Packs:SetMeta(packId, name, expansion)
 end
 
 function Packs:FindPin(pack, pinId)
-    if type(pack) ~= "table" or type(pack.pins) ~= "table" then
+    if type(pack) ~= "table" or type(pack.pins) ~= "table" or pinId == nil then
         return nil, nil
     end
-    for i, pin in ipairs(pack.pins) do
-        if pin.id == pinId then
+    pinId = tostring(pinId)
+    for i, pin in pairs(pack.pins) do
+        if type(pin) == "table" and tostring(pin.id) == pinId then
             return pin, i
         end
     end
     return nil, nil
+end
+
+--- Pack table, raw pin row, and pins-array index for a `pk:` display id.
+function Packs:ResolvePackedPin(pinID)
+    if not self:IsPackPinId(pinID) then
+        return nil
+    end
+    local packId, pinId = self:ParseDisplayId(pinID)
+    local function matchIn(pack)
+        if type(pack) ~= "table" or type(pack.pins) ~= "table" then
+            return nil
+        end
+        local pin, index = self:FindPin(pack, pinId)
+        if pin then
+            return pin, index
+        end
+        for i, row in pairs(pack.pins) do
+            if type(row) == "table" and self:MakeDisplayId(pack.id, row.id) == pinID then
+                return row, i
+            end
+        end
+        return nil
+    end
+    local pack = packId and self:GetPack(packId)
+    if pack then
+        local pin, index = matchIn(pack)
+        if pin then
+            return pack, pin, index
+        end
+    end
+    for _, other in pairs(Store()) do
+        local pin, index = matchIn(other)
+        if pin then
+            return other, pin, index
+        end
+    end
+    return nil
 end
 
 function Packs:AddPin(packId, fields)
@@ -588,21 +625,31 @@ function Packs:SaveDisplayPin(display)
     Notify()
 end
 
-function Packs:DeletePinByDisplayId(pinID)
-    local packId, pinId = self:ParseDisplayId(pinID)
-    local pack = packId and self:GetPack(packId)
-    local _, index = pack and self:FindPin(pack, pinId)
-    if not index then
-        return
+function Packs:DeletePinByDisplayId(pinID, quiet)
+    local pack, _, index = self:ResolvePackedPin(pinID)
+    if not pack or index == nil then
+        return false
     end
-    tremove(pack.pins, index)
+    if type(index) == "number" then
+        tremove(pack.pins, index)
+    else
+        pack.pins[index] = nil
+    end
     pack.modified = GetServerTime()
-    Notify()
+    if not quiet then
+        Notify()
+    end
+    return true
 end
 
 function Packs:ReturnPinToPersonal(pinID)
     local display = self:GetDisplayPinById(pinID)
     if not display then
+        return nil
+    end
+    -- Drop the pack row first. Add notifies; if that refresh errors, the pack
+    -- pin must already be gone so a reload does not keep both copies.
+    if not self:DeletePinByDisplayId(pinID, true) then
         return nil
     end
     local newId = ns.WayPins:Add({
@@ -620,9 +667,21 @@ function Packs:ReturnPinToPersonal(pinID)
         storage     = "account",
     })
     if not newId then
+        self:AddPin(display.packId, {
+            id          = display.packPinId,
+            title       = display.title,
+            note        = display.description,
+            mapID       = display.mapID,
+            x           = display.x,
+            y           = display.y,
+            icon        = display.icon,
+            bg          = display.bg,
+            effect      = display.effect,
+            mapSize     = display.mapSize,
+            minimapSize = display.minimapSize,
+        })
         return nil
     end
-    self:DeletePinByDisplayId(pinID)
     return newId
 end
 

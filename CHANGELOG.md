@@ -54,10 +54,12 @@
 - Zone defaults to This Map. The count under the list is Showing X of Y, so an empty list does not look like you have no pins. The list says No pins on this map when none match this zone.
 - Pin Packs group many pins behind one row on the Pins tab. Turn a pack off to hide every pin in it on the world map, minimap, map legend, and zone list.
 - Import or export a pack as a paste string. Send a personal pin into a pack; it uses the pack look until you give that pin its own. Show Disabled Packs stays on so you can turn a pack back on.
-- Drag pack pins to reorder them (Lock order turns that off). Expansion is a list of current expansions. Pack Look uses the same icon, background, and effect options as a pin. A pin can keep the pack look or use its own. Changing the look updates the maps without turning the pack off.
+- Drag pack pins to reorder them (Lock order turns that off). The pack Expansion menu lists every expansion without scrolling. Pack Look uses the same icon, background, and effect options as a pin. A pin can keep the pack look or use its own. Changing the look updates the maps without turning the pack off.
 - Imported packs work like packs you made. Add pins, rename them, reorder, and delete. With a pack selected, Add Here and Find Location add into that pack. New pack makes an empty pack.
-- Right-click a pin or a pack for Go, Show Map, Edit, Send to Pack, enable or disable, and delete. Delete is also on the list and in the pack pane. Remove from Pack returns a pin to My Pins.
+- Right-click a pin or a pack for Go, Show Map, Edit, Send to Pack, enable or disable, and delete. The Pins list is names only so titles have room. Pack pin rows keep Edit only; a line above that list says to right-click for the rest.
 - Opening a pin pack no longer errors.
+- Choosing a new icon and clicking Save keeps that icon on the pin or pack.
+- Remove from Pack returns the pin to My Pins and takes it out of the pack. Delete on a pack pin removes that pin.
 
 ---
 

@@ -72,6 +72,10 @@ local function PinVisible(data)
 end
 
 local previewDraft
+local returnConfirm
+local pendingReturnId
+local deleteConfirm
+local pendingDeleteId
 
 local function PinsForMap(mapID)
     local pins = ns.WayPins:GetForMap(mapID)
@@ -270,47 +274,80 @@ end
 function WayPinsMap:ConfirmReturnFromPack(pin)
     if type(pin) ~= "table" or not pin.id then return end
     if not ns.WayPinPacks:IsPackPinId(pin.id) then return end
-    local pinID = pin.id
+    pendingReturnId = pin.id
     local title = pin.title or L["WAYPINS_UNTITLED"]
-    local result = OneWoW_GUI:CreateConfirmDialog({
-        title = L["WAYPINS_REMOVE_FROM_PACK"],
-        message = string.format(L["WAYPINS_REMOVE_FROM_PACK_CONFIRM"], title),
-        buttons = {
-            {
-                text = L["WAYPINS_REMOVE_FROM_PACK"],
-                color = { 0.8, 0.2, 0.2 },
-                onClick = function(dlg)
-                    ns.WayPinPacks:ReturnPinToPersonal(pinID)
+    local message = string.format(L["WAYPINS_REMOVE_FROM_PACK_CONFIRM"], title)
+    if not returnConfirm then
+        returnConfirm = OneWoW_GUI:CreateConfirmDialog({
+            name = "OneWoW_NotesReturnWayPinConfirm",
+            title = L["WAYPINS_REMOVE_FROM_PACK"],
+            message = message,
+            buttons = {
+                {
+                    text = L["WAYPINS_REMOVE_FROM_PACK"],
+                    color = { 0.8, 0.2, 0.2 },
+                    onClick = function(dlg)
+                        dlg:Hide()
+                        local pinID = pendingReturnId
+                        pendingReturnId = nil
+                        if not pinID then
+                            return
+                        end
+                        local newId = ns.WayPinPacks:ReturnPinToPersonal(pinID)
+                        if newId and ns.UI and ns.UI.SelectWayPin then
+                            ns.UI.SelectWayPin(newId)
+                        end
+                    end,
+                },
+                { text = CANCEL, onClick = function(dlg)
+                    pendingReturnId = nil
                     dlg:Hide()
-                end,
+                end },
             },
-            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
-        },
-    })
-    result.frame:Show()
+        })
+    else
+        returnConfirm.titleLabel:SetText(L["WAYPINS_REMOVE_FROM_PACK"])
+        returnConfirm.messageLabel:SetText(message)
+    end
+    returnConfirm.frame:Show()
+    returnConfirm.frame:Raise()
 end
 
 function WayPinsMap:ConfirmDelete(pin)
     if type(pin) ~= "table" or not pin.id then return end
-    local pinID = pin.id
+    pendingDeleteId = pin.id
     local title = pin.title or L["WAYPINS_UNTITLED"]
-    local result = OneWoW_GUI:CreateConfirmDialog({
-        name = "OneWoW_NotesDeleteWayPinConfirm",
-        title = L["DIALOG_CONFIRM_DELETE"],
-        message = string.format(L["POPUP_DELETE_WAYPIN"], title),
-        buttons = {
-            {
-                text = DELETE,
-                color = { 0.8, 0.2, 0.2 },
-                onClick = function(dlg)
-                    ns.WayPins:Remove(pinID)
+    local message = string.format(L["POPUP_DELETE_WAYPIN"], title)
+    if not deleteConfirm then
+        deleteConfirm = OneWoW_GUI:CreateConfirmDialog({
+            name = "OneWoW_NotesDeleteWayPinConfirm",
+            title = L["DIALOG_CONFIRM_DELETE"],
+            message = message,
+            buttons = {
+                {
+                    text = DELETE,
+                    color = { 0.8, 0.2, 0.2 },
+                    onClick = function(dlg)
+                        dlg:Hide()
+                        local pinID = pendingDeleteId
+                        pendingDeleteId = nil
+                        if pinID then
+                            ns.WayPins:Remove(pinID)
+                        end
+                    end,
+                },
+                { text = CANCEL, onClick = function(dlg)
+                    pendingDeleteId = nil
                     dlg:Hide()
-                end,
+                end },
             },
-            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
-        },
-    })
-    result.frame:Show()
+        })
+    else
+        deleteConfirm.titleLabel:SetText(L["DIALOG_CONFIRM_DELETE"])
+        deleteConfirm.messageLabel:SetText(message)
+    end
+    deleteConfirm.frame:Show()
+    deleteConfirm.frame:Raise()
 end
 
 --- Open the world map on this pin's zone, switch to Map Legend, and set a live waypoint.

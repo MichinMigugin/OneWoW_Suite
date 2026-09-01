@@ -195,11 +195,6 @@ local function PaintPinRow(row, pin)
     row.kind = "pin"
     row.pinID = pin.id
     row.packID = nil
-    row.goBtn:Show()
-    row.showMapBtn:Show()
-    row.delBtn:Show()
-    row.title:SetPoint("RIGHT", row.showMapBtn, "LEFT", -6, 0)
-    row.sub:SetPoint("RIGHT", row.showMapBtn, "LEFT", -6, 0)
     row.title:SetText(pin.title or L["WAYPINS_UNTITLED"])
     row.sub:SetText(string.format("%s (%d)", ns.WayPins:MapDisplayName(pin.mapID), pin.mapID))
     Visual.Apply(row.preview, PinForPaint(pin), { size = 22, animate = false })
@@ -220,11 +215,6 @@ local function PaintPackRow(row, pack)
     row.kind = "pack"
     row.pinID = nil
     row.packID = pack.id
-    row.goBtn:Hide()
-    row.showMapBtn:Hide()
-    row.delBtn:Show()
-    row.title:SetPoint("RIGHT", row.delBtn, "LEFT", -6, 0)
-    row.sub:SetPoint("RIGHT", row.delBtn, "LEFT", -6, 0)
     row.title:SetText(pack.name or "")
     local count = ns.WayPinPacks:PackPinCount(pack)
     local sub = string.format("%s (%d)", L["WAYPINS_PACK_BADGE"], count)
@@ -274,59 +264,16 @@ function ns.UI.RefreshWayPinsTab()
             Visual.Attach(preview)
             row.preview = preview
 
-            local delBtn = OneWoW_GUI:CreateFitTextButton(row, { text = DELETE, height = 22, minWidth = 40 })
-            delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            delBtn:SetScript("OnClick", function(myself)
-                local parent = myself:GetParent()
-                if parent.kind == "pack" and parent.packID then
-                    ns.UI.OpenWayPinPackRemove(parent.packID)
-                elseif parent.pinID then
-                    local data = ns.WayPins:GetPin(parent.pinID)
-                    if data then
-                        ns.WayPinsMap:ConfirmDelete(data)
-                    end
-                end
-            end)
-            row.delBtn = delBtn
-
-            local goBtn = OneWoW_GUI:CreateFitTextButton(row, { text = L["WAYPINS_GO"], height = 22, minWidth = 36 })
-            goBtn:SetPoint("RIGHT", delBtn, "LEFT", -4, 0)
-            goBtn:SetScript("OnClick", function(myself)
-                local id = myself:GetParent().pinID
-                if id then
-                    ns.WayPins:Track(id)
-                end
-            end)
-            row.goBtn = goBtn
-
-            local showMapBtn = OneWoW_GUI:CreateFitTextButton(row, { text = SHOW_MAP, height = 22, minWidth = 72 })
-            showMapBtn:SetPoint("RIGHT", goBtn, "LEFT", -4, 0)
-            showMapBtn:SetScript("OnClick", function(myself)
-                local id = myself:GetParent().pinID
-                local data = id and ns.WayPins:GetPin(id)
-                if data then
-                    ns.WayPinsMap:ShowOnMap(data)
-                end
-            end)
-            showMapBtn:SetScript("OnEnter", function(myself)
-                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-                GameTooltip:SetText(SHOW_MAP, 1, 1, 1)
-                GameTooltip:AddLine(L["WAYPINS_SHOW_ON_MAP_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                GameTooltip:Show()
-            end)
-            showMapBtn:SetScript("OnLeave", GameTooltip_Hide)
-            row.showMapBtn = showMapBtn
-
             local title = OneWoW_GUI:CreateFS(row, 12)
             title:SetPoint("TOPLEFT", preview, "TOPRIGHT", 8, 2)
-            title:SetPoint("RIGHT", showMapBtn, "LEFT", -6, 0)
+            title:SetPoint("RIGHT", row, "RIGHT", -8, 0)
             title:SetJustifyH("LEFT")
             title:SetWordWrap(false)
             row.title = title
 
             local sub = OneWoW_GUI:CreateFS(row, 10)
             sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -2)
-            sub:SetPoint("RIGHT", showMapBtn, "LEFT", -6, 0)
+            sub:SetPoint("RIGHT", row, "RIGHT", -8, 0)
             sub:SetJustifyH("LEFT")
             sub:SetWordWrap(false)
             row.sub = sub
@@ -578,8 +525,25 @@ function ns.UI.CreateWayPinsTab(parent)
     end)
     detailWidgets.goBtn = goBtn
 
+    local showMapBtn = OneWoW_GUI:CreateFitTextButton(header, { text = SHOW_MAP, height = 24 })
+    showMapBtn:SetPoint("RIGHT", goBtn, "LEFT", -6, 0)
+    showMapBtn:SetScript("OnClick", function()
+        local pin = selectedID and ns.WayPins:GetPin(selectedID)
+        if pin then
+            ns.WayPinsMap:ShowOnMap(pin)
+        end
+    end)
+    showMapBtn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(SHOW_MAP, 1, 1, 1)
+        GameTooltip:AddLine(L["WAYPINS_SHOW_ON_MAP_TT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:Show()
+    end)
+    showMapBtn:SetScript("OnLeave", GameTooltip_Hide)
+    detailWidgets.showMapBtn = showMapBtn
+
     local editBtn = OneWoW_GUI:CreateFitTextButton(header, { text = EDIT, height = 24 })
-    editBtn:SetPoint("RIGHT", goBtn, "LEFT", -6, 0)
+    editBtn:SetPoint("RIGHT", showMapBtn, "LEFT", -6, 0)
     editBtn:SetScript("OnClick", function()
         local pin = selectedID and ns.WayPins:GetPin(selectedID)
         if pin then
