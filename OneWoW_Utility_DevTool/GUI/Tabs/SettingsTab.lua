@@ -220,7 +220,8 @@ function ns.UI:CreateSettingsTab(parent)
 
     local sectionHeight = abs(lowestY) + 42
     section:SetHeight(max(120, sectionHeight))
-    scrollContent:SetHeight(max(1, abs(nextOffset - sectionHeight) + 24))
+
+    scrollContent:SetHeight(max(1, abs(nextOffset) + sectionHeight + 24))
 
     for _, assetKey in ipairs({ "textures", "sounds" }) do
         if self:IsTabEnabled(assetKey) and self:GetUnloadOnDisable(assetKey) then

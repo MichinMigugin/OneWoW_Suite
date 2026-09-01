@@ -88,7 +88,8 @@ local function BuildVendorEntries(record)
     local offers = record and record.acquisition and record.acquisition.vendorOffers
     if not offers then return entries end
 
-    local api = OneWoW_CatalogData_Vendors_API
+    OneWoW:EnsureCatalogPack("vendors")
+    local api = OneWoW:GetCatalogPackAPI("vendors")
     for _, offer in ipairs(offers) do
         local entry = {
             npcID         = offer.npcID,
@@ -525,7 +526,8 @@ function ns.UI.CreateCollectiblesTab(parent)
         ec.tooltipSection:SetPoint("TOPLEFT",  section, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
         ec.tooltipSection:SetPoint("TOPRIGHT", section, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
 
-        local api = OneWoW_CatalogData_Vendors_API
+        OneWoW:EnsureCatalogPack("vendors")
+        local api = OneWoW:GetCatalogPackAPI("vendors")
         for i, row in ipairs(section.rows) do
             local entry = entries[i]
             if entry then

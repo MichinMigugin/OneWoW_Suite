@@ -11,10 +11,30 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "Clicca per aprire",
 
-    ["TAB_JOURNAL"] = "Diario",
-    ["TAB_VENDORS"] = "Venditori",
+    ["TAB_JOURNAL"] = "Zone",
+    ["TAB_VENDORS"] = "PNG",
     ["TAB_QUESTS"] = "Missioni",
     ["TAB_ITEMSEARCH"] = "Ricerca oggetti",
+    ["TAB_COLLECTIBLES"] = "Oggetti da collezione",
+
+    ["COLLECTIBLES_SEARCH"] = "Cerca oggetti da collezione...",
+    ["COLLECTIBLES_EMPTY"] = "Nessun oggetto da collezione da mostrare.",
+    ["COLLECTIBLES_SELECT"] = "Seleziona un oggetto da collezione per vederne i dettagli.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "Mostra trasmog., cavalcature, mascotte e giocattoli del diario delle collezioni.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "Mostra le apparenze di trasmog. del diario delle collezioni.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "Mostra le cavalcature del diario delle cavalcature.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "Mostra le mascotte da combattimento del diario delle mascotte.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "Mostra i giocattoli della scatola dei giocattoli.",
+    ["COLLECTIBLES_RARE_SECTION"] = "Raro del mondo",
+
+    ["HOUSING_SEARCH"] = "Cerca decorazioni per alloggio...",
+    ["HOUSING_EMPTY"] = "Nessuna decorazione per alloggio da mostrare.",
+    ["HOUSING_SELECT"] = "Seleziona una decorazione per alloggio per vederne i dettagli.",
+    ["HOUSING_FILTER_ALL_DESC"] = "Mostra le decorazioni del catalogo alloggi.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "Mostra le decorazioni per alloggio.",
+    ["HOUSING_OWNED_COUNTS"] = "Posseduti %d  |  Depositati %d  |  Piazzati %d",
+
+    ["CATALOG_LIST_NARROW"] = "Filtra o cerca per restringere ulteriormente i risultati.",
 
     ["CATALOG_FAVORITE"] = "Preferito",
     ["CATALOG_FAVORITE_TT"] = "Segna questa voce come preferita. I preferiti vengono ordinati in cima alla lista.",

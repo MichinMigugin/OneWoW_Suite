@@ -28,8 +28,8 @@ local function AttributeRecipe(recipeID)
             return name
         end
     end
-    local catalog = OneWoW_CatalogData_Tradeskills_API
-    if catalog and catalog.GetRecipeProfession then
+    local catalog = OneWoW:GetCatalogPackAPI("tradeskills")
+    if catalog then
         return catalog.GetRecipeProfession(recipeID)
     end
     return nil

@@ -50,7 +50,7 @@ function DataAccess:Initialize()
     end
     if not tradeskillsWatchRegistered then
         tradeskillsWatchRegistered = true
-        OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", OnTradeskillsReady)
+        OneWoW:RegisterDataReadyWatcher(OneWoW:ResolveCatalogPack("tradeskills"), OnTradeskillsReady)
     end
 end
 
@@ -59,7 +59,7 @@ function DataAccess:HasAltData()
 end
 
 function DataAccess:HasRecipeData()
-    return OneWoW_CatalogData_Tradeskills_API ~= nil
+    return OneWoW:IsCatalogPackAvailable("tradeskills")
 end
 
 -- Read-only view over the Storage unit's data, assembled from its public API so
@@ -191,8 +191,10 @@ end
 function DataAccess:GetQualityVariants(itemID)
     if qvCache[itemID] then return qvCache[itemID] end
     local variants = { itemID }
-    if OneWoW_CatalogData_Tradeskills_API and OneWoW_CatalogData_Tradeskills_API.GetCraftingQualityVariants then
-        variants = OneWoW_CatalogData_Tradeskills_API.GetCraftingQualityVariants(itemID)
+    OneWoW:EnsureCatalogPack("tradeskills")
+    local tsAPI = OneWoW:GetCatalogPackAPI("tradeskills")
+    if tsAPI then
+        variants = tsAPI.GetCraftingQualityVariants(itemID)
     end
     qvCache[itemID] = variants
     return variants

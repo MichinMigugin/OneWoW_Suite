@@ -9,10 +9,13 @@ local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 local ipairs, pairs = ipairs, pairs
 local tinsert, sort, wipe, tconcat = tinsert, sort, wipe, table.concat
 local C_Item, C_CurrencyInfo, C_Map, C_Timer, C_TooltipInfo = C_Item, C_CurrencyInfo, C_Map, C_Timer, C_TooltipInfo
+local C_CreatureInfo = C_CreatureInfo
+local UNKNOWNOBJECT = UNKNOWNOBJECT
 local SetPortraitTextureFromCreatureDisplayID = SetPortraitTextureFromCreatureDisplayID
 local math = math
 local OneWoW = OneWoW
 local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
+local RETRIEVING_DATA = RETRIEVING_DATA
 
 local L = ns.L
 ns.UI = ns.UI or {}
@@ -160,7 +163,7 @@ local function ClearVendorFilters(panels)
 end
 
 local function GetDataAddon()
-    return OneWoW_CatalogData_Vendors_API
+    return ns.GetCatalogPackAPI("vendors")
 end
 
 local function GetCurrentPlayerZone()
@@ -172,19 +175,27 @@ local function GetCurrentPlayerZone()
 end
 
 local function VendorHasVendorRole(vendor)
+    local addon = GetDataAddon()
+    if addon and addon.IsListVendor then
+        return addon.IsListVendor(vendor)
+    end
     if not vendor then return false end
     if vendor.roles then
         for _, role in ipairs(vendor.roles) do
-            if role == "vendor" then return true end
+            if role == "vendor" or role == "trainer" or role == "service" or role == "quest_giver" then
+                return true
+            end
         end
         return false
     end
+    local hasItems = false
     if vendor.items then
         for _ in pairs(vendor.items) do
-            return true
+            hasItems = true
+            break
         end
     end
-    return vendor.lastScanned ~= nil
+    return hasItems or vendor.lastScanned ~= nil
 end
 
 local function VendorMatchesExpansion(vendor, filter)
@@ -202,8 +213,16 @@ local function BuildZoneList()
         if VendorHasVendorRole(vendor) and VendorMatchesExpansion(vendor, expansionFilter) then
             if vendor.locations then
                 for _, loc in pairs(vendor.locations) do
-                    if loc.zone and loc.zone ~= "" then
-                        zoneSet[loc.zone] = true
+                    local zone = loc.zone
+                    if (not zone or zone == "") and loc.mapID then
+                        local info = C_Map.GetMapInfo(loc.mapID)
+                        zone = info and info.name
+                        if zone then
+                            loc.zone = zone
+                        end
+                    end
+                    if zone and zone ~= "" then
+                        zoneSet[zone] = true
                     end
                 end
             end
@@ -415,8 +434,26 @@ end
 local NPC_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0 }
 local ITEM_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0, 2.0 }
 
-local function IsGenericVendorName(name)
-    return not name or name == "" or name:find("^NPC #%d") ~= nil
+local function IsGenericVendorName(name, npcID)
+    if not name or name == "" then
+        return true
+    end
+    if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO then
+        return true
+    end
+    if name == UNKNOWNOBJECT then
+        return true
+    end
+    if name == "???" or name == "?" then
+        return true
+    end
+    if name:find("^NPC #%d") ~= nil or name:find("^NPC %d") ~= nil then
+        return true
+    end
+    if npcID and name == tostring(npcID) then
+        return true
+    end
+    return false
 end
 
 local function ResolveCreatureName(npcID)
@@ -428,7 +465,7 @@ local function ResolveCreatureName(npcID)
     end
     for _, line in ipairs(tooltipData.lines) do
         local text = line.leftText
-        if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
+        if text and not IsGenericVendorName(text, npcID) then
             return text
         end
     end
@@ -438,7 +475,7 @@ end
 local function FillVendorName(npcID, knownName, apply, isCurrent)
     local addon = GetDataAddon()
     local function accept(name)
-        if IsGenericVendorName(name) then
+        if IsGenericVendorName(name, npcID) then
             return false
         end
         if addon then
@@ -454,7 +491,22 @@ local function FillVendorName(npcID, knownName, apply, isCurrent)
     if addon and accept(addon.GetCachedNPCName(npcID)) then
         return
     end
+    if addon and addon.ResolveNPCName and accept(addon.ResolveNPCName(npcID)) then
+        return
+    end
     if accept(ResolveCreatureName(npcID)) then
+        return
+    end
+
+    if addon and addon.RequestNPCName then
+        addon.RequestNPCName(npcID, function(_, info)
+            if isCurrent and not isCurrent() then
+                return
+            end
+            if info then
+                accept(info.name)
+            end
+        end)
         return
     end
 
@@ -605,6 +657,9 @@ local function ApplyVendorPortrait(row, displayID)
 end
 
 local function BindVendorListRow(row, index, vendor, state)
+    if ns.BindCatalogListCapRow(row, vendor) then
+        return
+    end
     row._zebraIndex = index
     row.vendor = vendor
     row._rowSelected = state.selected and true or false
@@ -622,13 +677,18 @@ local function BindVendorListRow(row, index, vendor, state)
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         vendor.name = name
     end
-    if vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name) then
-        paintName(vendor.name)
+    local knownName = vendor.name
+    if IsGenericVendorName(knownName, npcID) then
+        knownName = nil
+        vendor.name = nil
+    end
+    if knownName then
+        paintName(knownName)
     else
         row.nameText:SetText("NPC #" .. (npcID or "?"))
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         if npcID then
-            FillVendorName(npcID, vendor.name, paintName, function()
+            FillVendorName(npcID, nil, paintName, function()
                 return row._nameToken == nameToken and row.vendor and row.vendor.npcID == npcID
             end)
         end
@@ -638,8 +698,16 @@ local function BindVendorListRow(row, index, vendor, state)
     if vendor.level and vendor.level > 0 then
         tinsert(metaParts, LEVEL .. " " .. vendor.level)
     end
-    if vendor.creatureType and vendor.creatureType ~= "" then
-        tinsert(metaParts, vendor.creatureType)
+    local creatureLabel = vendor.creatureType
+    if type(creatureLabel) == "number" then
+        local typeInfo = C_CreatureInfo.GetCreatureTypeInfo(creatureLabel)
+        creatureLabel = typeInfo and typeInfo.name
+        if creatureLabel then
+            vendor.creatureType = creatureLabel
+        end
+    end
+    if creatureLabel and creatureLabel ~= "" then
+        tinsert(metaParts, creatureLabel)
     end
     if vendor.expansion ~= nil then
         local expName = OneWoW:GetExpansionName(vendor.expansion)
@@ -853,6 +921,12 @@ local function ShowVendorDetail(panels, vendor)
         nameHeader:SetText(name)
         nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         vendor.name = name
+        if panels.vendorTypeDropdownText then
+            panels.vendorTypeDropdownText:SetText(
+                vendor.category and ns.VendorCategories:GetLabel(vendor.category)
+                    or L["VENDORS_CATEGORY_NONE"]
+            )
+        end
         if panels.rightStatusText then
             local n = 0
             if vendor.items then
@@ -861,7 +935,7 @@ local function ShowVendorDetail(panels, vendor)
             panels.rightStatusText:SetText(name .. " - " .. n .. " " .. L["VENDORS_ITEMS_SHORT"])
         end
     end
-    if vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name) then
+    if vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name, vendor.npcID) then
         paintDetailName(vendor.name)
     else
         nameHeader:SetText("NPC #" .. (vendor.npcID or "?"))
@@ -1017,6 +1091,28 @@ local function ShowVendorDetail(panels, vendor)
                 itemName:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
             end
 
+            if addon and addon.DetermineItemStatus then
+                local status = addon.DetermineItemStatus(itemID, itemData)
+                if status then
+                    local statusText = OneWoW_GUI:CreateFS(itemRow, 10)
+                    statusText:SetJustifyH("RIGHT")
+                    statusText:SetText(status)
+                    local collected = addon.IsItemCollected(itemID, itemData)
+                    if collected then
+                        statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+                    else
+                        statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+                    end
+                    if costStr ~= "" then
+                        statusText:SetPoint("RIGHT", costText, "LEFT", -8, 0)
+                    else
+                        statusText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
+                    end
+                    itemName:SetPoint("RIGHT", statusText, "LEFT", -8, 0)
+                    tinsert(detailElements, statusText)
+                end
+            end
+
             if itemData.limited then
                 local limitTag = OneWoW_GUI:CreateFS(itemRow, 10)
                 limitTag:SetPoint("RIGHT", costText, "LEFT", -6, 0)
@@ -1133,7 +1229,7 @@ function RefreshVendorList(panels)
     end
 
     local totalFiltered = #filtered
-    local hasActiveFilter = activeZoneFilter or (searchText ~= "") or currencyFilter or categoryFilter or expansionFilter ~= -1
+    local hasActiveFilter = activeZoneFilter or ns.CatalogListHasSearchText(searchText) or currencyFilter or categoryFilter or expansionFilter ~= -1
 
     if panels.leftStatusText then
         if hasActiveFilter then
@@ -1161,6 +1257,11 @@ function RefreshVendorList(panels)
         panels.emptyList:Hide()
     end
 
+    local isFiltered = hasActiveFilter and true or false
+    local cap = ns.GetCatalogListCap(isFiltered)
+    local truncated = totalFiltered > cap
+    local paint = truncated and cap or totalFiltered
+
     if pendingFocusNpcID then
         local focusVendor
         for _, v in ipairs(filtered) do
@@ -1173,13 +1274,25 @@ function RefreshVendorList(panels)
             tinsert(listResults, focusVendor)
         end
         for _, v in ipairs(filtered) do
+            if #listResults >= paint then
+                break
+            end
             if v.npcID ~= pendingFocusNpcID then
                 tinsert(listResults, v)
             end
         end
     else
-        for i = 1, totalFiltered do
+        for i = 1, paint do
             listResults[i] = filtered[i]
+        end
+    end
+
+    if truncated then
+        ns.AppendCatalogListCapNotice(listResults)
+        if panels.leftStatusText then
+            panels.leftStatusText:SetText(
+                string.format(L["VENDORS_STATS_SHOWING"], cap, totalFiltered)
+            )
         end
     end
 
@@ -1296,8 +1409,11 @@ function ns.UI.CreateVendorsTab(parent)
         getRowHeight = function(_)
             return EnsureVendorCardStride()
         end,
+        isSelectable = function(_, vendor)
+            return vendor ~= nil and not ns.IsCatalogListCap(vendor)
+        end,
         onSelect = function(_, vendor)
-            if vendor then
+            if vendor and not ns.IsCatalogListCap(vendor) then
                 ShowVendorDetail(panels, vendor)
             end
         end,
@@ -1548,9 +1664,7 @@ function ns.UI.CreateVendorsTab(parent)
     panels.vendorTypeDropdown = vendorTypeDropdown
     panels.vendorTypeDropdownText = vendorTypeDropdownText
 
-    panels.detailScrollFrame:ClearAllPoints()
-    panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -38)
-    panels.detailScrollFrame:SetPoint("BOTTOMRIGHT", panels.detailPanel, "BOTTOMRIGHT", -18, 8)
+    panels.LayoutDetailHeader({ height = 38 })
 
     -- Start in the no-data state; the data-ready watcher swaps to the live view
     -- once the Vendors data unit's data is queryable. Catch-up covers a tab opened
@@ -1563,7 +1677,7 @@ function ns.UI.CreateVendorsTab(parent)
     panels.detailScrollChild:SetHeight(100)
 
     local wired = false
-    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Vendors", function()
+    OneWoW:RegisterDataReadyWatcher(ns.ResolveCatalogPack("vendors"), function()
         if wired then return end
         local addon = GetDataAddon()
         if not addon then return end

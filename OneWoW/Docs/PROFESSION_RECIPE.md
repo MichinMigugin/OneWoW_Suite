@@ -91,7 +91,7 @@ gracefully when peer units are absent — there are **no** suite-internal
 | `AltTracker_Professions` `ProfessionRecipeCommit` | scan | Resolve canonical profession, commit `charData.recipes`, persist `recipeItemMap` |
 | `AltTracker_Professions` `DataManager` | open / closed | Live-query collectors (basics / equipment / concentration / expansion bands) |
 | `AltTracker_Accounting` `TrainerTracker` | learned | Confirm + name trainer purchases against the `PLAYER_MONEY` gold diff |
-| `CatalogData_Tradeskills` `TradeskillScanner` | scan | `scanCache` merge, then its own `RegisterScanCallback` fan-out for Catalog UI |
+| `CatDB_TradeSkillDB` / leftover `CatalogData_Tradeskills` `TradeskillScanner` | scan | `scanCache` merge, then its own `RegisterScanCallback` fan-out for Catalog UI |
 | `AltTracker` Professions tab | scan | Live tab refresh when visible |
 | `Trackers` `TrackerEngine` | open | Defer a tracker full-scan when a profession window becomes ready |
 | `QoL` `bagbar` | show / closed | Suppress the bag bar while the profession window is open |
@@ -106,7 +106,7 @@ profession slots, in priority order:
 1. Numeric base skill line (`baseInfo.professionID` vs `professions[*].skillLine`)
 2. Exact own-slot name match (non-empty)
 3. Per-recipe plurality via `C_TradeSkillUI.GetProfessionInfoByRecipeID` (Blizzard-native, no catalog)
-4. Catalog plurality via `OneWoW_CatalogData_Tradeskills_API.GetRecipeProfession` (only if that unit is loaded)
+4. Catalog plurality via `OneWoW_CatDB_TradeSkillDB_API.GetRecipeProfession` (leftover `OneWoW_CatalogData_Tradeskills_API`; only if that unit is loaded)
 5. **Unresolved → skip** (never write `recipes[""]`)
 
 ### Persistence rules

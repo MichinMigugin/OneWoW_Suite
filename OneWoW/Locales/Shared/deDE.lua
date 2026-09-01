@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("deDE", {
     ["TOAST_NEW_TMOG"] = "Neue Optik!",
     ["TOAST_INSTANCE_CLICK"] = "Klicken, um im Journal anzuzeigen",
 
+
     ["DATABASE_MANAGER_TITLE"] = "Datenbankmanager",
     ["DATABASE_MANAGER_DESC"] = "Verwaltet die Addon-Datenbanken. Klickt auf Zurücksetzen, um eine Datenbank vollständig zu leeren und einen UI-Neuladen zu erzwingen.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "Dieses Addon ist nicht aktiviert. Aktiviert es unter Funktionen verwalten, um die Datenbank zurückzusetzen.",

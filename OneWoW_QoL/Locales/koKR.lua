@@ -45,6 +45,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TIPS_ITEMTRACKER_DESC"] = "아이템을 어디에 보관하는지, 그리고 퀘스트, 상인, 인스턴스, 전문 기술 중 어디서 구하는지 표시합니다.",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "어디에 있는지",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "어디서 구하는지",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "Catalog에서 확인",
     ["TIPS_ITEMTRACKER_TOTAL"] = "합계 x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "가방",
     ["TIPS_ITEMTRACKER_BANK"] = "은행",

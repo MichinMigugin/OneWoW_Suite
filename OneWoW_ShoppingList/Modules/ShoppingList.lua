@@ -763,7 +763,8 @@ function ShoppingList:IsItemCraftable(itemID)
         return craftableCache[itemID].result, craftableCache[itemID].recipes
     end
 
-    local api = OneWoW_CatalogData_Tradeskills_API
+    OneWoW:EnsureCatalogPack("tradeskills")
+    local api = OneWoW:GetCatalogPackAPI("tradeskills")
     if not api then
         -- Do not cache absence — Tradeskills may load mid-session.
         return false
@@ -795,7 +796,8 @@ end
 function ShoppingList:CalculateCraftIngredients(recipeID, quantity)
     if not recipeID or not quantity then return {} end
 
-    local api = OneWoW_CatalogData_Tradeskills_API
+    OneWoW:EnsureCatalogPack("tradeskills")
+    local api = OneWoW:GetCatalogPackAPI("tradeskills")
     if not api then return {} end
 
     local reagents = api.GetRecipeReagents(recipeID)
@@ -822,7 +824,8 @@ end
 function ShoppingList:GetRecipeKnownBy(recipeID)
     if not recipeID then return {} end
 
-    local api = OneWoW_CatalogData_Tradeskills_API
+    OneWoW:EnsureCatalogPack("tradeskills")
+    local api = OneWoW:GetCatalogPackAPI("tradeskills")
     if not api then return {} end
 
     local keys = api.GetRecipeKnownBy(recipeID)

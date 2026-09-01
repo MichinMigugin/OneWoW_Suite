@@ -100,8 +100,9 @@ function ns_CharacterCleanup:CollectAll()
         end
     end
 
-    if OneWoW_CatalogData_Quests_API then
-        for _, charKey in ipairs(OneWoW_CatalogData_Quests_API.GetTrackedCharacterKeys()) do
+    local questsAPI = OneWoW:GetCatalogPackAPI("quests")
+    if questsAPI then
+        for _, charKey in ipairs(questsAPI.GetTrackedCharacterKeys()) do
             if type(charKey) == "string" then
                 if not charMap[charKey] then
                     charMap[charKey] = {
@@ -116,8 +117,9 @@ function ns_CharacterCleanup:CollectAll()
         end
     end
 
-    if OneWoW_CatalogData_Tradeskills_API then
-        for _, charKey in ipairs(OneWoW_CatalogData_Tradeskills_API.GetAllCharacters()) do
+    local tsAPI = OneWoW:GetCatalogPackAPI("tradeskills")
+    if tsAPI then
+        for _, charKey in ipairs(tsAPI.GetAllCharacters()) do
             local name, realm = strsplit("-", charKey)
             if name and realm then
                 if not charMap[charKey] then
@@ -183,11 +185,13 @@ function ns_CharacterCleanup:Purge(charKey)
         tinsert(purgedFrom, "Favorites")
     end
 
-    if OneWoW_CatalogData_Quests_API and OneWoW_CatalogData_Quests_API.PurgeCharacter(charKey) then
+    local questsAPI = OneWoW:GetCatalogPackAPI("quests")
+    if questsAPI and questsAPI.PurgeCharacter(charKey) then
         tinsert(purgedFrom, "Quest Completion")
     end
 
-    if OneWoW_CatalogData_Tradeskills_API and OneWoW_CatalogData_Tradeskills_API.PurgeCharacter(charKey) then
+    local tsAPI = OneWoW:GetCatalogPackAPI("tradeskills")
+    if tsAPI and tsAPI.PurgeCharacter(charKey) then
         tinsert(purgedFrom, "Tradeskill Scans")
     end
 

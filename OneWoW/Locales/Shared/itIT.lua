@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("itIT", {
     ["TOAST_NEW_TMOG"] = "Nuovo aspetto!",
     ["TOAST_INSTANCE_CLICK"] = "Clicca per vedere nel Diario",
 
+
     ["DATABASE_MANAGER_TITLE"] = "Gestore database",
     ["DATABASE_MANAGER_DESC"] = "Gestisci i database dell'addon. Clicca su Reimposta per cancellare completamente un database e forzare il ricaricamento dell'interfaccia.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "Questo addon non è attivo. Attivalo in Gestisci funzionalità per reimpostare il database.",

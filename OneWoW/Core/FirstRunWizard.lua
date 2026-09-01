@@ -111,7 +111,7 @@ FirstRun.CATALOG = {
         group       = "standalone",
         datastores  = {
             "OneWoW_AltTracker_Storage",
-            "OneWoW_CatalogData_Tradeskills",
+            "OneWoW_CatDB_TradeSkillDB",
         },
     },
     {
@@ -144,11 +144,12 @@ FirstRun.CATALOG = {
 
 -- Per-data-module icons (numeric file IDs) so sub-rows mirror the parent's icon slot.
 local STORE_ICONS = {
-    OneWoW_CatalogData_Journal      = 5341597,  -- inv_toy_booklibrary
-    OneWoW_CatalogData_Quests       = 236670,   -- achievement_quests_completed_07
-    OneWoW_CatalogData_Quests_Archive = 236669, -- achievement_quests_completed_06
-    OneWoW_CatalogData_Tradeskills  = 136241,   -- trade_blacksmithing
-    OneWoW_CatalogData_Vendors      = 901746,   -- inv_misc_coinbag_special
+    OneWoW_CatDB_ZoneDB             = 5341597,
+    OneWoW_CatDB_QuestDBCurrent     = 236670,
+    OneWoW_CatDB_QuestDBArchive     = 236669,
+    OneWoW_CatDB_TradeSkillDB       = 136241,
+    OneWoW_CatDB_NPCDB              = 901746,
+    OneWoW_CatDB_ItemDB             = 133771,   -- inv_misc_book_09
     OneWoW_AltTracker_Accounting    = 413573,   -- achievement_guildperk_cashflow_rank2
     OneWoW_AltTracker_Auctions      = 413570,   -- achievement_guildperk_bartering
     OneWoW_AltTracker_Character     = 134148,   -- inv_misc_grouplooking
@@ -160,11 +161,12 @@ local STORE_ICONS = {
 
 -- Sub-row copy and "What's affected?" modal keys (Catalog optional stores only).
 local STORE_DESC_KEYS = {
-    OneWoW_CatalogData_Journal     = "WIZARD_CAT_DATA_JOURNAL_DESC",
-    OneWoW_CatalogData_Quests      = "WIZARD_CAT_DATA_QUESTS_DESC",
-    OneWoW_CatalogData_Quests_Archive = "WIZARD_CAT_DATA_QUESTS_ARCHIVE_DESC",
-    OneWoW_CatalogData_Vendors     = "WIZARD_CAT_DATA_VENDORS_DESC",
-    OneWoW_CatalogData_Tradeskills = "WIZARD_CAT_DATA_TRADESKILLS_DESC",
+    OneWoW_CatDB_ZoneDB            = "WIZARD_CAT_DATA_JOURNAL_DESC",
+    OneWoW_CatDB_QuestDBCurrent    = "WIZARD_CAT_DATA_QUESTS_DESC",
+    OneWoW_CatDB_QuestDBArchive    = "WIZARD_CAT_DATA_QUESTS_ARCHIVE_DESC",
+    OneWoW_CatDB_NPCDB             = "WIZARD_CAT_DATA_VENDORS_DESC",
+    OneWoW_CatDB_TradeSkillDB      = "WIZARD_CAT_DATA_TRADESKILLS_DESC",
+    OneWoW_CatDB_ItemDB            = "WIZARD_CAT_DATA_ITEMDB_DESC",
 }
 
 local function ForEachInUnitFeature(fn)
@@ -197,27 +199,37 @@ function FirstRun:ApplyInUnitFeatures(featureSelections)
 end
 
 local STORE_AFFECTED_KEYS = {
-    OneWoW_CatalogData_Journal = {
+    OneWoW_CatDB_ZoneDB = {
         title = "WIZARD_AFFECTED_JOURNAL_TITLE",
         body  = "WIZARD_AFFECTED_JOURNAL_BODY",
     },
-    OneWoW_CatalogData_Quests = {
+    OneWoW_CatDB_QuestDBCurrent = {
         title = "WIZARD_AFFECTED_QUESTS_TITLE",
         body  = "WIZARD_AFFECTED_QUESTS_BODY",
     },
-    OneWoW_CatalogData_Quests_Archive = {
+    OneWoW_CatDB_QuestDBArchive = {
         title = "WIZARD_AFFECTED_QUESTS_ARCHIVE_TITLE",
         body  = "WIZARD_AFFECTED_QUESTS_ARCHIVE_BODY",
     },
-    OneWoW_CatalogData_Vendors = {
+    OneWoW_CatDB_NPCDB = {
         title = "WIZARD_AFFECTED_VENDORS_TITLE",
         body  = "WIZARD_AFFECTED_VENDORS_BODY",
     },
-    OneWoW_CatalogData_Tradeskills = {
+    OneWoW_CatDB_TradeSkillDB = {
         title = "WIZARD_AFFECTED_TRADESKILLS_TITLE",
         body  = "WIZARD_AFFECTED_TRADESKILLS_BODY",
     },
+    OneWoW_CatDB_ItemDB = {
+        title = "WIZARD_AFFECTED_ITEMDB_TITLE",
+        body  = "WIZARD_AFFECTED_ITEMDB_BODY",
+    },
 }
+
+-- CATALOG.datastores may name a pack role or CatDB folder.
+-- Resolve at consume time so ShoppingList always pulls TradeSkillDB.
+local function ResolveCatalogDatastore(name)
+    return ns:ResolveCatalogPack(name) or name
+end
 
 local PARENT_MODULE_LABEL_KEYS = {
     OneWoW_Catalog    = "MODULE_CATALOG",
@@ -275,7 +287,7 @@ local function GetStoreConsumerForced(storeAddon, selections)
     for _, entry in ipairs(FirstRun.CATALOG) do
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
-                if ds == storeAddon then
+                if ResolveCatalogDatastore(ds) == storeAddon then
                     if owner and owner.addon ~= entry.addonName then
                         return entry.addonName
                     end
@@ -302,6 +314,7 @@ local function ComputeEligibleDatastorePool(selections)
     for _, entry in ipairs(FirstRun.CATALOG) do
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
+                ds = ResolveCatalogDatastore(ds)
                 local owner = ns:GetManifestStoreOwner(ds)
                 if not owner
                     or selections[owner.addon]
@@ -326,6 +339,7 @@ local function ComputeDatastoreState(selections, storeSelections)
     for _, entry in ipairs(FirstRun.CATALOG) do
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
+                ds = ResolveCatalogDatastore(ds)
                 local owner = ns:GetManifestStoreOwner(ds)
                 if not owner
                     or selections[owner.addon]
@@ -444,7 +458,7 @@ function FirstRun:Apply(selections, perCharacter, hard, storeSelections, feature
     -- Wanted consumer-pulled stores when the feature was already loaded (BringUp
     -- skipped): EnsureLoaded each datastore that Apply just opted in.
     -- Catalog lazyStores stay unloaded until a tab / quest event / Item Search
-    -- source asks; ShoppingList still BringUp-pulls Tradeskills.
+    -- source asks; ShoppingList still BringUp-pulls the resolved tradeskills pack.
     for _, ds in ipairs(DATASTORE_ADDONS) do
         if datastoreState[ds] and not C_AddOns.IsAddOnLoaded(ds) and not ns:IsLazyStore(ds) then
             ns:EnsureLoaded(ds)
@@ -1027,6 +1041,7 @@ function FirstRun:BuildPanel(parent, opts)
                     for _, catalogEntry in ipairs(FirstRun.CATALOG) do
                         if catalogEntry.addonName == addon then
                             for _, ds in ipairs(catalogEntry.datastores) do
+                                ds = ResolveCatalogDatastore(ds)
                                 if effective[ds] then
                                     ns:SetFeatureOptOut(ds, false, perCharacter)
                                 end
@@ -1163,6 +1178,7 @@ function FirstRun:BuildPanel(parent, opts)
                 for _, entry in ipairs(FirstRun.CATALOG) do
                     if entry.addonName == addonName then
                         for _, ds in ipairs(entry.datastores) do
+                            ds = ResolveCatalogDatastore(ds)
                             if effective[ds] and NeedsSoftLoad(ds) then
                                 childNeedsLoad = true
                                 break

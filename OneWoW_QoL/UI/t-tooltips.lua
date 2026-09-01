@@ -389,10 +389,10 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
             rowY = rowY - math.max(24, reqLabel:GetStringHeight() + 8)
         end
 
-        addRequireRow("TIPS_ITEMTRACKER_VENDORS_REQUIRES", OneWoW_CatalogData_Vendors_API ~= nil)
-        addRequireRow("TIPS_ITEMTRACKER_INSTANCES_REQUIRES", OneWoW_CatalogData_Journal_API ~= nil)
-        addRequireRow("TIPS_ITEMTRACKER_QUESTS_REQUIRES", OneWoW_CatalogData_Quests_API ~= nil)
-        addRequireRow("TIPS_ITEMTRACKER_CRAFT_REQUIRES", OneWoW_CatalogData_Tradeskills_API ~= nil)
+        addRequireRow("TIPS_ITEMTRACKER_VENDORS_REQUIRES", OneWoW:IsCatalogPackAvailable("vendors"))
+        addRequireRow("TIPS_ITEMTRACKER_INSTANCES_REQUIRES", OneWoW:IsCatalogPackAvailable("journal"))
+        addRequireRow("TIPS_ITEMTRACKER_QUESTS_REQUIRES", OneWoW:IsCatalogPackAvailable("quests"))
+        addRequireRow("TIPS_ITEMTRACKER_CRAFT_REQUIRES", OneWoW:IsCatalogPackAvailable("tradeskills"))
         return math.max(1, math.abs(rowY))
     end)
 

@@ -29,7 +29,7 @@ Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 # Media
 Media\fonts.lua
 
-# GUI toolkit (absorbed OneWoW_GUI library — publishes the OneWoW_GUI global).
+# GUI toolkit (absorbed OneWoW_GUI library â€” publishes the OneWoW_GUI global).
 # Widget files - DO NOT reorder. Dependencies: Controls needs Buttons+Display;
 # Layout needs Buttons+Controls; Panels needs Buttons+Layout+EditBoxes;
 # ItemListEditor needs Buttons+EditBoxes+Panels (CreateScrollFrame).
@@ -61,9 +61,9 @@ GUI\DatabaseManager.lua
 GUI\ReportDialog.lua
 GUI\CatalogConfirm.lua
 
-# Locale service — must load before any Locales file and before any reader of
+# Locale service â€” must load before any Locales file and before any reader of
 # OneWoW.L. Lives in Services/ but loads here (ahead of the Services block) for
-# that reason. See Docs/ARCHITECTURE.md (§6 "Localization").
+# that reason. See Docs/ARCHITECTURE.md (Â§6 "Localization").
 Services\LocaleService.lua
 
 # Shared locale (suite-wide vocab: themes, languages, minimap labels, buttons).
@@ -104,6 +104,7 @@ Core\CopyPaste.lua
 Core\Database.lua
 Core\ModuleRegistry.lua
 Core\AddonLoader.lua
+Core\PackResolver.lua
 Core\Lifecycle.lua
 Core\StoreBootstrap.lua
 Core\SettingsFeatureRegistry.lua
@@ -114,7 +115,7 @@ Core\WhatsNewData.lua
 Core\WhatsNew.lua
 Core\VersionCheck.lua
 
-# Services (shared OneWoW.* engines/utilities consumed cross-unit — see ARCHITECTURE §6).
+# Services (shared OneWoW.* engines/utilities consumed cross-unit â€” see ARCHITECTURE Â§6).
 # DO NOT reorder within this block: TooltipScanner before PredicateEngine (PE
 # captures ns.TooltipScanner at file scope); ItemLevel before PredicateEngine +
 # upgrade-detection (they capture ns.ItemLevel at file scope); PredicateEngine
@@ -201,7 +202,7 @@ UI\t-profiles.lua
 UI\t-charprofiles.lua
 UI\t-managefeatures.lua
 
-# Facade (curated orchestrator global — must load after all ns.* attachments)
+# Facade (curated orchestrator global â€” must load after all ns.* attachments)
 Core\Facade.lua
 
 # Main

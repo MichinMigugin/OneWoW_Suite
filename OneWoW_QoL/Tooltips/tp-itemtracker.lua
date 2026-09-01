@@ -1,6 +1,44 @@
 local _, ns = ...
 
 local OneWoW = OneWoW
+local tinsert, sort, pairs, format = tinsert, sort, pairs, format
+local RETRIEVING_DATA = RETRIEVING_DATA
+local RETRIEVING_ITEM_INFO = RETRIEVING_ITEM_INFO
+local UNKNOWNOBJECT = UNKNOWNOBJECT
+local BATTLE_PET_SOURCE_1 = BATTLE_PET_SOURCE_1
+local BATTLE_PET_SOURCE_2 = BATTLE_PET_SOURCE_2
+local BATTLE_PET_SOURCE_3 = BATTLE_PET_SOURCE_3
+local BATTLE_PET_SOURCE_4 = BATTLE_PET_SOURCE_4
+local BATTLE_PET_SOURCE_6 = BATTLE_PET_SOURCE_6
+local CLUB_FINDER_MULTIPLE_CHECKED = CLUB_FINDER_MULTIPLE_CHECKED
+local GUILD = GUILD
+local C_Map = C_Map
+local GetAchievementInfo = GetAchievementInfo
+
+local CATDB_RARE_BASE = 10000000
+local CATDB_GENERAL_MIN = 20000000
+local JOURNAL_RARE_BASE = -1000000
+local WHERE_LIST_CAP = 3
+local WHERE_HEADER_PAD = "  "
+local WHERE_CHILD_PAD = "    "
+
+---@param name string|nil
+---@return boolean
+local function IsMissingWhereName(name)
+    if not name or name == "" then
+        return true
+    end
+    if name == "?" or name == "???" then
+        return true
+    end
+    if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO or name == UNKNOWNOBJECT then
+        return true
+    end
+    if name:find("^NPC #%d") or name:find("^NPC %d") then
+        return true
+    end
+    return false
+end
 
 local function GetItemIndex()
     local api = OneWoW_AltTracker_Storage_API
@@ -8,33 +46,42 @@ local function GetItemIndex()
 end
 
 local function GetVendorData(itemID)
-    local api = OneWoW_CatalogData_Vendors_API
-    if api and api.GetVendorsByItem then
-        return api.GetVendorsByItem(itemID)
+    OneWoW:EnsureCatalogPack("vendors")
+    local api = OneWoW:GetCatalogPackAPI("vendors")
+    if not api then
+        return {}
     end
-    return {}
+    return api.GetVendorsByItem(itemID) or {}
 end
 
 -- The Journal store owns the drop index and dedupes per instance+encounter, so
 -- this only has to supply the tooltip's display fallback.
 local function GetInstanceData(itemID)
     local results = {}
-    local api = OneWoW_CatalogData_Journal_API
+    OneWoW:EnsureCatalogPack("journal")
+    local api = OneWoW:GetCatalogPackAPI("journal")
     if not api then
         return results
     end
     for _, drop in ipairs(api.GetItemDropLocations(itemID)) do
-        table.insert(results, {
-            instanceName  = drop.instanceName or "?",
-            encounterName = drop.encounterName,
-        })
+        tinsert(results, drop)
     end
     return results
 end
 
+local function GetAchievementIDs(itemID)
+    OneWoW:EnsureCatalogPack("journal")
+    local api = OneWoW:GetCatalogPackAPI("journal")
+    if not api then
+        return {}
+    end
+    return api.GetAchievementsForItem(itemID) or {}
+end
+
 local function GetCraftData(itemID)
     local results = {}
-    local api = OneWoW_CatalogData_Tradeskills_API
+    OneWoW:EnsureCatalogPack("tradeskills")
+    local api = OneWoW:GetCatalogPackAPI("tradeskills")
     if not api then
         return results
     end
@@ -49,24 +96,262 @@ local function GetCraftData(itemID)
     return results
 end
 
-local SOURCE_ROW_CAP = 5
-
-local function AppendCappedSourceRows(lines, rows, leftR, leftG, leftB)
-    local shown = 0
-    for _, row in ipairs(rows) do
-        if shown >= SOURCE_ROW_CAP then
-            table.insert(lines, { type = "text", text = "  ...", r = 0.7, g = 0.7, b = 0.7 })
-            break
-        end
-        table.insert(lines, {
-            type  = "double",
-            left  = "    " .. row.left,
-            right = row.right,
-            lr = leftR, lg = leftG, lb = leftB,
-            rr = 0.7, rg = 0.7, rb = 0.7,
-        })
-        shown = shown + 1
+---@param name string|nil
+---@return string|nil
+local function CleanWhereName(name)
+    if IsMissingWhereName(name) then
+        return nil
     end
+    return name
+end
+
+---@param drop table
+---@return string|nil
+local function DropKind(drop)
+    local encID = drop.encounterID
+    if drop.worldRare then
+        return "rare"
+    end
+    if encID then
+        if encID >= CATDB_RARE_BASE and encID < CATDB_GENERAL_MIN then
+            return "rare"
+        end
+        if encID <= JOURNAL_RARE_BASE then
+            return "rare"
+        end
+    end
+    local instType = drop.instanceType
+    local isWorld = instType == "world" or instType == "zone"
+        or ((not drop.instanceID or drop.instanceID == 0)
+            and instType ~= "party" and instType ~= "raid" and instType ~= "delve")
+    if isWorld then
+        if encID and encID > 0 and encID < CATDB_RARE_BASE then
+            return "worldBoss"
+        end
+        if drop.npcID then
+            return "rare"
+        end
+        return nil
+    end
+    if instType == "party" then
+        return "dungeon"
+    end
+    if instType == "delve" then
+        return "delve"
+    end
+    if instType == "raid" then
+        return "raid"
+    end
+    if drop.instanceID and drop.instanceID > 0 then
+        return "raid"
+    end
+    if drop.npcID then
+        return "rare"
+    end
+    return nil
+end
+
+---@param drop table
+---@return string|nil
+local function DropZoneName(drop)
+    if drop.uiMapID and drop.uiMapID > 0 then
+        local info = C_Map.GetMapInfo(drop.uiMapID)
+        local mapName = info and CleanWhereName(info.name)
+        if mapName then
+            return mapName
+        end
+    end
+    return CleanWhereName(drop.instanceName)
+end
+
+---@param lines table
+---@param header string
+---@param r number
+---@param g number
+---@param b number
+local function AppendCategoryHeader(lines, header, r, g, b)
+    tinsert(lines, {
+        type = "header",
+        text = WHERE_HEADER_PAD .. header,
+        r = r, g = g, b = b,
+    })
+end
+
+---@param lines table
+---@param left string
+---@param right string|nil
+---@param r number
+---@param g number
+---@param b number
+local function AppendCategoryChild(lines, left, right, r, g, b)
+    tinsert(lines, {
+        type = "double",
+        left = WHERE_CHILD_PAD .. left,
+        right = right or "",
+        lr = r, lg = g, lb = b,
+        rr = 0.85, rg = 0.85, rb = 0.85,
+    })
+end
+
+--- 1-3 rows: list all. More than 3: first 2 real rows, then Multiple / see Catalog.
+---@param lines table
+---@param header string
+---@param rows table
+---@param r number
+---@param g number
+---@param b number
+---@param seeCatalog string
+local function AppendCappedCategory(lines, header, rows, r, g, b, seeCatalog)
+    if #rows == 0 then
+        return
+    end
+    AppendCategoryHeader(lines, header, r, g, b)
+    local overflow = #rows > WHERE_LIST_CAP
+    local n = overflow and 2 or #rows
+    for i = 1, n do
+        AppendCategoryChild(lines, rows[i].left, rows[i].right, r, g, b)
+    end
+    if overflow then
+        AppendCategoryChild(lines, CLUB_FINDER_MULTIPLE_CHECKED, seeCatalog, r, g, b)
+    end
+end
+
+---@param vendor table
+---@return string|nil
+local function VendorZoneName(vendor)
+    local locs = vendor.locations
+    if not locs then
+        return nil
+    end
+    for _, loc in pairs(locs) do
+        local zone = CleanWhereName(loc.zone)
+        if zone then
+            return zone
+        end
+    end
+    return nil
+end
+
+---@param drop table
+---@return string|nil left
+---@return string|nil right
+local function DropRowLabels(drop)
+    local kind = DropKind(drop)
+    if kind == "rare" or kind == "worldBoss" then
+        return DropZoneName(drop), CleanWhereName(drop.encounterName)
+    end
+    local inst = CleanWhereName(drop.instanceName)
+    if inst or kind then
+        return inst, CleanWhereName(drop.encounterName)
+    end
+    return nil, nil
+end
+
+---@param lines table
+---@param seeCatalog string
+---@param drops table
+local function AppendDropSourceLines(lines, seeCatalog, drops)
+    local rows = {}
+    local seen = {}
+    for i = 1, #drops do
+        local left, right = DropRowLabels(drops[i])
+        if left then
+            local key = left .. "\0" .. (right or "")
+            if not seen[key] then
+                seen[key] = true
+                tinsert(rows, { left = left, right = right })
+            end
+        end
+    end
+    AppendCappedCategory(lines, BATTLE_PET_SOURCE_1, rows, 0.7, 0.9, 0.7, seeCatalog)
+end
+
+---@param lines table
+---@param seeCatalog string
+---@param vendors table
+local function AppendVendorLines(lines, seeCatalog, vendors)
+    local rows = {}
+    local seen = {}
+    for i = 1, #vendors do
+        local name = CleanWhereName(vendors[i].name)
+        if name and not seen[name] then
+            seen[name] = true
+            tinsert(rows, { left = name, right = VendorZoneName(vendors[i]) })
+        end
+    end
+    sort(rows, function(a, b)
+        return a.left < b.left
+    end)
+    AppendCappedCategory(lines, BATTLE_PET_SOURCE_3, rows, 0.9, 0.8, 0.5, seeCatalog)
+end
+
+---@param lines table
+---@param seeCatalog string
+---@param questAPI table
+---@param questIDs table
+local function AppendQuestLines(lines, seeCatalog, questAPI, questIDs)
+    local unique = {}
+    local order = {}
+    for i = 1, #questIDs do
+        local id = tonumber(questIDs[i])
+        if id and not unique[id] then
+            unique[id] = true
+            tinsert(order, id)
+        end
+    end
+    sort(order)
+    local rows = {}
+    for i = 1, #order do
+        local id = order[i]
+        local name = CleanWhereName(questAPI.GetQuestName(id))
+        tinsert(rows, {
+            left = name or "",
+            right = format("QuestID:[%d]", id),
+        })
+    end
+    AppendCappedCategory(lines, BATTLE_PET_SOURCE_2, rows, 0.9, 0.85, 0.5, seeCatalog)
+end
+
+---@param lines table
+---@param seeCatalog string
+---@param achIDs table
+local function AppendAchievementLines(lines, seeCatalog, achIDs)
+    local unique = {}
+    local order = {}
+    for i = 1, #achIDs do
+        local id = tonumber(achIDs[i])
+        if id and not unique[id] then
+            unique[id] = true
+            tinsert(order, id)
+        end
+    end
+    sort(order)
+    local rows = {}
+    for i = 1, #order do
+        local id = order[i]
+        local name = CleanWhereName(select(2, GetAchievementInfo(id)))
+        tinsert(rows, {
+            left = name or "",
+            right = format("AchievementID:[%d]", id),
+        })
+    end
+    AppendCappedCategory(lines, BATTLE_PET_SOURCE_6, rows, 0.9, 0.8, 0.4, seeCatalog)
+end
+
+---@param lines table
+---@param seeCatalog string
+---@param crafts table
+local function AppendCraftLines(lines, seeCatalog, crafts)
+    local rows = {}
+    local seen = {}
+    for i = 1, #crafts do
+        local name = CleanWhereName(crafts[i].name)
+        if name and not seen[name] then
+            seen[name] = true
+            tinsert(rows, { left = name, right = "" })
+        end
+    end
+    AppendCappedCategory(lines, BATTLE_PET_SOURCE_4, rows, 0.7, 0.8, 1.0, seeCatalog)
 end
 
 local function GetClassColor(class)
@@ -154,7 +439,7 @@ local function AggregateFamilyRows(locations, cfg, L, groupByRank)
                     local b = bucket(key, L["TIPS_ITEMTRACKER_WARBAND"], "warband", nil, locType, rankSlot)
                     b.count = b.count + (loc.count or 0)
                 elseif locType == "guild" then
-                    local gn = loc.guildName or "?"
+                    local gn = loc.guildName or GUILD
                     local key = "GUILD|" .. gn .. "|" .. (rankSlot or "_")
                     local b = bucket(key, gn, "guild", nil, locType, rankSlot)
                     b.count = b.count + (loc.count or 0)
@@ -327,84 +612,49 @@ local function ItemTrackerProvider(_, context)
         end
     end
 
-    local sourceBlocks = {}
+    local sourceStart = #lines
+    local seeCatalog = L["TIPS_ITEMTRACKER_SEE_CATALOG"]
 
-    if showQuests and OneWoW_CatalogData_Quests_API then
-        local questIDs = OneWoW_CatalogData_Quests_API.GetQuestsRewardingItem(context.itemID, false)
-        if questIDs then
-            local rows = {}
-            for _, questID in ipairs(questIDs) do
-                local q = OneWoW_CatalogData_Quests_API.GetQuest(questID, false)
-                rows[#rows + 1] = {
-                    left  = (q and q.name) or tostring(questID),
-                    right = BATTLE_PET_SOURCE_2,
-                }
-            end
-            if #rows > 0 then
-                sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.9, lg = 0.85, lb = 0.5 }
-            end
-        end
-    end
-
-    if showVendors and OneWoW_CatalogData_Vendors_API then
+    if showVendors then
         local vendors = GetVendorData(context.itemID)
         if vendors and #vendors > 0 then
-            local rows = {}
-            for _, vendor in ipairs(vendors) do
-                local vendorName = vendor.name or "?"
-                local zone
-                if vendor.locations then
-                    for _, loc in pairs(vendor.locations) do
-                        zone = loc.zone or loc.subzone
-                        break
-                    end
-                end
-                rows[#rows + 1] = {
-                    left  = vendorName,
-                    right = zone or BATTLE_PET_SOURCE_3,
-                }
-            end
-            sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.9, lg = 0.8, lb = 0.5 }
+            AppendVendorLines(lines, seeCatalog, vendors)
         end
     end
 
-    if showInstances and OneWoW_CatalogData_Journal_API then
+    if showQuests then
+        OneWoW:EnsureCatalogPack("quests")
+        local questAPI = OneWoW:GetCatalogPackAPI("quests")
+        local questIDs = questAPI and questAPI.GetQuestsRewardingItem(context.itemID, false)
+        if questIDs and #questIDs > 0 then
+            AppendQuestLines(lines, seeCatalog, questAPI, questIDs)
+        end
+    end
+
+    if showInstances then
         local instEntries = GetInstanceData(context.itemID)
         if instEntries and #instEntries > 0 then
-            local rows = {}
-            for _, entry in ipairs(instEntries) do
-                rows[#rows + 1] = {
-                    left  = entry.instanceName,
-                    right = entry.encounterName or BATTLE_PET_SOURCE_1,
-                }
-            end
-            sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.7, lg = 0.9, lb = 0.7 }
+            AppendDropSourceLines(lines, seeCatalog, instEntries)
+        end
+        local achIDs = GetAchievementIDs(context.itemID)
+        if #achIDs > 0 then
+            AppendAchievementLines(lines, seeCatalog, achIDs)
         end
     end
 
-    if showCrafted and OneWoW_CatalogData_Tradeskills_API then
+    if showCrafted then
         local crafts = GetCraftData(context.itemID)
         if #crafts > 0 then
-            local rows = {}
-            for _, craft in ipairs(crafts) do
-                rows[#rows + 1] = {
-                    left  = craft.name,
-                    right = BATTLE_PET_SOURCE_4,
-                }
-            end
-            sourceBlocks[#sourceBlocks + 1] = { rows = rows, lr = 0.7, lg = 0.8, lb = 1.0 }
+            AppendCraftLines(lines, seeCatalog, crafts)
         end
     end
 
-    if #sourceBlocks > 0 then
-        table.insert(lines, {
+    if #lines > sourceStart then
+        tinsert(lines, sourceStart + 1, {
             type = "text",
             text = "  " .. L["TIPS_ITEMTRACKER_WHERE_TO_GET"],
             r = 0.4, g = 0.8, b = 1.0,
         })
-        for _, block in ipairs(sourceBlocks) do
-            AppendCappedSourceRows(lines, block.rows, block.lr, block.lg, block.lb)
-        end
     end
 
     if #lines == 0 then return nil end

@@ -589,6 +589,8 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
+    local defaultContainerTopY = hideTitles and -8 or -32
+
     local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     OneWoW_GUI:SetFontBaseSize(detailTitle, 12)
     OneWoW_GUI:SafeSetFont(detailTitle, OneWoW_GUI:GetFont(), 12)
@@ -601,8 +603,31 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     end
 
     local detailContainer = CreateFrame("Frame", nil, detailPanel)
-    detailContainer:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, hideTitles and -8 or -32)
+    detailContainer:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, defaultContainerTopY)
     detailContainer:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
+
+    local headerOpts
+    local function LayoutDetailHeader(opts)
+        if opts ~= nil then
+            headerOpts = opts
+        end
+        opts = headerOpts
+        local chromeH = opts and tonumber(opts.height)
+        if not chromeH or chromeH <= 0 then
+            chromeH = defaultContainerTopY
+        else
+            chromeH = -chromeH
+        end
+        detailContainer:ClearAllPoints()
+        detailContainer:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, chromeH)
+        detailContainer:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
+    end
+
+    detailPanel:HookScript("OnSizeChanged", function()
+        if headerOpts then
+            LayoutDetailHeader()
+        end
+    end)
 
     local detailScrollFrame = CreateFrame("ScrollFrame", "OneWoWGUI_Split_Detail" .. uid, detailContainer, "UIPanelScrollFrameTemplate")
     detailScrollFrame:SetPoint("TOPLEFT", detailContainer, "TOPLEFT", 0, 0)
@@ -657,6 +682,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
         UpdateListThumb = noop,
         detailPanel = detailPanel,
         detailTitle = detailTitle,
+        LayoutDetailHeader = LayoutDetailHeader,
         detailScrollFrame = detailScrollFrame,
         detailScrollChild = detailScrollChild,
         UpdateDetailThumb = noop,

@@ -242,7 +242,7 @@ function ns.UI.CreateSettingsTab(parent)
         {section = "General"},
         {key = "s_maxlevel",  label = "Max player level",                   auto = true,  value = function() return "Level " .. GetMaxPlayerLevel() end, file = "GetMaxPlayerLevel()"},
         {key = "g_interface",  label = "Update ## Interface in TOC files when the build changes", auto = false, value = function() local _, _, _, intVersion = GetBuildInfo(); return "Current: " .. (intVersion or "?") end, file = "All .toc files - ## Interface line"},
-        {key = "g_journal",   label = "Regenerate Journal DB2 if season instances moved", auto = false, value = function() return "python bin/journal_db2_tools.py generate" end, file = "OneWoW_CatalogData_Journal/Data/Generated/"},
+        {key = "g_journal",   label = "Regenerate Journal DB2 if season instances moved", auto = false, value = function() return "python bin/journal_db2_tools.py generate" end, file = "OneWoW_CatDB_ZoneDB/Data/Generated/"},
     }
 
     local function OpenChecklistDialog()

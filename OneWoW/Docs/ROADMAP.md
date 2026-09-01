@@ -69,7 +69,7 @@ players to remine. Degrade gracefully when a key has no mapping.
 
 ### P-2 · Cross-alt quest completion — already shipped, consume it
 
-`OneWoW_CatalogData_Quests_API.GetCompletedCharacters(questID)` and
+`OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters(questID)` (leftover `OneWoW_CatalogData_Quests_API`) and
 `GetActiveCharacters(questID)` are public today, and Catalog's Quests tab already renders
 per-character completion. `CompletionTracker` maintains its own `db.completion[charKey]`,
 seeded from `GetAllCompletedQuestIDs()` on login and updated on every turn-in, falling back
@@ -180,7 +180,7 @@ Settled items, so they stop reappearing as open questions.
 
 | Decision | Outcome |
 | --- | --- |
-| Quest Ask ownership — AT2 vs Catalog | **Catalog.** Store and UI both already live there; other legs consume `OneWoW_CatalogData_Quests_API` and deep-link. |
+| Quest Ask ownership — AT2 vs Catalog | **Catalog.** Store and UI both already live there; other legs consume `OneWoW_CatDB_QuestDBCurrent_API` (leftover `OneWoW_CatalogData_Quests_API`) and deep-link. |
 | Endgame lockout access | **Raw read + predicate on the store** (P-3), not per-consumer blob walks. |
 | Roster deferrals | **Split data vs UI.** Data is available now; only rendering waits for AT2. |
 | Interim roster UI in legacy AltTracker | **No.** Legacy is feature-frozen and deleted at cutover. |

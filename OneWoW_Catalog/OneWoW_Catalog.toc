@@ -1,7 +1,7 @@
 ## Interface: 120007, 120100
 ## Version: R6.2609.0106
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Catalog|r
-## Notes: OneWoW Addon that: provides a catalog of game data including journal, vendors, tradeskills, and quests.
+## Notes: OneWoW Addon that: provides a catalog of game data including journal, vendors, tradeskills, quests, collectibles, and housing.
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW
@@ -33,6 +33,7 @@ Locales\itIT.lua
 # Core
 Core\Constants.lua
 Core\Database.lua
+Core\PackResolver.lua
 Core\API.lua
 Core\Favorites.lua
 Core\VendorCategories.lua
@@ -47,8 +48,10 @@ Services\ItemDataLoader.lua
 Services\VisibleItemFill.lua
 Services\CatalogTabReady.lua
 Services\CardChrome.lua
+Services\CollectibleBrowse.lua
 
 # UI
+UI\ListCap.lua
 # UI - Tabs
 UI\t-journal.lua
 UI\t-vendors.lua
@@ -56,6 +59,9 @@ UI\t-tradeskills.lua
 UI\t-quests.lua
 
 UI\t-itemsearch.lua
+UI\CollectibleBrowser.lua
+UI\t-collectibles.lua
+UI\t-housing.lua
 UI\t-settings.lua
 
 # Modules

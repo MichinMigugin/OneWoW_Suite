@@ -42,7 +42,7 @@ When you click the green **Craft** button on an item row, the addon:
 - Pre-fills it with the recipe's reagents.
 - Auto-merges quantities if the same item is craft-ordered again under the same parent list.
 
-With **OneWoW_CatalogData_Tradeskills** also installed, the **Craft** button knows which recipes produce a given item and shows a recipe picker that lists which characters know each recipe. Quality-variant reagents (rank 1/2/3 versions) are recognized as interchangeable when scanning bags.
+With **OneWoW_CatDB_TradeSkillDB** also installed, the **Craft** button knows which recipes produce a given item and shows a recipe picker that lists which characters know each recipe. Quality-variant reagents (rank 1/2/3 versions) are recognized as interchangeable when scanning bags.
 
 ### Crafting Orders Integration
 
@@ -89,7 +89,7 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 
 - **OneWoW** — Core hub addon (required).
 - **OneWoW_AltTracker_Storage** — Optional. Enables alt / personal-bank / guild-bank scanning (pulled when ShoppingList is enabled in Manage Features; AltTracker hub not required).
-- **OneWoW_CatalogData_Tradeskills** — Optional. Enables the **Craft** button on
+- **OneWoW_CatDB_TradeSkillDB** — Optional. Enables the **Craft** button on
   item rows, alt-recipe-knowledge lookup, and quality-variant reagent matching.
   Does not require the Catalog hub UI.
 

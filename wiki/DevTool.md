@@ -44,7 +44,7 @@ Browse globals, `Enum` tables, and addon data. Bookmarks and copy helpers. Secre
 
 ### Textures, Fonts, Sounds, Colors, Layout
 
-Browse atlases, font objects, sounds, color pickers, and an on-screen grid.
+Browse atlases, font objects, sounds, color pickers, and an on-screen grid. On Textures, double-click a sheet region to collect names and copy the whole list at once.
 
 ### Editor
 

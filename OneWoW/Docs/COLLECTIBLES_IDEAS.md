@@ -51,7 +51,7 @@ not inventing.
 | **Assignment primitive** (mode/chars/roles + membership test) | `OneWoW.AltScope` — `IsCharIncluded(charKey, scope)`, roles | `OneWoW/Services/AltScope.lua` |
 | **Alt multiselect UI** (all / selected + Add Alt + roles) | `ns.UI.BuildAltScopeSection(parent, opts)` | `OneWoW_QoL/UI/AltScopeSection.lua` |
 | **Click-to-copy** dialog(s) | `OneWoW_GUI:ShowCopyURLDialog(title, url)` / `ShowCopyLinksDialog(...)` | `OneWoW/GUI/Panels.lua` |
-| Vendor scan funnel + encyclopedia | `OneWoW.Merchant`, `OneWoW_CatalogData_Vendors_API` | core service / CatalogData unit |
+| Vendor scan funnel + encyclopedia | `OneWoW.Merchant`, `OneWoW_CatDB_NPCDB_API` | core service / CatDB unit |
 | Live per-offer affordability | `OneWoW.Collectibles.GetOfferAffordability(offer)` | `OneWoW/Services/Collectibles.lua` |
 | Ensemble/set progress rollup | `GetEnsembleProgress` / `GetSetMembers` | same service |
 | Punch-list voidcache → content itemIDs | `Collectibles.GetPunchListSummary` + curated map | `OneWoW/Services/CollectiblesPunchLists.lua` (QoL Collections tooltip footer) |
@@ -92,7 +92,7 @@ loot eligibility**: killing the same rare twice in a day yields no special loot.
   `…Collections_API.IsQuestCompleted`. Trackers already has `rare_quest` for the
   same flag. No combat-log parsing.
 - **Per-alt (already shipped — consume it):**
-  `OneWoW_CatalogData_Quests_API.GetCompletedCharacters(questID)` answers this today, and
+  `OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters(questID)` answers this today, and
   Catalog's Quests tab already renders it. `CompletionTracker` keeps its own
   `db.completion[charKey]`, seeded from `GetAllCompletedQuestIDs()` on login and updated on
   every turn-in, falling back to the AltTracker snapshot only for characters it has never
@@ -305,7 +305,7 @@ about to run X — what collectibles still drop on this difficulty, and is the
 boss dead this reset?" That wants a thin curated **key → { instanceID,
 encounterID, difficultyIDs }** (Collection Log `MountDropCategories` shape), not
 their raid-pack encyclopedia. **Activity UI is Catalog Journal** (`OneWoW_Catalog`
-+ `OneWoW_CatalogData_Journal_API`, membership/difficulties from `.warehouse/Sources/Wago`
++ `OneWoW_CatDB_ZoneDB_API`, membership/difficulties from Generated Lua
 Generated Lua). Journal extras now include world, holiday, and NPC drops
 and already carry `itemID` + `instanceID` / `encounterID` / diffs — that is listing
 truth, not a collectible-key map. `ResolveKeyFromItem` can bridge a row to a key

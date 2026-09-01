@@ -82,7 +82,7 @@ Track mounts, pets, toys, transmog, and other collectibles you care about:
 - Filter by category, type, storage scope, and collected / uncollected status
 - See live collection state from OneWoW’s collectibles service
 - Capture vendor offers for uncollected collectibles (**Off** / **Prompt** / **Automatic** in Notes settings)
-- View “Sold by” vendor info (richer with Catalog Vendors data) and set / ensemble progress where available
+- View “Sold by” vendor info (richer with the Catalog NPCs pack) and set / ensemble progress where available
 - Optional auto-cleanup: when enabled, collected Want/Spotted/Farming entries move to the Delete List and purge after a delay you choose
 - Custom categories and account- or character-scoped storage, like other Notes tabs
 - Link collectibles into notes and associate sightings on player notes

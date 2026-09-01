@@ -16,42 +16,4 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 
-# Locales
-Locales\enUS.lua
-Locales\koKR.lua
-Locales\frFR.lua
-Locales\deDE.lua
-Locales\zhCN.lua
-Locales\esES.lua
-Locales\zhTW.lua
-Locales\esMX.lua
-Locales\ruRU.lua
-Locales\ptBR.lua
-Locales\itIT.lua
-
-# Core
-Core\Database.lua
-Core\API.lua
-Core\Core.lua
-Core\QuestDBLoader.lua
-
-# Databases (each calls ns:RegisterQuestData; loader must precede them)
-Data\QuestDB\QuestDB_warwithin.lua
-Data\QuestDB\QuestDB_midnight.lua
-
-# Generated overlays (from .warehouse/Sources via bin/quest_db2_tools.py)
-Data\Generated\QuestLines.lua
-Data\Generated\Campaigns.lua
-Data\Generated\QuestObjectives.lua
-Data\Generated\QuestPins.lua
-Data\RemixRewardItems.lua
-Data\RemixOnlyQuests.lua
-Data\Generated\Apply.lua
-
-# Modules
-Modules\QuestData.lua
-Modules\QuestScanner.lua
-Modules\CompletionTracker.lua
-
-# Main
 OneWoW_CatalogData_Quests.lua

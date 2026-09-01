@@ -63,9 +63,39 @@ function OneWoW_Catalog_API.OpenToVendor(npcID)
     end
 end
 
+--- Open the Zones (Journal) tab on a place. Number is mapID; table may carry
+--- instanceID / placeKey / encounterID.
+---@param spec number|table
+function OneWoW_Catalog_API.OpenToInstance(spec)
+    if ns.UI and ns.UI.OpenToInstance then
+        ns.UI.OpenToInstance(spec)
+    end
+end
+
 --- Refresh the quests list when the quests tab UI is loaded.
 function OneWoW_Catalog_API.RefreshQuestsList()
     if ns.UI and ns.UI.RefreshQuestsList then
         ns.UI.RefreshQuestsList(true)
     end
+end
+
+--- Resolve a pack role or addon name to the CatDB addon Catalog will load.
+---@param roleOrName string
+---@return string|nil
+function OneWoW_Catalog_API.ResolveCatalogPack(roleOrName)
+    return OneWoW:ResolveCatalogPack(roleOrName)
+end
+
+--- Cross-unit API table for the resolved pack (`AddonName_API`).
+---@param roleOrName string
+---@return table|nil
+function OneWoW_Catalog_API.GetCatalogPackAPI(roleOrName)
+    return OneWoW:GetCatalogPackAPI(roleOrName)
+end
+
+--- EnsureLoaded the resolved pack. Explicit user actions only.
+---@param roleOrName string
+---@return string|nil
+function OneWoW_Catalog_API.EnsureCatalogPack(roleOrName)
+    return OneWoW:EnsureCatalogPack(roleOrName)
 end

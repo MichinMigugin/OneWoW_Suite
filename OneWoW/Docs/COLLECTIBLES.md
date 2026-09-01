@@ -273,7 +273,7 @@ Capture is a **subscription decision**, not a handler-side gate:
   path is idempotent (`MergeVendorOffer` dedupes by `npcID + itemID`).
 
 The Notes Collectibles detail panel renders a **Sold by** section from those
-offers (hydrated with `OneWoW_CatalogData_Vendors_API` for name + waypoint when
+offers (hydrated with `OneWoW_CatDB_NPCDB_API` / leftover `OneWoW_CatalogData_Vendors_API` for name + waypoint when
 that store is loaded, else straight from the offer snapshot). Live affordability
 per offer comes from `OneWoW.Collectibles.GetOfferAffordability`, which compares
 the offer's gold/currency/item costs against the player's current holdings — a

@@ -121,7 +121,7 @@ function ns.UI.CreateProfessionsTab(parent)
     -- tab was rendered in degraded (em-dash) mode, refresh once its data is
     -- queryable so the dashes become real numbers. Catch-up fires immediately if
     -- it is already loaded, which is a harmless no-op re-render.
-    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", function()
+    OneWoW:RegisterDataReadyWatcher(OneWoW:ResolveCatalogPack("tradeskills"), function()
         if ns.UI.RefreshProfessionsTab then
             ns.UI.RefreshProfessionsTab(parent)
         end

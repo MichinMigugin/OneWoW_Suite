@@ -11,10 +11,30 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "Zum Öffnen klicken",
 
-    ["TAB_JOURNAL"] = "Journal",
-    ["TAB_VENDORS"] = "Händler",
+    ["TAB_JOURNAL"] = "Zonen",
+    ["TAB_VENDORS"] = "NSCs",
     ["TAB_QUESTS"] = "Quests",
     ["TAB_ITEMSEARCH"] = "Gegenstandssuche",
+    ["TAB_COLLECTIBLES"] = "Sammelobjekte",
+
+    ["COLLECTIBLES_SEARCH"] = "Sammelobjekte suchen...",
+    ["COLLECTIBLES_EMPTY"] = "Keine Sammelobjekte vorhanden.",
+    ["COLLECTIBLES_SELECT"] = "Wahlt ein Sammelobjekt, um Details anzuzeigen.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "Zeigt Transmog, Reittiere, Haustiere und Spielzeuge aus dem Sammlungsjournal.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "Zeigt Transmog-Vorlagen aus dem Sammlungsjournal.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "Zeigt Reittiere aus dem Reittierjournal.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "Zeigt Kampfhaustiere aus dem Haustierjournal.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "Zeigt Spielzeuge aus der Spielzeugkiste.",
+    ["COLLECTIBLES_RARE_SECTION"] = "Welt-Selten",
+
+    ["HOUSING_SEARCH"] = "Behausungsdekoration suchen...",
+    ["HOUSING_EMPTY"] = "Keine Behausungsdekoration vorhanden.",
+    ["HOUSING_SELECT"] = "Wahlt eine Behausungsdekoration, um Details anzuzeigen.",
+    ["HOUSING_FILTER_ALL_DESC"] = "Zeigt Behausungsdekoration aus dem Wohnungskatalog.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "Zeigt Behausungsdekoration.",
+    ["HOUSING_OWNED_COUNTS"] = "Im Besitz %d  |  Gelagert %d  |  Platziert %d",
+
+    ["CATALOG_LIST_NARROW"] = "Bitte filtert oder sucht, um die Ergebnisse weiter einzugrenzen.",
 
     ["CATALOG_FAVORITE"] = "Favorit",
     ["CATALOG_FAVORITE_TT"] = "Diesen Eintrag als Favorit markieren. Favoriten werden oben in der Liste einsortiert.",

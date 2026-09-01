@@ -10,10 +10,30 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "Click to open",
 
-    ["TAB_JOURNAL"] = "Journal",
-    ["TAB_VENDORS"] = "Vendors",
+    ["TAB_JOURNAL"] = "Zones",
+    ["TAB_VENDORS"] = "NPCs",
     ["TAB_QUESTS"] = "Quests",
     ["TAB_ITEMSEARCH"] = "Item Search",
+    ["TAB_COLLECTIBLES"] = "Collectibles",
+
+    ["COLLECTIBLES_SEARCH"] = "Search collectibles...",
+    ["COLLECTIBLES_EMPTY"] = "No collectibles to show.",
+    ["COLLECTIBLES_SELECT"] = "Select a collectible to view details.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "Show transmog, mounts, pets, and toys from the Collections journal.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "Show transmog appearances from the Collections journal.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "Show mounts from the Mount Journal.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "Show battle pets from the Pet Journal.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "Show toys from the Toy Box.",
+    ["COLLECTIBLES_RARE_SECTION"] = "World Rare",
+
+    ["HOUSING_SEARCH"] = "Search housing decor...",
+    ["HOUSING_EMPTY"] = "No housing decor to show.",
+    ["HOUSING_SELECT"] = "Select housing decor to view details.",
+    ["HOUSING_FILTER_ALL_DESC"] = "Show housing decor from the housing catalog.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "Show housing decor.",
+    ["HOUSING_OWNED_COUNTS"] = "Owned %d  |  Stored %d  |  Placed %d",
+
+    ["CATALOG_LIST_NARROW"] = "Filter or search to narrow results more please.",
 
     ["CATALOG_FAVORITE"] = "Favorite",
     ["CATALOG_FAVORITE_TT"] = "Mark this entry as a favorite. Favorites sort to the top of the list.",

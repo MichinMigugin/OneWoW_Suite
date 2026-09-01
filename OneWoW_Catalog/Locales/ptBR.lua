@@ -11,10 +11,30 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "Clique para abrir",
 
-    ["TAB_JOURNAL"] = "Diário",
-    ["TAB_VENDORS"] = "Vendedores",
+    ["TAB_JOURNAL"] = "Zonas",
+    ["TAB_VENDORS"] = "PNJs",
     ["TAB_QUESTS"] = "Missões",
     ["TAB_ITEMSEARCH"] = "Busca de itens",
+    ["TAB_COLLECTIBLES"] = "Colecionaveis",
+
+    ["COLLECTIBLES_SEARCH"] = "Buscar colecionaveis...",
+    ["COLLECTIBLES_EMPTY"] = "Nenhum colecionavel para mostrar.",
+    ["COLLECTIBLES_SELECT"] = "Selecione um colecionavel para ver os detalhes.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "Mostra transmog., montarias, mascotes e brinquedos do diario de colecoes.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "Mostra aparencias de transmog. do diario de colecoes.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "Mostra montarias do diario de montarias.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "Mostra mascotes de batalha do diario de mascotes.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "Mostra brinquedos da caixa de brinquedos.",
+    ["COLLECTIBLES_RARE_SECTION"] = "Raro do mundo",
+
+    ["HOUSING_SEARCH"] = "Buscar decoracao de moradia...",
+    ["HOUSING_EMPTY"] = "Nenhuma decoracao de moradia para mostrar.",
+    ["HOUSING_SELECT"] = "Selecione uma decoracao de moradia para ver os detalhes.",
+    ["HOUSING_FILTER_ALL_DESC"] = "Mostra decoracao do catalogo de moradia.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "Mostra decoracao de moradia.",
+    ["HOUSING_OWNED_COUNTS"] = "Possuidos %d  |  Guardados %d  |  Colocados %d",
+
+    ["CATALOG_LIST_NARROW"] = "Filtre ou pesquise para restringir mais os resultados.",
 
     ["CATALOG_FAVORITE"] = "Favorito",
     ["CATALOG_FAVORITE_TT"] = "Marca esta entrada como favorita. Os favoritos são classificados no topo da lista.",

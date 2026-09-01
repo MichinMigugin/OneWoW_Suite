@@ -55,14 +55,14 @@ flowchart TB
     OW --> Modules
 
     subgraph Stores [Data stores — LoadOnDemand: 1]
-        CatalogData[OneWoW_CatalogData_*<br/>RequiredDeps: OneWoW]
+        CatDB[OneWoW_CatDB_*<br/>RequiredDeps: OneWoW]
         AltData[OneWoW_AltTracker_* most: OneWoW only<br/>Endgame: + AltTracker hub]
     end
-    Catalog --> CatalogData
+    Catalog --> CatDB
     AltTracker --> AltData
     Bags -.->|consumer pull| AltData
     ShoppingList -.->|consumer pull| AltData
-    ShoppingList -.->|consumer pull| CatalogData
+    ShoppingList -.->|consumer pull| CatDB
 
     DevTool[OneWoW_Utility_DevTool<br/>RequiredDeps: OneWoW · opt-in]
     OW --> DevTool
@@ -76,7 +76,7 @@ flowchart TB
 |---|---|---|---|
 | **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
 | **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
-| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand | Owned under `ModuleManifest.stores`. Most stores: `RequiredDeps: OneWoW` (consumers may load without the owning hub). **Exception:** Endgame still `RequiredDeps: …, OneWoW_AltTracker` (`parentRequiredStores`). |
+| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatDB_*` (leftover `OneWoW_CatalogData_*` until folder delete) | On demand | Owned under `ModuleManifest.stores`. Most stores: `RequiredDeps: OneWoW` (consumers may load without the owning hub). **Exception:** Endgame still `RequiredDeps: …, OneWoW_AltTracker` (`parentRequiredStores`). Catalog Home / Manage Features stores are CatDB (Zones, NPCs, Items, Quests, Tradeskills). `PackResolver` always returns CatDB. |
 | **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; soft-opted-out on a fresh account and excluded from recommended preset; `loadPhase = "login"` when wanted |
 
 Verified against current `.toc` files:
@@ -95,7 +95,8 @@ Verified against current `.toc` files:
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | 1 |
 | **OneWoW_AltTracker_\*** (except Endgame) | OneWoW | — | 1 |
 | **OneWoW_AltTracker_Endgame** | OneWoW, OneWoW_AltTracker | — | 1 |
-| **OneWoW_CatalogData_\*** | OneWoW | — | 1 (Catalog packs: `lazyStores`; parse on tab / quest event / Item Search source) |
+| **OneWoW_CatDB_\*** | OneWoW | — | 1 (Catalog packs: `lazyStores`; parse on tab / quest event / Item Search source) |
+| **OneWoW_CatalogData_\*** | OneWoW | — | 1 leftover on disk until folder delete (unused by Catalog) |
 
 ### OptionalDeps policy
 
@@ -558,6 +559,9 @@ while working.
 
 Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 `ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
+Catalog Home / Manage Features rows are the six `OneWoW_CatDB_*` stores.
+Leftover `OneWoW_CatalogData_*` packs stay on `leftoverStores` (loadable
+while those folders sit on disk; not player-facing toggles) until folder delete.
 Manage Features renders manifest `stores` as indented sub-rows under Catalog and
 AltTracker. `storePolicy` is `optional` for both. Notes can also list
 `inUnitFeatures` on its CATALOG entry (OneWay Pins today). Those use the same
@@ -567,7 +571,7 @@ sub-row chrome but are **not** load units: Apply calls the feature setter
 Endgame) and all Catalog packs toggle independently of their owning hub;
 Endgame stays parent-required (`parentRequiredStores` / TOC) and mutes when
 AltTracker is off. Consumer pulls (Bags → Storage/Character, ShoppingList →
-Storage / Tradeskills) still show “required by …” and stay non-interactive while
+Storage / TradeSkillDB) still show “required by …” and stay non-interactive while
 that consumer is on. Soft Apply writes per-store `SetFeatureOptOut` and
 `EnsureLoaded`s wanted-but-unloaded **eager** stores; cold start also
 `EnsureLoaded`s opted-in eager stores whose hub was skipped. Catalog
@@ -680,10 +684,10 @@ Each row-2 tab table may also declare optional gating fields:
   default `C_AddOns.IsAddOnLoaded` check, for bespoke availability logic.
 
 A tab with none of these is always available. Example: `OneWoW_Catalog` declares
-`requiresAddon = "OneWoW_CatalogData_Quests"` (etc.) on its single-source data tabs,
-and `requiresAnyAddon = { "OneWoW_CatalogData_Journal", …, "OneWoW_AltTracker_Storage" }`
-on `itemsearch` (which aggregates journal/vendor/crafted/quest/owned data) so it shows
-the aggregator placeholder only when none of its sources are loaded.
+`requiresAddon` on its single-source data tabs through `PackResolver` roles
+(`"quests"`, `"journal"`, …), which always resolve to `OneWoW_CatDB_*`.
+`itemsearch` is always available: opening the tab (or changing a filter) loads
+the active filter's pack, plus ItemDB for All / Drops.
 
 **Cached content is stale by default.** A tab frame is built once; revisiting it
 just `Show()`s the cached frame. `MainWindow` calls `frame:Activate()` on every
@@ -830,7 +834,7 @@ end
 - Cross-unit reads: `Core/API.lua` publishes `OneWoW_<Unit>_API` dot-functions (see
   `OneWoW_AltTracker` and `OneWoW_Catalog` as reference hubs).
 
-**Data store** (AltTracker_* stores, CatalogData_*, …):
+**Data store** (AltTracker_* stores, CatDB_*, leftover CatalogData_* until removed, …):
 
 ```lua
 local ADDON_NAME, ns = ...
@@ -936,7 +940,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.GearProficiency` | `Services/GearProficiency.lua` | Collectibles punch/direct lists (first); class weapon/armor proficiency masks via `FlagsUtil` — not loot-spec / not transmog-collect alone; see [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
-| `OneWoW:CreateItemDataLoader` | `Services/ItemDataLoader.lua` | Catalog hub shared loader + CatalogData packs (factory on colon API) |
+| `OneWoW:CreateItemDataLoader` | `Services/ItemDataLoader.lua` | Catalog hub shared loader + CatDB packs (factory on colon API) |
 | `OneWoW.ChunkedJob` | `Services/ChunkedJob.lua` | Catalog / DevTool time-budgeted walks |
 | `OneWoW.UIParent` | `Services/UIParent.lua` | Cinematic fullscreen overlays (AFK panel): refcounted `Hide`/`Restore` of Blizzard `UIParent`, plus re-sync of fragile FrameXML indicators (minimap mail icon) |
 | `OneWoW.Location` | `Services/Location.lua` | Trackers (steps, pins, exploration), Catalog Navigation waypoints, Notes NPCs, Vendors, AltTracker hearth — player map, 0-100 vs 0-1 conversion, `SetWaypoint` (`CanSetUserWaypointOnMap` + `opts.format` / `openMap` / `superTrack`), map-percent distance, world-yard `GetWorldPos` / `WorldDelta` / `MinimapOffset`. No pin rendering |
@@ -999,7 +1003,7 @@ what is intentionally *not* translated and why, and Blizzard-term alignment — 
 |---|---|---|
 | **Sub-addon** | Separate TOC / load unit | `OneWoW_Catalog`, `OneWoW_AltTracker_Storage` |
 | **Feature** | User-facing capability in a sub-addon | Journal tab, AH scanner, bag bar |
-| **Provider** | Load unit that publishes queryable data via `_API` (+ optional change callbacks) | `OneWoW_AltTracker_Storage`, `OneWoW_CatalogData_*` |
+| **Provider** | Load unit that publishes queryable data via `_API` (+ optional change callbacks) | `OneWoW_AltTracker_Storage`, `OneWoW_CatDB_*` |
 | **Service** | Near-stateless utility on `_G.OneWoW` | `OverlayEngine`, `CopyPaste` (target) |
 
 **Hub vs contextual:** hub = tabs in OneWoW window; contextual = own window in
@@ -1298,7 +1302,7 @@ registered its own frame with ad-hoc debounce — the `VendorScanner`
 
 Consumers subscribe (LoD-safe, on login / module enable) through the Facade
 global and receive **ephemeral** snapshots — core persists nothing (vendor
-catalogs stay in `OneWoW_CatalogData_Vendors_DB`, collectibles in
+catalogs stay in `OneWoW_CatDB_NPCDB_DB` (leftover `OneWoW_CatalogData_Vendors_DB` until removed), collectibles in
 `OneWoW_Notes_DB`). Three channels:
 
 - **`RegisterScanCallback(ownerID, fn)`** — `fn(scan)` vendor snapshot (npc

@@ -1495,12 +1495,18 @@ Returns a table with:
 - `panels.listScrollFrame` / `panels.listScrollChild` - left scroll area
 - `panels.detailPanel` - right panel frame
 - `panels.detailTitle` - right title font string
+- `panels.LayoutDetailHeader` - inset `detailContainer` for a panel-anchored control strip (old Catalog 38px header). Controls stay on `detailPanel`; do not re-anchor the scroll frame (that fights `bindSplitScrollGutter`).
 - `panels.detailScrollFrame` / `panels.detailScrollChild` - right scroll area
 - `panels.searchBox` - search edit box (if showSearch=true)
 - `panels.leftStatusBar` / `panels.leftStatusText` - left status bar
 - `panels.rightStatusBar` / `panels.rightStatusText` - right status bar
 
 Left panel width: 320px. Gap between panels: 10px.
+
+```lua
+panels.LayoutDetailHeader({ height = 38 })   -- reserve the old 38px control strip
+panels.LayoutDetailHeader({ height = 0 })    -- restore the default container inset
+```
 
 ---
 

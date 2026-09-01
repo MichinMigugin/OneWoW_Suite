@@ -46,6 +46,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TIPS_ITEMTRACKER_DESC"] = "显示你把物品放在哪里，以及从任务、商人、副本或专业技能中如何获得。",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "在哪里",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "如何获得",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "见 Catalog",
     ["TIPS_ITEMTRACKER_TOTAL"] = "总计 x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "背包",
     ["TIPS_ITEMTRACKER_BANK"] = "银行",

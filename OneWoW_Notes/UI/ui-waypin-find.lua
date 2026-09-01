@@ -162,14 +162,8 @@ local function ResolveZone(text)
 end
 
 local function EnsureVendorsAPI()
-    if OneWoW_CatalogData_Vendors_API and OneWoW_CatalogData_Vendors_API.GetAllVendors then
-        return OneWoW_CatalogData_Vendors_API
-    end
-    OneWoW:BringUp("OneWoW_CatalogData_Vendors")
-    if OneWoW_CatalogData_Vendors_API and OneWoW_CatalogData_Vendors_API.GetAllVendors then
-        return OneWoW_CatalogData_Vendors_API
-    end
-    return nil
+    OneWoW:EnsureCatalogPack("vendors")
+    return OneWoW:GetCatalogPackAPI("vendors")
 end
 
 local function VendorItemsMatch(vendor, include, exclude)

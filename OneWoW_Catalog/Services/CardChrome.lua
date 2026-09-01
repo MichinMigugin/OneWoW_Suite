@@ -462,3 +462,140 @@ function CardChrome.ApplyRowChrome(card, state)
     end
     ApplyBorderOverlay(card, card._borderKey)
 end
+
+-- ============================================================================
+-- Portrait rings
+-- ============================================================================
+-- Gold / silver mission dragons for world bosses + raids / rares + dungeons.
+-- Profession recraft socket for other NPCs. Not TWW landing-page renown art.
+-- ============================================================================
+
+local CATDB_RARE_BASE = 10000000
+local CATDB_GENERAL_MIN = 20000000
+local JOURNAL_RARE_BASE = -1000000
+local CLASS_RAREELITE = 2
+local CLASS_WORLDBOSS = 3
+local CLASS_RARE = 4
+
+local PORTRAIT_RING_SIZE = 50
+local PORTRAIT_RING_ATLAS = {
+    gold = "Adventure-Mission-Gold-Dragon",
+    silver = "Adventure-Mission-Silver-Dragon",
+    profession = "Professions-Recrafting-Frame-Item",
+}
+
+---@param roles table|nil
+---@param want string
+---@return boolean
+local function HasRole(roles, want)
+    if not roles then
+        return false
+    end
+    for i = 1, #roles do
+        if roles[i] == want then
+            return true
+        end
+    end
+    return false
+end
+
+---@param encounterID number|nil
+---@return boolean
+local function IsRareEncounterID(encounterID)
+    if type(encounterID) ~= "number" then
+        return false
+    end
+    if encounterID >= CATDB_RARE_BASE and encounterID < CATDB_GENERAL_MIN then
+        return true
+    end
+    return encounterID <= JOURNAL_RARE_BASE
+end
+
+---@param encounterIDs table|nil
+---@return boolean
+local function HasRareEncounterID(encounterIDs)
+    if not encounterIDs then
+        return false
+    end
+    for i = 1, #encounterIDs do
+        if IsRareEncounterID(encounterIDs[i]) then
+            return true
+        end
+    end
+    return false
+end
+
+--- World boss / raid = gold; rare / dungeon / delve = silver; else profession.
+---@param vendor table
+---@return string
+function CardChrome.PortraitKindForNPC(vendor)
+    if vendor.classification == CLASS_WORLDBOSS then
+        return "gold"
+    end
+    if vendor.worldRare or HasRole(vendor.roles, "rare") then
+        return "silver"
+    end
+    if vendor.classification == CLASS_RAREELITE or vendor.classification == CLASS_RARE then
+        return "silver"
+    end
+    if HasRareEncounterID(vendor.encounterIDs) then
+        return "silver"
+    end
+    return "profession"
+end
+
+--- Gold for raid and real world-boss encounters; silver for rares / party / delve.
+--- Section headers and leftover buckets return nil (no ring).
+---@param encounter table
+---@param instanceType string|nil
+---@return string|nil
+function CardChrome.PortraitKindForEncounter(encounter, instanceType)
+    if encounter.sectionHeader or encounter.extrasCategory or encounter.questCategory then
+        return nil
+    end
+    if encounter.worldRare or IsRareEncounterID(encounter.encounterID) then
+        return "silver"
+    end
+    local encID = encounter.encounterID
+    if type(encID) ~= "number" or encID <= 0 then
+        return nil
+    end
+    if instanceType == "raid" then
+        return "gold"
+    end
+    if instanceType == "world" then
+        return "gold"
+    end
+    if instanceType == "zone" then
+        return "gold"
+    end
+    if instanceType == "party" or instanceType == "delve" then
+        return "silver"
+    end
+    return nil
+end
+
+--- Overlay ring, centered on an existing portrait texture.
+---@param parent Frame
+---@param portrait Texture
+---@return Texture
+function CardChrome.CreatePortraitRing(parent, portrait)
+    local ring = parent:CreateTexture(nil, "OVERLAY")
+    ring:SetPoint("CENTER", portrait, "CENTER", 0, 0)
+    ring:SetSize(PORTRAIT_RING_SIZE, PORTRAIT_RING_SIZE)
+    ring:Hide()
+    return ring
+end
+
+---@param ring Texture
+---@param kind string|nil
+function CardChrome.ApplyPortraitRing(ring, kind)
+    local atlas = kind and PORTRAIT_RING_ATLAS[kind]
+    if not atlas then
+        ring:Hide()
+        return
+    end
+    ring:SetAtlas(atlas, false)
+    ring:SetSize(PORTRAIT_RING_SIZE, PORTRAIT_RING_SIZE)
+    ring:Show()
+end

@@ -176,6 +176,7 @@ local function CollectRawAttention()
             else
                 -- Consumer datastores: gaps diminish the wanted+loaded consumer.
                 for _, store in ipairs(entry.datastores) do
+                    store = ns:ResolveCatalogPack(store) or store
                     local gap, detail = UnitGap(store)
                     if gap == "not_loaded" and ns:IsFeatureWanted(store, true) then
                         local st, reason = ns:GetAddonStatus(store, true)

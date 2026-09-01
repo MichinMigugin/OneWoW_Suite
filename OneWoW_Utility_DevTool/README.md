@@ -84,6 +84,7 @@ Browse atlas and texture data shipped with DevTool for the current client flavor
 - **Search** — Filter the list
 - **Preview** — Zoom and pan sheet views; pick cells on multi-atlas sheets
 - **Bookmarks** — Favorite atlases (stored in SavedVariables)
+- **Collect names** — Double-click a sheet region (or the atlas preview) to add its name to a collected list. Copy the full list when you are ready; Clear empties it. Double-click the same name again to remove it.
 - **Copy helpers** — Copy atlas/texture names, snippets, and coordinates for paste into addon code
 
 Atlas catalog files are selected by game type via the addon TOC (e.g. mainline vs mainline-test); ensure your installed DevTool build matches how you launch the game.

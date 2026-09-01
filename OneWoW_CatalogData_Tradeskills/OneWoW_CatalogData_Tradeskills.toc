@@ -16,43 +16,4 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 
-# Locales
-Locales\enUS.lua
-Locales\koKR.lua
-Locales\frFR.lua
-Locales\deDE.lua
-Locales\zhCN.lua
-Locales\esES.lua
-Locales\zhTW.lua
-Locales\esMX.lua
-Locales\ruRU.lua
-Locales\ptBR.lua
-Locales\itIT.lua
-
-# Data (loaded before Core so globals are available)
-Data\Tradeskills_Alchemy.lua
-Data\Tradeskills_Blacksmithing.lua
-Data\Tradeskills_Cooking.lua
-Data\Tradeskills_Enchanting.lua
-Data\Tradeskills_Engineering.lua
-Data\Tradeskills_Fishing.lua
-Data\Tradeskills_Herbalism.lua
-Data\Tradeskills_HousingDyes.lua
-Data\Tradeskills_Inscription.lua
-Data\Tradeskills_Jewelcrafting.lua
-Data\Tradeskills_Leatherworking.lua
-Data\Tradeskills_Mining.lua
-Data\Tradeskills_Skinning.lua
-Data\Tradeskills_Tailoring.lua
-
-# Core
-Core\Database.lua
-Core\API.lua
-Core\Core.lua
-
-# Modules
-Modules\TradeskillData.lua
-Modules\TradeskillScanner.lua
-
-# Main
 OneWoW_CatalogData_Tradeskills.lua

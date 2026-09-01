@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["TOAST_NEW_TMOG"] = "Nova aparência!",
     ["TOAST_INSTANCE_CLICK"] = "Clique para ver no Diário",
 
+
     ["DATABASE_MANAGER_TITLE"] = "Gerenciador de bancos de dados",
     ["DATABASE_MANAGER_DESC"] = "Gerencie os bancos de dados do addon. Clique em Redefinir para limpar completamente um banco de dados e forçar o recarregamento da interface.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "Este addon não está ativado. Ative-o em Gerenciar recursos para redefinir o banco de dados.",

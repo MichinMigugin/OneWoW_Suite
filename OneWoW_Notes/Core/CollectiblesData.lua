@@ -295,7 +295,7 @@ end
 -- was seen for sale at a vendor: { npcID, npcName, itemID, cost, currencies,
 -- isPurchasable, blockReason, location, lastSeen }. It is a *snapshot at sighting* — live
 -- affordability + the full vendor encyclopedia are resolved elsewhere (core
--- OneWoW.Collectibles.GetOfferAffordability / CatalogData_Vendors). Deduped by
+-- OneWoW.Collectibles.GetOfferAffordability / vendors pack). Deduped by
 -- npcID + itemID so repeated/idempotent merchant scans refresh rather than stack.
 
 --- True if the record already carries a vendor offer for this npc+item pair.

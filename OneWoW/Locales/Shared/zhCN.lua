@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["TOAST_NEW_TMOG"] = "新外观！",
     ["TOAST_INSTANCE_CLICK"] = "点击在图鉴中查看",
 
+
     ["DATABASE_MANAGER_TITLE"] = "数据库管理器",
     ["DATABASE_MANAGER_DESC"] = "管理插件数据库。点击重置以彻底清空数据库并强制重新加载界面。",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "此插件未启用。请在“管理功能”中启用后再重置其数据库。",

@@ -1,0 +1,4 @@
+-- OneWoW_CatDB_TradeSkillDB main file.
+-- The public cross-addon API is published in Core/API.lua as the global
+-- OneWoW_CatDB_TradeSkillDB_API. This unit exposes no other globals; the addon
+-- namespace (ns) stays private to the unit.

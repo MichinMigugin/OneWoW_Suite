@@ -28,7 +28,8 @@ Contributor and integrator documentation for the suite.
 | [COLLECTIBLES.md](COLLECTIBLES.md) | Collectible identity, keys, live collection state |
 | [COLLECTIBLES_IDEAS.md](COLLECTIBLES_IDEAS.md) | Collectibles direction parking lot (not committed scope) |
 | [OneWoW_Mail/Docs/ARCHITECTURE.md](../../OneWoW_Mail/Docs/ARCHITECTURE.md) | Mail shell, shipments, send/collect pipeline, Storage in-transit |
-| [OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md](../../OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md) | Catalog quest data store and scanner |
+| [OneWoW_Catalog/Docs/CATDB.md](../../OneWoW_Catalog/Docs/CATDB.md) | Catalog databases (CatDB Zones / NPCs / Items / Quests / Tradeskills; leftover CatalogData until removed) |
+| [OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md](../../OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md) | Catalog quest store (current expansions) and scanner |
 
 ## Contributing
 

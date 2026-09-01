@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TIPS_ITEMTRACKER_DESC"] = "Show where you keep an item, and where to get it: quest, vendor, instance, or profession.",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "Where it is",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "Where to get it",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "see Catalog",
     ["TIPS_ITEMTRACKER_TOTAL"] = "Total x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "Bags",
     ["TIPS_ITEMTRACKER_BANK"] = "Bank",

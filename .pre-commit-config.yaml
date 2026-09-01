@@ -72,7 +72,6 @@ repos:
             | \.vscode/
             | \.releases/
             | OneWoW_Bags/API/Examples/
-            | OneWoW_CatalogData_Quests/Tools/
           )
 
       - id: no-data-manager-bypass
@@ -99,7 +98,6 @@ repos:
             | \.vscode/
             | \.releases/
             | OneWoW_Bags/API/Examples/
-            | OneWoW_CatalogData_Quests/Tools/
           )
 
       - id: no-namespace-publish
@@ -222,7 +220,6 @@ repos:
             | \.vscode/
             | \.releases/
             | OneWoW_Bags/API/Examples/
-            | OneWoW_CatalogData_Quests/Tools/
           )
 
       - id: no-raw-loadaddon

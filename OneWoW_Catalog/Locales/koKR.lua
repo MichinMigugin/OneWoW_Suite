@@ -10,10 +10,30 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW 도감",
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 열기",
 
-    ["TAB_JOURNAL"] = "일지",
-    ["TAB_VENDORS"] = "상인",
+    ["TAB_JOURNAL"] = "지역",
+    ["TAB_VENDORS"] = "NPC",
     ["TAB_QUESTS"] = "퀘스트",
     ["TAB_ITEMSEARCH"] = "아이템 검색",
+    ["TAB_COLLECTIBLES"] = "수집품",
+
+    ["COLLECTIBLES_SEARCH"] = "수집품 검색...",
+    ["COLLECTIBLES_EMPTY"] = "표시할 수집품이 없습니다.",
+    ["COLLECTIBLES_SELECT"] = "수집품을 선택하면 세부 정보를 볼 수 있습니다.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "수집품 도감의 형상변환, 탈것, 애완동물, 장난감을 표시합니다.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "수집품 도감의 형상변환 형상을 표시합니다.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "탈것 도감의 탈것을 표시합니다.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "애완동물 도감의 전투 애완동물을 표시합니다.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "장난감 상자의 장난감을 표시합니다.",
+    ["COLLECTIBLES_RARE_SECTION"] = "월드 희귀",
+
+    ["HOUSING_SEARCH"] = "주거 장식 검색...",
+    ["HOUSING_EMPTY"] = "표시할 주거 장식이 없습니다.",
+    ["HOUSING_SELECT"] = "주거 장식을 선택하면 세부 정보를 볼 수 있습니다.",
+    ["HOUSING_FILTER_ALL_DESC"] = "주거 도감의 장식을 표시합니다.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "주거 장식을 표시합니다.",
+    ["HOUSING_OWNED_COUNTS"] = "보유 %d  |  보관 %d  |  배치 %d",
+
+    ["CATALOG_LIST_NARROW"] = "결과를 더 좁히려면 필터하거나 검색해 주세요.",
 
     ["CATALOG_FAVORITE"] = "즐겨찾기",
     ["CATALOG_FAVORITE_TT"] = "이 항목을 즐겨찾기로 표시합니다. 즐겨찾기는 목록 상단에 정렬됩니다.",

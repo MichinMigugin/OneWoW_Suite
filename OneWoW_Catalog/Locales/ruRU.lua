@@ -11,10 +11,30 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "Нажмите, чтобы открыть",
 
-    ["TAB_JOURNAL"] = "Журнал",
-    ["TAB_VENDORS"] = "Торговцы",
+    ["TAB_JOURNAL"] = "Игровые зоны",
+    ["TAB_VENDORS"] = "НИП",
     ["TAB_QUESTS"] = "Задания",
     ["TAB_ITEMSEARCH"] = "Поиск предметов",
+    ["TAB_COLLECTIBLES"] = "Коллекционные предметы",
+
+    ["COLLECTIBLES_SEARCH"] = "Поиск коллекционных предметов...",
+    ["COLLECTIBLES_EMPTY"] = "Нет коллекционных предметов для отображения.",
+    ["COLLECTIBLES_SELECT"] = "Выберите коллекционный предмет, чтобы просмотреть подробности.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "Показывает трансмог., транспорт, питомцев и игрушки из журнала коллекций.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "Показывает облики трансмог. из журнала коллекций.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "Показывает транспорт из журнала транспорта.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "Показывает боевых питомцев из журнала питомцев.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "Показывает игрушки из сундучка с игрушками.",
+    ["COLLECTIBLES_RARE_SECTION"] = "Мировой редкий",
+
+    ["HOUSING_SEARCH"] = "Поиск декора жилища...",
+    ["HOUSING_EMPTY"] = "Нет декора жилища для отображения.",
+    ["HOUSING_SELECT"] = "Выберите декор жилища, чтобы просмотреть подробности.",
+    ["HOUSING_FILTER_ALL_DESC"] = "Показывает декор из каталога жилища.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "Показывает декор жилища.",
+    ["HOUSING_OWNED_COUNTS"] = "В наличии %d  |  На складе %d  |  Размещено %d",
+
+    ["CATALOG_LIST_NARROW"] = "Отфильтруйте или выполните поиск, чтобы сузить результаты.",
 
     ["CATALOG_FAVORITE"] = "Избранное",
     ["CATALOG_FAVORITE_TT"] = "Отметить эту запись как избранную. Избранное сортируется в начало списка.",

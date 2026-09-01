@@ -307,8 +307,11 @@ ns.Constants = {
         TEXTURE_SHEET_INITIAL_ZOOM_MULTIPLIER = 0.8,
         -- Manhattan distance (UI units) before a left-drag counts as pan (overlay clicks use shorter drags to select).
         TEXTURE_SHEET_PAN_CLICK_THRESHOLD = 4,
-        -- Space reserved below texture preview for details panel + copy row (pixels from bottom of right panel).
+        -- Space reserved below texture preview for details + collected list + copy row (pixels from bottom of right panel).
         TEXTURE_PREVIEW_BOTTOM_RESERVE = 235,
+        TEXTURE_COLLECTED_PANE_HEIGHT = 96,
+        TEXTURE_SHEET_OVERLAY_COLLECTED_FILL_ALPHA = 0.16,
+        TEXTURE_SHEET_OVERLAY_COLLECTED_BORDER_ALPHA = 0.9,
         TEXTURE_BROWSER_LIST_ROW_HEIGHT = 22,
         TEXTURE_BROWSER_LIST_VISIBLE_ROWS = 40,
         -- Resizable list / preview split (CreateVerticalPaneResizer).

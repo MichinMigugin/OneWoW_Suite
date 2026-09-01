@@ -23,6 +23,10 @@ local suppressSearchBoxChange = false
 local dataReadyWatchersRegistered = false
 local listAPI        = nil
 
+local function ItemSearchHasListFilter()
+    return #currentSearch >= 2 or currentSource ~= "all"
+end
+
 local function OpenItemNoteFromResult(result)
     if not result or not result.itemID or not ns.Navigation or not ns.Navigation.OpenItemNote then
         return false
@@ -37,6 +41,73 @@ local function OpenItemNoteFromResult(result)
         category = "General",
         storage  = "account",
     })
+end
+
+local function JumpToVendor(npcID)
+    npcID = tonumber(npcID)
+    if not npcID then
+        return
+    end
+    local packName = ns.EnsureCatalogPack("vendors")
+    local function open()
+        ns.UI.OpenToVendor(npcID)
+    end
+    if ns.GetCatalogPackAPI("vendors") then
+        open()
+        return
+    end
+    if packName then
+        OneWoW:WithAddon(packName, open)
+    end
+end
+
+local function JumpToQuest(questID)
+    questID = tonumber(questID)
+    if not questID then
+        return
+    end
+    local packName = ns.EnsureCatalogPack("quests")
+    local function open()
+        ns.UI.OpenQuest(questID)
+    end
+    if ns.GetCatalogPackAPI("quests") then
+        open()
+        return
+    end
+    if packName then
+        OneWoW:WithAddon(packName, open)
+    end
+end
+
+local function JumpToPlace(drop)
+    if not drop then
+        return
+    end
+    local packName = ns.EnsureCatalogPack("journal")
+    local function open()
+        ns.UI.OpenToInstance({
+            placeKey = drop.placeKey,
+            instanceID = drop.instanceID,
+            mapID = drop.uiMapID,
+            encounterID = drop.encounterID,
+        })
+    end
+    if ns.GetCatalogPackAPI("journal") then
+        open()
+        return
+    end
+    if packName then
+        OneWoW:WithAddon(packName, open)
+    end
+end
+
+---@param drop table
+---@return boolean
+local function DropCanJump(drop)
+    if drop.placeKey or (drop.instanceID and drop.instanceID > 0) or drop.uiMapID then
+        return true
+    end
+    return false
 end
 
 local ITEM_ROW_HEIGHT  = 30
@@ -63,7 +134,9 @@ local function SelectVisibleItemResult(itemID)
         return false
     end
 
-    for i, result in ipairs(listResults) do
+    local dataN = ns.CatalogListDataCount(listResults, ItemSearchHasListFilter())
+    for i = 1, dataN do
+        local result = listResults[i]
         if tonumber(result.itemID) == itemID then
             listAPI.SetSelectedIndex(i)
             return true
@@ -183,11 +256,9 @@ local function CreateSourceButton(parent, def)
         GameTooltip:Hide()
     end)
     btn:SetScript("OnClick", function(self)
-        if not self.available then
-            local addon = ns.ItemSearch and ns.ItemSearch.SOURCE_ADDON_BY_FILTER[self.sourceKey]
-            if addon then
-                OneWoW:EnsureLoaded(addon)
-            end
+        ns.ItemSearch.EnsureFilterPacks(self.sourceKey)
+        UpdateSourceButtonStates()
+        if not ns.ItemSearch:IsSourceAvailable(self.sourceKey) then
             return
         end
         currentSource = self.sourceKey
@@ -291,6 +362,9 @@ local function CreateItemListRow(parent)
 end
 
 local function BindItemListRow(row, index, result, state)
+    if ns.BindCatalogListCapRow(row, result) then
+        return
+    end
     row.result = result
     row._rowSelected = state.selected and true or false
     row._borderKey = "default"
@@ -486,10 +560,16 @@ ShowItemDetail = function(result)
         local fs = OneWoW_GUI:CreateFS(btn, 10)
         fs:SetPoint("LEFT", 0, 0)
         fs:SetText(text)
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_IDLE"))
 
-        btn:SetScript("OnEnter", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT")) end)
-        btn:SetScript("OnLeave", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
+        btn:SetScript("OnEnter", function()
+            fs:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_HOVER"))
+            SetCursor("Interface\\CURSOR\\Point")
+        end)
+        btn:SetScript("OnLeave", function()
+            fs:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_IDLE"))
+            ResetCursor()
+        end)
         btn:SetScript("OnClick", onClick)
 
         yOffset = yOffset - 18
@@ -498,11 +578,27 @@ ShowItemDetail = function(result)
     AddSectionHeader("ITEMSEARCH_SECTION_DROPS")
     if #detail.drops > 0 then
         for _, drop in ipairs(detail.drops) do
-            local line = drop.instanceName or ""
-            if drop.encounterName then
-                line = line .. "  -  " .. drop.encounterName
+            local inst = drop.instanceName
+            local enc = drop.encounterName
+            if not inst or inst == "" or inst == "?" or inst == "???" then
+                inst = nil
             end
-            AddTextRow(line, 12, "TEXT_PRIMARY")
+            if not enc or enc == "" or enc == "?" or enc == "???" then
+                enc = nil
+            end
+            local line
+            if inst and enc then
+                line = inst .. "  -  " .. enc
+            else
+                line = inst or enc or BATTLE_PET_SOURCE_1
+            end
+            if DropCanJump(drop) then
+                AddClickableRow(line, 12, function()
+                    JumpToPlace(drop)
+                end)
+            else
+                AddTextRow(line, 12, "TEXT_PRIMARY")
+            end
         end
     else
         AddTextRow(L["ITEMSEARCH_NO_DROPS"], 12, "TEXT_MUTED")
@@ -517,7 +613,13 @@ ShowItemDetail = function(result)
             if v.zone and v.zone ~= "" then
                 line = line .. "  (" .. v.zone .. ")"
             end
-            AddTextRow(line, 12, "TEXT_PRIMARY")
+            if v.npcID then
+                AddClickableRow(line, 12, function()
+                    JumpToVendor(v.npcID)
+                end)
+            else
+                AddTextRow(line, 12, "TEXT_PRIMARY")
+            end
         end
     else
         AddTextRow(L["ITEMSEARCH_NO_VENDORS"], 12, "TEXT_MUTED")
@@ -582,7 +684,7 @@ ShowItemDetail = function(result)
         for _, qr in ipairs(detail.questRewards) do
             local qname = qr.questName or string.format(L["QUESTS_UNNAMED"], qr.questID)
             AddClickableRow(qname, 12, function()
-                if ns.UI.OpenQuest then ns.UI.OpenQuest(qr.questID) end
+                JumpToQuest(qr.questID)
             end)
         end
     else
@@ -662,8 +764,10 @@ local function SyncListSelectionAndStatus(hasFilter, loading)
     end
 
     local keepSelection = nil
+    local dataN = ns.CatalogListDataCount(listResults, hasFilter)
     if selectedItem and selectedItem.itemID then
-        for i, result in ipairs(listResults) do
+        for i = 1, dataN do
+            local result = listResults[i]
             if result.itemID == selectedItem.itemID then
                 keepSelection = i
                 break
@@ -679,7 +783,7 @@ local function SyncListSelectionAndStatus(hasFilter, loading)
     end
 
     if panels.leftStatusText then
-        local n = #listResults
+        local n = ns.CatalogListDataCount(listResults, hasFilter)
         if loading then
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_LOADING"], n))
         elseif n == 0 then
@@ -715,10 +819,11 @@ RefreshItemList = function()
     end
 
     -- Single path: a <2 char term browses all available sources; >=2 filters.
-    local hasFilter = #currentSearch >= 2
+    local hasTextFilter = #currentSearch >= 2
+    local hasFilter = ItemSearchHasListFilter()
 
     if emptyList then
-        emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
+        emptyList:SetText(hasTextFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
         emptyList:Show()
     end
     if panels.leftStatusText then
@@ -738,7 +843,10 @@ RefreshItemList = function()
             end
             listAPI.Refresh()
             if panels.leftStatusText then
-                panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_LOADING"], #listResults))
+                panels.leftStatusText:SetText(string.format(
+                    L["ITEMSEARCH_LOADING"],
+                    ns.CatalogListDataCount(listResults, hasFilter)
+                ))
             end
         end,
         onComplete = function()
@@ -751,7 +859,7 @@ RefreshItemList = function()
                 listAPI.SetSelectedIndex(nil)
                 listAPI.Refresh()
                 if emptyList then
-                    emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
+                    emptyList:SetText(hasTextFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
                     emptyList:Show()
                 end
                 if panels.leftStatusText then
@@ -766,7 +874,7 @@ RefreshItemList = function()
 
             SyncListSelectionAndStatus(hasFilter, false)
 
-            local exactItemID = hasFilter and tonumber(currentSearch) or nil
+            local exactItemID = hasTextFilter and tonumber(currentSearch) or nil
             if exactItemID and not selectedItem then
                 SelectVisibleItemResult(exactItemID)
             end
@@ -885,6 +993,7 @@ function ns.UI.CreateItemSearchTab(parent)
         currentSearch = ""
         currentSource = "all"
         selectedItem = nil
+        ns.ItemSearch.EnsureFilterPacks(currentSource)
         ClearDetailElements()
         if emptyDetail then
             emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
@@ -907,12 +1016,18 @@ function ns.UI.CreateItemSearchTab(parent)
         scrollFrame = panels.listScrollFrame,
         content = panels.listScrollChild,
         getCount = function()
-            return #listResults
+            return ns.CatalogListVisibleCount(listResults, ItemSearchHasListFilter())
         end,
         getEntry = function(index)
-            return listResults[index]
+            return ns.CatalogListVisibleEntry(listResults, index, ItemSearchHasListFilter())
+        end,
+        isSelectable = function(_, entry)
+            return entry ~= nil and not ns.IsCatalogListCap(entry)
         end,
         onSelect = function(_, entry)
+            if ns.IsCatalogListCap(entry) then
+                return
+            end
             local same = selectedItem and entry and selectedItem.itemID == entry.itemID
             selectedItem = entry
             if not same then
@@ -938,8 +1053,22 @@ function ns.UI.CreateItemSearchTab(parent)
 
     panels.detailScrollChild:SetHeight(100)
 
+    ns.ItemSearch.EnsureFilterPacks(currentSource)
     UpdateSourceButtonStates()
-    RefreshItemList()
+    if emptyList then
+        emptyList:SetText(L["ITEMSEARCH_EMPTY"])
+        emptyList:Show()
+    end
+    if panels.leftStatusText then
+        panels.leftStatusText:SetText(L["ITEMSEARCH_MIN_CHARS"])
+    end
+    -- Tab create/show must not walk ZoneDB/ItemDB/NPCDB on this frame.
+    C_Timer.After(0, function()
+        if not panels or not listAPI then
+            return
+        end
+        RefreshItemList()
+    end)
 
     -- A data source becoming queryable mid-session changes which filters are
     -- usable. Watch the data boundary (OneWoW:SignalDataReady, fired after the
@@ -953,7 +1082,7 @@ function ns.UI.CreateItemSearchTab(parent)
     -- safe no-op.
     if not dataReadyWatchersRegistered then
         dataReadyWatchersRegistered = true
-        for _, addon in ipairs(ns.ItemSearch.SOURCE_ADDONS) do
+        for _, addon in ipairs(ns.ItemSearch.GetSourceAddons()) do
             OneWoW:RegisterDataReadyWatcher(addon, function()
                 if not panels then return end
                 if UpdateSourceButtonStates() then
@@ -987,6 +1116,7 @@ function ns.UI.CreateItemSearchTab(parent)
         currentSource = "all"
         currentSearch = query
         selectedItem = nil
+        ns.ItemSearch.EnsureFilterPacks(currentSource)
 
         UpdateSourceButtonStates()
         if searchTimer then
@@ -1015,6 +1145,13 @@ function ns.UI.CreateItemSearchTab(parent)
                     SelectVisibleItemResult(itemID)
                 end
             end)
+        end
+    end
+
+    function parent.Activate()
+        ns.ItemSearch.EnsureFilterPacks(currentSource)
+        if UpdateSourceButtonStates() then
+            RefreshItemList()
         end
     end
 

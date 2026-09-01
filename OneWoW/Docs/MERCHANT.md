@@ -110,14 +110,14 @@ filtered view scans a subset of the vendor's stock.
 ## No SavedVariables
 
 Core holds only the ephemeral `lastScan`. Vendor catalogs live in
-`OneWoW_CatalogData_Vendors_DB`; collectible wishlist records live in
+`OneWoW_CatDB_NPCDB_DB` (leftover `OneWoW_CatalogData_Vendors_DB` until removed); collectible wishlist records live in
 `OneWoW_Notes_DB`. Each consumer resolves and stores in its own scope.
 
 ## Consumers (LoD-safe)
 
 | Consumer | Channel | Responsibility |
 | --- | --- | --- |
-| `CatalogData_Vendors` `VendorScanner` | scan | Merge into the vendor DB (npc record, locations, item map with costs + `isPurchasable`/`isUsable`), then its own `_API.RegisterScanCallback` fan-out for Catalog UI |
+| `CatDB_NPCDB` / leftover `CatalogData_Vendors` `VendorScanner` | scan | Merge into the vendor DB (npc record, locations, item map with costs + `isPurchasable`/`isUsable`), then its own `_API.RegisterScanCallback` fan-out for Catalog UI |
 | `overlay-engine` (core) | show + scan | Vendor overlay refresh (standing subscription at login) |
 | Accounting `VendorTracker` | show + `IsMerchantOpen()` | Gold-before-repair snapshot; frame keeps `UPDATE_INVENTORY_DURABILITY` |
 | `OneWoW_Bags` | show + closed | Vendor-mode enter/exit (`Events:OnMerchantShow` / `OnMerchantClosed`) |

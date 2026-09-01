@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("zhTW", {
     ["TOAST_NEW_TMOG"] = "新外觀！",
     ["TOAST_INSTANCE_CLICK"] = "點擊在圖鑑中查看",
 
+
     ["DATABASE_MANAGER_TITLE"] = "資料庫管理員",
     ["DATABASE_MANAGER_DESC"] = "管理插件資料庫。點擊重置以徹底清空資料庫並強制重新載入介面。",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "此插件尚未啟用。請在「管理功能」中啟用後再重置其資料庫。",

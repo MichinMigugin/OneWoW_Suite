@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("koKR", {
     ["TOAST_NEW_TMOG"] = "새 외형!",
     ["TOAST_INSTANCE_CLICK"] = "클릭하여 저널에서 보기",
 
+
     ["DATABASE_MANAGER_TITLE"] = "데이터베이스 관리",
     ["DATABASE_MANAGER_DESC"] = "애드온 데이터베이스를 관리합니다. 초기화를 누르면 해당 DB가 완전히 비워지고 UI를 다시 불러옵니다.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "이 애드온이 활성화되어 있지 않습니다. 데이터베이스를 초기화하려면 기능 관리에서 활성화하세요.",

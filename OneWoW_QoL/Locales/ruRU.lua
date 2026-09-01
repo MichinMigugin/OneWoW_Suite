@@ -46,6 +46,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TIPS_ITEMTRACKER_DESC"] = "Показывает, где вы храните предмет и откуда его взять: задание, торговец, подземелье или профессия.",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "Где лежит",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "Откуда взять",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "см. Catalog",
     ["TIPS_ITEMTRACKER_TOTAL"] = "Всего x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "Сумки",
     ["TIPS_ITEMTRACKER_BANK"] = "Банк",

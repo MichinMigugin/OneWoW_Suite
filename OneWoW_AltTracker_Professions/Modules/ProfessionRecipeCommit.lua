@@ -67,8 +67,8 @@ local function ResolveByRecipes(professions, learned)
 end
 
 local function ResolveByCatalog(professions, learned)
-    local api = OneWoW_CatalogData_Tradeskills_API
-    if not api or not api.GetRecipeProfession or not learned then return nil end
+    local api = OneWoW:GetCatalogPackAPI("tradeskills")
+    if not api or not learned then return nil end
     local tally = {}
     for recipeID in pairs(learned) do
         local profName = api.GetRecipeProfession(recipeID)

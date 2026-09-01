@@ -11,10 +11,30 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "Cliquer pour ouvrir",
 
-    ["TAB_JOURNAL"] = "Journal",
-    ["TAB_VENDORS"] = "Marchands",
+    ["TAB_JOURNAL"] = "Zones",
+    ["TAB_VENDORS"] = "PNJ",
     ["TAB_QUESTS"] = "Quêtes",
     ["TAB_ITEMSEARCH"] = "Recherche d'objets",
+    ["TAB_COLLECTIBLES"] = "Objets de collection",
+
+    ["COLLECTIBLES_SEARCH"] = "Rechercher des objets de collection...",
+    ["COLLECTIBLES_EMPTY"] = "Aucun objet de collection a afficher.",
+    ["COLLECTIBLES_SELECT"] = "Selectionnez un objet de collection pour voir ses details.",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "Affiche transfigurations, montures, mascottes et jouets du journal des collections.",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "Affiche les apparences de transmog. du journal des collections.",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "Affiche les montures du journal des montures.",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "Affiche les mascottes de combat du journal des mascottes.",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "Affiche les jouets de la boite a jouets.",
+    ["COLLECTIBLES_RARE_SECTION"] = "Rare du monde",
+
+    ["HOUSING_SEARCH"] = "Rechercher du decor de logement...",
+    ["HOUSING_EMPTY"] = "Aucun decor de logement a afficher.",
+    ["HOUSING_SELECT"] = "Selectionnez un decor de logement pour voir ses details.",
+    ["HOUSING_FILTER_ALL_DESC"] = "Affiche le decor du catalogue de logement.",
+    ["HOUSING_FILTER_DECOR_DESC"] = "Affiche le decor de logement.",
+    ["HOUSING_OWNED_COUNTS"] = "Possedes %d  |  Stockes %d  |  Places %d",
+
+    ["CATALOG_LIST_NARROW"] = "Filtrez ou recherchez pour affiner davantage les résultats.",
 
     ["CATALOG_FAVORITE"] = "Favori",
     ["CATALOG_FAVORITE_TT"] = "Marquer cette entrée comme favorite. Les favoris sont classés en haut de la liste.",

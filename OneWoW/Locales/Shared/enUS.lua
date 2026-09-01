@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("enUS", {
     ["TOAST_NEW_TMOG"] = "New Appearance!",
     ["TOAST_INSTANCE_CLICK"] = "Click to view in Journal",
 
+
     ["DATABASE_MANAGER_TITLE"] = "Database Manager",
     ["DATABASE_MANAGER_DESC"] = "Manage addon databases. Click Reset to completely clear a database and force a UI reload.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "This addon is not enabled. Enable it in Manage Features to reset its database.",

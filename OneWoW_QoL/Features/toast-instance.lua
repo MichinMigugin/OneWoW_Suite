@@ -26,8 +26,9 @@ local function InstanceEnabled()
 end
 
 local function GetCatalogData(mapID)
-    local api = OneWoW_CatalogData_Journal_API
-    if not api or not api.GetInstanceByMapID then return nil end
+    OneWoW:EnsureCatalogPack("journal")
+    local api = OneWoW:GetCatalogPackAPI("journal")
+    if not api then return nil end
 
     local instData = api.GetInstanceByMapID(mapID)
     if not instData then return nil end

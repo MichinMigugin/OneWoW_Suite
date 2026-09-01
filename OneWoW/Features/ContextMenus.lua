@@ -41,8 +41,9 @@ local function IsMatchMountEnabled()
 end
 
 local function CatalogHasVendor(npcID)
-    local api = OneWoW_CatalogData_Vendors_API
-    if not api or not api.GetAllVendors then return false end
+    ns:EnsureCatalogPack("vendors")
+    local api = ns:GetCatalogPackAPI("vendors")
+    if not api then return false end
     local allVendors = api.GetAllVendors()
     return allVendors and allVendors[npcID] ~= nil
 end

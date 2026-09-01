@@ -11,12 +11,19 @@ local floor = math.floor
 local max = math.max
 local min = math.min
 local tinsert = tinsert
+local tremove = tremove
+local wipe = wipe
+
+-- GetDoubleClickTime is not present on Retail 12.x; match Notes/Trackers title-bar timing.
+local COLLECT_DOUBLE_CLICK = 0.4
 
 local BR = ns.TextureAtlasBrowser
 
 -- Forward declaration: refreshSheetOverlays (above) calls this from overlay OnClick.
 local selectAtlasFromOverlay
 local applySheetFrameLayout
+local updateSheetOverlayStyles
+local setCopyButtonEnabled
 
 local function getDU()
     return ns.Constants and ns.Constants.DEVTOOL_UI or {}
@@ -226,10 +233,17 @@ local function styleSheetOverlay(tab, overlay, DU)
         insets = { left = 0, right = 0, top = 0, bottom = 0 },
     })
     overlay:SetFrameLevel(baseLevel + (isSel and levelBoostSel or levelBoostNorm))
+    local isCollected = tab.collectedSet and tab.collectedSet[overlay.atlasName]
     if isSel then
         local fr, fg, fb = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
         overlay:SetBackdropColor(fr, fg, fb, fillAlpha)
         overlay:SetBackdropBorderColor(fr, fg, fb, 0.98)
+    elseif isCollected then
+        local cr, cg, cb = OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY")
+        local collectedFill = DU.TEXTURE_SHEET_OVERLAY_COLLECTED_FILL_ALPHA or 0.16
+        local collectedBorderA = DU.TEXTURE_SHEET_OVERLAY_COLLECTED_BORDER_ALPHA or 0.9
+        overlay:SetBackdropColor(cr, cg, cb, collectedFill)
+        overlay:SetBackdropBorderColor(cr, cg, cb, collectedBorderA)
     else
         overlay:SetBackdropColor(0, 0, 0, 0)
         local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
@@ -246,8 +260,100 @@ local function styleSheetOverlay(tab, overlay, DU)
     end
 end
 
+-- ============================================================================
+-- Collected atlas names
+-- ============================================================================
+-- Double-click a sheet region (or the solo atlas preview) to add/remove a name.
+-- The listing lives in the collected pane; Copy dumps every name, one per line.
+
+local function refreshCollectedPanel(tab)
+    if not tab or not tab.collectedText then
+        return
+    end
+    local names = tab.collectedNames
+    local n = names and #names or 0
+    if tab.collectedHeader then
+        if n > 0 then
+            tab.collectedHeader:SetText(format("%s (%d)", COLLECTED, n))
+        else
+            tab.collectedHeader:SetText(COLLECTED)
+        end
+    end
+    if n == 0 then
+        tab.collectedText:SetText(L["TEXTURE_MSG_COLLECT_HINT"])
+        tab.collectedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    else
+        tab.collectedText:SetText(table.concat(names, "\n"))
+        tab.collectedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+    local h = tab.collectedText:GetStringHeight()
+    tab.collectedScroll:GetScrollChild():SetHeight(max(h + 16, tab.collectedScroll:GetHeight()))
+    setCopyButtonEnabled(tab.collectedCopyBtn, n > 0)
+    setCopyButtonEnabled(tab.collectedClearBtn, n > 0)
+end
+
+local function toggleCollectedName(tab, atlasName)
+    if not tab or not atlasName or atlasName == "" then
+        return
+    end
+    if not tab.collectedNames then
+        tab.collectedNames = {}
+        tab.collectedSet = {}
+    end
+    if tab.collectedSet[atlasName] then
+        tab.collectedSet[atlasName] = nil
+        for i = 1, #tab.collectedNames do
+            if tab.collectedNames[i] == atlasName then
+                tremove(tab.collectedNames, i)
+                break
+            end
+        end
+    else
+        tab.collectedSet[atlasName] = true
+        tinsert(tab.collectedNames, atlasName)
+    end
+    refreshCollectedPanel(tab)
+    if BR:GetViewMode() == BR.VIEW_TEXTURE and tab.selectedTextureKey and tab.previewSheetHost and tab.previewSheetHost:IsShown() then
+        updateSheetOverlayStyles(tab)
+    end
+end
+
+local function clearCollectedNames(tab)
+    if tab.collectedNames then
+        wipe(tab.collectedNames)
+    end
+    if tab.collectedSet then
+        wipe(tab.collectedSet)
+    end
+    refreshCollectedPanel(tab)
+    if BR:GetViewMode() == BR.VIEW_TEXTURE and tab.selectedTextureKey and tab.previewSheetHost and tab.previewSheetHost:IsShown() then
+        updateSheetOverlayStyles(tab)
+    end
+end
+
+local function copyCollectedNames(tab)
+    local names = tab.collectedNames
+    if not names or #names == 0 then
+        return
+    end
+    ns:CopyToClipboard(table.concat(names, "\n"), L["COPY_DEFAULT_TITLE"])
+end
+
+--- Second click inside the OS double-click window is collect, not highlight-toggle.
+local function consumeOverlayDoubleClick(tab, atlasName)
+    local now = GetTime()
+    if tab._lastOverlayClickName == atlasName and (now - (tab._lastOverlayClickTime or 0)) <= COLLECT_DOUBLE_CLICK then
+        tab._lastOverlayClickTime = 0
+        tab._lastOverlayClickName = nil
+        return true
+    end
+    tab._lastOverlayClickTime = now
+    tab._lastOverlayClickName = atlasName
+    return false
+end
+
 --- Light-weight restyle: update selection highlight and bookmark icons on existing overlays.
-local function updateSheetOverlayStyles(tab)
+updateSheetOverlayStyles = function(tab)
     if not tab.sheetFrame or not tab.overlayPool then return end
     local DU = getDU()
     for overlay in tab.overlayPool:EnumerateActive() do
@@ -298,6 +404,10 @@ local function refreshSheetOverlays(tab)
                 overlay:SetScript("OnClick", function(self)
                     if tab._sheetPanDragged then
                         tab._sheetPanDragged = false
+                        return
+                    end
+                    if consumeOverlayDoubleClick(tab, self.atlasName) then
+                        toggleCollectedName(tab, self.atlasName)
                         return
                     end
                     selectAtlasFromOverlay(tab, self.atlasName)
@@ -556,7 +666,7 @@ end
 
 local TEXTURE_BAR_ACTIVE_KEY = "_textureBarActive"
 
-local function setCopyButtonEnabled(btn, enabled)
+setCopyButtonEnabled = function(btn, enabled)
     if not btn then return end
     btn:EnableMouse(enabled)
     if enabled then
@@ -621,6 +731,8 @@ function ns.UI:CreateTextureTab(parent)
     tab:Hide()
     tab.listRowH = TEX_ROW_H
     tab.zoomLevel = 1
+    tab.collectedNames = {}
+    tab.collectedSet = {}
 
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 160,
@@ -839,6 +951,7 @@ function ns.UI:CreateTextureTab(parent)
     tab.searchBox = searchBox
 
     local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    tab.rightPanel = rightPanel
     self:StyleContentPanel(rightPanel)
 
     OneWoW_GUI:CreateVerticalPaneResizer({
@@ -924,6 +1037,7 @@ function ns.UI:CreateTextureTab(parent)
     tab.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local previewBg = rightPanel:CreateTexture(nil, "BACKGROUND")
+    tab.previewBg = previewBg
     local bottomReserve = DU.TEXTURE_PREVIEW_BOTTOM_RESERVE or 188
     previewBg:SetPoint("TOP", tab.nameText, "BOTTOM", 0, -8)
     previewBg:SetPoint("LEFT", rightPanel, "LEFT", 8, 0)
@@ -994,6 +1108,21 @@ function ns.UI:CreateTextureTab(parent)
     tab.atlasSoloTexture = tab.atlasSoloFrame:CreateTexture(nil, "ARTWORK")
     tab.atlasSoloTexture:SetAllPoints()
 
+    tab.previewAtlasHost:EnableMouse(true)
+    tab.previewAtlasHost:SetScript("OnMouseUp", function(_, button)
+        if button ~= "LeftButton" then
+            return
+        end
+        local now = GetTime()
+        if (now - (tab._atlasSoloClickTime or 0)) <= COLLECT_DOUBLE_CLICK then
+            if tab.selectedAtlasName then
+                toggleCollectedName(tab, tab.selectedAtlasName)
+            end
+            tab._atlasSoloClickTime = 0
+        else
+            tab._atlasSoloClickTime = now
+        end
+    end)
     tab.previewAtlasHost:EnableMouseWheel(true)
     tab.previewAtlasHost:SetScript("OnMouseWheel", function(_, delta)
         if delta > 0 then
@@ -1084,11 +1213,66 @@ function ns.UI:CreateTextureTab(parent)
         updateDetailPanel(tab)
     end)
 
+    local COPY_ROW_H = 42
+    local COLLECT_H = DU.TEXTURE_COLLECTED_PANE_HEIGHT or 96
+    local BOTTOM_GAP = 8
+
+    local collectedPanel = OneWoW_GUI:CreateFrame(rightPanel, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = COLLECT_H })
+    tab.collectedPanel = collectedPanel
+    self:StyleContentPanel(collectedPanel)
+
+    tab.collectedHeader = collectedPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tab.collectedHeader:SetPoint("TOPLEFT", collectedPanel, "TOPLEFT", 8, -6)
+    tab.collectedHeader:SetJustifyH("LEFT")
+    tab.collectedHeader:SetText(COLLECTED)
+    tab.collectedHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local collectedClearBtn = OneWoW_GUI:CreateFitTextButton(collectedPanel, {
+        text = L["CLEAR"],
+        height = 22,
+        minWidth = 44,
+    })
+    collectedClearBtn:SetPoint("TOPRIGHT", collectedPanel, "TOPRIGHT", -6, -4)
+    collectedClearBtn:SetScript("OnClick", function()
+        clearCollectedNames(tab)
+    end)
+
+    local collectedCopyBtn = OneWoW_GUI:CreateFitTextButton(collectedPanel, {
+        text = L["COPY_DEFAULT_TITLE"],
+        height = 22,
+        minWidth = 44,
+    })
+    collectedCopyBtn:SetPoint("RIGHT", collectedClearBtn, "LEFT", -4, 0)
+    collectedCopyBtn:SetScript("OnClick", function()
+        copyCollectedNames(tab)
+    end)
+
+    tab.collectedCopyBtn = collectedCopyBtn
+    tab.collectedClearBtn = collectedClearBtn
+    tab.collectedHeader:SetPoint("RIGHT", collectedCopyBtn, "LEFT", -6, 0)
+    if tab.collectedHeader.SetWordWrap then
+        tab.collectedHeader:SetWordWrap(false)
+    end
+
+    local collectedScroll, collectedContent = OneWoW_GUI:CreateScrollFrame(collectedPanel, {})
+    collectedScroll:ClearAllPoints()
+    collectedScroll:SetPoint("TOPLEFT", collectedPanel, "TOPLEFT", 4, -28)
+    collectedScroll:SetPoint("BOTTOMRIGHT", collectedPanel, "BOTTOMRIGHT", -14, 4)
+    collectedScroll:HookScript("OnSizeChanged", function(_, w)
+        collectedContent:SetWidth(w)
+        refreshCollectedPanel(tab)
+    end)
+
+    tab.collectedScroll = collectedScroll
+    tab.collectedText = collectedContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    tab.collectedText:SetPoint("TOPLEFT", 2, -2)
+    tab.collectedText:SetPoint("RIGHT", collectedContent, "RIGHT", -2, 0)
+    tab.collectedText:SetJustifyH("LEFT")
+    tab.collectedText:SetText("")
+    tab.collectedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
     local infoPanel = OneWoW_GUI:CreateFrame(rightPanel, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
     tab.infoPanel = infoPanel
-    infoPanel:ClearAllPoints()
-    infoPanel:SetPoint("TOPLEFT", previewBg, "BOTTOMLEFT", 0, -8)
-    infoPanel:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -6, 42)
     self:StyleContentPanel(infoPanel)
 
     local infoScroll, infoContent = OneWoW_GUI:CreateScrollFrame(infoPanel, {})
@@ -1107,21 +1291,35 @@ function ns.UI:CreateTextureTab(parent)
     tab.infoText:SetText("")
     tab.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
+    local function layoutBottomPanels()
+        collectedPanel:ClearAllPoints()
+        collectedPanel:SetPoint("LEFT", previewBg, "LEFT", 0, 0)
+        collectedPanel:SetPoint("RIGHT", previewBg, "RIGHT", 0, 0)
+        collectedPanel:SetPoint("BOTTOM", rightPanel, "BOTTOM", 0, COPY_ROW_H)
+        collectedPanel:SetHeight(COLLECT_H)
+
+        infoPanel:ClearAllPoints()
+        if tab.manualPanel and tab.manualPanel:IsShown() then
+            infoPanel:SetPoint("TOPLEFT", tab.manualPanel, "BOTTOMLEFT", 0, -BOTTOM_GAP)
+            infoPanel:SetPoint("TOPRIGHT", tab.manualPanel, "BOTTOMRIGHT", 0, -BOTTOM_GAP)
+        else
+            infoPanel:SetPoint("TOPLEFT", previewBg, "BOTTOMLEFT", 0, -BOTTOM_GAP)
+            infoPanel:SetPoint("TOPRIGHT", previewBg, "BOTTOMRIGHT", 0, -BOTTOM_GAP)
+        end
+        infoPanel:SetPoint("BOTTOMLEFT", collectedPanel, "TOPLEFT", 0, BOTTOM_GAP)
+        infoPanel:SetPoint("BOTTOMRIGHT", collectedPanel, "TOPRIGHT", 0, BOTTOM_GAP)
+    end
+
+    layoutBottomPanels()
+    refreshCollectedPanel(tab)
+
     manualToggle:SetScript("OnClick", function()
         if tab.manualPanel:IsShown() then
             tab.manualPanel:Hide()
         else
             tab.manualPanel:Show()
         end
-        if tab.manualPanel:IsShown() then
-            tab.infoPanel:ClearAllPoints()
-            tab.infoPanel:SetPoint("TOPLEFT", tab.manualPanel, "BOTTOMLEFT", 0, -8)
-            tab.infoPanel:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -6, 42)
-        else
-            tab.infoPanel:ClearAllPoints()
-            tab.infoPanel:SetPoint("TOPLEFT", previewBg, "BOTTOMLEFT", 0, -8)
-            tab.infoPanel:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -6, 42)
-        end
+        layoutBottomPanels()
         ns.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 

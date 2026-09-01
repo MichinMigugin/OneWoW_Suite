@@ -6,8 +6,8 @@ local _, ns = ...
 -- User-assignable vendor types ("Quartermaster / Renown", "Mount Vendor",
 -- etc.) used by the Vendors tab for display and filtering.
 --
--- The category KEY is the stable identifier stored on
--- OneWoW_CatalogData_Vendors_DB.global.vendors[npcID].category.
+-- The category KEY is the stable identifier stored on NPCDB
+-- vendorCategories.
 -- The label is resolved through ns.L at runtime so it stays localized.
 -- ============================================================================
 

@@ -46,6 +46,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TIPS_ITEMTRACKER_DESC"] = "Zeigt, wo ihr einen Gegenstand aufbewahrt, und wo ihr ihn herbekommt: Quest, Händler, Instanz oder Beruf.",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "Wo es ist",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "Wo ihr es herbekommt",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "siehe Catalog",
     ["TIPS_ITEMTRACKER_TOTAL"] = "Gesamt x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "Taschen",
     ["TIPS_ITEMTRACKER_BANK"] = "Bank",

@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("esES", {
     ["TOAST_NEW_TMOG"] = "¡Nueva apariencia!",
     ["TOAST_INSTANCE_CLICK"] = "Haz clic para ver en el Diario",
 
+
     ["DATABASE_MANAGER_TITLE"] = "Gestor de bases de datos",
     ["DATABASE_MANAGER_DESC"] = "Gestiona las bases de datos del addon. Haz clic en Restablecer para borrar por completo una base de datos y forzar una recarga de la interfaz.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "Este addon no está activado. Actívalo en Gestionar funciones para restablecer su base de datos.",

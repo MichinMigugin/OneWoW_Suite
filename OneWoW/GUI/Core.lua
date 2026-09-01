@@ -8,7 +8,10 @@ OneWoW_GUI.noop = function() end
 -- WoW has this function but it was deprecated in 10.2.6.
 -- Accounts for color overrides in game accessibility settings
 function OneWoW_GUI:GetItemQualityColor(quality)
-    local t = ColorManager.GetColorDataForItemQuality(quality or 1)
+    if type(quality) ~= "number" then
+        quality = 1
+    end
+    local t = ColorManager.GetColorDataForItemQuality(quality)
     local colorMixin = t.color
     -- Returns r, g, b, a floats
     return colorMixin:GetRGBA()

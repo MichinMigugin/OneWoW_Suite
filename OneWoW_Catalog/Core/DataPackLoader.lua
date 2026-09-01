@@ -13,8 +13,6 @@ local C_Timer = C_Timer
 -- parse (QuestScanner.Initialize catch-up stores the dialog that triggered it).
 -- ============================================================================
 
-local QUEST_PACK = "OneWoW_CatalogData_Quests"
-
 local questPackFrame = CreateFrame("Frame")
 local loadQueued = false
 questPackFrame:SetScript("OnEvent", function(self)
@@ -23,7 +21,7 @@ questPackFrame:SetScript("OnEvent", function(self)
     end
     loadQueued = true
     C_Timer.After(0, function()
-        if OneWoW:EnsureLoaded(QUEST_PACK) then
+        if OneWoW:EnsureLoaded(ns.ResolveCatalogPack("quests")) then
             self:UnregisterAllEvents()
         else
             loadQueued = false

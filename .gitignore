@@ -22,6 +22,9 @@ Thumbs.db
 # Local scratch
 temp.txt
 
+# Local shelf of old fat CatalogData packs — never ship.
+/--Removed Data Addon/
+
 # Claude Code local permissions (personal) — leftover if a local .claude appears
 .claude/settings.local.json
 

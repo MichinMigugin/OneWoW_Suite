@@ -7,8 +7,6 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local WOW_QUEST_GOLD = OneWoW_GUI.Constants.WOW_QUEST_GOLD
 local QUEST_LIST_ROW_HEIGHT = 60
 local QUEST_LIST_ROW_FRAME_HEIGHT = 56
-local QUEST_LIST_CAP_UNFILTERED = 25
-local QUEST_LIST_CAP_FILTERED = 50
 local QUEST_LIST_RIGHT_GUTTER = 28
 local QUEST_LIST_TAG_GAP = 8
 local QUEST_LIST_TAG_PAD_X = 8
@@ -486,44 +484,6 @@ local function HasQuestListFilters()
     return IsDatabaseMode() or IsActiveFilterMode() or runtimeFilter == "favorite"
 end
 
-local function GetQuestListCap()
-    if HasQuestListFilters() then
-        return QUEST_LIST_CAP_FILTERED
-    end
-    return QUEST_LIST_CAP_UNFILTERED
-end
-
---- Keeps the left list short. `total` is the uncut match count for the status line.
----@param quests table
----@param favoriteQuests table|nil
----@param cap number
----@return table quests
----@return table favoriteQuests
----@return number total
----@return boolean capped
-local function CapQuestListResults(quests, favoriteQuests, cap)
-    favoriteQuests = favoriteQuests or {}
-    local total = #quests + #favoriteQuests
-    if total <= cap then
-        return quests, favoriteQuests, total, false
-    end
-
-    local qOut, fOut = {}, {}
-    for i = 1, #quests do
-        if #qOut >= cap then
-            break
-        end
-        qOut[#qOut + 1] = quests[i]
-    end
-    for i = 1, #favoriteQuests do
-        if (#qOut + #fOut) >= cap then
-            break
-        end
-        fOut[#fOut + 1] = favoriteQuests[i]
-    end
-    return qOut, fOut, total, true
-end
-
 local function ResetAdvancedFilters()
     typeFilter       = "all"
     questTypeFilter  = "all"
@@ -858,7 +818,7 @@ local function GetAllCharactersActiveQuests(addon)
 end
 
 local function GetDataAddon()
-    return OneWoW_CatalogData_Quests_API
+    return ns.GetCatalogPackAPI("quests")
 end
 
 local function ClearDetailElements()
@@ -1510,8 +1470,8 @@ local function RegisterVisibleQuestName(questID, textObject, prefix, suffix, for
 end
 
 local function GetQuestDisplayName(questID, _)
-    local API = OneWoW_CatalogData_Quests_API
-    local questName = API.GetQuestName(questID)
+    local API = ns.GetCatalogPackAPI("quests")
+    local questName = API and API.GetQuestName(questID)
     return questName or ("Quest " .. tostring(questID))
 end
 
@@ -1520,7 +1480,10 @@ local function RequestVisibleChainQuestName(questID)
     if not questID then
         return
     end
-    local API = OneWoW_CatalogData_Quests_API
+    local API = ns.GetCatalogPackAPI("quests")
+    if not API then
+        return
+    end
     if API.GetQuestName(questID) then
         return
     end
@@ -2080,6 +2043,18 @@ function ShowQuestDetail(panels, questData)
         )
     )
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    if questData.id then
+        RegisterVisibleQuestName(
+            questData.id,
+            titleText,
+            nil,
+            nil,
+            FormatAndHighlightQuestText
+        )
+        if not questData.name or questData.name == "" then
+            RequestVisibleChainQuestName(questData.id)
+        end
+    end
 
     local titleHeight = math.max(titleText:GetStringHeight() or 18, 18)
     titleFrame:SetHeight(titleHeight)
@@ -3452,6 +3427,29 @@ local function UpdateQuestListEntry(btn, entry, state)
         btn.nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", leftPad, -6)
         btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", rightGutter, -6)
         btn.nameText:SetText(nameText)
+        if not btn.isGroup and quest and quest.id and (not quest.name or quest.name == "") then
+            local liveName = addon.GetQuestName and addon.GetQuestName(quest.id)
+            if liveName and liveName ~= "" then
+                quest.name = liveName
+                btn.nameText:SetText(liveName)
+            else
+                addon.RequestQuestName(quest.id, function(id, name)
+                    if not name or name == "" then
+                        return
+                    end
+                    if btn.quest and btn.quest.id == id then
+                        btn.quest.name = name
+                        if btn.nameText then
+                            btn.nameText:SetText(name)
+                        end
+                    end
+                    local stored = addon.GetQuest(id)
+                    if stored then
+                        stored.name = name
+                    end
+                end)
+            end
+        end
 
         if btn.isGroup then
             btn.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
@@ -3702,6 +3700,9 @@ local function ToggleQuestListGroup(entry, api)
             panels._questResults or {},
             panels._favoriteQuestResults or {}
         )
+        if panels._questListWasCapped then
+            ns.AppendCatalogListCapNotice(panels._questListEntries)
+        end
         api.Refresh()
         if selectedQuest then
             local keepIndex = FindSelectableQuestListIndex(
@@ -3829,6 +3830,9 @@ local function CreateQuestListRow(parent, api)
 end
 
 local function BindQuestListRow(row, index, entry, state)
+    if ns.BindCatalogListCapRow(row, entry) then
+        return
+    end
     row._zebraIndex = index
     UpdateQuestListEntry(row, entry, state)
 end
@@ -3993,17 +3997,18 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
     end
 
     local matchTotal = #quests + #favoriteQuests
-    local listCap = GetQuestListCap()
+    local listCap = ns.GetCatalogListCap(HasQuestListFilters())
     local wasCapped = false
-    quests, favoriteQuests, matchTotal, wasCapped = CapQuestListResults(
+    quests, favoriteQuests, matchTotal, wasCapped = ns.CapCatalogListPair(
         quests,
         favoriteQuests,
-        listCap
+        HasQuestListFilters()
     )
 
     if #quests == 0 and #favoriteQuests == 0 then
         panels._questResults = {}
         panels._favoriteQuestResults = {}
+        panels._questListWasCapped = nil
         panels._questListEntries = {}
         if panels.emptyList then
             if loading then
@@ -4040,7 +4045,11 @@ local function PublishQuestListResults(panels, addon, quests, favoriteQuests, pr
 
     panels._questResults = quests
     panels._favoriteQuestResults = favoriteQuests
+    panels._questListWasCapped = wasCapped
     panels._questListEntries = BuildQuestListDisplayEntries(quests, favoriteQuests)
+    if wasCapped then
+        ns.AppendCatalogListCapNotice(panels._questListEntries)
+    end
 
     local keepIndex
     if selectedQuest then
@@ -4138,7 +4147,8 @@ local function BuildPinnedChainQuests(addon, chainIDs)
         if quest then
             table.insert(quests, quest)
         else
-            table.insert(quests, { id = chainIDs[i] })
+            local name = addon.GetQuestName and addon.GetQuestName(chainIDs[i]) or nil
+            table.insert(quests, { id = chainIDs[i], name = name })
         end
     end
     return quests
@@ -4296,6 +4306,7 @@ function RefreshQuestList(panels, invalidateStatus)
     if not addon then
         panels._questResults = {}
         panels._favoriteQuestResults = {}
+        panels._questListWasCapped = nil
         panels._questListEntries = {}
         if panels.emptyList then
             panels.emptyList:SetText(L["QUESTS_NO_DATA"])
@@ -5237,6 +5248,19 @@ function ns.UI.CreateQuestsTab(parent)
         ClearNpcFilter()
         completionFilter = "all"
         ResetAdvancedFilters()
+        selectedQuest = nil
+        ClearPinnedQuestChain()
+        if questListAPI then
+            questListAPI.SetSelectedIndex(nil)
+        end
+        ClearDetailElements()
+        if panels.emptyDetail then
+            panels.emptyDetail:SetText(L["QUESTS_SELECT"])
+            panels.emptyDetail:Show()
+        end
+        if panels.detailScrollChild then
+            panels.detailScrollChild:SetHeight(100)
+        end
         searchBox:SetText("")
         searchBox:ClearFocus()
         searchBox:RestorePlaceholder()
@@ -5271,7 +5295,7 @@ function ns.UI.CreateQuestsTab(parent)
     -- covers a tab opened after data was already ready; the signal covers a
     -- mid-session load. Ongoing quest-enrichment refreshes still arrive via
     -- QuestData's QueueQuestUIRefresh -> RefreshQuestsList push.
-    ns.WatchCatalogDataReady("OneWoW_CatalogData_Quests", {
+    ns.WatchCatalogDataReady("quests", {
         emptyList = emptyList,
         emptyDetail = emptyDetail,
         noDataText = L["QUESTS_NO_DATA"],

@@ -177,7 +177,8 @@ function ProfPanelModule:GetOtherAlts()
         end
     end
 
-    local tsAPI = OneWoW_CatalogData_Tradeskills_API
+    OneWoW:EnsureCatalogPack("tradeskills")
+    local tsAPI = OneWoW:GetCatalogPackAPI("tradeskills")
     if tsAPI then
         for _, charKey in ipairs(tsAPI.GetAllCharacters()) do
             local profData = charKey ~= currentChar and tsAPI.GetKnownRecipes(charKey, currentProf)

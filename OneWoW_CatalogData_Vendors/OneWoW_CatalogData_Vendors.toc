@@ -16,44 +16,4 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 
-# Locales
-Locales\enUS.lua
-Locales\koKR.lua
-Locales\frFR.lua
-Locales\deDE.lua
-Locales\zhCN.lua
-Locales\esES.lua
-Locales\zhTW.lua
-Locales\esMX.lua
-Locales\ruRU.lua
-Locales\ptBR.lua
-Locales\itIT.lua
-
-# Core
-Core\Database.lua
-Core\API.lua
-Core\NpcDBLoader.lua
-Core\Core.lua
-
-# Databases (each calls ns:RegisterNpcData; loader must precede them)
-Data\NpcDB\NpcDB_classic.lua
-Data\NpcDB\NpcDB_bc.lua
-Data\NpcDB\NpcDB_wotlk.lua
-Data\NpcDB\NpcDB_cata.lua
-Data\NpcDB\NpcDB_mop.lua
-Data\NpcDB\NpcDB_wod.lua
-Data\NpcDB\NpcDB_legion.lua
-Data\NpcDB\NpcDB_bfa.lua
-Data\NpcDB\NpcDB_shadowlands.lua
-Data\NpcDB\NpcDB_dragonflight.lua
-Data\NpcDB\NpcDB_warwithin.lua
-Data\NpcDB\NpcDB_midnight.lua
-
-# Modules
-Modules\DataLoader.lua
-Modules\VendorData.lua
-Modules\VendorCategoryMap.lua
-Modules\VendorScanner.lua
-
-# Main
 OneWoW_CatalogData_Vendors.lua

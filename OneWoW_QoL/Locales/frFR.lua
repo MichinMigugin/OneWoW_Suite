@@ -46,6 +46,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TIPS_ITEMTRACKER_DESC"] = "Affiche où vous rangez un objet, et où le trouver : quête, vendeur, instance ou métier.",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "Où il est",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "Où le trouver",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "voir Catalog",
     ["TIPS_ITEMTRACKER_TOTAL"] = "Total x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "Sacs",
     ["TIPS_ITEMTRACKER_BANK"] = "Banque",

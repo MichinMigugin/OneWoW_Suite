@@ -1,4 +1,2 @@
--- OneWoW_CatalogData_Tradeskills main file.
--- The public cross-addon API is published in Core/API.lua as the global
--- OneWoW_CatalogData_Tradeskills_API. This unit exposes no other globals; the addon
--- namespace (ns) stays private to the unit.
+local ADDON_NAME, ns = ...
+-- Leftover addon so WTF SavedVariables still load.

@@ -401,6 +401,7 @@ ns.Locale:RegisterShared("frFR", {
     ["TOAST_NEW_TMOG"] = "Nouvelle apparence !",
     ["TOAST_INSTANCE_CLICK"] = "Cliquez pour voir dans le Journal",
 
+
     ["DATABASE_MANAGER_TITLE"] = "Gestionnaire de bases de données",
     ["DATABASE_MANAGER_DESC"] = "Gérez les bases de données de l'addon. Cliquez sur Réinitialiser pour effacer complètement une base de données et forcer un rechargement de l'interface.",
     ["DATABASE_MANAGER_RESET_DISABLED"] = "Cet addon n'est pas activé. Activez-le dans Gérer les fonctionnalités pour réinitialiser sa base de données.",

@@ -195,7 +195,7 @@ One search / preset surface that answers questions instead of teaching five tab 
 | Which alts have daily/weekly work left? | Endgame weeklies + Collections active quests | Curated weeklies + real quest flags |
 | Which alts aren’t on lockout X / any raid lockout? | Endgame raids.lockouts | Wants the Endgame lockout `_API` (see §5.2) |
 | Which alts have item X? | Storage ItemIndex / Gather | Already strong in Items |
-| Which alts need / are on quest X? | `OneWoW_CatalogData_Quests_API` | **Already answered today** — see note below |
+| Which alts need / are on quest X? | `OneWoW_CatDB_QuestDBCurrent_API` | **Already answered today** — see note below |
 | Who still needs Great Vault slots? | Endgame vault | Visual + coaching |
 | Who is below N of currency Y / crest cap? | Endgame currencies | Remaining-to-cap |
 | Who has profession CD / concentration ready? | Professions store | |
@@ -203,7 +203,7 @@ One search / preset surface that answers questions instead of teaching five tab 
 | Who holds duplicates of X? | Storage FindDuplicates | Items mode today |
 
 **Quest ownership is already solved elsewhere — do not rebuild it.**
-`OneWoW_CatalogData_Quests_API.GetCompletedCharacters(questID)` and
+`OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters(questID)` and
 `GetActiveCharacters(questID)` are public today, and Catalog's Quests tab already renders
 per-character completion. `CompletionTracker` keeps its own `db.completion[charKey]`, seeded
 from `GetAllCompletedQuestIDs()` on login and updated on every turn-in, falling back to the
@@ -309,7 +309,7 @@ for the logged-in character only (`C_RaidLocks.IsEncounterComplete`). **Decided:
 raw read (`GetLockouts(charKey)`) with a predicate on top (`IsSavedTo(charKey, instanceID,
 difficultyID)`), so the difficulty-matching rules — including shared legacy 10/25 pairing —
 and the “last seen” freshness stamp live in the store rather than in every consumer.
-`OneWoW_CatalogData_Quests`' `CompletionTracker` is the precedent to follow. Sequenced in
+`OneWoW_CatDB_QuestDBCurrent`' `CompletionTracker` is the precedent to follow. Sequenced in
 [`ROADMAP.md`](ROADMAP.md).
 
 ### 5.3 Shared suite services
@@ -321,7 +321,7 @@ and the “last seen” freshness stamp live in the store rather than in every c
 - `OneWoW.Location` — player map, waypoint, hearth (legacy Summary already consumes it)
 - QoL tooltip ItemIndex consumer — ambient “where is this item”
 - Catalog — quest browsing **and cross-alt quest completion**
-  (`OneWoW_CatalogData_Quests_API`); Ask consumes and deep-links rather than duplicating
+  (`OneWoW_CatDB_QuestDBCurrent_API`); Ask consumes and deep-links rather than duplicating
 - `OneWoW.Collectibles` — live collection state; Notes owns want records (assignment
   via AltScope). AT2 does **not** grow a collections journal.
 - `OneWoW_Trackers` — farm plans; AT2 supplies lockout / quest-snapshot `_API` reads
@@ -492,7 +492,7 @@ for those jobs.
 
 ### Phase 6 — Ask v2 + coaching (P2)
 
-- [ ] Quest ownership asks — consume `OneWoW_CatalogData_Quests_API`, deep-link to Catalog
+- [ ] Quest ownership asks — consume `OneWoW_CatDB_QuestDBCurrent_API`, deep-link to Catalog
 - [ ] Crest sources / “what’s left” coaching copy
 - [ ] Profession CD / concentration presets
 - [ ] Saved Ask presets (user-defined)
@@ -540,7 +540,7 @@ Record answers here as they land:
 8. **Banker sellable definition:** PredicateEngine expression? quality threshold? exclude
    soulbound / reagents / junk?
 9. ~~**Quest Ask ownership:** AltTracker2 vs Catalog cross-link?~~ **Answered:** Catalog owns
-   it. `OneWoW_CatalogData_Quests_API.GetCompletedCharacters` / `GetActiveCharacters` are
+   it. `OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters` / `GetActiveCharacters` are
    public and the Quests tab already renders per-character completion. Ask consumes and
    deep-links (§4.4).
 10. **Craft army:** in Ops vs Professions dossier vs deferred entirely?
@@ -581,7 +581,7 @@ Record answers here as they land:
 - Roles UI: `OneWoW/UI/t-rolesandalts.lua`
 - Item index: `OneWoW_AltTracker_Storage/Modules/ItemIndex.lua`
 - Duplicates: `OneWoW_AltTracker_Storage_API.FindDuplicates` (Query layer, not ItemIndex)
-- Cross-alt quest completion: `OneWoW_CatalogData_Quests/Modules/CompletionTracker.lua`
+- Cross-alt quest completion: `OneWoW_CatDB_QuestDBCurrent` CompletionTracker (leftover `OneWoW_CatalogData_Quests/Modules/CompletionTracker.lua`)
 - QoL tooltip consumer: `OneWoW_QoL/Tooltips/tp-itemtracker.lua`
 - Home cards pattern: `OneWoW/UI/t-home.lua`
 - Architecture: `OneWoW/Docs/ARCHITECTURE.md`

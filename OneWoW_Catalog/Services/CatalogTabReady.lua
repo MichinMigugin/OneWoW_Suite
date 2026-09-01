@@ -22,6 +22,7 @@ local C_Timer = C_Timer
 ---  isReady (fun(): boolean)|nil
 ---  onReady fun()
 function ns.WatchCatalogDataReady(addonName, opts)
+    addonName = ns.ResolveCatalogPack(addonName) or addonName
     if opts.emptyList and opts.noDataText then
         opts.emptyList:SetText(opts.noDataText)
     end

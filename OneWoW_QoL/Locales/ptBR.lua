@@ -46,6 +46,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TIPS_ITEMTRACKER_DESC"] = "Mostra onde você guarda um item e de onde consegui-lo: missão, comerciante, instância ou profissão.",
     ["TIPS_ITEMTRACKER_WHERE_IS"] = "Onde está",
     ["TIPS_ITEMTRACKER_WHERE_TO_GET"] = "Onde conseguir",
+    ["TIPS_ITEMTRACKER_SEE_CATALOG"] = "ver Catalog",
     ["TIPS_ITEMTRACKER_TOTAL"] = "Total x%d",
     ["TIPS_ITEMTRACKER_BAGS"] = "Bolsas",
     ["TIPS_ITEMTRACKER_BANK"] = "Banco",

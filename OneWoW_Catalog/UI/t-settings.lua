@@ -27,11 +27,16 @@ function ns.UI.CreateSettingsTab(parent)
     dbDesc:SetSpacing(3)
     yOffset = yOffset - 30
 
+    local coreL = OneWoW.Locale:GetTable("OneWoW")
+    -- CatDB is the Home / Manage Features store list. Reset those SVs, not leftover CatalogData.
     local databases = {
-        { key = "OneWoW_Catalog",                nameKey = "SETTINGS_DB_NAME_CATALOG",     descKey = "SETTINGS_DB_DESC_CATALOG" },
-        { key = "OneWoW_CatalogData_Journal",    nameKey = "SETTINGS_DB_NAME_JOURNAL",     descKey = "SETTINGS_DB_DESC_JOURNAL" },
-        { key = "OneWoW_CatalogData_Vendors",    nameKey = "SETTINGS_DB_NAME_VENDORS",     descKey = "SETTINGS_DB_DESC_VENDORS" },
-        { key = "OneWoW_CatalogData_Tradeskills", nameKey = "SETTINGS_DB_NAME_TRADESKILLS", descKey = "SETTINGS_DB_DESC_TRADESKILLS" },
+        { key = "OneWoW_Catalog",              name = L["SETTINGS_DB_NAME_CATALOG"], desc = L["SETTINGS_DB_DESC_CATALOG"] },
+        { key = "OneWoW_CatDB_ZoneDB",         name = coreL["CAT_MOD_ZONEDB"], desc = coreL["WIZARD_CAT_DATA_JOURNAL_DESC"] },
+        { key = "OneWoW_CatDB_NPCDB",          name = coreL["CAT_MOD_NPCDB"], desc = coreL["WIZARD_CAT_DATA_VENDORS_DESC"] },
+        { key = "OneWoW_CatDB_ItemDB",         name = coreL["CAT_MOD_ITEMDB"], desc = coreL["WIZARD_CAT_DATA_ITEMDB_DESC"] },
+        { key = "OneWoW_CatDB_QuestDBCurrent", name = coreL["CAT_MOD_QUESTDB_CURRENT"], desc = coreL["WIZARD_CAT_DATA_QUESTS_DESC"] },
+        { key = "OneWoW_CatDB_QuestDBArchive", name = coreL["CAT_MOD_QUESTDB_ARCHIVE"], desc = coreL["WIZARD_CAT_DATA_QUESTS_ARCHIVE_DESC"] },
+        { key = "OneWoW_CatDB_TradeSkillDB",   name = coreL["CAT_MOD_TRADESKILLDB"], desc = coreL["WIZARD_CAT_DATA_TRADESKILLS_DESC"] },
     }
 
     local function GetEntryCount(dbKey)
@@ -45,8 +50,8 @@ function ns.UI.CreateSettingsTab(parent)
     for _, dbData in ipairs(databases) do
         local key = dbData.key
         yOffset = yOffset - OneWoW_GUI:CreateDatabaseManagerRow(scrollContent, {
-            name = L[dbData.nameKey],
-            description = L[dbData.descKey],
+            name = dbData.name,
+            description = dbData.desc,
             addonKey = key,
             yOffset = yOffset,
             getEntryCount = function()

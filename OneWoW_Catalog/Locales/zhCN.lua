@@ -11,10 +11,30 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Catalog",
     ["MINIMAP_TOOLTIP_HINT"] = "点击打开",
 
-    ["TAB_JOURNAL"] = "日志",
-    ["TAB_VENDORS"] = "商人",
+    ["TAB_JOURNAL"] = "地区",
+    ["TAB_VENDORS"] = "NPC",
     ["TAB_QUESTS"] = "任务",
     ["TAB_ITEMSEARCH"] = "物品搜索",
+    ["TAB_COLLECTIBLES"] = "收藏品",
+
+    ["COLLECTIBLES_SEARCH"] = "搜索收藏品...",
+    ["COLLECTIBLES_EMPTY"] = "没有可显示的收藏品。",
+    ["COLLECTIBLES_SELECT"] = "选择一件收藏品以查看详情。",
+    ["COLLECTIBLES_FILTER_ALL_DESC"] = "显示收藏品手册中的幻化、坐骑、宠物和玩具。",
+    ["COLLECTIBLES_FILTER_TMOG_DESC"] = "显示收藏品手册中的幻化外观。",
+    ["COLLECTIBLES_FILTER_MOUNT_DESC"] = "显示坐骑手册中的坐骑。",
+    ["COLLECTIBLES_FILTER_PET_DESC"] = "显示宠物手册中的战斗宠物。",
+    ["COLLECTIBLES_FILTER_TOY_DESC"] = "显示玩具箱中的玩具。",
+    ["COLLECTIBLES_RARE_SECTION"] = "世界稀有",
+
+    ["HOUSING_SEARCH"] = "搜索家园装饰...",
+    ["HOUSING_EMPTY"] = "没有可显示的家园装饰。",
+    ["HOUSING_SELECT"] = "选择家园装饰以查看详情。",
+    ["HOUSING_FILTER_ALL_DESC"] = "显示家园目录中的装饰。",
+    ["HOUSING_FILTER_DECOR_DESC"] = "显示家园装饰。",
+    ["HOUSING_OWNED_COUNTS"] = "已拥有 %d  |  已存放 %d  |  已摆放 %d",
+
+    ["CATALOG_LIST_NARROW"] = "请使用筛选或搜索来缩小结果范围。",
 
     ["CATALOG_FAVORITE"] = "收藏",
     ["CATALOG_FAVORITE_TT"] = "将此条目标记为收藏。收藏项会排在列表顶部。",

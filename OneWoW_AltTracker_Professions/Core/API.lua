@@ -90,9 +90,9 @@ function OneWoW_AltTracker_Professions_API.GetRecipeCount(charKey, professionNam
 end
 
 --- Recipe progress for a profession. Stored known count is always available;
---- totals and the per-expansion breakdown require the LoD catalog data unit
---- (OneWoW_CatalogData_Tradeskills) to be loaded. When it is not, callers must
---- degrade to showing the stored count only (never a fake "Total 0 / Known 0").
+--- totals and the per-expansion breakdown require the resolved catalog
+--- tradeskills pack to be loaded. When it is not, callers must degrade to
+--- showing the stored count only (never a fake "Total 0 / Known 0").
 ---@param charKey string
 ---@param professionName string
 ---@return table progress { catalogLoaded, stored, known, total, byExpansion }
@@ -115,8 +115,8 @@ function OneWoW_AltTracker_Professions_API.GetRecipeProgress(charKey, profession
         byExpansion = {},
     }
 
-    local catalog = OneWoW_CatalogData_Tradeskills_API
-    if not catalog or not catalog.GetRecipesByProfession then
+    local catalog = OneWoW:GetCatalogPackAPI("tradeskills")
+    if not catalog then
         return progress
     end
 

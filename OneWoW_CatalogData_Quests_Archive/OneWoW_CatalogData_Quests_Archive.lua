@@ -1,3 +1,2 @@
--- OneWoW_CatalogData_Quests_Archive main file.
--- Classic through Dragonflight shards register through Core/QuestDBLoader.lua;
--- Core.lua imports them into OneWoW_CatalogData_Quests_API. This unit exposes no globals.
+local ADDON_NAME, ns = ...
+-- Leftover addon so this folder still loads.

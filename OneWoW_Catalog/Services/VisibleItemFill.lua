@@ -8,7 +8,7 @@ local _, ns = ...
 -- Instant-only (GetItemInfoInstant). RequestLoadItemDataByID runs inside
 -- opts.load, for the visible row only.
 --
--- Journal lazy hydrate: OneWoW_CatalogData_Journal/Docs/JOURNAL_DATA.md
+-- Journal lazy hydrate: resolved journal pack (ZoneDB).
 -- ============================================================================
 
 local TOKEN_KEY = "_catalogFillToken"

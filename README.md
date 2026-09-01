@@ -38,12 +38,13 @@ flowchart TB
     end
     OW --> Features
 
-    subgraph CatalogData["Catalog data stores"]
-        CDJ[CatalogData_Journal]
-        CDV[CatalogData_Vendors]
-        CDT[CatalogData_Tradeskills]
-        CDQ[CatalogData_Quests]
-        CDQA[CatalogData_Quests_Archive]
+    subgraph CatalogData["Catalog data stores (CatDB)"]
+        ZoneDB[CatDB_ZoneDB]
+        NPCDB[CatDB_NPCDB]
+        ItemDB[CatDB_ItemDB]
+        QuestCur[CatDB_QuestDBCurrent]
+        QuestArc[CatDB_QuestDBArchive]
+        Trade[CatDB_TradeSkillDB]
     end
     Catalog --> CatalogData
 
@@ -88,17 +89,20 @@ Shared across the suite: **themes**, **11 locales**, and **SavedVariables** conv
 | [OneWoW_Mail](OneWoW_Mail/README.md) | Mailbox UI, collect/compose, and shipments to characters or roles | [Docs](OneWoW_Mail/Docs/ARCHITECTURE.md) |
 | [OneWoW_DirectDeposit](OneWoW_DirectDeposit/README.md) | Automatic Warband Bank gold and item transfers | README |
 
-### Catalog data stores
+### Catalog data stores (CatDB)
 
-Companion addons for [OneWoW_Catalog](OneWoW_Catalog/README.md). Enable with Catalog in Manage Features.
+Companion addons for [OneWoW_Catalog](OneWoW_Catalog/README.md). Enable with Catalog in Manage Features. Pack map: [CATDB.md](OneWoW_Catalog/Docs/CATDB.md).
 
 | Addon | Description |
 |-------|-------------|
-| [OneWoW_CatalogData_Journal](OneWoW_CatalogData_Journal/README.md) | Dungeons, raids, and encounter data |
-| [OneWoW_CatalogData_Vendors](OneWoW_CatalogData_Vendors/README.md) | Classic through Midnight vendors and what they sell |
-| [OneWoW_CatalogData_Tradeskills](OneWoW_CatalogData_Tradeskills/README.md) | Professions and recipes |
-| [OneWoW_CatalogData_Quests](OneWoW_CatalogData_Quests/README.md) | Quest database and completion tracking (this expansion and the previous one) |
-| [OneWoW_CatalogData_Quests_Archive](OneWoW_CatalogData_Quests_Archive/README.md) | Classic through Dragonflight quests |
+| [OneWoW_CatDB_ZoneDB](OneWoW_CatDB_ZoneDB/Docs/ARCHITECTURE.md) | Zones — dungeons, raids, Delves, World hubs, encounters (Journal tab) |
+| [OneWoW_CatDB_NPCDB](OneWoW_CatDB_NPCDB/Docs/ARCHITECTURE.md) | NPCs — vendors and other people, stock, map pins (Vendors tab) |
+| [OneWoW_CatDB_ItemDB](OneWoW_CatDB_ItemDB/Docs/ARCHITECTURE.md) | Items — names and item rows for Item Search and lookups |
+| [OneWoW_CatDB_QuestDBCurrent](OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md) | Quests — this expansion and the previous one (The War Within and Midnight) |
+| [OneWoW_CatDB_QuestDBArchive](OneWoW_CatDB_QuestDBArchive/Docs/ARCHITECTURE.md) | Quest Archive — Classic through Dragonflight |
+| [OneWoW_CatDB_TradeSkillDB](OneWoW_CatDB_TradeSkillDB/Docs/ARCHITECTURE.md) | Tradeskills — professions and recipes |
+
+Older `OneWoW_CatalogData_*` folders (Journal, Vendors, Quests, Quest Archive, Tradeskills) may still ship as leftover packs until they are removed.
 
 ### AltTracker data stores
 

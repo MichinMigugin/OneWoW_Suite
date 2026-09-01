@@ -82,11 +82,46 @@ local LOC_TYPE_TO_LABEL = {
     auction = "ah",
 }
 
--- Owned-item rollup for the search + detail views. Rather than re-walking every
--- container by hand, this reuses the shared Storage Query layer (the same
--- Gather + normalization the AltTracker Items/Bank tabs use) so the traversal
--- lives in exactly one place. We only aggregate the normalized instances by
--- itemID into the { total, name, locations } shape those views expect.
+local INDEX_LOC_TO_LABEL = {
+    bags = "bags",
+    bank = "bank",
+    equipped = "bags",
+    warband = "warband",
+    guild = "guild",
+    mail = "mail",
+    auction = "ah",
+}
+
+--- Per-item owned snapshot. Uses Storage's inverted index; does not Gather.
+---@param itemID number
+---@return table|nil
+local function GetOwnedTooltip(itemID)
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI then
+        return nil
+    end
+    return storageAPI.GetItemIndex():GetTooltipData(itemID)
+end
+
+---@param loc table
+---@return string|nil
+---@return string|nil
+local function OwnedLocDisplay(loc)
+    local locType = loc.locationType or loc.locLabel
+    local locLabel = INDEX_LOC_TO_LABEL[locType] or LOC_TYPE_TO_LABEL[locType] or locType
+    local charName
+    if locType == "warband" then
+        charName = "Warband"
+    elseif locType == "guild" then
+        charName = loc.guildName
+    else
+        charName = loc.name or loc.charName
+    end
+    return charName, locLabel
+end
+
+-- Full owned rollup. Only the Owned filter's empty browse uses this; search and
+-- detail look up one itemID on Storage's index.
 local function GetOwnedItems(shouldYield)
     local owned = {}
     local storageAPI = OneWoW_AltTracker_Storage_API
@@ -105,8 +140,6 @@ local function GetOwnedItems(shouldYield)
             local locType = where.type
             local locLabel = LOC_TYPE_TO_LABEL[locType] or locType
 
-            -- Account/guild containers don't carry a per-character name; keep the
-            -- same display strings the previous hand-walk produced.
             local charName
             if locType == "warband" then
                 charName = "Warband"
@@ -124,8 +157,6 @@ local function GetOwnedItems(shouldYield)
             end
             rec.total = rec.total + count
 
-            -- Name is used for offline owned-search matching. MakeInstance carries
-            -- the stored itemName; fall back to the link's "[Name]" like before.
             if not rec.name then
                 local name = inst.name or NameFromLink(inst.itemLink)
                 if name and name ~= "" then
@@ -141,18 +172,21 @@ local function GetOwnedItems(shouldYield)
     return owned
 end
 
--- Per-filter data availability. "all" is always available (the tab-level
--- placeholder covers the no-sources case); every other filter maps to the data
--- it reads. Shared by Query (source gating) and the UI (button enable state) so
--- the two can never drift. The Owned source depends on Storage (GetOwnedItems
--- early-returns without it).
+-- Per-filter data availability. Opening the tab loads the active filter's
+-- packs (ItemDB for All / Drops). Buttons stay dim until that pack is ready.
+-- Shared by Query (source gating) and the UI so the two cannot drift.
 local SOURCE_AVAILABILITY = {
     all     = function() return true end,
-    drops   = function() return OneWoW_CatalogData_Journal_API ~= nil end,
-    vendors = function() return OneWoW_CatalogData_Vendors_API ~= nil end,
-    crafted = function() return OneWoW_CatalogData_Tradeskills_API ~= nil end,
+    drops   = function()
+        -- Drop names come from ItemDB; without it the journal name index
+        -- is empty and Drops / All look broken.
+        return ns.GetCatalogPackAPI("journal") ~= nil
+            and ns.GetCatalogPackAPI("items") ~= nil
+    end,
+    vendors = function() return ns.GetCatalogPackAPI("vendors") ~= nil end,
+    crafted = function() return ns.GetCatalogPackAPI("tradeskills") ~= nil end,
     owned   = function() return OneWoW_AltTracker_Storage_API ~= nil end,
-    quests  = function() return OneWoW_CatalogData_Quests_API ~= nil end,
+    quests  = function() return ns.GetCatalogPackAPI("quests") ~= nil end,
 }
 
 function ItemSearch:IsSourceAvailable(sourceKey)
@@ -161,45 +195,84 @@ function ItemSearch:IsSourceAvailable(sourceKey)
     return fn() and true or false
 end
 
--- The backing data addons this tab aggregates. Single source of truth: reused
--- for the tab's `requiresAnyAddon` gate (OneWoW_Catalog.lua) and for the
--- data-ready watchers that refresh the source buttons (t-itemsearch.lua).
-ItemSearch.SOURCE_ADDONS = {
-    "OneWoW_CatalogData_Journal",
-    "OneWoW_CatalogData_Vendors",
-    "OneWoW_CatalogData_Tradeskills",
-    "OneWoW_CatalogData_Quests",
-    "OneWoW_AltTracker_Storage",
+-- The backing data addons this tab aggregates. Resolved at call time.
+local FILTER_PACK_ROLE = {
+    drops   = "journal",
+    vendors = "vendors",
+    crafted = "tradeskills",
+    quests  = "quests",
 }
 
-ItemSearch.SOURCE_ADDON_BY_FILTER = {
-    drops   = "OneWoW_CatalogData_Journal",
-    vendors = "OneWoW_CatalogData_Vendors",
-    crafted = "OneWoW_CatalogData_Tradeskills",
-    quests  = "OneWoW_CatalogData_Quests",
-    owned   = "OneWoW_AltTracker_Storage",
-}
+--- Deduped addons for data-ready watchers.
+---@return string[]
+function ItemSearch.GetSourceAddons()
+    return ns.GetCatalogItemSearchAddons()
+end
 
--- Fill `results` (array) from sources. `shouldYield` is optional; when provided
--- (ChunkedJob), YieldIfNeeded is called after each candidate so large walks
--- stay off the hitch path. When omitted / always-false, this is synchronous.
+--- Addon that backs one Item Search source filter. All maps to ItemDB.
+---@param filterKey string
+---@return string|nil
+function ItemSearch.GetSourceAddon(filterKey)
+    if filterKey == "owned" then
+        return "OneWoW_AltTracker_Storage"
+    end
+    if filterKey == "all" then
+        return ns.ResolveCatalogPack("items")
+    end
+    local role = FILTER_PACK_ROLE[filterKey]
+    if not role then
+        return nil
+    end
+    return ns.ResolveCatalogPack(role)
+end
+
+--- Packs this filter needs loaded. All and Drops include ItemDB.
+---@param filterKey string
+---@return string[]
+function ItemSearch.GetFilterPacks(filterKey)
+    local out = {}
+    local seen = {}
+    local function add(name)
+        if name and not seen[name] then
+            seen[name] = true
+            out[#out + 1] = name
+        end
+    end
+    if filterKey == "all" or filterKey == "drops" then
+        add(ns.ResolveCatalogPack("items"))
+    end
+    local addon = ItemSearch.GetSourceAddon(filterKey)
+    if addon then
+        add(addon)
+    end
+    return out
+end
+
+--- Load the packs for this filter. Opening the tab or changing filter is the
+--- explicit action; do not wait for another tab to have loaded them.
+---@param filterKey string
+function ItemSearch.EnsureFilterPacks(filterKey)
+    for _, name in ipairs(ItemSearch.GetFilterPacks(filterKey)) do
+        OneWoW:EnsureLoaded(name)
+    end
+end
+
+-- Fill `results` from sources. Empty / 1-char browse never builds ZoneDB drop
+-- indexes or walks all vendors / recipes / quest rewards. Name search walks
+-- ItemDB (already in memory) and uses per-item lookups. `shouldYield` keeps
+-- large walks off the hitch path.
 local function BuildQueryResults(self, searchTerm, sourceFilter, results, shouldYield)
     wipe(results)
     local yieldCheck = shouldYield or function() return false end
     local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
 
-    -- A nil or <2 char term means "no text filter": browse every available source.
-    -- An empty Lua pattern still matches every name via string.find(s, "", 1, true),
-    -- so the source loops below work unchanged for the browse case.
     local hasFilter = searchTerm ~= nil and #searchTerm >= 2
     local term = hasFilter and searchTerm:lower() or ""
     local exactItemID = hasFilter and tonumber(searchTerm) or nil
     local resultMap = {}
     local count = 0
+    local listCap = ns.GetCatalogListCap(hasFilter or sourceFilter ~= "all")
 
-    -- Gate each source on its backing data actually being present so an unloaded
-    -- source contributes nothing. "all" pulls from every available source; a
-    -- specific filter pulls only from its own.
     local doJournal = (sourceFilter == "all" or sourceFilter == "drops")   and self:IsSourceAvailable("drops")
     local doVendors = (sourceFilter == "all" or sourceFilter == "vendors") and self:IsSourceAvailable("vendors")
     local doCrafted = (sourceFilter == "all" or sourceFilter == "crafted") and self:IsSourceAvailable("crafted")
@@ -230,6 +303,57 @@ local function BuildQueryResults(self, searchTerm, sourceFilter, results, should
         resultMap[itemID] = count
     end
 
+    local function AnnotateOwned(entry)
+        local data = GetOwnedTooltip(entry.itemID)
+        if data then
+            entry.ownedCount = data.totalCount or 0
+            entry.isOwned = true
+        end
+    end
+
+    ---@param itemID number
+    ---@return boolean
+    local function PassesSourceFilter(itemID)
+        if sourceFilter == "all" then
+            return true
+        end
+        if sourceFilter == "drops" then
+            if not doJournal then
+                return false
+            end
+            local journalAPI = ns.GetCatalogPackAPI("journal")
+            local drops = journalAPI.GetItemDropLocations(itemID)
+            return drops and drops[1] ~= nil
+        end
+        if sourceFilter == "vendors" then
+            if not doVendors then
+                return false
+            end
+            local vendorsAPI = ns.GetCatalogPackAPI("vendors")
+            return vendorsAPI.ItemIsSold(itemID)
+        end
+        if sourceFilter == "crafted" then
+            if not doCrafted then
+                return false
+            end
+            local tsAddon = ns.GetCatalogPackAPI("tradeskills")
+            local recipes = tsAddon.GetRecipesByItem(itemID)
+            return recipes and recipes[1] ~= nil
+        end
+        if sourceFilter == "quests" then
+            if not doQuest then
+                return false
+            end
+            local questAddon = ns.GetCatalogPackAPI("quests")
+            local quests = questAddon.GetQuestsRewardingItem(itemID)
+            return quests and quests[1] ~= nil
+        end
+        if sourceFilter == "owned" then
+            return doOwned and GetOwnedTooltip(itemID) ~= nil
+        end
+        return true
+    end
+
     if exactItemID then
         local sourceKey = "isQuestReward"
         if sourceFilter == "drops" then
@@ -240,6 +364,8 @@ local function BuildQueryResults(self, searchTerm, sourceFilter, results, should
             sourceKey = "isCrafted"
         elseif sourceFilter == "owned" then
             sourceKey = "isOwned"
+        elseif sourceFilter == "all" then
+            sourceKey = "isExactMatch"
         end
 
         local exactName = C_Item.GetItemNameByID(exactItemID)
@@ -247,134 +373,106 @@ local function BuildQueryResults(self, searchTerm, sourceFilter, results, should
         addOrAnnotate(exactItemID, exactName, exactIcon, nil, sourceKey)
         if resultMap[exactItemID] then
             results[resultMap[exactItemID]].isExactMatch = true
+            AnnotateOwned(results[resultMap[exactItemID]])
         end
-        YieldIfNeeded(yieldCheck)
+        return
     end
 
-    if doJournal then
-        -- The Journal store owns this index; it is offline (generated names plus
-        -- extras names) so a text search still matches loot the client has never
-        -- cached. Icon comes from Instant; the list row loader fills quality.
-        for itemID, name in pairs(OneWoW_CatalogData_Journal_API.GetItemNameIndex()) do
-            if name:lower():find(term, 1, true) then
-                local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
-                addOrAnnotate(itemID, name, icon, nil, "isJournal")
-            end
-            YieldIfNeeded(yieldCheck)
-        end
-    end
-
-    -- Secondary sources: most itemIDs already exist from the journal walk.
-    -- Annotate those without GetItemNameByID (that call was the post-26k stall).
-    -- Browse (no text filter) can add unknowns with instant icon only; the list
-    -- row loader fills the name asynchronously. Filtered walks still need a name.
-    if doVendors then
-        local vendorsAPI = OneWoW_CatalogData_Vendors_API
-        local vendors = vendorsAPI and vendorsAPI.GetAllVendors()
-        if vendors then
-            for _, vendor in pairs(vendors) do
-                if vendor.items then
-                    for itemID in pairs(vendor.items) do
-                        if resultMap[itemID] then
-                            results[resultMap[itemID]].isVendor = true
-                        elseif not hasFilter then
-                            local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
-                            addOrAnnotate(itemID, nil, icon, nil, "isVendor")
-                        else
-                            local itemName = C_Item.GetItemNameByID(itemID)
-                            if itemName and itemName:lower():find(term, 1, true) then
-                                addOrAnnotate(itemID, itemName, nil, nil, "isVendor")
-                            end
-                        end
-                        YieldIfNeeded(yieldCheck)
-                    end
+    -- Empty / 1-char: never EnsureDropIndex / GetAllVendors / all recipes / all
+    -- quest rewards. All-sources browse takes 50 already-resident ItemDB names.
+    if not hasFilter then
+        if sourceFilter == "owned" and doOwned then
+            local ownedMap = GetOwnedItems(yieldCheck)
+            for itemID, od in pairs(ownedMap) do
+                if count >= listCap then
+                    break
                 end
-            end
-        end
-    end
-
-    if doCrafted then
-        local tsAddon = OneWoW_CatalogData_Tradeskills_API
-        if tsAddon then
-            local function markCrafted(itemID)
-                if not itemID or itemID <= 0 then return end
+                addOrAnnotate(itemID, od.name, nil, nil, "isOwned")
                 if resultMap[itemID] then
-                    results[resultMap[itemID]].isCrafted = true
-                elseif not hasFilter then
-                    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
-                    addOrAnnotate(itemID, nil, icon, nil, "isCrafted")
-                else
-                    local itemName = C_Item.GetItemNameByID(itemID)
-                    if itemName and itemName:lower():find(term, 1, true) then
-                        addOrAnnotate(itemID, itemName, nil, nil, "isCrafted")
+                    results[resultMap[itemID]].ownedCount = od.total or 0
+                end
+                YieldIfNeeded(yieldCheck)
+            end
+        elseif sourceFilter == "drops" and doJournal then
+            local journalAPI = ns.GetCatalogPackAPI("journal")
+            local names = journalAPI and journalAPI.GetItemNameIndexIfReady()
+            if names then
+                for itemID, name in pairs(names) do
+                    if count >= listCap then
+                        break
                     end
+                    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                    addOrAnnotate(itemID, name, icon, nil, "isJournal")
+                    YieldIfNeeded(yieldCheck)
                 end
             end
-            for _, prof in ipairs(tsAddon.GetProfessions()) do
-                for _, recipe in ipairs(tsAddon.GetRecipesByProfession(prof.name)) do
-                    markCrafted(recipe.item)
-                    if recipe.items then
-                        for _, altID in ipairs(recipe.items) do
-                            if altID ~= recipe.item then
-                                markCrafted(altID)
-                            end
-                        end
+        elseif sourceFilter == "all" then
+            local itemAPI = ns.GetCatalogPackAPI("items")
+            local names = itemAPI and itemAPI.GetItemNameIndex()
+            if names then
+                for itemID, name in pairs(names) do
+                    if count >= listCap then
+                        break
+                    end
+                    if type(name) == "string" and name ~= "" then
+                        local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                        addOrAnnotate(itemID, name, icon, nil, "isExactMatch")
                     end
                     YieldIfNeeded(yieldCheck)
                 end
             end
         end
-    end
 
-    if doQuest then
-        local questAddon = OneWoW_CatalogData_Quests_API
-        if questAddon then
-            for _, itemID in ipairs(questAddon.GetRewardItemIDs(yieldCheck)) do
-                if resultMap[itemID] then
-                    results[resultMap[itemID]].isQuestReward = true
-                elseif not hasFilter then
-                    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
-                    addOrAnnotate(itemID, nil, icon, nil, "isQuestReward")
-                else
-                    local itemName = C_Item.GetItemNameByID(itemID)
-                    if itemName and itemName:lower():find(term, 1, true) then
-                        addOrAnnotate(itemID, itemName, nil, nil, "isQuestReward")
-                    end
-                end
-                YieldIfNeeded(yieldCheck)
-            end
+        for i = 1, count do
+            AnnotateOwned(results[i])
+            YieldIfNeeded(yieldCheck)
         end
+
+        OneWoW.ChunkedJob.Sort(results, function(a, b)
+            if a.ownedCount > 0 and b.ownedCount == 0 then return true end
+            if a.ownedCount == 0 and b.ownedCount > 0 then return false end
+            return (a.name or "") < (b.name or "")
+        end, shouldYield)
+        return
     end
 
-    -- Force a slice boundary before Storage.Gather so the UI can paint journal
-    -- results; Gather itself is still one sync call (no internal yield points).
-    if shouldYield then
-        coroutine.yield()
+    -- 2+ char search: ItemDB names (resident). Drops filter may build the
+    -- journal drop-name index once; other filters use per-item lookups.
+    local nameIndex
+    if sourceFilter == "drops" and doJournal then
+        local journalAPI = ns.GetCatalogPackAPI("journal")
+        nameIndex = journalAPI and journalAPI.GetItemNameIndex()
+    else
+        local itemAPI = ns.GetCatalogPackAPI("items")
+        nameIndex = itemAPI and itemAPI.GetItemNameIndex()
     end
-    local ownedMap = GetOwnedItems(yieldCheck)
 
-    if doOwned then
-        for itemID, od in pairs(ownedMap) do
-            if resultMap[itemID] then
-                results[resultMap[itemID]].isOwned = true
-            else
-                -- Prefer the name persisted at scan time so owned items match offline;
-                -- fall back to the live cache only when no stored name exists.
-                local itemName = od.name or C_Item.GetItemNameByID(itemID)
-                if not hasFilter or (itemName and itemName:lower():find(term, 1, true)) then
-                    addOrAnnotate(itemID, itemName, nil, nil, "isOwned")
+    if nameIndex then
+        for itemID, name in pairs(nameIndex) do
+            if type(name) == "string" and name:lower():find(term, 1, true) then
+                if sourceFilter == "all" or sourceFilter == "drops" or PassesSourceFilter(itemID) then
+                    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                    local sourceKey = "isExactMatch"
+                    if sourceFilter == "drops" then
+                        sourceKey = "isJournal"
+                    elseif sourceFilter == "vendors" then
+                        sourceKey = "isVendor"
+                    elseif sourceFilter == "crafted" then
+                        sourceKey = "isCrafted"
+                    elseif sourceFilter == "owned" then
+                        sourceKey = "isOwned"
+                    elseif sourceFilter == "quests" then
+                        sourceKey = "isQuestReward"
+                    end
+                    addOrAnnotate(itemID, name, icon, nil, sourceKey)
                 end
             end
             YieldIfNeeded(yieldCheck)
         end
     end
 
-    for _, entry in ipairs(results) do
-        local od = ownedMap[entry.itemID]
-        if od then
-            entry.ownedCount = od.total
-            entry.isOwned = true
-        end
+    for i = 1, count do
+        AnnotateOwned(results[i])
         YieldIfNeeded(yieldCheck)
     end
 
@@ -459,17 +557,25 @@ function ItemSearch:GetDetail(itemID)
         recipeKnownBy = isRecipe and GetRecipeKnownByFromAltTracker(itemID) or nil,
     }
 
-    if OneWoW_CatalogData_Journal_API then
-        for _, drop in ipairs(OneWoW_CatalogData_Journal_API.GetItemDropLocations(itemID)) do
+    local journalAPI = ns.GetCatalogPackAPI("journal")
+    if journalAPI then
+        for _, drop in ipairs(journalAPI.GetItemDropLocations(itemID)) do
             tinsert(detail.drops, {
+                placeKey      = drop.placeKey,
+                instanceID    = drop.instanceID,
+                instanceType  = drop.instanceType,
                 instanceName  = drop.instanceName or "",
+                encounterID   = drop.encounterID,
                 encounterName = drop.encounterName,
+                uiMapID       = drop.uiMapID,
+                npcID         = drop.npcID,
+                worldRare     = drop.worldRare,
                 difficulties  = drop.difficulties,
             })
         end
     end
 
-    local vendorsAPI = OneWoW_CatalogData_Vendors_API
+    local vendorsAPI = ns.GetCatalogPackAPI("vendors")
     local sellingVendors = vendorsAPI and vendorsAPI.GetVendorsByItem(itemID)
     if sellingVendors then
         for _, vendor in ipairs(sellingVendors) do
@@ -492,7 +598,7 @@ function ItemSearch:GetDetail(itemID)
         end
     end
 
-    local tsAddon = OneWoW_CatalogData_Tradeskills_API
+    local tsAddon = ns.GetCatalogPackAPI("tradeskills")
     if tsAddon then
         local craftedRecipes = tsAddon.GetRecipesByItem(itemID)
         for _, recipe in ipairs(craftedRecipes) do
@@ -505,27 +611,31 @@ function ItemSearch:GetDetail(itemID)
         end
     end
 
-    local ownedMap = GetOwnedItems()
-    local od = ownedMap[itemID]
-    if od then
+    local ownedData = GetOwnedTooltip(itemID)
+    if ownedData then
         local byCharLoc = {}
-        for _, loc in ipairs(od.locations) do
-            local key = loc.charName .. "|" .. loc.locLabel
+        for _, loc in ipairs(ownedData.locations) do
+            local charName, locLabel = OwnedLocDisplay(loc)
+            local key = tostring(charName) .. "|" .. tostring(locLabel)
             if not byCharLoc[key] then
-                byCharLoc[key] = { charName = loc.charName, locLabel = loc.locLabel, count = 0 }
+                byCharLoc[key] = { charName = charName, locLabel = locLabel, count = 0 }
                 tinsert(detail.owned, byCharLoc[key])
             end
-            byCharLoc[key].count = byCharLoc[key].count + loc.count
+            byCharLoc[key].count = byCharLoc[key].count + (loc.count or 1)
         end
     end
 
-    local questAddon = OneWoW_CatalogData_Quests_API
+    local questAddon = ns.GetCatalogPackAPI("quests")
     if questAddon then
-        local questIDs = questAddon.GetQuestsRewardingItem(itemID)
+        local questIDs = questAddon.GetQuestsRewardingItem(itemID, true)
         if questIDs then
             for _, questID in ipairs(questIDs) do
-                local q = questAddon.GetQuest(questID)
-                tinsert(detail.questRewards, { questID = questID, questName = q and q.name })
+                local questName = questAddon.GetQuestName and questAddon.GetQuestName(questID)
+                if not questName then
+                    local q = questAddon.GetQuest(questID)
+                    questName = q and q.name
+                end
+                tinsert(detail.questRewards, { questID = questID, questName = questName })
             end
         end
     end

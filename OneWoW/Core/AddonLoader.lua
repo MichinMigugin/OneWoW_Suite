@@ -377,6 +377,8 @@ function ns:StoreRequiresParent(storeName)
 end
 
 --- FirstRun.CATALOG datastores pulled by a feature (consumer graph), or empty.
+--- Catalog pack names are resolved (role or CatDB folder)
+--- so BringUp loads the Home-listed CatDB store (TradeSkillDB for ShoppingList).
 ---@param addonName string
 ---@return string[]
 function ns:GetCatalogDatastores(addonName)
@@ -384,7 +386,11 @@ function ns:GetCatalogDatastores(addonName)
     if not catalog or not addonName then return {} end
     for _, entry in ipairs(catalog) do
         if entry.addonName == addonName and entry.datastores then
-            return entry.datastores
+            local resolved = {}
+            for _, ds in ipairs(entry.datastores) do
+                resolved[#resolved + 1] = self:ResolveCatalogPack(ds) or ds
+            end
+            return resolved
         end
     end
     return {}
@@ -399,7 +405,7 @@ function ns:GetStoreCatalogConsumers(storeAddon)
     if not catalog or not storeAddon then return result end
     for _, entry in ipairs(catalog) do
         for _, ds in ipairs(entry.datastores) do
-            if ds == storeAddon then
+            if (self:ResolveCatalogPack(ds) or ds) == storeAddon then
                 result[#result + 1] = entry.addonName
                 break
             end
@@ -697,12 +703,14 @@ ns.ModuleManifest = {
     { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/1wcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
         storePolicy = "optional",
         lazyStores = true,
+        -- Home / Manage Features / BringUp children. CatDB only.
         stores = {
-            "OneWoW_CatalogData_Tradeskills",
-            "OneWoW_CatalogData_Vendors",
-            "OneWoW_CatalogData_Quests",
-            "OneWoW_CatalogData_Quests_Archive",
-            "OneWoW_CatalogData_Journal",
+            "OneWoW_CatDB_ZoneDB",
+            "OneWoW_CatDB_NPCDB",
+            "OneWoW_CatDB_ItemDB",
+            "OneWoW_CatDB_QuestDBCurrent",
+            "OneWoW_CatDB_QuestDBArchive",
+            "OneWoW_CatDB_TradeSkillDB",
         } },
     { addon = "OneWoW_Trackers",        display = "Trackers",      cmd = "/1wt",   module = "trackers",   tabOrder = 4, loadPhase = "login" },
     { addon = "OneWoW_QoL",             display = "QoL",           cmd = "/1wqol", module = "qol",        tabOrder = 5, loadPhase = "login" },
@@ -723,11 +731,12 @@ local STORE_LABEL_KEYS = {
     OneWoW_AltTracker_Endgame       = "DATA_MOD_ENDGAME",
     OneWoW_AltTracker_Accounting    = "DATA_MOD_ACCOUNTING",
     OneWoW_AltTracker_Auctions      = "DATA_MOD_AUCTIONS",
-    OneWoW_CatalogData_Journal      = "CAT_MOD_JOURNAL",
-    OneWoW_CatalogData_Quests       = "CAT_MOD_QUESTS",
-    OneWoW_CatalogData_Quests_Archive = "CAT_MOD_QUESTS_ARCHIVE",
-    OneWoW_CatalogData_Vendors      = "CAT_MOD_VENDORS",
-    OneWoW_CatalogData_Tradeskills  = "CAT_MOD_TRADESKILLS",
+    OneWoW_CatDB_ZoneDB             = "CAT_MOD_ZONEDB",
+    OneWoW_CatDB_NPCDB              = "CAT_MOD_NPCDB",
+    OneWoW_CatDB_ItemDB             = "CAT_MOD_ITEMDB",
+    OneWoW_CatDB_QuestDBCurrent     = "CAT_MOD_QUESTDB_CURRENT",
+    OneWoW_CatDB_QuestDBArchive     = "CAT_MOD_QUESTDB_ARCHIVE",
+    OneWoW_CatDB_TradeSkillDB       = "CAT_MOD_TRADESKILLDB",
 }
 
 --- Manifest entry for a root load unit, or nil.

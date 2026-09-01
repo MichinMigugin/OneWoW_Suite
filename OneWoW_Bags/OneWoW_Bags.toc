@@ -80,7 +80,7 @@ Integrations\TSMIntegration.lua
 Integrations\BaganatorImport.lua
 Integrations\Masque.lua
 
-# GUI helpers (before Controllers — BankController uses WindowHelpers at runtime)
+# GUI helpers (before Controllers â€” BankController uses WindowHelpers at runtime)
 GUI\WindowHelpers.lua
 
 # Controllers

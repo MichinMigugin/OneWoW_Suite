@@ -67,7 +67,7 @@ local RefreshRecipeList
 local ShowRecipeDetail
 
 local function GetDataAddon()
-    return OneWoW_CatalogData_Tradeskills_API
+    return ns.GetCatalogPackAPI("tradeskills")
 end
 
 --- Soft Storage surface (no TOC OptionalDeps). Sticky nil when Storage is off.
@@ -396,6 +396,12 @@ local function IsGenericNPCName(name, npcID)
     if not name or name == "" then
         return true
     end
+    if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO then
+        return true
+    end
+    if name == "???" or name == "?" then
+        return true
+    end
     if npcID and name == string.format(L["QUESTS_NPC_UNNAMED"], npcID) then
         return true
     end
@@ -411,7 +417,7 @@ local function ResolveCreatureName(npcID)
     end
     for _, line in ipairs(tooltipData.lines) do
         local text = line.leftText
-        if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
+        if text and not IsGenericNPCName(text, npcID) then
             return text
         end
     end
@@ -419,7 +425,7 @@ local function ResolveCreatureName(npcID)
 end
 
 local function GetVendorsAPI()
-    return OneWoW_CatalogData_Vendors_API
+    return ns.GetCatalogPackAPI("vendors")
 end
 
 local function VendorRecord(npcID)
@@ -473,8 +479,23 @@ local function FillLearnNPCName(npcID, apply, isCurrent)
         if vendor and accept(vendor.name) then
             return
         end
+        if api.ResolveNPCName and accept(api.ResolveNPCName(npcID)) then
+            return
+        end
     end
     if accept(ResolveCreatureName(npcID)) then
+        return
+    end
+
+    if api and api.RequestNPCName then
+        api.RequestNPCName(npcID, function(_, info)
+            if isCurrent and not isCurrent() then
+                return
+            end
+            if info then
+                accept(info.name)
+            end
+        end)
         return
     end
 
@@ -734,6 +755,9 @@ local function LayoutRecipeNameMeta(row, hasMeta)
 end
 
 local function BindRecipeListRow(row, index, entry, state)
+    if ns.BindCatalogListCapRow(row, entry) then
+        return
+    end
     row.entry = entry
     row._rowSelected = state.selected and entry.type == "recipe" or false
     row._zebraIndex = index
@@ -1502,16 +1526,25 @@ local function PublishRecipeList(totalRecipes, statusText)
     end
 end
 
-local function BuildFlatRecipeEntries(recipes)
+local function BuildFlatRecipeEntries(recipes, truncated, totalMatched)
     wipe(listEntries)
     for _, recipe in ipairs(recipes) do
         tinsert(listEntries, { type = "recipe", recipe = recipe })
     end
+    if truncated then
+        ns.AppendCatalogListCapNotice(listEntries)
+    end
     local totalCount = #recipes
-    PublishRecipeList(totalCount, string.format(L["TRADESKILLS_RECIPES"], totalCount))
+    local status
+    if truncated then
+        status = string.format(L["TRADESKILLS_RECIPES_FILTERED"], totalCount, totalMatched)
+    else
+        status = string.format(L["TRADESKILLS_RECIPES"], totalCount)
+    end
+    PublishRecipeList(totalCount, status)
 end
 
-local function BuildGroupedRecipeEntries(recipes, addon)
+local function BuildGroupedRecipeEntries(recipes, addon, truncated, totalMatched)
     wipe(listEntries)
     local expansions = addon.GetExpansions()
 
@@ -1553,8 +1586,18 @@ local function BuildGroupedRecipeEntries(recipes, addon)
         end
     end
 
+    if truncated then
+        ns.AppendCatalogListCapNotice(listEntries)
+    end
+
     local profLabel = selectedProfession and selectedProfession.name or L["TRADESKILLS_ALL"]
-    PublishRecipeList(totalRecipes, profLabel .. " - " .. string.format(L["TRADESKILLS_RECIPES"], totalRecipes))
+    local recipeStatus
+    if truncated then
+        recipeStatus = string.format(L["TRADESKILLS_RECIPES_FILTERED"], totalRecipes, totalMatched)
+    else
+        recipeStatus = string.format(L["TRADESKILLS_RECIPES"], totalRecipes)
+    end
+    PublishRecipeList(totalRecipes, profLabel .. " - " .. recipeStatus)
 end
 
 RefreshRecipeList = function()
@@ -1622,10 +1665,21 @@ RefreshRecipeList = function()
 
     if emptyList then emptyList:Hide() end
 
+    local isFiltered = ns.CatalogListHasSearchText(currentSearch)
+        or selectedProfession ~= nil
+        or filterExpansion ~= nil
+        or filterKnownByMe
+        or filterKnownByAlts
+        or filterNotKnownByMe
+        or filterNotKnownByAlts
+        or filterHaveMaterials
+    local totalMatched = #recipes
+    local truncated = ns.CapCatalogList(recipes, isFiltered)
+
     if isSearching or not selectedProfession then
-        BuildFlatRecipeEntries(recipes)
+        BuildFlatRecipeEntries(recipes, truncated, totalMatched)
     else
-        BuildGroupedRecipeEntries(recipes, addon)
+        BuildGroupedRecipeEntries(recipes, addon, truncated, totalMatched)
     end
 end
 
@@ -1665,8 +1719,11 @@ function ns.UI.CreateTradeskillsTab(parent)
         getEntry = function(index)
             return listEntries[index]
         end,
+        isSelectable = function(_, entry)
+            return entry ~= nil and entry.type == "recipe" and not ns.IsCatalogListCap(entry)
+        end,
         onSelect = function(_, entry)
-            if entry and entry.type == "recipe" and entry.recipe then
+            if entry and entry.type == "recipe" and entry.recipe and not ns.IsCatalogListCap(entry) then
                 ShowRecipeDetail(entry.recipe)
             end
         end,
@@ -1916,7 +1973,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     end
 
     local wired = false
-    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", function()
+    OneWoW:RegisterDataReadyWatcher(ns.ResolveCatalogPack("tradeskills"), function()
         local addon = GetDataAddon()
         if not addon then return end
         emptyList:SetText(L["TRADESKILLS_SELECT"])
