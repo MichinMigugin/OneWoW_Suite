@@ -21,8 +21,8 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 ### Overlays and map
 
-* Pin lists as floating progress windows while you play
-* World-map pins for coordinate steps on pinned lists
+* Pin lists as floating progress windows while you play. Hide pin when done hides the window once every visible step is complete; the list stays pinned and the window comes back after reset (or when something is incomplete again). Edit the list to show that pin only for characters in selected Roles (Settings >> Roles & Alts); the list stays in the hub on every character.
+* World-map pins for coordinate steps on pinned lists. Map pins hide with the window when Hide pin when done or a Role filter puts that pin away.
 * Minimap pins for those steps stay on the landmark as you walk
 
 ### Farm value
@@ -42,7 +42,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 
 ## Tips
 
-* Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub.
+* Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub. Hide pin when done puts that window away after the last step and brings it back after reset. Edit the list to show the pin only on characters in a Role.
 * Dungeon and raid bosses cannot be filled from your target. Blizzard does not let addons read that target inside an instance. Add Kill a Dungeon or Raid Boss and use Fill from current encounter during the fight or just after you defeat it (still works after you leave, until you reload). A fight with two bosses (for example Twin Fangs) is still one encounter.
 * Open-world rares still use Kill a Rare or Boss and Fill from target. Rare Quest is the loot lock (once per day or week), not the kill itself.
 * Drag a section header or a step to reorder. Drop a step on another section to move it there.

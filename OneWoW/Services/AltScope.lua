@@ -17,6 +17,25 @@ ns.AltScope = AltScope
 local pairs, type, next = pairs, type, next
 local sort = sort
 
+local changeCallbacks = {}
+
+local function FireChanged()
+    for _, fn in pairs(changeCallbacks) do
+        fn()
+    end
+end
+
+---@param id string
+---@param fn fun()
+function AltScope:RegisterChangedCallback(id, fn)
+    changeCallbacks[id] = fn
+end
+
+---@param id string
+function AltScope:UnregisterChangedCallback(id)
+    changeCallbacks[id] = nil
+end
+
 local function GetRolesStore()
     return ns.db.global.roles
 end
@@ -64,6 +83,7 @@ function AltScope:CreateRole(name)
     if not roles or type(name) ~= "string" or name:trim() == "" then return nil end
     local id = NextRoleId(roles)
     roles[id] = { id = id, name = name:trim(), members = {} }
+    FireChanged()
     return id
 end
 
@@ -73,13 +93,17 @@ function AltScope:RenameRole(id, name)
     local role = self:GetRole(id)
     if role and type(name) == "string" and name:trim() ~= "" then
         role.name = name:trim()
+        FireChanged()
     end
 end
 
 ---@param id string
 function AltScope:DeleteRole(id)
     local roles = GetRolesStore()
-    if roles then roles[id] = nil end
+    if roles then
+        roles[id] = nil
+        FireChanged()
+    end
 end
 
 ---@param id string
@@ -98,6 +122,7 @@ function AltScope:SetCharInRole(id, charKey, inRole)
     if not role then return end
     role.members = role.members or {}
     role.members[charKey] = inRole and true or nil
+    FireChanged()
 end
 
 ---@param id string
@@ -135,6 +160,7 @@ function AltScope:RemoveCharFromAllRoles(charKey)
             role.members[charKey] = nil
         end
     end
+    FireChanged()
 end
 
 --- Whether a scope actually restricts anything (selected mode with at least one

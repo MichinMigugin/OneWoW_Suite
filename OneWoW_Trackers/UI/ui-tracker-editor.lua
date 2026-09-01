@@ -23,8 +23,8 @@ local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
 
 local DEFAULT_REPEAT_HOURS = 24
-local LIST_FORM_HEIGHT = 376
-local LIST_FORM_HEIGHT_REPEAT = 426
+local LIST_FORM_HEIGHT = 484
+local LIST_FORM_HEIGHT_REPEAT = 534
 local TYPE_LIST_H = 300
 local STEP_EDITOR_HEIGHT = 700
 local stepEditorCollapsed = {}
@@ -1355,6 +1355,137 @@ local function WireRepeatInterval(dialog, content, typeDD, intervalY, accountWid
     applyRepeatRow(listType == "repeating")
 end
 
+local function OpenRolesAndAltsTab()
+    OneWoW.UI:Show("settings")
+    OneWoW.UI:SelectSubTab("settings", "rolesandalts")
+end
+
+local function PinScopeSummaryText(roles)
+    local parts = {}
+    for _, role in ipairs(OneWoW.AltScope:GetRolesSorted()) do
+        if roles[role.id] then
+            tinsert(parts, role.name or role.id)
+        end
+    end
+    if #parts == 0 then
+        return L["TRACKER_PIN_SCOPE_PICK"]
+    end
+    return table.concat(parts, ", ")
+end
+
+--- All-characters vs selected-roles pin visibility. Anchors below the
+--- account-wide hint so the repeating-hours row can shift that block down.
+local function WirePinScope(dialog, content, accountWideHint, existing)
+    local scopeRoles = {}
+    local modeSelected = false
+    if type(existing) == "table" and existing.mode == "selected" then
+        modeSelected = true
+        if type(existing.roles) == "table" then
+            for id, on in pairs(existing.roles) do
+                if on then scopeRoles[id] = true end
+            end
+        end
+    end
+
+    local scopeLabel = MakeLabel(content, L["TRACKER_PIN_SCOPE"], 10, 0)
+    scopeLabel:ClearAllPoints()
+    scopeLabel:SetPoint("TOPLEFT", accountWideHint, "BOTTOMLEFT", -18, -12)
+
+    local allCb = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_PIN_SCOPE_ALL"] })
+    allCb:SetPoint("TOPLEFT", scopeLabel, "BOTTOMLEFT", -4, -4)
+
+    local rolesCb = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_PIN_SCOPE_ROLES"] })
+    rolesCb:SetPoint("LEFT", allCb, "LEFT", (allCb:GetMeasuredWidth() or 140) + 16, 0)
+
+    local roleDD = OneWoW_GUI:CreateDropdown(content, {
+        width = 280,
+        height = 24,
+        text = PinScopeSummaryText(scopeRoles),
+    })
+    roleDD:SetPoint("TOPLEFT", allCb, "BOTTOMLEFT", 4, -6)
+
+    local linkBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["TRACKER_PIN_SCOPE_MANAGE"], height = 22 })
+    linkBtn:SetPoint("TOPLEFT", roleDD, "BOTTOMLEFT", 0, -6)
+    linkBtn:SetScript("OnClick", OpenRolesAndAltsTab)
+
+    local function ScopeTooltip(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TRACKER_PIN_SCOPE"], 1, 1, 1)
+        GameTooltip:AddLine(L["TRACKER_PIN_SCOPE_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end
+    local function HideTip()
+        GameTooltip:Hide()
+    end
+    allCb:SetScript("OnEnter", ScopeTooltip)
+    allCb:SetScript("OnLeave", HideTip)
+    if allCb.label then
+        allCb.label:SetScript("OnEnter", ScopeTooltip)
+        allCb.label:SetScript("OnLeave", HideTip)
+    end
+    rolesCb:SetScript("OnEnter", ScopeTooltip)
+    rolesCb:SetScript("OnLeave", HideTip)
+    if rolesCb.label then
+        rolesCb.label:SetScript("OnEnter", ScopeTooltip)
+        rolesCb.label:SetScript("OnLeave", HideTip)
+    end
+    roleDD:HookScript("OnEnter", ScopeTooltip)
+    roleDD:HookScript("OnLeave", HideTip)
+
+    local function ApplyMode(selected)
+        modeSelected = selected
+        allCb:SetChecked(not selected)
+        rolesCb:SetChecked(selected)
+        if selected then
+            roleDD:Enable()
+            roleDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            roleDD:Disable()
+            roleDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+
+    allCb:SetScript("OnClick", function()
+        ApplyMode(false)
+    end)
+    rolesCb:SetScript("OnClick", function()
+        ApplyMode(true)
+    end)
+
+    OneWoW_GUI:AttachFilterMenu(roleDD, {
+        searchable = false,
+        menuHeight = 200,
+        buildItems = function()
+            local items = {}
+            local roles = OneWoW.AltScope:GetRolesSorted()
+            if #roles == 0 then
+                tinsert(items, { type = "header", text = L["TRACKER_PIN_SCOPE_NONE"] })
+                return items
+            end
+            for _, role in ipairs(roles) do
+                local roleId = role.id
+                tinsert(items, {
+                    type = "checkbox",
+                    text = role.name or role.id,
+                    checked = scopeRoles[roleId] and true or false,
+                    onToggle = function(isOn)
+                        scopeRoles[roleId] = isOn and true or nil
+                        roleDD._text:SetText(PinScopeSummaryText(scopeRoles))
+                    end,
+                })
+            end
+            return items
+        end,
+    })
+
+    ApplyMode(modeSelected)
+
+    dialog._pinScopeGet = function()
+        if not modeSelected then return nil end
+        return { mode = "selected", roles = CopyTable(scopeRoles), chars = {} }
+    end
+end
+
 local QUICK_START = {
     {
         key = "weekly",
@@ -1734,6 +1865,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
                         listType = listType,
                         category = frame._catDD:GetValue() or defaultCategory or "General",
                         accountWide = frame._accountWideCheck:GetChecked(),
+                        pinScope = frame._pinScopeGet(),
                     }
                     if listType == "repeating" then
                         opts.resetInterval = RepeatSecondsFromHoursText(frame._hoursBox:GetText())
@@ -1804,6 +1936,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     WireRepeatInterval(dialog, content, typeDD, intervalY, accountWideCheck, defaultType or "todo", nil)
+    WirePinScope(dialog, content, accountWideHint, nil)
 
     dialog:Show()
 end
@@ -1899,6 +2032,9 @@ function TE_UI:ShowListEditor(listID, callback)
                         changes.resetInterval = RepeatSecondsFromHoursText(frame._hoursBox:GetText())
                     end
                     TD:UpdateList(listID, changes)
+                    local edited = TD:GetList(listID)
+                    edited.pinScope = TD:NormalizePinScope(frame._pinScopeGet())
+                    TE:SyncAllPinnedOverlays()
                     frame:Hide(); frame:SetParent(nil)
                     if callback then callback() end
                 end,
@@ -1966,6 +2102,7 @@ function TE_UI:ShowListEditor(listID, callback)
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     WireRepeatInterval(dialog, content, typeDD, intervalY, accountWideCheck, list.listType or "todo", list.resetInterval)
+    WirePinScope(dialog, content, accountWideHint, list.pinScope)
 
     dialog:Show()
 end

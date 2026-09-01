@@ -49,6 +49,8 @@ Do not invent parallel track types. The engine already evaluates:
 | Cross-alt quest completion | `OneWoW_CatalogData_Quests_API.GetCompletedCharacters` / `GetActiveCharacters` — public, with UI in Catalog |
 | Collectible-shaped preset | Dusting for Moths (`TrackerPresets` — `quest_account` + coords + renown gates) |
 | Hide completed | `pinnedHideCompleted` (persisted, per list) — the hub filter is a different thing, see caveat |
+| Hide pin when done | `pinnedAutoHideWhenComplete` (persisted, per list) — overlay chrome, not unpin; farm-value excluded; checkbox on pin hover only |
+| Pin role scope | `pinScope` AltScope shape on the list; overlay + map pins only; hub stays account-wide |
 | Interval timer step | `custom_timer` (`trackParams.interval` in seconds; reset reads `sp.lastCompleted`) |
 | Instance / map / difficulty identity | `OneWoW_CatalogData_Journal_API` (`GetInstanceByMapID`, live EJ merge); Generated `JournalMapDifficulties` / `JournalInstanceMeta` |
 | Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins, Tracker hub detail (sections + steps; drop a step on a header). `TD:MoveStepToSection` migrates the progress blob |
@@ -68,6 +70,11 @@ Do not invent parallel track types. The engine already evaluates:
 - **`hideCompleted` and `pinnedHideCompleted` are not a pair.** `pinnedHideCompleted` is a
   persisted per-list field honored by the pin and hub detail. The hub-side "Hide completed"
   is a session filter over the left rail that hides fully complete *lists*.
+- **`pinnedAutoHideWhenComplete` is overlay chrome, not unpin.** The pin flag stays;
+  `TrackerPinned:Suppress` hides the frame. The checkbox is on the pin hover strip, not
+  hub detail (Hide completed stays there). Role `pinScope` is the same: overlay (and map
+  pins) skip, hub authoring does not. Not the hub Hide Done filter. Farm-value lists ignore
+  auto-hide. `pinScope` role ids are account-local and stripped on export.
 - **Picker is type-family, not one card per engine type.** Quest scopes
   (`quest` / `quest_account` / `quest_world` / `quest_active` / `rare_quest`) share one
   card; vault slots and profession tasks share one card each. `rare_quest` is a **label**,

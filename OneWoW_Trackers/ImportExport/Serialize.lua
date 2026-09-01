@@ -28,6 +28,7 @@ local SERIALIZE_KEYS = {
     campaignID = "ci", questIDs = "qi",
     userNote = "un",
     accountWide = "aw",
+    pinnedAutoHideWhenComplete = "pah",
 }
 
 local DESERIALIZE_KEYS = {}
@@ -97,6 +98,7 @@ function TD:ExportList(listID)
     exportData.pinnedLockResize     = nil
     exportData.pinnedHideCompleted  = nil
     exportData.pinnedLocked         = nil
+    exportData.pinScope             = nil
     exportData.favorite = nil
 
     return "OWT1:" .. SerializeValue(exportData)
@@ -151,6 +153,9 @@ local function ValidateAndNormalizeImport(expanded)
             end
         end
     end
+
+    expanded.pinnedAutoHideWhenComplete = expanded.pinnedAutoHideWhenComplete and true or false
+    expanded.pinScope = nil
 
     return expanded
 end
@@ -263,6 +268,8 @@ function TD:NormalizeAllLists()
             list.pinnedLockMove       = list.pinnedLockMove and true or false
             list.pinnedLockResize     = list.pinnedLockResize and true or false
             list.pinnedHideCompleted  = list.pinnedHideCompleted and true or false
+            list.pinnedAutoHideWhenComplete = list.pinnedAutoHideWhenComplete and true or false
+            list.pinScope             = TD:NormalizePinScope(list.pinScope)
 
             if type(list.sections) ~= "table" then
                 list.sections = {}

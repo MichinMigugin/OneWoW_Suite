@@ -273,6 +273,13 @@ function TP:Create(listID)
         local currentList = TD:GetList(listID)
         if not currentList then return end
 
+        if frame.hideCompletedCB then
+            frame.hideCompletedCB:SetChecked(currentList.pinnedHideCompleted and true or false)
+        end
+        if frame.autoHideCB then
+            frame.autoHideCB:SetChecked(currentList.pinnedAutoHideWhenComplete and true or false)
+        end
+
         if currentList.listType == "farmvalue" and ns.TrackerFarmValue then
             totalLabel:SetText("")
             ns.TrackerFarmValue:RenderPinned(currentList, scrollChild, frame)
@@ -619,7 +626,8 @@ function TP:Create(listID)
     })
     hoverControlsPanel:SetPoint("TOPLEFT",  frame, "BOTTOMLEFT",  0, 0)
     hoverControlsPanel:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-    hoverControlsPanel:SetHeight(76)
+    local isFarm = list.listType == "farmvalue"
+    hoverControlsPanel:SetHeight(isFarm and 76 or 100)
     hoverControlsPanel:SetFrameStrata(frame:GetFrameStrata())
     hoverControlsPanel:SetFrameLevel(frame:GetFrameLevel() + 10)
     hoverControlsPanel:EnableMouse(true)
@@ -648,7 +656,7 @@ function TP:Create(listID)
             ApplyMoveLock()
         end,
     })
-    lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 28)
+    lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, isFarm and 28 or 52)
 
     local lockResizeCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
         label   = L["LOCK_RESIZE"],
@@ -666,9 +674,13 @@ function TP:Create(listID)
         onClick = function(myself)
             list.pinnedHideCompleted = myself:GetChecked() and true or false
             frame:Refresh()
+            if ns.UI.RefreshTab then
+                ns.UI.RefreshTab()
+            end
         end,
     })
-    hideCompletedCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 4)
+    hideCompletedCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, isFarm and 4 or 28)
+    frame.hideCompletedCB = hideCompletedCB
     local function HideCompletedTooltip(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["TRACKER_PIN_HIDE_COMPLETED"], 1, 1, 1)
@@ -681,6 +693,36 @@ function TP:Create(listID)
     if hideCompletedCB.label then
         hideCompletedCB.label:SetScript("OnEnter", HideCompletedTooltip)
         hideCompletedCB.label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+
+    local autoHideCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
+        label   = L["TRACKER_PIN_AUTO_HIDE"],
+        checked = list.pinnedAutoHideWhenComplete,
+        onClick = function(myself)
+            list.pinnedAutoHideWhenComplete = myself:GetChecked() and true or false
+            TE:SyncPinnedOverlay(listID)
+            if frame:IsShown() then
+                frame:Refresh()
+            end
+        end,
+    })
+    autoHideCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 4)
+    frame.autoHideCB = autoHideCB
+    local function AutoHideTooltip(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TRACKER_PIN_AUTO_HIDE"], 1, 1, 1)
+        GameTooltip:AddLine(L["TRACKER_PIN_AUTO_HIDE_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end
+    autoHideCB:SetScript("OnEnter", AutoHideTooltip)
+    autoHideCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    if autoHideCB.label then
+        autoHideCB.label:SetScript("OnEnter", AutoHideTooltip)
+        autoHideCB.label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+    if isFarm then
+        hideCompletedCB:Hide()
+        autoHideCB:Hide()
     end
 
     local function HideHoverControls()
@@ -743,6 +785,17 @@ function TP:Show(listID)
     return win
 end
 
+--- Hide the overlay without clearing `list.pinned` (auto-hide / role scope).
+---@param listID string
+function TP:Suppress(listID)
+    local win = windows[listID]
+    if not win then return end
+    win:Hide()
+    if win.hoverControlsPanel then
+        win.hoverControlsPanel:Hide()
+    end
+end
+
 --- Hide the overlay and clear `list.pinned`.
 ---@param listID string
 function TP:Destroy(listID)
@@ -777,7 +830,7 @@ function TP:RestoreAll()
     for listID, list in pairs(lists) do
         if list.pinned then
             C_Timer.After(1, function()
-                ns.TrackerEngine:CreatePinnedWindow(listID)
+                ns.TrackerEngine:SyncPinnedOverlay(listID)
             end)
         end
     end

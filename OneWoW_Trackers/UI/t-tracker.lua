@@ -705,6 +705,8 @@ function ns.UI.CreateTrackerTab(parent)
         hideStepsCheck:SetChecked(list.pinnedHideCompleted and true or false)
         if list.listType ~= "farmvalue" then
             hideStepsCheck:Show()
+        else
+            hideStepsCheck:Hide()
         end
         LayoutDetailScroll()
 

@@ -34,7 +34,7 @@ function TrackerDataProviderMixin:RefreshAllData()
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
-        if list.pinned then
+        if ns.TrackerEngine:ShouldShowPinnedOverlay(list) then
         for _, sec in ipairs(list.sections) do
             for _, step in ipairs(sec.steps or {}) do
                 if step.mapID and tonumber(step.mapID) == mapID and step.coordX and step.coordY then
@@ -199,7 +199,7 @@ local function CollectMinimapTargets(mapID)
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
-        if list.pinned then
+        if ns.TrackerEngine:ShouldShowPinnedOverlay(list) then
             for _, sec in ipairs(list.sections) do
                 for _, step in ipairs(sec.steps or {}) do
                     if step.mapID and tonumber(step.mapID) == mapID and step.coordX and step.coordY then

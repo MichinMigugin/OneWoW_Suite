@@ -330,6 +330,31 @@ function TD:GetProgressDBForList(listID)
     return self:GetProgressDB()
 end
 
+--- Nil means every character. Selected mode keeps only truthy role/char keys.
+---@param scope table|nil
+---@return table|nil
+function TD:NormalizePinScope(scope)
+    if type(scope) ~= "table" or scope.mode ~= "selected" then
+        return nil
+    end
+    local roles, chars = {}, {}
+    if type(scope.roles) == "table" then
+        for id, on in pairs(scope.roles) do
+            if on and type(id) == "string" then
+                roles[id] = true
+            end
+        end
+    end
+    if type(scope.chars) == "table" then
+        for key, on in pairs(scope.chars) do
+            if on and type(key) == "string" then
+                chars[key] = true
+            end
+        end
+    end
+    return { mode = "selected", roles = roles, chars = chars }
+end
+
 function TD:CreateList(opts)
     opts = opts or {}
     local db = GetDB()
@@ -367,6 +392,8 @@ function TD:CreateList(opts)
         pinnedLockMove       = false,
         pinnedLockResize     = false,
         pinnedHideCompleted  = false,
+        pinnedAutoHideWhenComplete = false,
+        pinScope      = self:NormalizePinScope(opts.pinScope),
         accountWide   = opts.accountWide or false,
     }
 
@@ -395,6 +422,9 @@ function TD:UpdateList(listID, changes)
 
     if changes.category ~= nil then
         changes.category = self:NormalizeCategory(changes.category)
+    end
+    if changes.pinScope ~= nil then
+        changes.pinScope = self:NormalizePinScope(changes.pinScope)
     end
 
     for k, v in pairs(changes) do

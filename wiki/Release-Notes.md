@@ -55,6 +55,11 @@
 ---
 
 ### Trackers
+#### Pinned lists
+- A pinned list can hide itself when every visible step is done, then come back after daily or weekly reset (or when something is incomplete again). Turn on Hide pin when done on the pin hover bar. The list stays pinned; you do not have to pin it again.
+- Hide completed on the pin hover bar and in the hub stay in sync.
+- Edit a list to show its pin only for characters in selected Roles (Settings >> Roles & Alts). Other characters still see the list in the hub. Adding or removing a character from a Role updates those pins right away.
+
 #### Rare Quest
 - Rare Quest steps can pick a rare by name or fill from your target. Click a rare to set a waypoint. A Midnight zone-rares preset builds a daily list grouped by zone, with spawn coords when known.
 

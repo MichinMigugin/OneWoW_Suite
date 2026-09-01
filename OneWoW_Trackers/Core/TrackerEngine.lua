@@ -1,5 +1,6 @@
 local _, ns = ...
 
+local OneWoW_GUI = OneWoW_GUI
 local Inventory = OneWoW.Inventory
 local Location = OneWoW.Location
 
@@ -154,6 +155,79 @@ function TE:HasIncompleteVisibleStep(listID, section)
         end
     end
     return false
+end
+
+function TE:HasIncompleteVisibleList(listID)
+    local list = TD:GetList(listID)
+    if not list then return false end
+    for _, sec in ipairs(list.sections or {}) do
+        if self:IsSectionVisible(sec) and self:HasIncompleteVisibleStep(listID, sec) then
+            return true
+        end
+    end
+    return false
+end
+
+--- Pin membership stays even when the overlay is hidden (auto-hide or role
+--- scope). DestroyPinnedWindow is the only unpin path.
+---@param list table
+---@return boolean
+function TE:ShouldShowPinnedOverlay(list)
+    if not list or not list.pinned then return false end
+    local scope = list.pinScope
+    if scope and scope.mode == "selected" then
+        if not OneWoW.AltScope:IsCharIncluded(OneWoW_GUI:BuildCharKey(), scope) then
+            return false
+        end
+    end
+    if list.pinnedAutoHideWhenComplete and list.listType ~= "farmvalue" then
+        if not self:HasIncompleteVisibleList(list.id) then
+            return false
+        end
+    end
+    return true
+end
+
+local overlaySyncing = {}
+
+local function NotifyMapPins()
+    ns.TrackerMap:MarkMinimapDirty()
+    ns.TrackerMap:RefreshWorldMap()
+end
+
+function TE:SyncPinnedOverlay(listID)
+    if overlaySyncing[listID] then return end
+    local list = TD:GetList(listID)
+    if not list then return end
+    overlaySyncing[listID] = true
+    local should = self:ShouldShowPinnedOverlay(list)
+    local win = ns.TrackerPinned:Get(listID)
+    if should then
+        if win then
+            if not win:IsShown() then
+                win:Show()
+                win:Refresh()
+            end
+        else
+            self:CreatePinnedWindow(listID)
+            if not self:ShouldShowPinnedOverlay(list) then
+                ns.TrackerPinned:Suppress(listID)
+            end
+        end
+    elseif win then
+        ns.TrackerPinned:Suppress(listID)
+    end
+    overlaySyncing[listID] = nil
+    NotifyMapPins()
+end
+
+function TE:SyncAllPinnedOverlays()
+    local lists = TD:GetListsDB()
+    for listID, list in pairs(lists) do
+        if list.pinned then
+            self:SyncPinnedOverlay(listID)
+        end
+    end
 end
 
 local function BuildIndices()
@@ -400,6 +474,9 @@ function TE:EvaluateList(listID)
             end
         end
     end
+    if list.pinned then
+        self:SyncPinnedOverlay(listID)
+    end
 end
 
 -- Session latch: objectives roll up through EvaluateStep; bare session steps
@@ -645,8 +722,13 @@ function TE:Initialize()
 
     BuildIndices()
 
+    OneWoW.AltScope:RegisterChangedCallback("OneWoW_Trackers_Pins", function()
+        TE:SyncAllPinnedOverlays()
+    end)
+
     C_Timer.NewTicker(30, function()
         TD:CheckCustomTimerResets()
+        TE:RefreshAllPinnedWindows()
     end)
 end
 
@@ -673,7 +755,13 @@ function TE:GetPinnedWindow(listID)
 end
 
 function TE:RefreshAllPinnedWindows()
+    if initialized then
+        self:SyncAllPinnedOverlays()
+    end
     ns.TrackerPinned:RefreshAll()
+    if initialized then
+        NotifyMapPins()
+    end
 end
 
 --- Notify hub UI and all pinned windows that manual progress changed.

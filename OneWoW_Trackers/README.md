@@ -17,7 +17,7 @@
 - Daily, weekly, repeating (hour interval), or one-time reset rules; optional account-wide progress
 
 ### Pinned Overlays & Map
-- Pin lists as floating progress windows while you play
+- Pin lists as floating progress windows while you play. Hide pin when done hides the window once every visible step is complete; the list stays pinned and the window comes back after reset. Edit the list to show that pin only for characters in selected Roles.
 - World-map pins for coordinate steps on pinned lists
 
 ### Farm Value
