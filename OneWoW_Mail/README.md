@@ -13,6 +13,7 @@ Replaces the default mailbox UI while you are at a mailbox:
 - Richer Auction House invoice breakdown when that mail type is recognized
 - **Compose** — OneWoW chrome with address suggestions for your alts (all realms)
 - **Activity** — session run log for collect/send results; pending shipment reviews when auto-run holds a plan for Process/Discard
+- **WoW UI / One UI** — switch to the default WoW mailbox and back without turning Mail off. Auto-collect and shipment auto-run do not run while WoW UI is on. `/1wmail` or the minimap while WoW UI is showing returns to One UI.
 
 ### Shipments
 Reusable logistics plans for mailing items and gold:
@@ -45,7 +46,7 @@ Supporting utilities on the Other tab (for example disenchantable dumps and exce
 
 ## Slash Commands
 
-- `/1wmail` — Toggle the Mail UI shell
+- `/1wmail` — Toggle the Mail UI shell. At a mailbox on WoW UI, switches back to One UI.
 
 ## Localization
 

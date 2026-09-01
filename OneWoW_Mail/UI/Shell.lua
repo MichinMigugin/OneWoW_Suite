@@ -18,6 +18,9 @@ local currentTab = "inbox"
 local selected = {}
 local blizzardHidden = false
 local hideFromMailClosed = false
+local hideFromChromeSwap = false
+local blizzardModeBtn
+local switchDialog
 
 local TAB_ORDER = { "inbox", "compose", "shipments", "activity" }
 
@@ -34,16 +37,50 @@ local function HideBlizzardMail()
     blizzardHidden = true
 end
 
+local function RestoreOpenAllMail()
+    if not OpenAllMail then
+        return
+    end
+    OpenAllMail:SetAlpha(1)
+    if InboxFrame and InboxFrame:IsShown() then
+        OpenAllMail:Show()
+    end
+end
+
 local function RestoreBlizzardMail()
     if not MailFrame or not blizzardHidden then
         return
     end
     MailFrame:SetAlpha(1)
     MailFrame:EnableMouse(true)
+    RestoreOpenAllMail()
+    blizzardHidden = false
+end
+
+-- MAIL_CLOSED: put MailFrame back to a normal hidden state so the next open
+-- is not stuck at alpha 0. Do not Show() it — Blizzard is already hiding it.
+local function ResetBlizzardPark()
+    if not blizzardHidden then
+        return
+    end
+    if MailFrame then
+        MailFrame:SetAlpha(1)
+        MailFrame:EnableMouse(true)
+    end
     if OpenAllMail then
         OpenAllMail:SetAlpha(1)
     end
     blizzardHidden = false
+end
+
+function Shell:UsesBlizzardUI()
+    return ns.db.global.mail.useBlizzardUI and true or false
+end
+
+function Shell:IsMailboxOpen()
+    return C_PlayerInteractionManager.IsInteractingWithNpcOfType(
+        Enum.PlayerInteractionType.MailInfo
+    )
 end
 
 local function HideSettingsPopover()
@@ -141,6 +178,186 @@ function Shell:RequestClose()
     end
 end
 
+local function HideSwitchDialog()
+    if switchDialog and switchDialog.frame then
+        switchDialog.frame:Hide()
+    end
+end
+
+function Shell:UpdateModeChrome()
+    local useBlizzard = self:UsesBlizzardUI()
+    local mailboxOpen = self:IsMailboxOpen()
+    if shellFrame and shellFrame.wowUiBtn then
+        if useBlizzard then
+            shellFrame.wowUiBtn:Hide()
+        else
+            shellFrame.wowUiBtn:Show()
+        end
+    end
+    if shellFrame and shellFrame.settingsUseWowUI then
+        shellFrame.settingsUseWowUI:SetChecked(useBlizzard)
+    end
+    if blizzardModeBtn then
+        if useBlizzard and mailboxOpen then
+            blizzardModeBtn:Show()
+        else
+            blizzardModeBtn:Hide()
+        end
+    end
+end
+
+function Shell:EnsureModeButtons()
+    if not MailFrame then
+        return
+    end
+    if not blizzardModeBtn then
+        local closeBtn = MailFrame.CloseButton
+        local btn = OneWoW_GUI:CreateFitTextButton(MailFrame, {
+            text = L["USE_ONEUI"],
+            height = 22,
+            minWidth = 48,
+            paddingX = 16,
+        })
+        if closeBtn then
+            btn:SetPoint("RIGHT", closeBtn, "LEFT", -4, 0)
+        else
+            btn:SetPoint("TOPRIGHT", MailFrame, "TOPRIGHT", -28, -8)
+        end
+        btn:SetFrameStrata("HIGH")
+        btn:SetFrameLevel((MailFrame:GetFrameLevel() or 0) + 10)
+        btn:SetScript("OnClick", function()
+            Shell:SetUseBlizzardUI(false)
+        end)
+        btn:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
+            GameTooltip:SetText(L["USE_ONEUI"])
+            GameTooltip:AddLine(L["TT_USE_ONEUI"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            GameTooltip:Show()
+        end)
+        btn:SetScript("OnLeave", GameTooltip_Hide)
+        blizzardModeBtn = btn
+        OneWoW_GUI:RegisterFontRoot(btn, function()
+            if blizzardModeBtn then
+                blizzardModeBtn:SetFitText(L["USE_ONEUI"])
+            end
+        end)
+    else
+        blizzardModeBtn:SetFitText(L["USE_ONEUI"])
+    end
+    self:UpdateModeChrome()
+end
+
+local function HideShellChrome()
+    HideSettingsPopover()
+    HideSwitchDialog()
+    if ns.Compose and ns.Compose.OnHide then
+        ns.Compose:OnHide()
+    end
+    if shellFrame then
+        hideFromChromeSwap = true
+        shellFrame:Hide()
+        hideFromChromeSwap = false
+    end
+end
+
+local function ApplyBlizzardMode()
+    ns.db.global.mail.useBlizzardUI = true
+    if ns.AutoRun and ns.AutoRun.StandDownEngine then
+        ns.AutoRun:StandDownEngine()
+    end
+    if ns.NativeSend then
+        ns.NativeSend:DeactivateAll()
+    end
+    HideShellChrome()
+    RestoreBlizzardMail()
+    Shell:EnsureModeButtons()
+    Shell:UpdateModeChrome()
+end
+
+local function ConfirmSwitchToBlizzard()
+    if not switchDialog then
+        switchDialog = OneWoW_GUI:CreateDialog({
+            name = "OneWoW_MailSwitchPending",
+            title = L["CLOSE_PENDING_TITLE"],
+            width = 420,
+            height = 160,
+            escClose = true,
+            showBrand = false,
+            buttons = {
+                {
+                    text = L["CLOSE_PENDING_BACK"],
+                    onClick = function(frame)
+                        frame:Hide()
+                        Shell:UpdateModeChrome()
+                    end,
+                },
+                {
+                    text = SWITCH,
+                    onClick = function(frame)
+                        frame:Hide()
+                        if ns.AutoRun then
+                            ns.AutoRun:Discard()
+                        end
+                        ApplyBlizzardMode()
+                    end,
+                },
+            },
+        })
+        local msg = OneWoW_GUI:CreateFS(switchDialog.contentFrame, 12)
+        msg:SetPoint("TOPLEFT", switchDialog.contentFrame, "TOPLEFT", 16, -16)
+        msg:SetPoint("TOPRIGHT", switchDialog.contentFrame, "TOPRIGHT", -16, -16)
+        msg:SetJustifyH("LEFT")
+        msg:SetWordWrap(true)
+        switchDialog.message = msg
+    end
+    switchDialog.message:SetText(L["SWITCH_PENDING_BODY"])
+    switchDialog.frame:Show()
+    switchDialog.frame:Raise()
+end
+
+function Shell:SetUseBlizzardUI(wantBlizzard)
+    wantBlizzard = wantBlizzard and true or false
+    if wantBlizzard == self:UsesBlizzardUI() then
+        self:UpdateModeChrome()
+        return
+    end
+    if not wantBlizzard then
+        ns.db.global.mail.useBlizzardUI = false
+        self:UpdateModeChrome()
+        if self:IsMailboxOpen() then
+            self:Show()
+            if ns.AutoRun and ns.AutoRun.ArmEngineIfNeeded then
+                ns.AutoRun:ArmEngineIfNeeded()
+            end
+        end
+        return
+    end
+    if ns.SendQueue and ns.SendQueue:IsRunning() then
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ERR_SWITCH_SEND_RUNNING"])
+        self:UpdateModeChrome()
+        return
+    end
+    if ns.AutoRun and ns.AutoRun.IsProcessing and ns.AutoRun:IsProcessing() then
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ERR_SWITCH_SEND_RUNNING"])
+        self:UpdateModeChrome()
+        return
+    end
+    if ns.Collect and ns.Collect:IsRunning() then
+        ns.Collect:Cancel()
+    end
+    if not self:IsMailboxOpen() then
+        ns.db.global.mail.useBlizzardUI = true
+        self:UpdateModeChrome()
+        return
+    end
+    if ns.AutoRun and ns.AutoRun:HasPending() then
+        ConfirmSwitchToBlizzard()
+        self:UpdateModeChrome()
+        return
+    end
+    ApplyBlizzardMode()
+end
+
 function Shell:Ensure()
     if shellFrame then
         return shellFrame
@@ -182,7 +399,7 @@ function Shell:Ensure()
     -- Escape (UISpecialFrames) hides the shell without CloseMail, which used to
     -- leave AutoRun.mailOpen stuck. Route through RequestClose / CloseMail.
     shellFrame:HookScript("OnHide", function(myself)
-        if hideFromMailClosed then
+        if hideFromMailClosed or hideFromChromeSwap then
             return
         end
         if ns.AutoRun and ns.AutoRun:HasPending() then
@@ -285,6 +502,25 @@ function Shell:Ensure()
         height = 22,
     })
     settingsBtn:SetPoint("RIGHT", tabBar, "RIGHT", 0, 0)
+
+    local wowUiBtn = OneWoW_GUI:CreateFitTextButton(tabBar, {
+        text = L["USE_WOWUI"],
+        height = 22,
+        minWidth = 48,
+        paddingX = 16,
+    })
+    wowUiBtn:SetPoint("RIGHT", settingsBtn, "LEFT", -4, 0)
+    wowUiBtn:SetScript("OnClick", function()
+        Shell:SetUseBlizzardUI(true)
+    end)
+    wowUiBtn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["USE_WOWUI"])
+        GameTooltip:AddLine(L["TT_USE_WOWUI"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:Show()
+    end)
+    wowUiBtn:SetScript("OnLeave", GameTooltip_Hide)
+    shellFrame.wowUiBtn = wowUiBtn
     settingsBtn:HookScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_TOP")
         GameTooltip:SetText(SETTINGS, 1, 1, 1)
@@ -301,7 +537,7 @@ function Shell:Ensure()
     shellFrame.settingsDismisser = settingsDismisser
 
     local popover = CreateFrame("Frame", nil, shellFrame, "BackdropTemplate")
-    popover:SetSize(300, 150)
+    popover:SetSize(300, 200)
     popover:SetPoint("TOPRIGHT", settingsBtn, "BOTTOMRIGHT", 0, -4)
     popover:SetFrameLevel(settingsDismisser:GetFrameLevel() + 1)
     popover:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
@@ -353,6 +589,23 @@ function Shell:Ensure()
     ackTip:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     shellFrame.settingsAckTip = ackTip
 
+    local useWowUI = OneWoW_GUI:CreateCheckbox(popover, {
+        label = L["SETTINGS_USE_WOWUI"],
+        checked = Shell:UsesBlizzardUI(),
+        onClick = function(myself)
+            Shell:SetUseBlizzardUI(myself:GetChecked())
+        end,
+    })
+    useWowUI:SetPoint("TOPLEFT", ackTip, "BOTTOMLEFT", -4, -10)
+    useWowUI:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(L["SETTINGS_USE_WOWUI"])
+        GameTooltip:AddLine(L["TT_USE_WOWUI"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:Show()
+    end)
+    useWowUI:HookScript("OnLeave", GameTooltip_Hide)
+    shellFrame.settingsUseWowUI = useWowUI
+
     -- Keep the gear above the dismisser so toggle still works while open.
     settingsBtn:SetFrameLevel(settingsDismisser:GetFrameLevel() + 2)
     settingsBtn:SetScript("OnClick", function()
@@ -361,6 +614,7 @@ function Shell:Ensure()
             return
         end
         ackSlider.slider:SetValue(ns.SendResult:GetAckTimeout())
+        useWowUI:SetChecked(Shell:UsesBlizzardUI())
         settingsDismisser:Show()
         popover:Show()
     end)
@@ -381,11 +635,24 @@ function Shell:Ensure()
     tinsert(UISpecialFrames, "OneWoW_MailShell")
     -- Standalone mailbox window is outside the hub rebuild; opt in to live font changes.
     OneWoW_GUI:RegisterFontRoot(shellFrame)
+    OneWoW_GUI:RegisterFontRoot(wowUiBtn, function()
+        if shellFrame and shellFrame.wowUiBtn then
+            shellFrame.wowUiBtn:SetFitText(L["USE_WOWUI"])
+        end
+    end)
+    self:EnsureModeButtons()
     return shellFrame
 end
 
 function Shell:Show()
+    if self:UsesBlizzardUI() and self:IsMailboxOpen() then
+        self:EnsureModeButtons()
+        Trace("show_blizzard", {})
+        self:UpdateModeChrome()
+        return
+    end
     self:Ensure()
+    self:EnsureModeButtons()
     HideBlizzardMail()
     Trace("show", { tab = currentTab })
     shellFrame:Show()
@@ -394,6 +661,7 @@ function Shell:Show()
     end
     SelectTab(currentTab or "inbox")
     self:UpdateActivityBadge()
+    self:UpdateModeChrome()
     if currentTab == "compose" and ns.NativeSend then
         C_Timer.After(0, function()
             ns.NativeSend:ReassertPark()
@@ -433,7 +701,10 @@ function Shell:UpdateActivityBadge()
 end
 
 function Shell:Hide()
+    HideSwitchDialog()
     if not shellFrame or not shellFrame:IsShown() then
+        ResetBlizzardPark()
+        self:UpdateModeChrome()
         return
     end
     Trace("hide", {})
@@ -444,10 +715,15 @@ function Shell:Hide()
         ns.Compose:OnHide()
     end
     shellFrame:Hide()
-    RestoreBlizzardMail()
+    ResetBlizzardPark()
+    self:UpdateModeChrome()
 end
 
 function Shell:Toggle()
+    if self:IsMailboxOpen() and self:UsesBlizzardUI() then
+        self:SetUseBlizzardUI(false)
+        return
+    end
     if shellFrame and shellFrame:IsShown() then
         self:RequestClose()
     else
@@ -460,10 +736,17 @@ function Shell:IsShown()
 end
 
 function Shell:FullReset()
+    HideSwitchDialog()
+    if switchDialog then
+        switchDialog = nil
+    end
     if ns.Compose and ns.Compose.OnHide then
         ns.Compose:OnHide()
     end
     if shellFrame then
+        if shellFrame.wowUiBtn then
+            OneWoW_GUI:UnregisterFontRoot(shellFrame.wowUiBtn)
+        end
         OneWoW_GUI:UnregisterFontRoot(shellFrame)
         hideFromMailClosed = true
         shellFrame:Hide()
@@ -478,6 +761,12 @@ function Shell:FullReset()
             OneWoW_MailShell = nil
         end
         shellFrame = nil
+    end
+    if blizzardModeBtn then
+        OneWoW_GUI:UnregisterFontRoot(blizzardModeBtn)
+        blizzardModeBtn:Hide()
+        blizzardModeBtn:SetParent(nil)
+        blizzardModeBtn = nil
     end
     if ns.Inbox and ns.Inbox.Reset then
         ns.Inbox:Reset()
@@ -516,6 +805,9 @@ function Shell:ApplyTheme()
     end
     if shellFrame.settingsAckTip then
         shellFrame.settingsAckTip:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+    if shellFrame.settingsUseWowUI and shellFrame.settingsUseWowUI.label then
+        shellFrame.settingsUseWowUI.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
     OneWoW_GUI:ApplyFontToFrame(shellFrame)
 end

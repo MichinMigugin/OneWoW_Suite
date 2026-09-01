@@ -11,6 +11,13 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["SETTINGS_SEND_ACK_TIMEOUT"] = "Wait for send confirmation",
     ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "How long to wait for the server to confirm a send before treating it as failed.\nToo low can cause false timeouts on laggy connections; too high makes a stuck send wait longer.",
+    ["USE_WOWUI"] = "WoW UI",
+    ["USE_ONEUI"] = "One UI",
+    ["TT_USE_WOWUI"] = "Show the default WoW mailbox instead of OneWoW Mail.\nAuto-collect and shipment auto-run do not run while WoW UI is on.",
+    ["TT_USE_ONEUI"] = "Switch back to OneWoW Mail.",
+    ["SETTINGS_USE_WOWUI"] = "Use WoW mailbox",
+    ["ERR_SWITCH_SEND_RUNNING"] = "Wait for the send to finish before switching to WoW UI.",
+    ["SWITCH_PENDING_BODY"] = "Switching to WoW UI hides Activity. Pending shipment reviews will be discarded.",
 
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",

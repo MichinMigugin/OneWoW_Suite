@@ -35,6 +35,7 @@ local mailOpen = false
 local visitToken = 0
 local processing = false
 local closing = false
+local engineArmedThisVisit = false
 local pendingIntents = {} -- display rows
 local sessionDone = {} -- [shipmentId] = true (char targets, or role fully complete)
 -- Role session successes: [shipmentId] = { [roleId] = { [charKey] = true } }
@@ -350,6 +351,9 @@ local function PhaseB(token)
     if not mailOpen or token ~= visitToken then
         return
     end
+    if ns.Shell and ns.Shell:UsesBlizzardUI() then
+        return
+    end
     local ids = CollectEligibleIds("auto_preview")
     local idCount = 0
     for _ in pairs(ids) do
@@ -383,6 +387,9 @@ local function PhaseB(token)
 end
 
 local function PhaseA(token)
+    if ns.Shell and ns.Shell:UsesBlizzardUI() then
+        return
+    end
     local ids = CollectEligibleIds("auto")
     local idCount = 0
     for _ in pairs(ids) do
@@ -448,6 +455,9 @@ local function TryStart(token)
     if not mailOpen or token ~= visitToken then
         return
     end
+    if ns.Shell and ns.Shell:UsesBlizzardUI() then
+        return
+    end
     if ns.Collect:IsRunning() or ns.SendQueue:IsRunning() then
         Trace("busy_retry", {
             collect = ns.Collect:IsRunning(),
@@ -459,6 +469,40 @@ local function TryStart(token)
         return
     end
     PhaseA(token)
+end
+
+local function EngineAllowed()
+    return mailOpen and not (ns.Shell and ns.Shell:UsesBlizzardUI())
+end
+
+local function ArmEngine()
+    if engineArmedThisVisit or not EngineAllowed() then
+        return
+    end
+    engineArmedThisVisit = true
+    local token = visitToken
+    Trace("arm_engine", { token = token })
+    C_Timer.After(SETTLE_DELAY, function()
+        if not EngineAllowed() or token ~= visitToken then
+            return
+        end
+        MaybeStartAutoCollect()
+        TryStart(token)
+    end)
+end
+
+--- Arm auto-collect / auto-run once per mailbox visit when One UI is showing.
+function AutoRun:ArmEngineIfNeeded()
+    ArmEngine()
+end
+
+--- Cancel in-flight settle/try without mailbox-close session rules.
+function AutoRun:StandDownEngine()
+    Trace("stand_down", { armed = engineArmedThisVisit })
+    visitToken = visitToken + 1
+    if ns.Collect and ns.Collect:IsRunning() then
+        ns.Collect:Cancel()
+    end
 end
 
 --- Narrow Preview result to one mail target (role shipments plan every member).
@@ -693,15 +737,13 @@ function AutoRun:Initialize()
             HideCloseDialog()
             closing = false
             mailOpen = true
+            engineArmedThisVisit = false
             visitToken = visitToken + 1
-            local token = visitToken
-            Trace("mail_show", { token = token })
-            C_Timer.After(SETTLE_DELAY, function()
-                MaybeStartAutoCollect()
-                TryStart(token)
-            end)
+            Trace("mail_show", { token = visitToken })
+            ArmEngine()
         else
             mailOpen = false
+            engineArmedThisVisit = false
             visitToken = visitToken + 1 -- invalidate in-flight settle/try
             HideCloseDialog()
             -- Forced path when Shell didn't already run RequestClose/OnMailboxClosing.

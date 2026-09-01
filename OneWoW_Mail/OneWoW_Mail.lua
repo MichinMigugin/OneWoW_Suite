@@ -34,8 +34,14 @@ function OneWoW_Mail:ReinitForLanguage(_)
     if not ns.Shell then
         return
     end
+    local mailboxOpen = ns.Shell:IsMailboxOpen()
+    local useBlizzard = ns.Shell:UsesBlizzardUI()
     local wasShown = ns.Shell:IsShown()
     ns.Shell:FullReset()
+    if mailboxOpen and useBlizzard then
+        ns.Shell:EnsureModeButtons()
+        return
+    end
     if wasShown then
         C_Timer.After(0.1, function()
             if ns.Shell then

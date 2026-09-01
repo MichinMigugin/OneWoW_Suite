@@ -14,6 +14,7 @@
 * Richer Auction House invoice breakdown when recognized
 * **Compose** — address suggestions for alts across realms
 * **Activity** — session log; pending auto-run shipment reviews (Process / Discard)
+* **WoW UI / One UI** — switch to the default WoW mailbox and back without turning Mail off. Auto-collect and shipment auto-run do not run while WoW UI is on. `/1wmail` or the minimap while WoW UI is showing returns to One UI.
 
 ### Shipments
 
@@ -35,7 +36,7 @@ Supporting utilities (for example disenchantable dumps and excess-gold helpers) 
 
 * Practice a simple character shipment before role-wide distributes.
 * Shipment match rules use English `#` keywords like Bags — see [Search syntax](Bags-Search-Syntax).
-* Open a mailbox NPC; Mail takes over the Blizzard frame while enabled.
+* Open a mailbox NPC; Mail takes over the Blizzard frame while enabled. Use **WoW UI** on the tab bar if you want the default mailbox back.
 
 ## Related
 

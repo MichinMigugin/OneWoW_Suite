@@ -198,7 +198,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wmail` | User | Toggle the OneWoW Mail UI shell |
+| `/1wmail` | User | Toggle the OneWoW Mail UI shell. At a mailbox on WoW UI, switches back to One UI. |
 | `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring (on by default, ring 2048, session-only) |
 
 ### `/1wmailtrace` subcommands

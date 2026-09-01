@@ -16,7 +16,7 @@ Player overview and install: [`../README.md`](../README.md).
 
 | Area | Role |
 |------|------|
-| `UI/Shell.lua` | Hide Blizzard `MailFrame`, tab host (Inbox / Compose / Shipments / Other) |
+| `UI/Shell.lua` | Hide Blizzard `MailFrame`, tab host (Inbox / Compose / Shipments / Other); `useBlizzardUI` chrome swap (WoW UI / One UI) |
 | `UI/Inbox.lua` | Filtered collect buttons, selection, Shift-loot / Ctrl-return |
 | `UI/Compose.lua` | OneWoW Compose chrome; hidden native `SendMailFrame` via NativeSend; success/fail → RunLog |
 | `Engine/NativeSend.lua` | Activate/deactivate `SetSendMailShowing` + park Blizzard send frame |
@@ -26,7 +26,7 @@ Player overview and install: [`../README.md`](../README.md).
 | `Engine/MailClassify.lua` | AH invoice + subject classification |
 | `Engine/AddressBook.lua` | Alts (all realms) + normalize + suggestions |
 | `Engine/ShipmentEvaluator.lua` | Expand role → per-member plans; PE match + keep/max/restock; role distribute modes → jobs |
-| `Engine/AutoRun.lua` | Session success map `shipmentId → roleId → charKey`; skip already-successful role members |
+| `Engine/AutoRun.lua` | Session success map `shipmentId → roleId → charKey`; skip already-successful role members; stands down while `useBlizzardUI` |
 | `Engine/SendResult.lua` | Ack listener for `MAIL_SEND_SUCCESS` / `MAIL_FAILED`; captures mail `UI_ERROR_MESSAGE` for the activity log |
 | `Engine/SendQueue.lua` | Sequential `SendMail` jobs; success/fail → RunLog |
 | `Engine/RunLog.lua` | Session activity log; optional chat mirror (`mirrorLogToChat`); errors always print |

@@ -23,7 +23,7 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | [Trackers](Trackers) | `/1wt` | Open Trackers in the hub |
 | [QoL](QoL) | `/1wqol` | Open QoL in the hub |
 | [Shopping List](Shopping-List) | `/1wsl` | Toggle the shopping-list window |
-| [Mail](Mail) | `/1wmail` | Toggle the Mail UI |
+| [Mail](Mail) | `/1wmail` | Toggle the Mail UI. At a mailbox on WoW UI, switches back to One UI. |
 | [Direct Deposit](Direct-Deposit) | `/1wdd` | Toggle the Direct Deposit window |
 | Direct Deposit | `/1wdd deposit` | Start a manual deposit |
 | Direct Deposit | `/1wdd pause` or `stop` | Stop an in-progress deposit |

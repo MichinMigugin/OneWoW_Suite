@@ -20,6 +20,7 @@ local defaults = {
             sortByExpiry = false,
             mirrorLogToChat = false,
             sendAckTimeout = 8,
+            useBlizzardUI = false,
             autoFillLastRecipient = false,
             lastRecipient = "",
             favorites = {},

@@ -140,7 +140,12 @@
 
 ---
 
-*No user-facing changes this release for Home, Shopping List, or Mail.*
+### Mail
+- A **WoW UI** / **One UI** button at the mailbox switches to the default WoW mailbox and back without turning Mail off. WoW UI skips auto-collect and shipment auto-run. `/1wmail` (or the minimap) while WoW UI is showing returns to One UI.
+
+---
+
+*No user-facing changes this release for Home or Shopping List.*
 
 ---
 
