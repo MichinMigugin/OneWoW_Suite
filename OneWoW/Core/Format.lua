@@ -58,8 +58,8 @@ local function AmountColors(useWhite)
     return GOLD_DIGIT, SILVER_DIGIT, COPPER_DIGIT
 end
 
---- Color the amount, then append the coin texture from a Blizzard %d texture fmt.
----@param color string |cAARRGGBB
+--- Color the amount with a |cAARRGGBB prefix, then append the coin texture from a Blizzard %d texture fmt.
+---@param color string
 ---@param amount number
 ---@param textureFmt string SILVER_AMOUNT_TEXTURE or COPPER_AMOUNT_TEXTURE
 ---@return string

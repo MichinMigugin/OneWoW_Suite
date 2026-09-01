@@ -25,7 +25,7 @@
 local _, ns = ...
 
 local ipairs, pairs, type = ipairs, pairs, type
-local tinsert, tremove, wipe, sort = tinsert, tremove, wipe, sort
+local tinsert, tremove, sort = tinsert, tremove, sort
 local strlower, strfind = strlower, strfind
 local tostring, concat = tostring, table.concat
 

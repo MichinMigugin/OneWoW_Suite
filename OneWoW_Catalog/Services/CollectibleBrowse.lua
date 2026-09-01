@@ -1,7 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local ipairs, pairs = ipairs, pairs
+local pairs = pairs
 local tinsert, wipe = tinsert, wipe
 local strlower, strfind, strtrim = strlower, strfind, strtrim
 local tonumber, sort = tonumber, sort

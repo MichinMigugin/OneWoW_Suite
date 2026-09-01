@@ -23,7 +23,7 @@ local function IsProfessionWeekly(questID)
     return (tag.tradeskillLineID or 0) > 0
 end
 
-function Module:CollectData(charKey, charData)
+function Module:CollectData(_, charData)
     local quests = {}
     local num = C_QuestLog.GetNumQuestLogEntries()
     for i = 1, num do

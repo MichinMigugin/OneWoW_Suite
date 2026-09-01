@@ -15,14 +15,14 @@ function Module:CollectData(charKey, charData)
     -- collapsed header hides every currency under it. Expand collapsed headers
     -- before collecting, then restore the player's collapsed state after.
     local reCollapse = {}
-    local i = 1
-    while i <= C_CurrencyInfo.GetCurrencyListSize() do
-        local info = C_CurrencyInfo.GetCurrencyListInfo(i)
+    local headerIdx = 1
+    while headerIdx <= C_CurrencyInfo.GetCurrencyListSize() do
+        local info = C_CurrencyInfo.GetCurrencyListInfo(headerIdx)
         if info and info.isHeader and not info.isHeaderExpanded then
-            C_CurrencyInfo.ExpandCurrencyList(i, true)
+            C_CurrencyInfo.ExpandCurrencyList(headerIdx, true)
             reCollapse[info.name] = true
         end
-        i = i + 1
+        headerIdx = headerIdx + 1
     end
 
     local currencies = {}
