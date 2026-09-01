@@ -28,7 +28,7 @@ function ns.UI.CreateSettingsTab(parent)
     yOffset = yOffset - 30
 
     local coreL = OneWoW.Locale:GetTable("OneWoW")
-    -- CatDB is the Home / Manage Features store list. Reset those SVs, not leftover CatalogData.
+    -- Reset CatDB SavedVariables listed on Home / Manage Features.
     local databases = {
         { key = "OneWoW_Catalog",              name = L["SETTINGS_DB_NAME_CATALOG"], desc = L["SETTINGS_DB_DESC_CATALOG"] },
         { key = "OneWoW_CatDB_ZoneDB",         name = coreL["CAT_MOD_ZONEDB"], desc = coreL["WIZARD_CAT_DATA_JOURNAL_DESC"] },

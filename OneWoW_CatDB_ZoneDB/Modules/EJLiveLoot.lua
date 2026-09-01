@@ -3,7 +3,7 @@
 -- ============================================================================
 -- Live Encounter Journal overlay for one Catalog card: scaled loot links and
 -- names. Per-instance only. Does not scrape the encyclopedia at login.
--- Same contract as CatalogData_Journal EJLiveLoot.
+-- Live Encounter Journal loot overlay.
 -- ============================================================================
 local _, ns = ...
 

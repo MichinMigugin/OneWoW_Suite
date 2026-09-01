@@ -533,7 +533,7 @@ This addon is a LoD datastore for the OneWoW suite.
 
 The professions datastore can be queried for profession information across all
 characters through `OneWoW_AltTracker_Professions_API`. Recipe totals/known
-comparison also uses `OneWoW_CatalogData_Tradeskills_API` when that LoD unit is
+comparison also uses `OneWoW_CatDB_TradeSkillDB_API` when that LoD unit is
 loaded (nil-guarded — no OptionalDeps; display degrades to stored-only counts
 otherwise).
 

@@ -14,7 +14,6 @@ local ARCHIVE_HUB = "OneWoW_CatDB_QuestDBArchive"
 local ARCHIVE_EXPANSION_MAX = 9
 
 -- Public, cross-addon read surface for QuestDB Current. ns stays private.
--- Method names match OneWoW_CatalogData_Quests_API so Catalog can swap packs.
 OneWoW_CatDB_QuestDBCurrent_API = {}
 
 local API = OneWoW_CatDB_QuestDBCurrent_API
@@ -616,7 +615,7 @@ local function InsertQuestIDByNumber(ids, questID)
 end
 
 --- Shipped series omits the viewed quest. Rebuild table order from this list
---- plus each peer's series (same as CatalogData Quests).
+--- plus each peer's series.
 ---@param questID number
 ---@param series number[]
 ---@return number[]

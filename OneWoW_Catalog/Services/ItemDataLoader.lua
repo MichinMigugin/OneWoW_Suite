@@ -4,8 +4,8 @@ local sharedLoader = nil
 
 --- Catalog's shared loader instance, backed by the addon db handle.
 --- Lazily created: the db handle only exists after OnAddonLoaded, and UI code
---- runs strictly after that. CatalogData store addons keep their own loader
---- instances on their own DBs; this one serves Catalog's own tabs.
+--- runs strictly after that. CatDB packs keep their own loader instances
+--- on their own DBs; this one serves Catalog's own tabs.
 ---@return ItemDataLoader
 function ns.GetItemDataLoader()
     if not sharedLoader then

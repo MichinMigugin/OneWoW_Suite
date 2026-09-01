@@ -7,7 +7,7 @@ local C_Item = C_Item
 local C_Spell = C_Spell
 
 -- Public, cross-addon read surface for TradeSkillDB. ns stays private.
--- Method names match OneWoW_CatalogData_Tradeskills_API so Catalog can swap packs.
+-- Recipe helpers for the Catalog Tradeskills tab.
 OneWoW_CatDB_TradeSkillDB_API = {}
 
 local EXPANSIONS = {

@@ -6,10 +6,7 @@ built. Build-time source order lives in OneWoW_Workspace
 
 Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-This is the Catalog Zones store. `OneWoW_CatalogData_Journal` remains a
-leftover fallback until cutover. Disabling the leftover Journal pack must
-not require this pack, and disabling this pack must not blank the leftover
-store.
+This is the Catalog Zones store.
 
 ## One home
 
@@ -112,5 +109,3 @@ Also in this addon: `Difficulties` (`name`, `maxPlayers`, `instanceType`),
 python bin/catdb_zone_emit.py
 python bin/catdb_status.py zone
 ```
-
-Does not write `OneWoW_CatalogData_Journal`.

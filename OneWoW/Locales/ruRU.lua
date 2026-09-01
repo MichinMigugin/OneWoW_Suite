@@ -248,11 +248,6 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["DATA_MOD_PROFESSIONS"] = "Professions",
     ["DATA_MOD_STORAGE"] = "Storage",
 
-    ["CAT_MOD_JOURNAL"] = "Journal",
-    ["CAT_MOD_TRADESKILLS"] = "Tradeskills",
-    ["CAT_MOD_QUESTS"] = "Quests",
-    ["CAT_MOD_QUESTS_ARCHIVE"] = "Архив заданий",
-    ["CAT_MOD_VENDORS"] = "Vendors",
     ["CAT_MOD_ZONEDB"] = "База игровых зон",
     ["CAT_MOD_NPCDB"] = "База НИП",
     ["CAT_MOD_ITEMDB"] = "База предметов",

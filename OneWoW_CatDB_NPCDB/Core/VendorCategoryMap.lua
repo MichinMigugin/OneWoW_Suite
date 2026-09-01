@@ -1,7 +1,7 @@
 local _, ns = ...
 
 -- Maps NPC SubName (merchant tooltip subtitle / Creature title) → category key.
--- Same rules as CatalogData Vendors VendorCategoryMap, plus English title
+-- Vendor category map, plus English title
 -- needles from the old NpcDB emit so shipped Creature titles classify
 -- without a live merchant visit. Never uses suite L[] labels.
 

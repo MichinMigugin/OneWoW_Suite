@@ -8,7 +8,7 @@ local _, ns = ...
 -- service registers the events (only while at least one consumer is
 -- subscribed), coalesces repaints into a debounced scan, and fans ephemeral
 -- snapshots out to subscribers. Nothing is persisted in core -- each LoD
--- consumer (CatalogData_Vendors merge, Notes wishlist capture, …) resolves and
+-- consumer (NPCDB merge, Notes wishlist capture, ...) resolves and
 -- stores in its own scope.
 --
 -- Before this service, every merchant listener (VendorScanner, overlay-engine,

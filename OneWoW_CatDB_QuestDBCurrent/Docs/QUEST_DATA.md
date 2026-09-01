@@ -10,8 +10,6 @@ Build-time source order lives in OneWoW_Workspace
 Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 This is the Catalog Quests store (current expansions).
-`OneWoW_CatalogData_Quests` remains a leftover fallback until cutover.
-Disabling the leftover Quests pack must not require this pack.
 
 ## One home
 
@@ -78,6 +76,5 @@ python bin/catdb_quest_emit.py
 python bin/catdb_status.py quest
 ```
 
-Reads current CatalogData QuestDB (read-only), splits npc pins onto
-`{ npcID }`, keeps object/area starts as `startObjects`. Does not write
-`OneWoW_CatalogData_*`.
+Splits npc pins onto `{ npcID }`, keeps object/area starts as
+`startObjects`.

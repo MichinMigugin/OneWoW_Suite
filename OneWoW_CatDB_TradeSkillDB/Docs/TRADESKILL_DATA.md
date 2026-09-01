@@ -6,9 +6,8 @@ built. Build-time source order lives in OneWoW_Workspace
 
 Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-This is the Catalog Tradeskills store. `OneWoW_CatalogData_Tradeskills`
-remains a leftover fallback until cutover. Disabling the leftover
-Tradeskills pack must not require this pack.
+This is the Catalog Tradeskills store. Known recipes live on AltTracker
+Professions.
 
 ## One home
 
@@ -56,18 +55,16 @@ Recipe fields (all included when present):
 | Learn | `taught`, `learn`, `npc`, `quest`, `map`, `xy`, `cost`, `fcq`, `mask` |
 
 `learn` is `trainer` / `quest` / `item` / `drop` / `vendor` / `auto` /
-`spec` when known. Dropped vs CatalogData: `link` (locale-baked item
-links) still omitted.
+`spec` when known. Locale-baked item `link` fields are omitted.
 
 ## Build (Workspace)
 
 ```bash
 # from OneWoW_Workspace
 python bin/catdb_tradeskill_emit.py
-# optional: rebuild from warehouse CSVs instead of CatalogData files
 python bin/catdb_tradeskill_emit.py --from-db2
 python bin/catdb_status.py tradeskill
 ```
 
-Default emit reads `OneWoW_CatalogData_Tradeskills` (read-only) and strips
-`map` / `xy` when `npc` is set. Does not write CatalogData.
+Emit writes TradeSkillDB. `--from-db2` rebuilds from warehouse CSVs.
+`map` / `xy` are stripped when `npc` is set.

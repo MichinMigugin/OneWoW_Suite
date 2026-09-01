@@ -3,8 +3,7 @@
 > **See also:** [Suite architecture](../../OneWoW/Docs/ARCHITECTURE.md) §6 (store access rules)
 >
 > Catalog pointer: [OneWoW_Catalog/Docs/CATDB.md](../../OneWoW_Catalog/Docs/CATDB.md).
-> This is the Catalog NPCs store (Vendors tab). `OneWoW_CatalogData_Vendors`
-> remains a leftover fallback until cutover.
+> This is the Catalog NPCs store (Vendors tab).
 
 ## Overview
 
@@ -59,9 +58,8 @@ Per-expansion Lua shards under `Data/NpcDB/`. Each file calls
 ## Tools (offline / Workspace)
 
 Emit lives in OneWoW_Workspace (`bin/catdb_npc_emit.py`,
-`bin/catdb_status.py npc`). Seeds from current CatDB NPC shards, then
-leftover CatalogData + warehouse CSVs; does not write CatalogData. Not
-loaded by the addon TOC.
+`bin/catdb_status.py npc`). Seeds from current CatDB NPC shards plus
+warehouse CSVs. Not loaded by the addon TOC.
 
 Static schema: [NPC_DATA.md](NPC_DATA.md).
 Workspace pipeline: `Docs/WAREHOUSE_PLAN.md`.

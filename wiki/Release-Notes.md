@@ -3,7 +3,7 @@
 - **Status**: Draft
 
 ### Home
-- Catalog data stores on Home and in Manage Features are Zone Database, NPC Database, Item Database, Quest Database, Quest Archive Database, and TradeSkill Database. The older Journal, Vendors, Quests, and Tradeskills packs stay installed but are not the list you turn on.
+- Catalog data stores on Home and in Manage Features are Zone Database, NPC Database, Item Database, Quest Database, Quest Archive Database, and TradeSkill Database.
 
 ---
 

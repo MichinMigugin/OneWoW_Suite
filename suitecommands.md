@@ -33,8 +33,8 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 | OneWoW_Bags | `/1wbags` · debug: `/1wbprof` `/1wblayout` `/1wboverlay` |
 | OneWoW_Utility_DevTool | `/1wdt` · `/1wdev` |
 
-Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
-`OneWoW_CatalogData_*` data packs.
+Load units with **no** slash commands: `OneWoW_AltTracker_*` and
+`OneWoW_CatDB_*` data packs.
 
 ---
 

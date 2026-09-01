@@ -109,8 +109,6 @@ Catalog data is the **CatDB** addons (Zones, NPCs, Items, Quests, Tradeskills). 
 
 Each data pack is optional. Disable any `OneWoW_CatDB_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running.
 
-Older `OneWoW_CatalogData_*` folders (Journal, Vendors, Quests, Quest Archive, Tradeskills) may still ship as leftover packs until they are removed. Catalog always uses the CatDB packs.
-
 ---
 
 ## Disabling Data Modules

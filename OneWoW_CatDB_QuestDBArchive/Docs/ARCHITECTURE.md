@@ -3,8 +3,7 @@
 > **See also:** [Suite architecture](../../OneWoW/Docs/ARCHITECTURE.md) §6 (store access rules)
 >
 > Catalog pointer: [OneWoW_Catalog/Docs/CATDB.md](../../OneWoW_Catalog/Docs/CATDB.md).
-> This is the Catalog Quest Archive store. `OneWoW_CatalogData_Quests_Archive`
-> remains a leftover fallback until cutover.
+> This is the Catalog Quest Archive store.
 
 ## Overview
 

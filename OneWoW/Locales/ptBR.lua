@@ -248,11 +248,6 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["DATA_MOD_PROFESSIONS"] = "Professions",
     ["DATA_MOD_STORAGE"] = "Storage",
 
-    ["CAT_MOD_JOURNAL"] = "Journal",
-    ["CAT_MOD_TRADESKILLS"] = "Tradeskills",
-    ["CAT_MOD_QUESTS"] = "Quests",
-    ["CAT_MOD_QUESTS_ARCHIVE"] = "Arquivo de missões",
-    ["CAT_MOD_VENDORS"] = "Vendors",
     ["CAT_MOD_ZONEDB"] = "Banco de zonas",
     ["CAT_MOD_NPCDB"] = "Banco de PNJs",
     ["CAT_MOD_ITEMDB"] = "Banco de itens",

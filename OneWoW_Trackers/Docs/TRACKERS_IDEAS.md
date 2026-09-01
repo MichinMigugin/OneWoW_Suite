@@ -26,7 +26,7 @@ These products share keys, lockouts, and alts; they do not share ownership.
 | **`OneWoW_Trackers`** | Lists / sections / steps, auto-complete, pinned overlays, map pins | Collection truth, per-alt SavedVariables, “what don’t I have” |
 | **AltTracker / AltTracker2** | Per-alt snapshots (quests, lockouts, currencies, professions), Ask the roster | Farm routes, collectible records |
 
-**Instance / encounter / loot listing is not a fourth leg.** Catalog (`OneWoW_Catalog` Journal tab) is the EJ interface; `OneWoW_CatDB_ZoneDB` is the store (`OneWoW_CatDB_ZoneDB_API`; leftover `OneWoW_CatalogData_Journal_API` until cutover). Listing and valid difficulties come from Generated Lua. QoL already consumes `GetInstanceByMapID` for toasts / ESC. Trackers and Collectibles **read those IDs**; they do not overlay Blizzard’s Encounter Journal or ship a parallel instance encyclopedia.
+**Instance / encounter / loot listing is not a fourth leg.** Catalog (`OneWoW_Catalog` Journal tab) is the EJ interface; `OneWoW_CatDB_ZoneDB` is the store (`OneWoW_CatDB_ZoneDB_API`). Listing and valid difficulties come from Generated Lua. QoL already consumes `GetInstanceByMapID` for toasts / ESC. Trackers and Collectibles **read those IDs**; they do not overlay Blizzard’s Encounter Journal or ship a parallel instance encyclopedia.
 
 A `farming`-intent collectible in Notes should **hand a key to Trackers**, not grow a farm engine. Trackers already is “executable plans.” The remaining work is the handoff contract, skip/prune against live game state, and a few step types — not a second addon.
 
@@ -46,13 +46,13 @@ Do not invent parallel track types. The engine already evaluates:
 | Map pin on a step | `mapID` + `coordX`/`coordY` + `TrackerMap` |
 | Step gating | `professionRequired`, `eventRequired` (calendar `eventID`), `faction` hide; `requiresSteps` dims **and** blocks user check-off (`TD:CanCompleteStep`); editor picker; still does not hide |
 | Per-alt “who has done this step” | `rosterMode` (current char stamped into an account roster) |
-| Cross-alt quest completion | `OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters` / `GetActiveCharacters` (leftover `OneWoW_CatalogData_Quests_API`) — public, with UI in Catalog |
+| Cross-alt quest completion | `OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters` / `GetActiveCharacters` — public, with UI in Catalog |
 | Collectible-shaped preset | Dusting for Moths (`TrackerPresets` — `quest_account` + coords + renown gates) |
 | Hide completed | `pinnedHideCompleted` (persisted, per list) — the hub filter is a different thing, see caveat |
 | Hide pin when done | `pinnedAutoHideWhenComplete` (persisted, per list) — overlay chrome, not unpin; farm-value excluded; checkbox on pin hover only |
 | Pin role scope | `pinScope` AltScope shape on the list; overlay + map pins only; hub stays account-wide |
 | Interval timer step | `custom_timer` (`trackParams.interval` in seconds; reset reads `sp.lastCompleted`) |
-| Instance / map / difficulty identity | `OneWoW_CatDB_ZoneDB_API` (`GetInstanceByMapID`, live EJ merge); leftover `OneWoW_CatalogData_Journal_API` |
+| Instance / map / difficulty identity | `OneWoW_CatDB_ZoneDB_API` (`GetInstanceByMapID`, live EJ merge) |
 | Row reorder (suite) | `OneWoW_GUI:CreateReorderDrag` — bags, hub pins, Tracker hub detail (sections + steps; drop a step on a header). `TD:MoveStepToSection` migrates the progress blob |
 
 **Caveats on the rows above** — verified against the code, do not re-derive from the older text:
@@ -244,7 +244,7 @@ Do **not** own Collectionist’s Midnight encyclopedia. A plan’s steps are eit
 FuocoNote / ICH / BountyHelper / MRP all answer “is this still lootable this reset?” from `GetSavedInstance*` (and shared 10/25 diffs). We already store lockouts in AltTracker_Endgame. `kill_encounter` already answers live lockout for the **logged-in** character via `C_RaidLocks.IsEncounterComplete` (redirected difficulty) — that is not this slice.
 
 - **Build:** when a step names `enter_instance` / `kill_creature`, evaluate **stored** lockout and **skip or dim** — do not invent an attempt ledger. “Tried this week” is lockout + `rare_quest`, not a custom counter. `kill_encounter` already self-completes on the live raid lock; this slice is the other instance types plus a shared skip/dim policy.
-- **Roster read:** the *data* is available today and is **not** blocked by AltTracker2 — lockouts come from Endgame (via the `_API` in roadmap P-3) and cross-alt quest completion from `OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters` (leftover `OneWoW_CatalogData_Quests_API`). Only the Ask-the-roster *UI* waits for AltTracker2. Trackers evaluates the logged-in char first either way.
+- **Roster read:** the *data* is available today and is **not** blocked by AltTracker2 — lockouts come from Endgame (via the `_API` in roadmap P-3) and cross-alt quest completion from `OneWoW_CatDB_QuestDBCurrent_API.GetCompletedCharacters`. Only the Ask-the-roster *UI* waits for AltTracker2. Trackers evaluates the logged-in char first either way.
 - Collectibles-side framing: [`COLLECTIBLES_IDEAS.md`](../../OneWoW/Docs/COLLECTIBLES_IDEAS.md) §2 / §8.
 
 ### 4. Calendar fail-open

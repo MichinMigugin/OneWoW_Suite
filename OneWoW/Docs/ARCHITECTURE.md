@@ -76,7 +76,7 @@ flowchart TB
 |---|---|---|---|
 | **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
 | **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
-| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatDB_*` (leftover `OneWoW_CatalogData_*` until folder delete) | On demand | Owned under `ModuleManifest.stores`. Most stores: `RequiredDeps: OneWoW` (consumers may load without the owning hub). **Exception:** Endgame still `RequiredDeps: …, OneWoW_AltTracker` (`parentRequiredStores`). Catalog Home / Manage Features stores are CatDB (Zones, NPCs, Items, Quests, Tradeskills). `PackResolver` always returns CatDB. |
+| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatDB_*` | On demand | Owned under `ModuleManifest.stores`. Most stores: `RequiredDeps: OneWoW` (consumers may load without the owning hub). **Exception:** Endgame still `RequiredDeps: …, OneWoW_AltTracker` (`parentRequiredStores`). Catalog Home / Manage Features stores are CatDB (Zones, NPCs, Items, Quests, Tradeskills). `PackResolver` always returns CatDB. |
 | **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; soft-opted-out on a fresh account and excluded from recommended preset; `loadPhase = "login"` when wanted |
 
 Verified against current `.toc` files:
@@ -96,7 +96,6 @@ Verified against current `.toc` files:
 | **OneWoW_AltTracker_\*** (except Endgame) | OneWoW | — | 1 |
 | **OneWoW_AltTracker_Endgame** | OneWoW, OneWoW_AltTracker | — | 1 |
 | **OneWoW_CatDB_\*** | OneWoW | — | 1 (Catalog packs: `lazyStores`; parse on tab / quest event / Item Search source) |
-| **OneWoW_CatalogData_\*** | OneWoW | — | 1 leftover on disk until folder delete (unused by Catalog) |
 
 ### OptionalDeps policy
 
@@ -560,8 +559,6 @@ while working.
 Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 `ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
 Catalog Home / Manage Features rows are the six `OneWoW_CatDB_*` stores.
-Leftover `OneWoW_CatalogData_*` packs stay on `leftoverStores` (loadable
-while those folders sit on disk; not player-facing toggles) until folder delete.
 Manage Features renders manifest `stores` as indented sub-rows under Catalog and
 AltTracker. `storePolicy` is `optional` for both. Notes can also list
 `inUnitFeatures` on its CATALOG entry (OneWay Pins today). Those use the same
@@ -834,7 +831,7 @@ end
 - Cross-unit reads: `Core/API.lua` publishes `OneWoW_<Unit>_API` dot-functions (see
   `OneWoW_AltTracker` and `OneWoW_Catalog` as reference hubs).
 
-**Data store** (AltTracker_* stores, CatDB_*, leftover CatalogData_* until removed, …):
+**Data store** (AltTracker_* stores, CatDB_*, …):
 
 ```lua
 local ADDON_NAME, ns = ...
@@ -1302,7 +1299,7 @@ registered its own frame with ad-hoc debounce — the `VendorScanner`
 
 Consumers subscribe (LoD-safe, on login / module enable) through the Facade
 global and receive **ephemeral** snapshots — core persists nothing (vendor
-catalogs stay in `OneWoW_CatDB_NPCDB_DB` (leftover `OneWoW_CatalogData_Vendors_DB` until removed), collectibles in
+catalogs stay in `OneWoW_CatDB_NPCDB_DB`, collectibles in
 `OneWoW_Notes_DB`). Three channels:
 
 - **`RegisterScanCallback(ownerID, fn)`** — `fn(scan)` vendor snapshot (npc

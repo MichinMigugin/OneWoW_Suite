@@ -15,7 +15,7 @@ local C_QuestLog = C_QuestLog
 local C_UIWidgetManager = C_UIWidgetManager
 
 -- Public, cross-addon read surface for ZoneDB. ns stays private.
--- Journal-shaped helpers match OneWoW_CatalogData_Journal_API so Catalog can
+-- Journal-shaped helpers for the Catalog Zones tab. Catalog can
 -- swap packs. Cards are views over ns.Places / ns.Encounters, not shard writes.
 OneWoW_CatDB_ZoneDB_API = {}
 

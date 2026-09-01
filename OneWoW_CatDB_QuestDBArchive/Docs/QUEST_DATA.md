@@ -8,9 +8,7 @@ Full field list, IDs-only rules, and emit command:
 
 Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-This is the Catalog Quest Archive store. `OneWoW_CatalogData_Quests_Archive`
-remains a leftover fallback until cutover. Disabling the leftover Quest
-Archive pack must not require this pack.
+This is the Catalog Quest Archive store.
 
 ## What it owns
 
@@ -32,5 +30,3 @@ object / area starts keep coords on the quest.
 python bin/catdb_quest_emit.py
 python bin/catdb_status.py quest
 ```
-
-Does not write `OneWoW_CatalogData_*`.

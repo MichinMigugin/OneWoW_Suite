@@ -18,7 +18,6 @@ local NOT_COLLECTED = NOT_COLLECTED
 local UNKNOWNOBJECT = UNKNOWNOBJECT
 
 -- Public, cross-addon read surface for NPCDB. ns stays private.
--- Method names match OneWoW_CatalogData_Vendors_API so Catalog can swap packs.
 OneWoW_CatDB_NPCDB_API = {}
 
 local Location = OneWoW.Location

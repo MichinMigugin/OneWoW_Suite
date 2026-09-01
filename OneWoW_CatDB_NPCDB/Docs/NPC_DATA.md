@@ -6,10 +6,7 @@ built. Build-time source order lives in OneWoW_Workspace
 
 Load-unit wiring: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-This is the Catalog NPCs store. `OneWoW_CatalogData_Vendors` remains a
-leftover fallback until cutover. Disabling the leftover Vendors pack must
-not require this pack, and disabling this pack must not blank vendor pins
-on the leftover store.
+This is the Catalog NPCs store.
 
 ## One home
 
@@ -82,6 +79,4 @@ python bin/catdb_npc_emit.py
 python bin/catdb_status.py npc
 ```
 
-Seeds from current CatDB NPC shards, then leftover CatalogData (additive;
-empty leftover is a no-op) plus Creature titles and related CSVs. Does
-not write `OneWoW_CatalogData_*`.
+Seeds from current CatDB NPC shards plus Creature titles and related CSVs.

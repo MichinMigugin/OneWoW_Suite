@@ -581,7 +581,7 @@ Record answers here as they land:
 - Roles UI: `OneWoW/UI/t-rolesandalts.lua`
 - Item index: `OneWoW_AltTracker_Storage/Modules/ItemIndex.lua`
 - Duplicates: `OneWoW_AltTracker_Storage_API.FindDuplicates` (Query layer, not ItemIndex)
-- Cross-alt quest completion: `OneWoW_CatDB_QuestDBCurrent` CompletionTracker (leftover `OneWoW_CatalogData_Quests/Modules/CompletionTracker.lua`)
+- Cross-alt quest completion: `OneWoW_CatDB_QuestDBCurrent` CompletionTracker
 - QoL tooltip consumer: `OneWoW_QoL/Tooltips/tp-itemtracker.lua`
 - Home cards pattern: `OneWoW/UI/t-home.lua`
 - Architecture: `OneWoW/Docs/ARCHITECTURE.md`

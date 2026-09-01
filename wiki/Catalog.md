@@ -35,8 +35,6 @@ Catalog data is the **CatDB** addons. Each pack is optional. Disable packs you d
 
 Turning a pack off empties its Catalog tab and removes related details elsewhere (for example vendor lines on tooltips, or Shopping List craft detection when Tradeskills is off). Other tabs keep working.
 
-Older `OneWoW_CatalogData_*` folders (Journal, Vendors, Quests, Quest Archive, Tradeskills) may still be in the zip. They are leftover packs and stay optional until they are removed. Catalog always uses the CatDB packs.
-
 ---
 
 ## Tips

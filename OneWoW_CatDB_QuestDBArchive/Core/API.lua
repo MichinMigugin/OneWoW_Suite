@@ -9,7 +9,7 @@ local C_Map = C_Map
 local C_QuestLog = C_QuestLog
 
 -- Public, cross-addon read surface for QuestDB Archive. ns stays private.
--- Method names match OneWoW_CatalogData_Quests_API so Catalog can swap packs.
+-- Public, cross-addon read surface for Quest Archive. ns stays private.
 OneWoW_CatDB_QuestDBArchive_API = {}
 
 local API = OneWoW_CatDB_QuestDBArchive_API

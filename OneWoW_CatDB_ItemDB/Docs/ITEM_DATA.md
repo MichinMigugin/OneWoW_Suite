@@ -65,5 +65,3 @@ Currency row: `{ name, icon }` keyed by currencyID.
 python bin/catdb_item_emit.py
 python bin/catdb_status.py item
 ```
-
-Does not write `OneWoW_CatalogData_*`.

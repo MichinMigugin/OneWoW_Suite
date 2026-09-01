@@ -248,11 +248,6 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["DATA_MOD_PROFESSIONS"] = "Professions",
     ["DATA_MOD_STORAGE"] = "Storage",
 
-    ["CAT_MOD_JOURNAL"] = "Journal",
-    ["CAT_MOD_TRADESKILLS"] = "Tradeskills",
-    ["CAT_MOD_QUESTS"] = "Quests",
-    ["CAT_MOD_QUESTS_ARCHIVE"] = "Archivio missioni",
-    ["CAT_MOD_VENDORS"] = "Vendors",
     ["CAT_MOD_ZONEDB"] = "Database zone",
     ["CAT_MOD_NPCDB"] = "Database PNG",
     ["CAT_MOD_ITEMDB"] = "Database oggetti",

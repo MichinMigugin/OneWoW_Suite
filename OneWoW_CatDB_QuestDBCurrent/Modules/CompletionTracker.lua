@@ -6,7 +6,7 @@ local pairs, ipairs = pairs, ipairs
 local tinsert, sort = tinsert, sort
 local C_QuestLog = C_QuestLog
 
--- Same per-character completion track as CatalogData Quests: login snapshot,
+-- Per-character completion: login snapshot,
 -- QUEST_TURNED_IN, own SV, then AltTracker for alts that have never logged in
 -- with this pack. Catalog reads { key, name } rows via GetCompletedCharacters.
 ns.CompletionTracker = {}

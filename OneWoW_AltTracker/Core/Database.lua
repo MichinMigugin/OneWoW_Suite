@@ -31,7 +31,6 @@ ns.DatabaseDefaults = {
         favoriteBarSets = {},
         favoriteItems   = {},
         seasonChecklist = {},
-        legacyCatalogDataCopied = false,
 
         -- Last-used Items-tab duplicate-finder spec (seeded from the Storage
         -- default on first use; canonical default values live in that unit).

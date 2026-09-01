@@ -38,7 +38,7 @@ flowchart TB
     end
     OW --> Features
 
-    subgraph CatalogData["Catalog data stores (CatDB)"]
+    subgraph CatDB["Catalog data stores (CatDB)"]
         ZoneDB[CatDB_ZoneDB]
         NPCDB[CatDB_NPCDB]
         ItemDB[CatDB_ItemDB]
@@ -46,7 +46,7 @@ flowchart TB
         QuestArc[CatDB_QuestDBArchive]
         Trade[CatDB_TradeSkillDB]
     end
-    Catalog --> CatalogData
+    Catalog --> CatDB
 
     subgraph AltData["AltTracker data stores"]
         AltS[AltTracker_Storage]
@@ -101,8 +101,6 @@ Companion addons for [OneWoW_Catalog](OneWoW_Catalog/README.md). Enable with Cat
 | [OneWoW_CatDB_QuestDBCurrent](OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md) | Quests — this expansion and the previous one (The War Within and Midnight) |
 | [OneWoW_CatDB_QuestDBArchive](OneWoW_CatDB_QuestDBArchive/Docs/ARCHITECTURE.md) | Quest Archive — Classic through Dragonflight |
 | [OneWoW_CatDB_TradeSkillDB](OneWoW_CatDB_TradeSkillDB/Docs/ARCHITECTURE.md) | Tradeskills — professions and recipes |
-
-Older `OneWoW_CatalogData_*` folders (Journal, Vendors, Quests, Quest Archive, Tradeskills) may still ship as leftover packs until they are removed.
 
 ### AltTracker data stores
 

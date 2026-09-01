@@ -248,11 +248,6 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["DATA_MOD_PROFESSIONS"] = "Professions",
     ["DATA_MOD_STORAGE"] = "Storage",
 
-    ["CAT_MOD_JOURNAL"] = "Journal",
-    ["CAT_MOD_TRADESKILLS"] = "Tradeskills",
-    ["CAT_MOD_QUESTS"] = "Quests",
-    ["CAT_MOD_QUESTS_ARCHIVE"] = "任务归档",
-    ["CAT_MOD_VENDORS"] = "Vendors",
     ["CAT_MOD_ZONEDB"] = "地区数据库",
     ["CAT_MOD_NPCDB"] = "NPC数据库",
     ["CAT_MOD_ITEMDB"] = "物品数据库",

@@ -4,7 +4,6 @@
 >
 > Catalog pointer: [OneWoW_Catalog/Docs/CATDB.md](../../OneWoW_Catalog/Docs/CATDB.md).
 > This is the Catalog Quests store (current expansions).
-> `OneWoW_CatalogData_Quests` remains a leftover fallback until cutover.
 
 ## Overview
 
@@ -33,7 +32,7 @@ Archive rows into this pack's `ns` so Catalog keeps using the Current API.
 | Module | Role |
 |--------|------|
 | `Core/DataLoader.lua` | `RegisterQuestData` → `ns.ExternalQuestDB`, `ExternalQuestDBByExpansion`, `QuestsByNPC`, `QuestsByRewardItem` (items, choices, package) |
-| `Modules/CompletionTracker.lua` | Same per-character completion as CatalogData Quests (`GetCompletedCharacters` `{ key, name }` rows, AltTracker supplement, `QUEST_TURNED_IN`) |
+| `Modules/CompletionTracker.lua` | Per-character completion (`GetCompletedCharacters` `{ key, name }` rows, AltTracker supplement, `QUEST_TURNED_IN`) |
 | `Data/Generated/QuestLineMembers.lua` | QuestLine id → ordered quest IDs (all expansions; used by `GetQuestGuideChain`) |
 | `Core/Database.lua` | SavedVariables init (`ns.db`, including `completion`) |
 | `Core/API.lua` | Public API (`GetQuest`, `GetQuestLineMembers`, `GetQuestsForNPC`, `GetQuestsRewardingItem`, `GetCompletedCharacters`, `EnsureArchiveThen`, …) |
@@ -55,8 +54,7 @@ OneWoW:BootStore(ns, {
 ```
 
 `InitializeDatabase` runs through BootStore. `GetSettings()` reads
-`ns.db.global.settings`. Completion uses the same tracker as CatalogData
-Quests. Live QuestScanner (pin/text capture) stays on the old pack.
+`ns.db.global.settings`.
 
 ## Data Layout
 
@@ -72,8 +70,7 @@ quest rows. Archive does not ship a second copy of Generated.
 ## Tools (offline / Workspace)
 
 Emit lives in OneWoW_Workspace (`bin/catdb_quest_emit.py` writes **both**
-Current and Archive, `bin/catdb_status.py quest`). Reads current
-CatalogData shards (read-only). Not loaded by the addon TOC.
+Current and Archive, `bin/catdb_status.py quest`). Not loaded by the addon TOC.
 
 Static schema: [QUEST_DATA.md](QUEST_DATA.md).
 Archive load unit: [`OneWoW_CatDB_QuestDBArchive/Docs/ARCHITECTURE.md`](../../OneWoW_CatDB_QuestDBArchive/Docs/ARCHITECTURE.md).

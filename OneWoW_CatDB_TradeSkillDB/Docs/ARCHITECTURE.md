@@ -3,8 +3,8 @@
 > **See also:** [Suite architecture](../../OneWoW/Docs/ARCHITECTURE.md) §6 (store access rules)
 >
 > Catalog pointer: [OneWoW_Catalog/Docs/CATDB.md](../../OneWoW_Catalog/Docs/CATDB.md).
-> This is the Catalog Tradeskills store. `OneWoW_CatalogData_Tradeskills`
-> remains a leftover fallback until cutover.
+> This is the Catalog Tradeskills store. Known recipes live on AltTracker
+> Professions.
 
 ## Overview
 
@@ -63,9 +63,8 @@ calls `ns:RegisterProfessionData`.
 ## Tools (offline / Workspace)
 
 Emit lives in OneWoW_Workspace (`bin/catdb_tradeskill_emit.py`,
-`bin/catdb_status.py tradeskill`). Default re-emits current CatalogData
-recipe files (read-only). `--from-db2` rebuilds from warehouse CSVs.
-Not loaded by the addon TOC.
+`bin/catdb_status.py tradeskill`). `--from-db2` rebuilds from warehouse
+CSVs. Not loaded by the addon TOC.
 
 Static schema: [TRADESKILL_DATA.md](TRADESKILL_DATA.md).
 Workspace pipeline: `Docs/WAREHOUSE_PLAN.md`.
