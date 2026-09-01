@@ -56,23 +56,11 @@ local function ApplyScrollBarVisibility(host)
     if not frame or not frame.scroll then
         return
     end
-    local bar = frame.scroll.ScrollBar
-    if not bar then
-        return
-    end
     host = host or hostFrame
     if host and hostFrame and host ~= hostFrame then
         return
     end
-    if HostHidesScrollBar(host or hostFrame) then
-        bar:Hide()
-        bar:SetAlpha(0)
-        bar:EnableMouse(false)
-    else
-        bar:SetAlpha(1)
-        bar:EnableMouse(true)
-        bar:Show()
-    end
+    OneWoW_GUI:SetScrollBarAlwaysHidden(frame.scroll, HostHidesScrollBar(host or hostFrame))
 end
 
 local function EnsureFrame()
@@ -216,16 +204,6 @@ local function EnsureFrame()
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 8)
     frame.scroll = scroll
     frame.child = child
-    local bar = scroll.ScrollBar
-    if bar then
-        bar:HookScript("OnShow", function(myself)
-            if HostHidesScrollBar(hostFrame) then
-                myself:Hide()
-                myself:SetAlpha(0)
-                myself:EnableMouse(false)
-            end
-        end)
-    end
     child:EnableMouse(true)
     child:SetScript("OnMouseUp", function(myself, button)
         if button == "RightButton" then

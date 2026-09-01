@@ -1,5 +1,8 @@
 # OneWoW Suite Changelog
 
+## Lists
+- Scroll bars hide when everything on the list fits. The list still scrolls with the mouse wheel if it grows. Hide-scrollbar options in Bags, Notes pins, and Crafting Orders still hide the bar all the time.
+
 ## Hub search
 - The search box on the OneWoW title bar now follows live settings, features, and windows. Type a name or a short question (for example popup pins) to open the right page.
 

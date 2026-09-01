@@ -620,20 +620,11 @@ function ns.UI.CreateCustomScroll(parent)
     local container = CreateFrame("Frame", nil, parent)
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(container, {})
-    -- Fill the container. CreateScrollFrame already reserves a scrollbar gutter
-    -- on the scroll child; the old extra -14 inset here double-counted it and
-    -- left a wide empty strip on the right. Reserve the scrollbar width once so
-    -- rows extend to just before the scrollbar, matching the search box above.
+    -- Fill the container. CreateScrollFrame owns the scrollbar gutter (and
+    -- drops it when the bar hides).
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)
-
-    local function syncWidth()
-        scrollChild:SetWidth(math.max(1, scrollFrame:GetWidth() - 20))
-    end
-    scrollFrame:HookScript("OnSizeChanged", syncWidth)
-    scrollFrame:HookScript("OnShow", syncWidth)
-    syncWidth()
 
     return {
         container   = container,

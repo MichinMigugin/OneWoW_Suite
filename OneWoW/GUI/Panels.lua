@@ -460,19 +460,37 @@ function OneWoW_GUI:CreateScrollFrame(parent, options)
             local w = scrollFrame:GetWidth()
             content:SetWidth(math.max(1, w))
         end
-        scrollFrame:HookScript("OnSizeChanged", syncOuterFullWidth)
-        scrollFrame:HookScript("OnShow", syncOuterFullWidth)
-        syncOuterFullWidth()
         local layoutName = name and (name .. "Layout") or nil
         local layout = CreateFrame("Frame", layoutName, content)
         layout:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
-        layout:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -layoutRightInset, 0)
+        local function syncLayoutInset(shown)
+            local inset = shown and layoutRightInset or 0
+            layout:ClearAllPoints()
+            layout:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+            layout:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -inset, 0)
+        end
+        scrollFrame._oneWoWOnScrollBarShown = syncLayoutInset
+        scrollFrame:HookScript("OnSizeChanged", syncOuterFullWidth)
+        scrollFrame:HookScript("OnShow", syncOuterFullWidth)
+        syncOuterFullWidth()
+        local sb = scrollFrame.ScrollBar
+        syncLayoutInset(sb and sb:IsShown() and not sb._oneWoWAlwaysHidden)
         return scrollFrame, layout
     end
 
+    local function scrollChildGutter()
+        local sb = scrollFrame.ScrollBar
+        if sb and sb:IsShown() and not sb._oneWoWAlwaysHidden then
+            return Constants.GUI.SCROLLBAR_CONTENT_GUTTER
+        end
+        return 0
+    end
     local function syncScrollChildWidth()
         local w = scrollFrame:GetWidth()
-        content:SetWidth(math.max(1, w - Constants.GUI.SCROLLBAR_CONTENT_GUTTER))
+        content:SetWidth(math.max(1, w - scrollChildGutter()))
+    end
+    scrollFrame._oneWoWOnScrollBarShown = function()
+        syncScrollChildWidth()
     end
     scrollFrame:HookScript("OnSizeChanged", syncScrollChildWidth)
     scrollFrame:HookScript("OnShow", syncScrollChildWidth)
@@ -535,12 +553,27 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     listContainer:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, containerTopY)
     listContainer:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -8, 8)
 
+    local SPLIT_SCROLL_BAR_INSET = 14
+
+    local function bindSplitScrollGutter(scrollFrame, host)
+        local function applyInset(shown)
+            local right = shown and -SPLIT_SCROLL_BAR_INSET or 0
+            scrollFrame:ClearAllPoints()
+            scrollFrame:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
+            scrollFrame:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", right, 0)
+        end
+        scrollFrame._oneWoWOnScrollBarShown = applyInset
+        local sb = scrollFrame.ScrollBar
+        applyInset(sb and sb:IsShown() and not sb._oneWoWAlwaysHidden)
+    end
+
     local listScrollFrame = CreateFrame("ScrollFrame", "OneWoWGUI_Split_List" .. uid, listContainer, "UIPanelScrollFrameTemplate")
     listScrollFrame:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, 0)
-    listScrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -14, 0)
+    listScrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -SPLIT_SCROLL_BAR_INSET, 0)
     listScrollFrame:EnableMouseWheel(true)
 
     self:ApplyScrollBarStyle(listScrollFrame.ScrollBar, listContainer, -2)
+    bindSplitScrollGutter(listScrollFrame, listContainer)
 
     local listScrollChild = CreateFrame("Frame", "OneWoWGUI_Split_ListContent" .. uid, listScrollFrame)
     listScrollChild:SetHeight(1)
@@ -573,10 +606,11 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
 
     local detailScrollFrame = CreateFrame("ScrollFrame", "OneWoWGUI_Split_Detail" .. uid, detailContainer, "UIPanelScrollFrameTemplate")
     detailScrollFrame:SetPoint("TOPLEFT", detailContainer, "TOPLEFT", 0, 0)
-    detailScrollFrame:SetPoint("BOTTOMRIGHT", detailContainer, "BOTTOMRIGHT", -14, 0)
+    detailScrollFrame:SetPoint("BOTTOMRIGHT", detailContainer, "BOTTOMRIGHT", -SPLIT_SCROLL_BAR_INSET, 0)
     detailScrollFrame:EnableMouseWheel(true)
 
     self:ApplyScrollBarStyle(detailScrollFrame.ScrollBar, detailContainer, -2)
+    bindSplitScrollGutter(detailScrollFrame, detailContainer)
 
     local detailScrollChild = CreateFrame("Frame", "OneWoWGUI_Split_DetailContent" .. uid, detailScrollFrame)
     detailScrollChild:SetHeight(1)
@@ -662,7 +696,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     local headerRow = CreateFrame("Frame", nil, inner, "BackdropTemplate")
     headerRow:SetClipsChildren(true)
     headerRow:SetPoint("TOPLEFT", inner, "TOPLEFT", 0, 0)
-    headerRow:SetPoint("TOPRIGHT", inner, "TOPRIGHT", -scrollBarWidth, 0)
+    headerRow:SetPoint("TOPRIGHT", inner, "TOPRIGHT", 0, 0)
     headerRow:SetHeight(headerHeight)
     headerRow:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     headerRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
@@ -880,7 +914,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, inner)
     scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", -scrollBarWidth, 0)
+    scrollFrame:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", 0, 0)
     scrollFrame:EnableMouseWheel(true)
     scrollFrame:SetScript("OnMouseWheel", function(myself, delta)
         local current = myself:GetVerticalScroll()
@@ -896,6 +930,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     scrollTrack:SetPoint("TOPRIGHT", inner, "TOPRIGHT", -2, 0)
     scrollTrack:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", -2, 0)
     scrollTrack:SetWidth(8)
+    scrollTrack:Hide()
     scrollTrack:SetBackdrop(Constants.BACKDROP_SIMPLE)
     scrollTrack:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
@@ -906,14 +941,34 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     scrollThumb:SetBackdrop(Constants.BACKDROP_SIMPLE)
     -- Bright theme-derived thumb so it stands out hard from the ACCENT_PRIMARY row selection.
     scrollThumb:SetBackdropColor(OneWoW_GUI:GetScrollThumbColor(false))
+    scrollThumb:Hide()
 
     local function UpdateScrollThumb()
         local maxScroll = scrollFrame:GetVerticalScrollRange()
-        if maxScroll <= 0 then
+        local needed = math.floor(maxScroll) > 0
+        local wasShown = scrollTrack:IsShown() and true or false
+        if not needed then
             scrollThumb:Hide()
+            scrollTrack:Hide()
+            if wasShown then
+                local right = 0
+                headerRow:SetPoint("TOPRIGHT", inner, "TOPRIGHT", right, 0)
+                scrollFrame:ClearAllPoints()
+                scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -2)
+                scrollFrame:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", right, 0)
+                dataTable.UpdateColumnLayout()
+            end
             return
         end
+        scrollTrack:Show()
         scrollThumb:Show()
+        if not wasShown then
+            headerRow:SetPoint("TOPRIGHT", inner, "TOPRIGHT", -scrollBarWidth, 0)
+            scrollFrame:ClearAllPoints()
+            scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -2)
+            scrollFrame:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", -scrollBarWidth, 0)
+            dataTable.UpdateColumnLayout()
+        end
         local viewHeight = scrollFrame:GetHeight()
         local trackHeight = scrollTrack:GetHeight()
         local thumbHeight = math.max(20, trackHeight * (viewHeight / (viewHeight + maxScroll)))

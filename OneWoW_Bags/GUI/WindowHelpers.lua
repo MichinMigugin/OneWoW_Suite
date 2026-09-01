@@ -435,8 +435,8 @@ function WH:CreateScrollScaffold(config)
     end
 
     OneWoW_GUI:StyleScrollBar(scrollFrame, { container = config.contentArea, offset = 0 })
-    if config.hideScrollBar and scrollFrame.ScrollBar then
-        scrollFrame.ScrollBar:Hide()
+    if config.hideScrollBar then
+        OneWoW_GUI:SetScrollBarAlwaysHidden(scrollFrame, true)
     end
 
     local contentFrame = CreateFrame("Frame", config.scrollName .. "Content", scrollFrame)

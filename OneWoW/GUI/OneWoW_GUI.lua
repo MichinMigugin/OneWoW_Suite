@@ -202,13 +202,15 @@ function OneWoW_GUI:CreateLayoutFrame(parent, options)
     return frame
 end
 
-local function applyScrollBarStyle(scrollBar, container, offset)
-    if not scrollBar then return end
-    offset = offset or -2
-    scrollBar:ClearAllPoints()
-    scrollBar:SetPoint("TOPRIGHT", container, "TOPRIGHT", offset, 0)
-    scrollBar:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", offset, 0)
-    scrollBar:SetWidth(Constants.GUI.SCROLLBAR_WIDTH)
+-- UIPanelScrollFrameTemplate always paints the thumb. scrollBarHideable would
+-- hide it when range is 0, but Blizzard's range-changed handler also re-Shows
+-- the up/down buttons we strip in the skin. Hook after that handler instead.
+-- Callers that always hide (Bags, Notes pins, Crafting Orders) set
+-- _oneWoWAlwaysHidden via SetScrollBarAlwaysHidden so this never Shows.
+-- Optional scrollFrame._oneWoWOnScrollBarShown(shown) reclaims reserved gutter.
+local floor = math.floor
+
+local function keepScrollButtonsHidden(scrollBar)
     if scrollBar.ScrollUpButton then
         scrollBar.ScrollUpButton:Hide()
         scrollBar.ScrollUpButton:SetAlpha(0)
@@ -219,6 +221,69 @@ local function applyScrollBarStyle(scrollBar, container, offset)
         scrollBar.ScrollDownButton:SetAlpha(0)
         scrollBar.ScrollDownButton:EnableMouse(false)
     end
+end
+
+local function syncScrollBarVisibility(scrollFrame, yrange)
+    local scrollBar = scrollFrame.ScrollBar
+    if not scrollBar then
+        return
+    end
+    if scrollFrame._oneWoWScrollBarSyncing then
+        return
+    end
+    scrollFrame._oneWoWScrollBarSyncing = true
+
+    keepScrollButtonsHidden(scrollBar)
+
+    if yrange == nil then
+        yrange = scrollFrame:GetVerticalScrollRange()
+    end
+    local needed = (not scrollBar._oneWoWAlwaysHidden) and floor(yrange) > 0
+    -- Do not read IsShown() here. Blizzard's OnScrollRangeChanged runs first
+    -- and Shows the bar, so IsShown is already true and the gutter callback
+    -- would never fire (Category Manager icons sitting under the thumb).
+    local prevNeeded = scrollFrame._oneWoWScrollBarNeeded
+    scrollFrame._oneWoWScrollBarNeeded = needed
+    if needed then
+        scrollBar:Show()
+    else
+        scrollBar:Hide()
+    end
+    keepScrollButtonsHidden(scrollBar)
+
+    if prevNeeded ~= needed then
+        local onShown = scrollFrame._oneWoWOnScrollBarShown
+        if onShown then
+            onShown(needed)
+        end
+    end
+
+    scrollFrame._oneWoWScrollBarSyncing = nil
+end
+
+local function wireHideIfUnscrollable(scrollBar)
+    local scrollFrame = scrollBar:GetParent()
+    if not scrollFrame or scrollFrame._oneWoWScrollBarWired then
+        return
+    end
+    scrollFrame._oneWoWScrollBarWired = true
+    scrollFrame:HookScript("OnScrollRangeChanged", function(myself, _, yrange)
+        syncScrollBarVisibility(myself, yrange)
+    end)
+    scrollFrame:HookScript("OnShow", function(myself)
+        syncScrollBarVisibility(myself)
+    end)
+    syncScrollBarVisibility(scrollFrame)
+end
+
+local function applyScrollBarStyle(scrollBar, container, offset)
+    if not scrollBar then return end
+    offset = offset or -2
+    scrollBar:ClearAllPoints()
+    scrollBar:SetPoint("TOPRIGHT", container, "TOPRIGHT", offset, 0)
+    scrollBar:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", offset, 0)
+    scrollBar:SetWidth(Constants.GUI.SCROLLBAR_WIDTH)
+    keepScrollButtonsHidden(scrollBar)
     if scrollBar.Background then
         scrollBar.Background:SetColorTexture(GetThemeColor("BG_TERTIARY"))
     end
@@ -239,6 +304,7 @@ local function applyScrollBarStyle(scrollBar, container, offset)
     scrollBar:SetScript("OnLeave", function(self)
         if self.ThumbTexture then self.ThumbTexture:SetColorTexture(OneWoW_GUI:GetScrollThumbColor(false)) end
     end)
+    wireHideIfUnscrollable(scrollBar)
 end
 
 function OneWoW_GUI:ApplyScrollBarStyle(scrollBar, container, offset)
@@ -252,4 +318,21 @@ function OneWoW_GUI:StyleScrollBar(scrollFrame, options)
     local container = opt.container or scrollFrame
     local offset = opt.offset or -2
     applyScrollBarStyle(scrollBar, container, offset)
+    if opt.alwaysHidden then
+        self:SetScrollBarAlwaysHidden(scrollFrame, true)
+    end
+end
+
+--- Keep a styled bar hidden even when the list overflows (Bags / Notes pins /
+--- Crafting Orders "hide scrollbar"). Mouse wheel still scrolls. Pass false to
+--- return to hide-when-unscrollable.
+---@param scrollFrame Frame
+---@param hidden boolean
+function OneWoW_GUI:SetScrollBarAlwaysHidden(scrollFrame, hidden)
+    local scrollBar = scrollFrame and scrollFrame.ScrollBar
+    if not scrollBar then
+        return
+    end
+    scrollBar._oneWoWAlwaysHidden = hidden and true or false
+    syncScrollBarVisibility(scrollFrame)
 end

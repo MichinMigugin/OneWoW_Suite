@@ -235,6 +235,7 @@ function M:SyncOverlayScrollBar()
     local scroll = overlay.virt.listScroll
     local sb = scroll.ScrollBar
     local hideWanted = M:IsHideScrollBar()
+    OneWoW_GUI:SetScrollBarAlwaysHidden(scroll, hideWanted)
     local contentH = overlay.virt.listContent:GetHeight()
     local viewH = scroll:GetHeight()
     local shown = (not hideWanted) and contentH > viewH + 0.5

@@ -1,5 +1,7 @@
 local _, ns = ...
 
+local OneWoW_GUI = OneWoW_GUI
+
 ns.WindowLayoutController = {}
 local WindowLayoutController = ns.WindowLayoutController
 
@@ -96,13 +98,7 @@ function WindowLayoutController:BindScrollFrame(config)
 
     local scrollbarOffset = config.hideScrollBar and 0 or -12
     if config.scrollFrame.ScrollBar then
-        if config.hideScrollBar then
-            config.scrollFrame.ScrollBar:Hide()
-            config.scrollFrame.ScrollBar:SetAlpha(0)
-        else
-            config.scrollFrame.ScrollBar:Show()
-            config.scrollFrame.ScrollBar:SetAlpha(1)
-        end
+        OneWoW_GUI:SetScrollBarAlwaysHidden(config.scrollFrame, config.hideScrollBar and true or false)
     end
 
     config.scrollFrame:ClearAllPoints()

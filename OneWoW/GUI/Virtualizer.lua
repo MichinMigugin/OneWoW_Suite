@@ -123,12 +123,23 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
     local content = options.content
     local ownedScroll = false
 
+    local VIRT_INSET = 4
+    local VIRT_BAR_INSET = 14
+
     if not scrollFrame then
         ownedScroll = true
         scrollFrame = CreateFrame("ScrollFrame", name, parent, "UIPanelScrollFrameTemplate")
-        scrollFrame:SetPoint("TOPLEFT", 4, -4)
-        scrollFrame:SetPoint("BOTTOMRIGHT", -14, 4)
+        scrollFrame:SetPoint("TOPLEFT", VIRT_INSET, -VIRT_INSET)
+        scrollFrame:SetPoint("BOTTOMRIGHT", -VIRT_BAR_INSET, VIRT_INSET)
         self:ApplyScrollBarStyle(scrollFrame.ScrollBar, parent, -2)
+        scrollFrame._oneWoWOnScrollBarShown = function(shown)
+            local right = shown and -VIRT_BAR_INSET or -VIRT_INSET
+            scrollFrame:ClearAllPoints()
+            scrollFrame:SetPoint("TOPLEFT", VIRT_INSET, -VIRT_INSET)
+            scrollFrame:SetPoint("BOTTOMRIGHT", right, VIRT_INSET)
+        end
+        local sb = scrollFrame.ScrollBar
+        scrollFrame._oneWoWOnScrollBarShown(sb and sb:IsShown() and not sb._oneWoWAlwaysHidden)
     end
 
     if not content then

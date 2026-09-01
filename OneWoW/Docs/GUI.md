@@ -1323,8 +1323,9 @@ local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, {
 ```
 Uses UIPanelScrollFrameTemplate (Lesson 3 compliant).
 ScrollBar anchored to parent container.
-- Without width: content width auto-syncs on resize.
+- Without width: content width auto-syncs on resize, minus `SCROLLBAR_CONTENT_GUTTER` only while the bar is shown.
 - With width: content width set to (width - 32).
+- The bar hides when the child fits (range floors to 0). Mouse wheel still works if content grows. Do not set Blizzard `scrollBarHideable` on these frames — it re-shows the up/down buttons the skin strips. Always-hide surfaces (Bags, Notes pin list, Crafting Orders) call `OneWoW_GUI:SetScrollBarAlwaysHidden(scrollFrame, true)` so the bar stays hidden even when the list overflows.
 
 ### Scrollable multiline edit box
 ```lua
@@ -1351,8 +1352,9 @@ frame follows the caret while typing.
 
 - ScrollFrame uses `UIPanelScrollFrameTemplate` with styled scrollbar.
 - EditBox is the scroll child, starts at height 1 and auto-expands with content.
-- Width auto-syncs to scrollFrame on resize, minus `SCROLLBAR_CONTENT_GUTTER`, and the right
-  text inset clears the thumb so glyphs do not sit under the scrollbar.
+- Width auto-syncs to scrollFrame on resize, minus `SCROLLBAR_CONTENT_GUTTER` (kept even
+  when the bar hides, so glyphs do not jump under a later-appearing thumb). The right
+  text inset also clears the thumb.
 - `scrollFrame:HookScript("OnMouseDown")` calls `editBox:SetFocus()` so clicks anywhere in the
   visible area work, not just the first pixel row.
 - Cursor scroll-follow via `ScrollingEdit_OnCursorChanged` + `ScrollingEdit_OnUpdate`.
@@ -1465,10 +1467,15 @@ All four DevTool browse tabs (Texture, Sound, Font, Globals) use `CreateVirtuali
 OneWoW_GUI:StyleScrollBar(scrollFrame, {
     container = parentFrame,  -- optional, anchors scrollbar to this
     offset = -2,              -- optional, right offset
+    alwaysHidden = false,     -- optional; same as SetScrollBarAlwaysHidden(true)
 })
 ```
 
 Lower-level (same styling as above): `OneWoW_GUI:ApplyScrollBarStyle(scrollFrame.ScrollBar, containerFrame, -2)`
+
+`SetScrollBarAlwaysHidden(scrollFrame, hidden)` — force-hide for a caller-owned “hide scrollbar” toggle. Wheel still scrolls. Pass `false` to return to hide-when-unscrollable.
+
+`CreateScrollFrame` (default and `layoutRightInset`), `CreateSplitPanel`, and owned `CreateVirtualizer` scrolls reclaim the gutter when the bar hides. `CreateScrollEditBox` does not.
 
 ---
 
