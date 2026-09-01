@@ -1,4 +1,4 @@
-## Interface: 120007, 120100
+## Interface: 120100
 ## Version: R6.2609.0106
 ## Title: OneWoW - Data: |cFFFFFFFFItems|r
 ## Notes: OneWoW Data Addon that: provides item identity data for the Catalog.
