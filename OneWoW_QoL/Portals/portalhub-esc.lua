@@ -38,6 +38,9 @@ local function RecycleStripButtons()
 end
 
 function EscMenu:Initialize()
+	-- GameMenu OnShow reads portalHub.escEnabled. Keep it aligned with the
+	-- Features module toggle so a prior disable still hides the strips.
+	OneWoW:GetPortalHub().escEnabled = ns.ModuleRegistry:IsEnabled("escpanel")
 	self:HookGameMenu()
 	self:RegisterAutoUpdateEvents()
 end

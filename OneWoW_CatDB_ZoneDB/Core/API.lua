@@ -1234,7 +1234,13 @@ end
 ---@param inst table
 ---@return table inst
 function OneWoW_CatDB_ZoneDB_API.EnsureEncounters(inst)
-    if not inst or inst.encountersHydrated then
+    if not inst then
+        return inst
+    end
+    -- ItemSpecial classifies TMog / Mount / Recipe / ... from ItemDB.
+    -- Catalog stores are lazy; toast and ESC pull journal without opening Catalog.
+    OneWoW:EnsureCatalogPack("items")
+    if inst.encountersHydrated then
         return inst
     end
     local bosses, rares, leftoverItems = {}, {}, {}

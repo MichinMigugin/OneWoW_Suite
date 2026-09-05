@@ -2,6 +2,7 @@ local _, ns = ...
 local ESCPanelModule, L = ns.ModuleRegistry:Current()
 if not ESCPanelModule then return end
 
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
 -- Session-only collapse memory (survives tab switches; cleared on /reload)
@@ -15,15 +16,8 @@ local TOGGLE_TO_DB = {
     esc_show_portals         = "escPortalsEnabled",
 }
 
-local function GetPortalHubDB()
-    local hub = OneWoW
-    if not hub or not hub.db or not hub.db.global then return nil end
-    return hub.db.global.portalHub
-end
-
 function ESCPanelModule:OnEnable()
-    local ph = GetPortalHubDB()
-    if not ph then return end
+    local ph = OneWoW:GetPortalHub()
     ph.escEnabled = true
     for toggleId, dbKey in pairs(TOGGLE_TO_DB) do
         if ph[dbKey] ~= nil then
@@ -36,19 +30,18 @@ function ESCPanelModule:OnEnable()
 end
 
 function ESCPanelModule:OnDisable()
-    local ph = GetPortalHubDB()
-    if not ph then return end
+    local ph = OneWoW:GetPortalHub()
     ph.escEnabled = false
     ns.PortalHubEsc:HidePortalFrames()
 end
 
 function ESCPanelModule:OnToggle(toggleId, value)
-    local ph = GetPortalHubDB()
-    if not ph then return end
+    local ph = OneWoW:GetPortalHub()
     local dbKey = TOGGLE_TO_DB[toggleId]
     if dbKey then
         ph[dbKey] = value
     end
+    ns.PortalHubEsc:Reload()
 end
 
 function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
@@ -96,10 +89,10 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
         descText:SetText(L["ESCPANEL_LAYOUT_DESC"])
         descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        local ph0 = GetPortalHubDB()
-        local panelsSide = (ph0 and ph0.escPanelsSide == "right") and "right" or "left"
-        local portalsSide = (ph0 and ph0.escPortalsSide == "left") and "left" or "right"
-        local currentIconSize = (ph0 and ph0.escIconSize) or 40
+        local ph0 = OneWoW:GetPortalHub()
+        local panelsSide = (ph0.escPanelsSide == "right") and "right" or "left"
+        local portalsSide = (ph0.escPortalsSide == "left") and "left" or "right"
+        local currentIconSize = ph0.escIconSize or 40
 
         local iconSizeLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         iconSizeLabel:SetPoint("TOPLEFT", descText, "BOTTOMLEFT", 0, -gap)
@@ -114,8 +107,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
             currentVal = currentIconSize,
             fmt        = "%dpx",
             onChange   = function(val)
-                local p = GetPortalHubDB()
-                if p then p.escIconSize = val end
+                OneWoW:GetPortalHub().escIconSize = val
                 ns.PortalHubEsc:Reload()
             end,
         })
@@ -140,13 +132,11 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
             end,
             onSelect = function(value, text)
                 panelsDDText:SetText(text)
-                local p = GetPortalHubDB()
-                if p then p.escPanelsSide = value end
+                OneWoW:GetPortalHub().escPanelsSide = value
                 ns.PortalHubEsc:Reload()
             end,
             getActiveValue = function()
-                local p = GetPortalHubDB()
-                return (p and p.escPanelsSide == "right") and "right" or "left"
+                return (OneWoW:GetPortalHub().escPanelsSide == "right") and "right" or "left"
             end,
         })
         panelsDD:SetPoint("TOPLEFT", panelsRowLabel, "BOTTOMLEFT", 0, -4)
@@ -170,24 +160,22 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
             end,
             onSelect = function(value, text)
                 portalsDDText:SetText(text)
-                local p = GetPortalHubDB()
-                if p then p.escPortalsSide = value end
+                OneWoW:GetPortalHub().escPortalsSide = value
                 ns.PortalHubEsc:Reload()
             end,
             getActiveValue = function()
-                local p = GetPortalHubDB()
-                return (p and p.escPortalsSide == "left") and "left" or "right"
+                return (OneWoW:GetPortalHub().escPortalsSide == "left") and "left" or "right"
             end,
         })
         portalsDD:SetPoint("TOPLEFT", portalsRowLabel, "BOTTOMLEFT", 0, -4)
 
         layoutRefresh = function()
-            local p = GetPortalHubDB()
-            local ps = (p and p.escPanelsSide == "right") and "right" or "left"
-            local pr = (p and p.escPortalsSide == "left") and "left" or "right"
+            local p = OneWoW:GetPortalHub()
+            local ps = (p.escPanelsSide == "right") and "right" or "left"
+            local pr = (p.escPortalsSide == "left") and "left" or "right"
             panelsDDText:SetText(ps == "right" and (L["ESCPANEL_SIDE_RIGHT"]) or (L["ESCPANEL_SIDE_LEFT"]))
             portalsDDText:SetText(pr == "left" and (L["ESCPANEL_SIDE_LEFT"]) or (L["ESCPANEL_SIDE_RIGHT"]))
-            local sz = (p and p.escIconSize) or 40
+            local sz = p.escIconSize or 40
             if iconSizeSlider.slider:GetValue() ~= sz then
                 iconSizeSlider.slider:SetValue(sz)
             end

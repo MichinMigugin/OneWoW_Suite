@@ -26,6 +26,7 @@ local function InstanceEnabled()
 end
 
 local function GetCatalogData(mapID)
+    OneWoW:EnsureCatalogPack("items")
     OneWoW:EnsureCatalogPack("journal")
     local api = OneWoW:GetCatalogPackAPI("journal")
     if not api then return nil end

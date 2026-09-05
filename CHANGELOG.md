@@ -53,6 +53,12 @@
 ---
 
 # QoL
+## ESC Menu
+- Turning off ESC Menu Panel now hides the character info, notes, and portal strips. Character Info, Alerts, Zone Notes, and left/right side choices apply when you open the game menu.
+
+## Instance Toast
+- Zoning into a dungeon or raid shows real collectable counts on the instance toast and the ESC instance panel again.
+
 ## Tooltips
 - Item Tracker on item tooltips now has two blocks: Where it is (your copies) and Where to get it (quest, vendor, instance, profession). Those source lines appear when that Catalog pack is already loaded.
 
