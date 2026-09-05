@@ -32,7 +32,18 @@ You do not need every folder. Enable what you use under Manage Features.
 
 ## Web armory
 
-A free companion lives at [https://app.onewow.net/](https://app.onewow.net/). Sign in with Battle.net and see your roster, gear, gold, vault, collections, and progress on any device. An optional PC upload fills bags, banks, and lockouts. In-game tracking stays in [AltTracker](AltTracker).
+A free companion lives at [https://app.onewow.net/](https://app.onewow.net/). Sign in with Battle.net and see your roster, gear, gold, vault, collections, and progress on any device. An optional PC upload (OneWoW CompSync) fills bags, banks, and lockouts. In-game tracking stays in [AltTracker](AltTracker).
+
+### Send missing Catalog facts
+
+If you find a quest, NPC, or profession recipe Catalog does not have yet, OneWoW can flag it while you play. CompSync can send those flags so they may appear in a later OneWoW release. This does **not** upload your bags, gold, or settings.
+
+1. Play. Talk to NPCs, open quests, and open profession windows.
+2. Log out of WoW so the files are written.
+3. Sign in at [app.onewow.net](https://app.onewow.net/) and create an upload token.
+4. In CompSync, paste that token on **Cloud**, pick your account, then either leave **Also upload Contribute data** checked when you sync, or use the **Contribute** tab: **Refresh**, then **Upload Contribute data**.
+
+You will not see a Contribute page or new Catalog rows on the website. The facts wait for a later addon release. See [FAQ](FAQ) and [Catalog](Catalog).
 
 For how OneWoW sits next to Altoholic, All The Things, and Bagnon, see [Compare](Compare).
 
@@ -40,6 +51,7 @@ For how OneWoW sits next to Altoholic, All The Things, and Bagnon, see [Compare]
 
 * [Compare](Compare)
 * [FAQ](FAQ)
+* [Catalog](Catalog)
 * [Install](Install)
 * [Developers](Developers)
 

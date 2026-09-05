@@ -25,3 +25,5 @@ not ship. CompSync Contribute reads only those rows. Contract:
 
 Emit and scoreboard live in OneWoW_Workspace (`bin/catdb_*_emit.py`,
 `bin/catdb_status.py`). They write only `OneWoW_CatDB_*` Data files.
+Contribute facts from the site merge into those same shards
+(`bin/catdb_contribute_merge.py`), not a side pack.

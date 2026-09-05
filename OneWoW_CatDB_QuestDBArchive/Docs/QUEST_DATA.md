@@ -29,4 +29,5 @@ object / area starts keep coords on the quest.
 # from OneWoW_Workspace — writes Current and Archive
 python bin/catdb_quest_emit.py
 python bin/catdb_status.py quest
+python bin/catdb_contribute_merge.py --from EXPORT
 ```

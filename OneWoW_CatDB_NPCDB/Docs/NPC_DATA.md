@@ -80,6 +80,7 @@ See [CATDB_CONTRIBUTE](../../OneWoW/Docs/CATDB_CONTRIBUTE.md).
 # from OneWoW_Workspace
 python bin/catdb_npc_emit.py
 python bin/catdb_status.py npc
+python bin/catdb_contribute_merge.py --from EXPORT
 ```
 
 Seeds from current CatDB NPC shards plus Creature titles and related CSVs.

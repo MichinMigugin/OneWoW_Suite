@@ -74,6 +74,7 @@ One command writes Current **and** Archive:
 # from OneWoW_Workspace
 python bin/catdb_quest_emit.py
 python bin/catdb_status.py quest
+python bin/catdb_contribute_merge.py --from EXPORT
 ```
 
 Splits npc pins onto `{ npcID }`, keeps object/area starts as

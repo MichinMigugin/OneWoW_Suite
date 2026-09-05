@@ -29,6 +29,7 @@ Contributor and integrator documentation for the suite.
 | [COLLECTIBLES_IDEAS.md](COLLECTIBLES_IDEAS.md) | Collectibles direction parking lot (not committed scope) |
 | [OneWoW_Mail/Docs/ARCHITECTURE.md](../../OneWoW_Mail/Docs/ARCHITECTURE.md) | Mail shell, shipments, send/collect pipeline, Storage in-transit |
 | [OneWoW_Catalog/Docs/CATDB.md](../../OneWoW_Catalog/Docs/CATDB.md) | Catalog databases (CatDB Zones / NPCs / Items / Quests / Tradeskills) |
+| [CATDB_CONTRIBUTE.md](CATDB_CONTRIBUTE.md) | Player-found Catalog facts: addon `sync` flag, CompSync payload, merge into existing shards |
 | [OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md](../../OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md) | Catalog quest store (current expansions) and scanner |
 
 ## Contributing

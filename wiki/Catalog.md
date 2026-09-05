@@ -52,11 +52,13 @@ Turning a pack off empties its Catalog tab and removes related details elsewhere
 * Dungeons and raids have an Adventure Guide button on the details toolbar. Delves keep the Difficulty dropdown in place so the map pin lines up, but it stays disabled (Delves have no difficulty filter and no Adventure Guide page).
 * Collectibles and Housing sit next to Item Search. They read the Collections journals and the housing decor catalog, so opening the tab stays smooth. Filter or search when the list asks you to narrow it. Vendor, drop, and quest lines on a selected item show when those CatDB packs are already loaded. Click one to open that Catalog tab.
 * Themes follow suite-wide OneWoW settings.
+* If Catalog is missing a quest, NPC, or recipe you just saw, OneWoW can flag it. CompSync **Contribute** (or Cloud with **Also upload Contribute data**) sends those flags for a later release. They do not appear on [app.onewow.net](https://app.onewow.net/). See [About](About).
 
 ## Related
 
 * [Shopping List](Shopping-List)
 * [AltTracker](AltTracker)
+* [About](About)
 * [Slash commands](Slash-Commands)
 
 ### Sources

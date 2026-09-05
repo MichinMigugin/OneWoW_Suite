@@ -2,8 +2,9 @@
 
 Players can send **missing Catalog facts** they found in-game so those rows
 may be included in a later OneWoW release. This file is the addon contract.
-CompSync builds a compact JSON payload from it. The site ingest is documented
-in the Companion repo and is **not wired yet**.
+CompSync builds a compact JSON payload from it. app.onewow.net stores the
+accepted rows and we merge them into the existing CatDB shards later — not
+as a side file.
 
 This is not a Cloud snapshot. Bags, gold, settings, name caches, and
 completion maps stay on the player’s PC.
@@ -45,8 +46,21 @@ Clear `sync` on accepted ids (keep the learned overlay). Do not clear
 until the site returns `ok`. CompSync must not rewrite SavedVariables
 while WoW is running.
 
+## Into Suite shards
+
+This is the developer import path. Players never do this.
+
+1. Site: `php OneWoW_ComWeb/tools/export_contribute.php --out PATH`
+2. Workspace dry-run: `python bin/catdb_contribute_merge.py --from PATH`
+3. Apply: `python bin/catdb_contribute_merge.py --from PATH --apply`
+
+The merge writes the existing NPC / Quest / TradeSkill shard files. New
+rows look like every other shipped row. Do not add a Contribute.lua pack.
+Full notes: Companion `OneWoW_ComWeb/docs/CONTRIBUTE.md` and Workspace
+`Docs/CATDB_CONTRIBUTE.md`.
+
 ## Related
 
 - In-game queue: `OneWoW/Services/CatDBSync.lua`
 - CompSync extract + UI: Companion `OneWoW_CompSync/Docs/CONTRIBUTE.md`
-- Site ingest (not built): Companion `OneWoW_ComWeb/docs/CONTRIBUTE.md`
+- Site ingest: Companion `OneWoW_ComWeb/docs/CONTRIBUTE.md`

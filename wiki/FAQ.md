@@ -34,6 +34,16 @@ OneWoW keywords are **English-only** (`#epic`, `#armor`, …). Import foreign ca
 
 The feature must be **installed and enabled**. Open [Slash commands](Slash-Commands) for the list, then check Manage Features.
 
+## Companion site
+
+### How do I send missing Catalog facts?
+
+Play with OneWoW. Talk to NPCs, open quests, and open professions. Log out of WoW. In CompSync, paste your [app.onewow.net](https://app.onewow.net/) upload token on **Cloud**, then upload from **Contribute** or leave **Also upload Contribute data** checked when you Cloud sync. Only flagged Catalog facts go. Bags and gold stay on your PC. Those facts do not show on the website; they wait for a later OneWoW release. See [About](About).
+
+### Why don’t my Contribute facts show on app.onewow.net?
+
+That upload is not a site Catalog. It only stores the facts for a future addon release. Your roster, bags, and lockouts still come from the normal Cloud snapshot.
+
 ## The project
 
 ### Is the source public?
