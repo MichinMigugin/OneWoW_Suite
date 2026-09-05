@@ -1444,8 +1444,9 @@ local function ScanCreatureTooltipName(npcID)
     end
     for i = 1, #tooltipData.lines do
         local text = tooltipData.lines[i].leftText
-        if text and text ~= "" and text ~= RETRIEVING_DATA
-            and text ~= RETRIEVING_ITEM_INFO and text ~= "???" and text ~= "?" then
+        if text and not OneWoW.Restriction.IsSecretValue(text) and text ~= ""
+            and text ~= RETRIEVING_DATA and text ~= RETRIEVING_ITEM_INFO
+            and text ~= "???" and text ~= "?" then
             return text
         end
     end

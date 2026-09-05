@@ -44,7 +44,14 @@ end
 ---@param npcID number|nil
 ---@return boolean
 local function IsUnresolvedNPCName(name, npcID)
-    if not name or name == "" then
+    if not name then
+        return true
+    end
+    -- Instanced creature tooltip lines are secret: any compare errors.
+    if OneWoW.Restriction.IsSecretValue(name) then
+        return true
+    end
+    if name == "" then
         return true
     end
     if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO then
@@ -662,7 +669,7 @@ function OneWoW_CatDB_NPCDB_API.ResolveNPCName(npcID)
     local name, subtitle
     for i = 1, #tooltipData.lines do
         local text = tooltipData.lines[i].leftText
-        if text and text ~= "" and not IsUnresolvedNPCName(text, npcID) then
+        if not IsUnresolvedNPCName(text, npcID) then
             if not name then
                 name = text
             else

@@ -23,6 +23,9 @@
 ## Vendors
 - The list is people you can talk to: shops, trainers, innkeepers, repair, stables, flight masters, bankers, barbers, and quest givers. Talking to someone who is missing adds them. Click a quest giver name to open that card. Search by NPC id as well as name.
 
+## Fixes
+- Opening the NPCs tab inside a dungeon or other instance no longer errors.
+
 ## Journal
 - Extra drops that come from a quest or an achievement sit in their own groups again. Click the quest link to open that quest.
 

@@ -438,7 +438,13 @@ local NPC_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0 }
 local ITEM_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0, 2.0 }
 
 local function IsGenericVendorName(name, npcID)
-    if not name or name == "" then
+    if not name then
+        return true
+    end
+    if OneWoW.Restriction.IsSecretValue(name) then
+        return true
+    end
+    if name == "" then
         return true
     end
     if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO then

@@ -1318,9 +1318,11 @@ local function ResolveNPCName(npcID, knownName, allowLive)
 
     if tooltipData and tooltipData.lines then
         for _, line in ipairs(tooltipData.lines) do
-            if line.leftText and line.leftText ~= "" and line.leftText ~= RETRIEVING_ITEM_INFO then
-                npcNameCache[npcID] = line.leftText
-                return line.leftText
+            local text = line.leftText
+            if text and not OneWoW.Restriction.IsSecretValue(text)
+                and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
+                npcNameCache[npcID] = text
+                return text
             end
         end
     end
