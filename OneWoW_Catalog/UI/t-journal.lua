@@ -3668,7 +3668,14 @@ function ns.UI.OpenToInstance(spec)
     end
 
     local instData
-    if type(placeKey) == "string" and placeKey ~= "" then
+    if encounterID then
+        local enc = journalAPI.GetEncounter(encounterID)
+        local encInstanceID = enc and tonumber(enc.instanceID)
+        if encInstanceID and encInstanceID > 0 then
+            instData = journalAPI.GetInstanceByInstanceID(encInstanceID)
+        end
+    end
+    if not instData and type(placeKey) == "string" and placeKey ~= "" then
         instData = journalAPI.GetInstanceByPlaceKey(placeKey)
     end
     if not instData and instanceID and instanceID > 0 then

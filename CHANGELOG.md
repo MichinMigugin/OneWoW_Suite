@@ -27,6 +27,8 @@
 
 ## Fixes
 - Opening the NPCs tab inside a dungeon or other instance no longer errors.
+- Opening a quest or NPC card no longer errors when the creature name is restricted, or on the location pin row.
+- View loot on an NPC opens that encounter on Zones. It no longer jumps to a city the NPC also visits.
 
 ## Journal
 - Extra drops that come from a quest or an achievement sit in their own groups again. Click the quest link to open that quest.

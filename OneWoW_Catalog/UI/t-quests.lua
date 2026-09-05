@@ -1291,10 +1291,14 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
 end
 
 local function IsGenericNPCName(name, npcID)
-    if not name or name == "" then
+    if not name then
         return true
     end
+    -- Secret tooltip lines error on any compare, including == "".
     if OneWoW.Restriction.IsSecretValue(name) then
+        return true
+    end
+    if name == "" then
         return true
     end
     if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO then
@@ -1405,7 +1409,10 @@ end
 
 local function ApplyVisibleNPCName(npcID, npcName)
     npcID = tonumber(npcID)
-    if not npcID or not npcName or npcName == "" then
+    if not npcID or not npcName then
+        return false
+    end
+    if OneWoW.Restriction.IsSecretValue(npcName) or npcName == "" then
         return false
     end
 
