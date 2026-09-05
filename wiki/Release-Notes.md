@@ -61,6 +61,9 @@
 #### Instance Toast
 - Zoning into a dungeon or raid shows real collectable counts on the instance toast and the ESC instance panel again.
 
+#### Auto Open
+- Auto Open now opens Torn Sack of Pet Supplies from the Crysa's Flyers daily.
+
 #### Tooltips
 - Item Tracker on item tooltips now has two blocks: Where it is (your copies) and Where to get it (quest, vendor, instance, profession). Those source lines appear when that Catalog pack is already loaded.
 
