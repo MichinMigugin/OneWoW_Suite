@@ -63,6 +63,8 @@
 #### Portals
 - Mage Teleports and Mage Portals are separate ESC flyouts. Show or hide each set in Portals settings. Class & Racial Abilities uses the same split.
 - ESC portal icons use short destination labels (HoV, SoB, SW). You can enlarge just that text, or hide it and use the tooltip. The suite font size no longer changes those labels.
+- ESC hearthstone can be random, your Hearthstone, a specific toy, hidden, or shown disabled. Seasonal-only mode hides older Hero's Path expansion flyouts. Live dungeon teleports (on by default) pick up new Path spells from the game. A Group Finder teleport prompt is off unless you turn it on.
+- Added Mycomancer's Hearthspore, The Schools of Arcane Magic - Mastery, Nature's Beacon, and Dundun's Abundant Travel Method.
 
 #### Instance Toast
 - Zoning into a dungeon or raid shows real collectable counts on the instance toast and the ESC instance panel again.

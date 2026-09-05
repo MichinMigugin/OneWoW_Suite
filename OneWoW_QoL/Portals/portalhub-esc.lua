@@ -384,8 +384,18 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	if showTopRow then
 		local hearthButtons = {}
 		if ph.showHearthstone ~= false then
-			local hsType = ph.randomHearthstone and "randomhearth" or "item"
-			table.insert(hearthButtons, {type = hsType, id = 6948})
+			local choice = ns.PortalHubDetection:GetHearthstoneChoice()
+			if choice == "none" then
+				-- skip ESC hearth button
+			elseif choice == "disabled" then
+				table.insert(hearthButtons, {type = "hearthdisabled", id = 6948})
+			elseif choice == "random" then
+				table.insert(hearthButtons, {type = "randomhearth", id = 6948})
+			elseif choice == "default" then
+				table.insert(hearthButtons, {type = "item", id = 6948})
+			else
+				table.insert(hearthButtons, {type = "toy", id = choice})
+			end
 		end
 		if ph.showDalaranHearth ~= false then
 			if PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663) then
@@ -504,6 +514,8 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 	if ns.NestedFlyouts then
 		local midIcon = C_Spell.GetSpellTexture(1254400) or C_Spell.GetSpellTexture(1254572) or 5872031
+		local currentExp = ns.PortalHubDetection:GetCurrentPathExpansion()
+		local seasonalOnly = ns.PortalHubDetection:IsSeasonalOnly()
 		local dungeonExpansions = {
 			{id = "mid", label = "MID", icon = midIcon, portals = ns.PortalHubDetection:GetDungeonPortals("mid", showUnknown)},
 			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetDungeonPortals("tww", showUnknown)},
@@ -515,6 +527,15 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetDungeonPortals("mop", showUnknown)},
 			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetDungeonPortals("cata", showUnknown)},
 		}
+		if seasonalOnly then
+			local filtered = {}
+			for _, exp in ipairs(dungeonExpansions) do
+				if exp.id == currentExp then
+					table.insert(filtered, exp)
+				end
+			end
+			dungeonExpansions = filtered
+		end
 
 		local hasDungeons = false
 		for _, exp in ipairs(dungeonExpansions) do
@@ -541,6 +562,15 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetRaidPortals("mop", showUnknown)},
 			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetRaidPortals("cata", showUnknown)},
 		}
+		if seasonalOnly then
+			local filtered = {}
+			for _, exp in ipairs(raidExpansions) do
+				if exp.id == currentExp then
+					table.insert(filtered, exp)
+				end
+			end
+			raidExpansions = filtered
+		end
 
 		local hasRaids = false
 		for _, exp in ipairs(raidExpansions) do
@@ -623,9 +653,16 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 	button:RegisterForClicks("AnyDown", "AnyUp")
 	button:SetAttribute("useOnKeyDown", true)
 
-	if portalData.type == "randomhearth" then
+	if portalData.type == "hearthdisabled" then
+		button:SetAttribute("type", nil)
+		button:SetAlpha(0.5)
+		local item = Item:CreateFromItemID(6948)
+		item:ContinueOnItemLoad(function()
+			local icon = item:GetItemIcon()
+			if icon then button.icon:SetTexture(icon) end
+		end)
+	elseif portalData.type == "randomhearth" then
 		local hasHearthstoneItem = C_Item.GetItemCount(6948) > 0
-		local randomEnabled = OneWoW:GetPortalHub().randomHearthstone
 		local hearthstones = ns.PortalData_Hearthstones and ns.PortalData_Hearthstones.List or {}
 		local availableToys = {}
 
@@ -639,34 +676,21 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 			end
 		end
 
-		if randomEnabled then
-			local available = {}
-			if hasHearthstoneItem then table.insert(available, 6948) end
-			for _, toyID in ipairs(availableToys) do table.insert(available, toyID) end
+		local available = {}
+		if hasHearthstoneItem then table.insert(available, 6948) end
+		for _, toyID in ipairs(availableToys) do table.insert(available, toyID) end
 
-			if #available == 0 then
-				button:SetAttribute("type", "macro")
-				button:SetAttribute("macrotext", "/run print('|cFF00FF00OneWoW:|r No hearthstones available!')")
-			else
-				local selectedID = available[math.random(1, #available)]
-				if selectedID == 6948 then
-					button:SetAttribute("type", "item")
-					button:SetAttribute("item", "item:6948")
-				else
-					button:SetAttribute("type", "toy")
-					button:SetAttribute("toy", selectedID)
-				end
-			end
+		if #available == 0 then
+			button:SetAttribute("type", "macro")
+			button:SetAttribute("macrotext", "/run print('|cFF00FF00OneWoW:|r No hearthstones available!')")
 		else
-			if hasHearthstoneItem then
+			local selectedID = available[math.random(1, #available)]
+			if selectedID == 6948 then
 				button:SetAttribute("type", "item")
 				button:SetAttribute("item", "item:6948")
-			elseif #availableToys > 0 then
-				button:SetAttribute("type", "toy")
-				button:SetAttribute("toy", availableToys[math.random(1, #availableToys)])
 			else
-				button:SetAttribute("type", "macro")
-				button:SetAttribute("macrotext", "/run print('|cFF00FF00OneWoW:|r No hearthstones available!')")
+				button:SetAttribute("type", "toy")
+				button:SetAttribute("toy", selectedID)
 			end
 		end
 
@@ -737,7 +761,10 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 
 	button:SetScript("OnEnter", function(myself)
 		GameTooltip:SetOwner(myself, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
-		if portalData.type == "randomhearth" or portalData.type == "item" then
+		if portalData.type == "hearthdisabled" then
+			GameTooltip:SetText(L["FEATURE_DISABLED"], 1, 1, 1)
+			GameTooltip:AddLine(L["PORTAL_HEARTHSTONE_CHOICE_DESC"], 0.8, 0.8, 0.8, true)
+		elseif portalData.type == "randomhearth" or portalData.type == "item" then
 			GameTooltip:SetItemByID(portalData.id)
 		elseif portalData.type == "toy" then
 			GameTooltip:SetToyByItemID(portalData.id)

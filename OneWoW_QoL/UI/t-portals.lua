@@ -685,17 +685,121 @@ function ns.UI.CreatePortalsTab(parent)
 			fontSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 12, fontSliderY)
 			rowY = fontSliderY - 36 - 10
 
+			local hsLabel = OneWoW_GUI:CreateFS(content, 12)
+			hsLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+			hsLabel:SetJustifyH("LEFT")
+			hsLabel:SetText(L["PORTAL_HEARTHSTONE_CHOICE"])
+			hsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+			local function HearthChoiceLabel(choice)
+				if choice == "none" then
+					return NONE
+				end
+				if choice == "disabled" then
+					return L["FEATURE_DISABLED"]
+				end
+				if choice == "default" then
+					return DEFAULT
+				end
+				local id = tonumber(choice)
+				if id then
+					local _, name = C_ToyBox.GetToyInfo(id)
+					return name or tostring(id)
+				end
+				return L["PORTAL_RANDOM_HEARTHSTONE"]
+			end
+
+			local hsDrop, hsDropText = OneWoW_GUI:CreateDropdown(content, {
+				width = math.min(260, math.max(160, contentWidth - 24)),
+				height = 26,
+				text = HearthChoiceLabel(ns.PortalHubDetection:GetHearthstoneChoice()),
+			})
+			hsDrop:SetPoint("TOPLEFT", hsLabel, "BOTTOMLEFT", 0, -4)
+			OneWoW_GUI:AttachFilterMenu(hsDrop, {
+				searchable = true,
+				menuHeight = 280,
+				buildItems = function()
+					local items = {
+						{value = "random", text = L["PORTAL_RANDOM_HEARTHSTONE"]},
+						{value = "default", text = DEFAULT},
+						{value = "none", text = NONE},
+						{value = "disabled", text = L["FEATURE_DISABLED"]},
+					}
+					local toys = ns.PortalData_Hearthstones:GetOwnedToys()
+					for _, toy in ipairs(toys) do
+						tinsert(items, {value = toy.id, text = toy.name})
+					end
+					return items
+				end,
+				onSelect = function(value, text)
+					OneWoW:GetPortalHub().hearthstoneChoice = value
+					OneWoW:GetPortalHub().randomHearthstone = (value == "random")
+					hsDropText:SetText(text)
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				getActiveValue = function()
+					return OneWoW:GetPortalHub().hearthstoneChoice
+				end,
+			})
+
+			local hsDesc = OneWoW_GUI:CreateFS(content, 10)
+			hsDesc:SetPoint("TOPLEFT", hsDrop, "BOTTOMLEFT", 0, -4)
+			hsDesc:SetWidth(math.max(50, contentWidth - 24))
+			hsDesc:SetJustifyH("LEFT")
+			hsDesc:SetWordWrap(true)
+			hsDesc:SetText(L["PORTAL_HEARTHSTONE_CHOICE_DESC"])
+			hsDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+			rowY = rowY - hsLabel:GetStringHeight() - 4 - 26 - 4 - hsDesc:GetStringHeight() - 10
+
 			rowY = OneWoW_GUI:CreateToggleRow(content, {
 				yOffset = rowY,
 				contentWidth = contentWidth,
-				label = L["PORTAL_RANDOM_HEARTHSTONE"],
-				description = L["PORTAL_RANDOM_HEARTHSTONE_DESC"],
-				value = ph.randomHearthstone and true or false,
+				label = L["PORTAL_SEASONAL_ONLY"],
+				description = L["PORTAL_SEASONAL_ONLY_DESC"],
+				value = ph.seasonalOnly == true,
 				isEnabled = true,
 				onValueChange = function(newVal)
-					OneWoW:GetPortalHub().randomHearthstone = newVal
+					OneWoW:GetPortalHub().seasonalOnly = newVal
 					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
+				label = L["PORTAL_LIVE_PATH_FLYOUTS"],
+				description = L["PORTAL_LIVE_PATH_FLYOUTS_DESC"],
+				value = ph.useLivePathFlyouts ~= false,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().useLivePathFlyouts = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
+				label = L["PORTAL_LFG_PROMPT"],
+				description = L["PORTAL_LFG_PROMPT_DESC"],
+				value = ph.lfgTeleportPrompt == true,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().lfgTeleportPrompt = newVal
+					if ns.PortalHubLFG then
+						ns.PortalHubLFG:SetEnabled(newVal)
 					end
 				end,
 				onLabel = L["FEATURES_ON"],

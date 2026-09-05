@@ -14,13 +14,46 @@ local function PortalsPath(leafKey)
 end
 
 Search:Register({
-    id = "qol:portals-random-hearth",
-    title = "PORTAL_RANDOM_HEARTHSTONE",
-    description = "PORTAL_RANDOM_HEARTHSTONE_DESC",
+    id = "qol:portals-hearth-choice",
+    title = "PORTAL_HEARTHSTONE_CHOICE",
+    description = "PORTAL_HEARTHSTONE_CHOICE_DESC",
     scope = "OneWoW_QoL",
-    tags = { "hearthstone", "random", "toy", "esc" },
+    tags = { "hearthstone", "random", "toy", "esc", "disabled" },
     addonKey = "OneWoW_QoL",
-    path = PortalsPath("PORTAL_RANDOM_HEARTHSTONE"),
+    path = PortalsPath("PORTAL_HEARTHSTONE_CHOICE"),
+    nav = portalsNav,
+})
+
+Search:Register({
+    id = "qol:portals-seasonal-only",
+    title = "PORTAL_SEASONAL_ONLY",
+    description = "PORTAL_SEASONAL_ONLY_DESC",
+    scope = "OneWoW_QoL",
+    tags = { "season", "dungeon", "raid", "esc", "hide" },
+    addonKey = "OneWoW_QoL",
+    path = PortalsPath("PORTAL_SEASONAL_ONLY"),
+    nav = portalsNav,
+})
+
+Search:Register({
+    id = "qol:portals-live-path",
+    title = "PORTAL_LIVE_PATH_FLYOUTS",
+    description = "PORTAL_LIVE_PATH_FLYOUTS_DESC",
+    scope = "OneWoW_QoL",
+    tags = { "dungeon", "raid", "path", "teleport", "esc" },
+    addonKey = "OneWoW_QoL",
+    path = PortalsPath("PORTAL_LIVE_PATH_FLYOUTS"),
+    nav = portalsNav,
+})
+
+Search:Register({
+    id = "qol:portals-lfg-prompt",
+    title = "PORTAL_LFG_PROMPT",
+    description = "PORTAL_LFG_PROMPT_DESC",
+    scope = "OneWoW_QoL",
+    tags = { "lfg", "group finder", "dungeon", "teleport", "popup" },
+    addonKey = "OneWoW_QoL",
+    path = PortalsPath("PORTAL_LFG_PROMPT"),
     nav = portalsNav,
 })
 

@@ -36,6 +36,11 @@ local function IsWorgen()
 	return IsRace("Worgen")
 end
 
+local function IsClass(classFile)
+	local _, class = UnitClass("player")
+	return class == classFile
+end
+
 Portals.Items = {
 	rings = {
 		{id = 32757, name = "Blessed Medallion of Karabor", type = "item"},
@@ -203,6 +208,9 @@ Portals.Items = {
 		{id = 249699, name = "Shadowguard Translocator", type = "item"},
 		{id = 253629, name = "Personal Key to the Arcantina", type = "toy"},
 		{id = 276371, name = "Lightveil Recall Beacon", type = "toy"},
+		{id = 266370, name = "Dundun's Abundant Travel Method", type = "toy"},
+		{id = 43824, name = "The Schools of Arcane Magic - Mastery", type = "toy"},
+		{id = 136849, name = "Nature's Beacon", type = "toy", condition = function() return IsClass("DRUID") end},
 		{id = 28585, name = "Ruby Slippers", type = "item"},
 		{id = 153226, name = "Observer's Locus Resonator", type = "item"},
 		{id = 165581, name = "Crest of Pa'ku", type = "item"},

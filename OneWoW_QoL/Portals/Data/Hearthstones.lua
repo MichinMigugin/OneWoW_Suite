@@ -84,6 +84,7 @@ Hearthstones.List = {
 	[263933] = true,
 	[265100] = true,
 	[257736] = true, -- Lightcalled Hearthstone
+	[264367] = true, -- Mycomancer's Hearthspore
 }
 
 function Hearthstones:GetAvailable(showAll)
@@ -106,4 +107,26 @@ function Hearthstones:GetAvailable(showAll)
 		end
 	end
 	return available
+end
+
+function Hearthstones:GetOwnedToys()
+	local toys = {}
+	for id, condition in pairs(self.List) do
+		if id ~= 6948 and PlayerHasToy(id) then
+			local include = false
+			if type(condition) == "function" then
+				include = condition() == true
+			elseif condition == true then
+				include = true
+			end
+			if include then
+				local _, name, icon = C_ToyBox.GetToyInfo(id)
+				tinsert(toys, {id = id, name = name or tostring(id), icon = icon})
+			end
+		end
+	end
+	sort(toys, function(a, b)
+		return (a.name or "") < (b.name or "")
+	end)
+	return toys
 end

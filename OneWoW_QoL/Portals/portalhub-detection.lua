@@ -1,5 +1,7 @@
 local _, ns = ...
 
+local OneWoW = OneWoW
+
 ns.PortalHubDetection = ns.PortalHubDetection or {}
 local Detection = ns.PortalHubDetection
 
@@ -19,8 +21,6 @@ local ENGINEERING_TOYS = {
 	[212337] = true,
 	[221966] = true,
 	[248485] = true,
-	[251662] = true,
-	[412555] = true,
 }
 
 local ENGINEERING_ITEMS = {
@@ -242,7 +242,7 @@ local function IsKnownItemPortalUsable(portalType, id)
 		itemData.cloaks,
 		itemData.tabards,
 		itemData.consumables,
-		itemData.special,
+		itemData.special_items,
 	}
 
 	for _, group in ipairs(groups) do
@@ -475,44 +475,157 @@ function Detection:GetRacePortals(showAll)
 	return portals
 end
 
-function Detection:GetDungeonPortals(expansion, showAll)
-	local portals = {}
+local HARDCODED_DUNGEONS = {
+	mid = {1254572, 1254400, 1254563, 1254559, 1286812, 1286809, 1286807, 1286801, 1286804},
+	tww = {445417, 445440, 445416, 445441, 445414, 1237215, 1216786, 445444, 445443, 445269},
+	df = {393273, 393279, 393267, 424197, 393283, 393276, 393262, 393256, 393222},
+	sl = {354468, 354465, 354464, 354462, 354463, 354469, 354466, 367416, 354467},
+	bfa = {424187, 410071, 373274, 410074, 424167, 1286831, 1286828},
+	legion = {424153, 393766, 424163, 393764, 373262, 410078, 252631, 1254551},
+	wod = {159897, 159895, 159901, 159900, 159896, 159899, 159898, 159902, 1254557},
+	mop = {131225, 131222, 131232, 131231, 131229, 131228, 131206, 131205, 131204},
+	cata = {445424, 424142, 410080},
+	wotlk = {1254555},
+	bc = {},
+	classic = {},
+}
 
-	local dungeonsByExpansion = {
-		mid = {1254572, 1254400, 1254563, 1254559, 1286812, 1286809, 1286807, 1286801, 1286804},
-		tww = {445417, 445440, 445416, 445441, 445414, 1237215, 1216786, 445444, 445443, 445269},
-		df = {393273, 393279, 393267, 424197, 393283, 393276, 393262, 393256, 393222},
-		sl = {354468, 354465, 354464, 354462, 354463, 354469, 354466, 367416, 354467},
-		bfa = {424187, 410071, 373274, 410074, 424167, 1286831, 1286828},
-		legion = {424153, 393766, 424163, 393764, 373262, 410078, 252631, 1254551},
-		wod = {159897, 159895, 159901, 159900, 159896, 159899, 159898, 159902, 1254557},
-		mop = {131225, 131222, 131232, 131231, 131229, 131228, 131206, 131205, 131204},
-		cata = {445424, 424142, 410080},
-		wotlk = {1254555},
-		bc = {},
-		classic = {},
-	}
+local HARDCODED_RAIDS = {
+	mid = {},
+	tww = {1226482, 1239155},
+	df = {432254, 432257, 432258},
+	sl = {373190, 373191, 373192},
+	bfa = {},
+	legion = {},
+	wod = {},
+	mop = {},
+	cata = {},
+	wotlk = {},
+	bc = {},
+	classic = {},
+}
 
+-- Blizzard Hero's Path flyouts. New Path of X spells on these flyouts appear
+-- without a list edit. Hardcoded IDs above stay as extras (faction variants,
+-- older paths that are not on a flyout).
+local PATH_FLYOUTS = {
+	mid = {dungeons = 246},
+	tww = {dungeons = 232, raids = 242},
+	df = {dungeons = 227, raids = 231},
+	sl = {dungeons = 220, raids = 222},
+	bfa = {dungeons = 223},
+	legion = {dungeons = 224},
+	wod = {dungeons = 96},
+	mop = {dungeons = 84},
+	cata = {dungeons = 230},
+}
+
+local CURRENT_PATH_EXPANSION = "mid"
+
+local CHALLENGE_MAP_SPELLS = {
+	[161] = 159898,
+	[239] = 1254551,
+	[249] = 1286831,
+	[250] = 1286828,
+	[399] = 393256,
+	[402] = 393273,
+	[556] = 1254555,
+	[557] = 1254400,
+	[558] = 1254572,
+	[559] = 1254563,
+	[560] = 1254559,
+	[584] = 1286801,
+	[585] = 1286804,
+	[586] = 1286807,
+	[587] = 1286809,
+	[588] = 1286812,
+}
+
+local function CollectFlyoutSpellIDs(flyoutID)
 	local spells = {}
-	if expansion then
-		if dungeonsByExpansion[expansion] then
-			spells = dungeonsByExpansion[expansion]
+	if not flyoutID then
+		return spells
+	end
+	local _, _, numSlots = GetFlyoutInfo(flyoutID)
+	if not numSlots then
+		return spells
+	end
+	for i = 1, numSlots do
+		local spellID = GetFlyoutSlotInfo(flyoutID, i)
+		if spellID then
+			tinsert(spells, spellID)
 		end
-	else
-		for _, dungeonList in pairs(dungeonsByExpansion) do
-			for _, spellID in ipairs(dungeonList) do
-				if spellID then
-					table.insert(spells, spellID)
+	end
+	return spells
+end
+
+local function MergeSpellIDs(...)
+	local seen = {}
+	local out = {}
+	for i = 1, select("#", ...) do
+		local list = select(i, ...)
+		if list then
+			for _, spellID in ipairs(list) do
+				if spellID and not seen[spellID] then
+					seen[spellID] = true
+					tinsert(out, spellID)
 				end
 			end
+		end
+	end
+	return out
+end
+
+function Detection:GetHearthstoneChoice()
+	local choice = OneWoW:GetPortalHub().hearthstoneChoice
+	if choice == "none" or choice == "disabled" or choice == "random" or choice == "default" then
+		return choice
+	end
+	local id = tonumber(choice)
+	if id then
+		return id
+	end
+	return "random"
+end
+
+function Detection:GetCurrentPathExpansion()
+	return CURRENT_PATH_EXPANSION
+end
+
+function Detection:UsesLivePathFlyouts()
+	return OneWoW:GetPortalHub().useLivePathFlyouts ~= false
+end
+
+function Detection:IsSeasonalOnly()
+	return OneWoW:GetPortalHub().seasonalOnly == true
+end
+
+local function GetExpansionSpellIDs(expansion, kind)
+	local hardcoded = kind == "raids" and HARDCODED_RAIDS or HARDCODED_DUNGEONS
+	local flyoutKey = kind == "raids" and "raids" or "dungeons"
+	local extras = hardcoded[expansion] or {}
+	if not Detection:UsesLivePathFlyouts() then
+		return extras
+	end
+	local flyoutInfo = PATH_FLYOUTS[expansion]
+	local flyoutID = flyoutInfo and flyoutInfo[flyoutKey]
+	return MergeSpellIDs(CollectFlyoutSpellIDs(flyoutID), extras)
+end
+
+function Detection:GetDungeonPortals(expansion, showAll)
+	local portals = {}
+	local spells = {}
+	if expansion then
+		spells = GetExpansionSpellIDs(expansion, "dungeons")
+	else
+		for expKey in pairs(HARDCODED_DUNGEONS) do
+			spells = MergeSpellIDs(spells, GetExpansionSpellIDs(expKey, "dungeons"))
 		end
 	end
 
 	local faction = UnitFactionGroup("player")
 	for _, spellID in ipairs(spells) do
-		if spellID then
-			AppendSpellPortal(portals, spellID, showAll)
-		end
+		AppendSpellPortal(portals, spellID, showAll)
 	end
 
 	if expansion == "bfa" or not expansion then
@@ -527,32 +640,12 @@ end
 
 function Detection:GetRaidPortals(expansion, showAll)
 	local portals = {}
-
-	local raidsByExpansion = {
-		mid = {},
-		tww = {1226482, 1239155},
-		df = {432254, 432257, 432258},
-		sl = {373190, 373191, 373192},
-		bfa = {},
-		legion = {},
-		wod = {},
-		mop = {},
-		cata = {},
-		wotlk = {},
-		bc = {},
-		classic = {},
-	}
-
 	local spells = {}
 	if expansion then
-		if raidsByExpansion[expansion] then
-			spells = raidsByExpansion[expansion]
-		end
+		spells = GetExpansionSpellIDs(expansion, "raids")
 	else
-		for _, raidList in pairs(raidsByExpansion) do
-			for _, spellID in ipairs(raidList) do
-				table.insert(spells, spellID)
-			end
+		for expKey in pairs(HARDCODED_RAIDS) do
+			spells = MergeSpellIDs(spells, GetExpansionSpellIDs(expKey, "raids"))
 		end
 	end
 
@@ -561,6 +654,74 @@ function Detection:GetRaidPortals(expansion, showAll)
 	end
 
 	return portals
+end
+
+local function NormalizeDungeonName(name)
+	name = name:lower()
+	name = name:gsub("%s*%b()%s*$", "")
+	name = name:gsub("^%s+", ""):gsub("%s+$", "")
+	return name
+end
+
+local function PathNamesMatch(dungeonName, spellName)
+	if dungeonName == spellName then
+		return true
+	end
+	if spellName:find(dungeonName, 1, true) then
+		return true
+	end
+	local pathRest = spellName:match("^path of the (.+)$") or spellName:match("^path of (.+)$")
+	if not pathRest then
+		return false
+	end
+	return pathRest == dungeonName or dungeonName:find(pathRest, 1, true) or pathRest:find(dungeonName, 1, true)
+end
+
+function Detection:ResolvePathSpellByName(displayName)
+	if type(displayName) ~= "string" or displayName == "" then
+		return nil
+	end
+	local dungeonName = NormalizeDungeonName(displayName)
+	if dungeonName == "" then
+		return nil
+	end
+
+	for mapID, spellID in pairs(CHALLENGE_MAP_SPELLS) do
+		local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
+		if mapName and NormalizeDungeonName(mapName) == dungeonName then
+			return spellID
+		end
+	end
+
+	local maps = C_ChallengeMode.GetMapTable()
+	for _, mapID in ipairs(maps) do
+		local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
+		local spellID = CHALLENGE_MAP_SPELLS[mapID]
+		if spellID and mapName and NormalizeDungeonName(mapName) == dungeonName then
+			return spellID
+		end
+	end
+
+	local pathSpells = MergeSpellIDs(
+		GetExpansionSpellIDs("mid", "dungeons"),
+		GetExpansionSpellIDs("tww", "dungeons"),
+		GetExpansionSpellIDs("df", "dungeons"),
+		GetExpansionSpellIDs("sl", "dungeons"),
+		GetExpansionSpellIDs("bfa", "dungeons"),
+		GetExpansionSpellIDs("legion", "dungeons"),
+		GetExpansionSpellIDs("wod", "dungeons"),
+		GetExpansionSpellIDs("mop", "dungeons"),
+		GetExpansionSpellIDs("cata", "dungeons"),
+		GetExpansionSpellIDs("wotlk", "dungeons")
+	)
+	for _, spellID in ipairs(pathSpells) do
+		local spellName = C_Spell.GetSpellName(spellID)
+		if spellName and PathNamesMatch(dungeonName, NormalizeDungeonName(spellName)) then
+			return spellID
+		end
+	end
+
+	return nil
 end
 
 function Detection:GetWormholes(showAll)
@@ -705,6 +866,9 @@ local SEASON_PORTAL_SPELLS = {
 function Detection:GetSeasonPortals(season, showAll)
 	local portals = {}
 	local seasonSpells = SEASON_PORTAL_SPELLS[season]
+	if not seasonSpells then
+		return portals
+	end
 	for _, spellID in ipairs(seasonSpells) do
 		AppendSpellPortal(portals, spellID, showAll)
 	end

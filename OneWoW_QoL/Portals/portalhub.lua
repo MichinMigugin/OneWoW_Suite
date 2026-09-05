@@ -13,6 +13,14 @@ function PortalHub:Initialize()
 end
 
 function PortalHub:InitializeDatabase()
+	local ph = OneWoW:GetPortalHub()
+	if ph.hearthstoneChoiceMigrated then
+		return
+	end
+	if ph.randomHearthstone == false then
+		ph.hearthstoneChoice = "default"
+	end
+	ph.hearthstoneChoiceMigrated = true
 end
 
 local function CategorizePortal(portalData)
@@ -51,7 +59,7 @@ local function CategorizePortal(portalData)
 	if portalData.type == "toy" then
 		local professionToys = {
 			18984, 18986, 30542, 30544, 48933, 87215, 112059, 151652, 168807, 168808,
-			168807, 251662, 412555, 212337, 198156, 221966, 248485
+			172924, 212337, 198156, 221966, 248485
 		}
 		for _, toyID in ipairs(professionToys) do
 			if portalData.id == toyID then

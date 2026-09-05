@@ -94,6 +94,7 @@ function OneWoW_QoL:OnAddonLoaded()
     -- Portal Hub: module before esc-menu integration.
     OneWoW_QoL:RegisterLoginHandler("portalhub", function() ns.PortalHubModule:Initialize() end)
     OneWoW_QoL:RegisterLoginHandler("portalhub-esc", function() ns.PortalHubEsc:Initialize() end)
+    OneWoW_QoL:RegisterLoginHandler("portalhub-lfg", function() ns.PortalHubLFG:Initialize() end)
     OnInitialize()
 end
 
