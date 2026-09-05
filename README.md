@@ -96,7 +96,7 @@ Companion addons for [OneWoW_Catalog](OneWoW_Catalog/README.md). Enable with Cat
 | Addon | Description |
 |-------|-------------|
 | [OneWoW_CatDB_ZoneDB](OneWoW_CatDB_ZoneDB/Docs/ARCHITECTURE.md) | Zones — dungeons, raids, Delves, World hubs, encounters (Journal tab) |
-| [OneWoW_CatDB_NPCDB](OneWoW_CatDB_NPCDB/Docs/ARCHITECTURE.md) | NPCs — vendors and other people, stock, map pins (Vendors tab) |
+| [OneWoW_CatDB_NPCDB](OneWoW_CatDB_NPCDB/Docs/ARCHITECTURE.md) | NPCs — shops, trainers, quest givers, rares, bosses, stock, map pins (NPCs tab) |
 | [OneWoW_CatDB_ItemDB](OneWoW_CatDB_ItemDB/Docs/ARCHITECTURE.md) | Items — names and item rows for Item Search and lookups |
 | [OneWoW_CatDB_QuestDBCurrent](OneWoW_CatDB_QuestDBCurrent/Docs/ARCHITECTURE.md) | Quests — this expansion and the previous one (The War Within and Midnight) |
 | [OneWoW_CatDB_QuestDBArchive](OneWoW_CatDB_QuestDBArchive/Docs/ARCHITECTURE.md) | Quest Archive — Classic through Dragonflight |

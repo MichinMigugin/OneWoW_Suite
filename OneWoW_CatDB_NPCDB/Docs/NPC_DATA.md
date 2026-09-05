@@ -65,13 +65,18 @@ order: player `vendorCategories` SV, shipped `category`, Creature
 `title` / live subtitle via `VendorCategoryMap`, then `trainer` or
 `quest_giver` roles. An unstamped quest giver is stamped `quest_giver`.
 Barber / Trainer / Innkeeper / Quest Giver filters use that key. Rare
-and boss stay roles only — no extra filter rows.
+and boss stay roles only — no extra shop-category rows.
 
-The Catalog NPCs list is `vendor`, `trainer`, `service`, or
-`quest_giver`, plus anyone the player talked to (learned overlay). Rare
-and boss stay out of the browse list until interacted. Learned rows and
-new facts set `sync = true` for CompSync Contribute. Do not mutate
-shipped shards. `GetVendorsByItem` / `ItemIsSold` still require stock.
+When a creature row has no `locations` pin, the overlay joins ZoneDB
+encounter `uiMapID` / `pin` and `placeKeys` `zone:<mapID>` so Catalog
+can show the instance or zone and Current Zone Only can match this map.
+Shipped shards stay unchanged.
+
+The Catalog NPCs list is `vendor`, `trainer`, `service`, `quest_giver`,
+`rare`, `boss`, or `vignette`, plus anyone the player talked to (learned
+overlay). Learned rows and new facts set `sync = true` for CompSync
+Contribute. Do not mutate shipped shards. `GetVendorsByItem` /
+`ItemIsSold` still require stock.
 See [CATDB_CONTRIBUTE](../../OneWoW/Docs/CATDB_CONTRIBUTE.md).
 
 ## Build (Workspace)

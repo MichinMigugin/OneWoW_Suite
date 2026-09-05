@@ -1287,6 +1287,7 @@ function OneWoW_CatDB_ZoneDB_API.EnsureEncounters(inst)
                             displayID = enc.displayIDs and enc.displayIDs[1],
                             displayIDs = enc.displayIDs,
                             zoneMapID = enc.uiMapID,
+                            pin = enc.pin,
                         })
                     end
                 end

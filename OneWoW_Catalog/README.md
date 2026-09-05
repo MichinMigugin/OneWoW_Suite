@@ -13,6 +13,7 @@ Browse dungeons, raids, Delves, and World hubs from every expansion:
 - Source icons on encounters and loot: Adventure Guide or shipped OneWoW data. When AllTheThings is loaded, a shield on the lower right of the filter bar marks it; hover the shield. Journal can add anything AllTheThings has live
 - See all instances and encounters at a glance
 - Pin on a card or the details toolbar opens the world map at that instance's entrance (gold pins are Wowhead locations until official doors ship). Right-click the pin to save a OneWay Pin in Notes
+- Encounter rows have See NPC (opens that boss on the NPCs tab) and See Map (pins that encounter when we have a location)
 - Instance Type includes World, Zones, Cities, and Delves, with a Show Bountiful checkbox for this week's bountiful doors
 - Delve cards show today's story on the type line (Incomplete color only while you still need that variant) and remaining Stories progress until that achievement is complete. Details list each variant under Stories while it is unfinished
 - A pin on a World-hub rare, boss, or achievement opens that zone or city when we know the map. Cities and outdoor zones for every expansion ship with the Zones pack
@@ -25,15 +26,16 @@ Browse dungeons, raids, Delves, and World hubs from every expansion:
 - Search for specific raids, dungeons, or delves
 - Perfect for planning raid nights or preparing for content
 
-### Vendors Tab
-Find vendors and what they sell:
-- Browse all NPCs that sell items
-- Search for specific vendors
-- See what items each vendor has for sale
-- Find vendors by location or item
-- Check prices and currency requirements
-- Filter by vendor type (general merchants, specialty vendors, etc.)
-- **Pin** sets a live waypoint and opens that zone on the world map. **Save Pin** writes a OneWay Pin in Notes; it becomes **Open Pin** once that vendor location is saved
+### NPCs Tab
+Find NPCs, shops, and encounters:
+- Browse shops, trainers, services, quest givers, rares, and bosses
+- Search by name, encounter name, NPC id, encounter id, or quest id
+- Encounter cards show type, kill quest, related quests, loot, and location
+- Click a quest to open it on the Quests tab; View loot opens the Zones encounter
+- Click a location (or Pin) to open that zone on the world map
+- Encounter NPCs show the instance or zone for that encounter. Current Zone Only includes bosses in this instance or map
+- Filter by expansion, zone, currency, or type (including Encounters)
+- **Pin** sets a live waypoint and opens that zone on the world map. **Save Pin** writes a OneWay Pin in Notes; it becomes **Open Pin** once that location is saved
 
 ### Tradeskills Tab
 Complete profession and recipe database:
@@ -82,10 +84,10 @@ Catalog data is the **CatDB** addons (Zones, NPCs, Items, Quests, Tradeskills). 
 - Complete expansion coverage (Classic through Midnight)
 
 ### Data: NPCs (OneWoW_CatDB_NPCDB)
-- Vendor locations and NPCs for the Vendors tab
+- Shops, trainers, services, quest givers, rares, and bosses for the NPCs tab
 - Item prices and currencies accepted
-- Vendor specialties
-- Seasonal vendors
+- Encounter joins (kill quest, related quests, loot)
+- Seasonal shops
 
 ### Data: Items (OneWoW_CatDB_ItemDB)
 - Item names and item rows for items Catalog already has a source for (drop, vendor, quest, recipe, or achievement)
@@ -122,7 +124,7 @@ This table is the canonical cross-module reference.
 | **Zones** (`OneWoW_CatDB_ZoneDB`) | Journal tab empty; Item Search drop filter and drop details; collection status on journal loot; navigate-to-instance from toasts | QoL Item Tracker — no instance/encounter lines on item tooltips; QoL — no collection grid on instance-entry toasts or ESC instance panel |
 | **Quests** (`OneWoW_CatDB_QuestDBCurrent`) | Quests tab empty (including active-quest views); Item Search quest-reward filter and details; open-to-quest navigation | Notes — no associated-quest list on NPCs; Journal — no "View Quest" or quest completion on journal loot *(also needs Quests)*; AltTracker settings — quest completion not listed for character purge |
 | **Quest Archive** (`OneWoW_CatDB_QuestDBArchive`) | Classic through Dragonflight missing from the Quests tab and from all-quest search | Reward lookups for those expansions stay empty until Archive is on |
-| **NPCs** (`OneWoW_CatDB_NPCDB`) | Vendors tab empty; Item Search vendor filter and "sold by" details; open-to-vendor navigation | Core — no "Open Vendor Details" on NPC context menus; QoL Item Tracker — no vendor lines on item tooltips |
+| **NPCs** (`OneWoW_CatDB_NPCDB`) | NPCs tab empty; Item Search vendor filter and "sold by" details; open-to-NPC navigation | Core — no Open NPC Details on NPC context menus; QoL Item Tracker — no vendor lines on item tooltips |
 | **Items** (`OneWoW_CatDB_ItemDB`) | Item Search names and item rows thin out (only sourced items ship) | Other tabs that join item identity lose shipped names until live fill |
 | **Tradeskills** (`OneWoW_CatDB_TradeSkillDB`) | Tradeskills tab empty; Item Search crafted filter and recipe details (including known-by alts) | ShoppingList — no craft detection, craft orders, recipe picker, or crafting-quality inventory rollup; QoL Professions Panel — no supplemental alt recipe data from tradeskill scans |
 

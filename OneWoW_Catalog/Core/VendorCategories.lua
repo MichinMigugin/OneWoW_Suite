@@ -4,7 +4,7 @@ local _, ns = ...
 -- VendorCategories
 -- ============================================================================
 -- User-assignable vendor types ("Quartermaster / Renown", "Mount Vendor",
--- etc.) used by the Vendors tab for display and filtering.
+-- etc.) used by the NPCs tab for shop-type display and filtering.
 --
 -- The category KEY is the stable identifier stored on NPCDB
 -- vendorCategories.

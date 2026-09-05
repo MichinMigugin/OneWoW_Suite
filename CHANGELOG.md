@@ -20,14 +20,16 @@
 - Details show journal source text plus vendors, drops, quests, and a world rare when we know one. Those extra lines appear when that pack is already loaded. Click a vendor, instance, or quest to open that Catalog tab (that click loads the pack if needed). Achievements appear only when we have an id.
 - Collectibles and Housing can show Collected Only or Not Collected Only. Housing uses owned decor for that.
 
-## Vendors
-- The list is people you can talk to: shops, trainers, innkeepers, repair, stables, flight masters, bankers, barbers, and quest givers. Talking to someone who is missing adds them. Click a quest giver name to open that card. Search by NPC id as well as name.
+## NPCs
+- The NPCs tab lists shops, trainers, innkeepers, repair, stables, flight masters, bankers, barbers, quest givers, rares, and bosses. Encounter cards show type, kill quest, related quests, loot, Adventure Guide text when the game has it, and location. Click a quest, View loot, or a location to open Quests, Zones, or the map. Search by name, encounter name, NPC id, encounter id, or quest id. Filter by Encounters or a boss type.
+- Encounter NPCs use the instance or zone from that encounter instead of Unknown Location. Current Zone Only lists bosses in this instance or map. Click the location to open that map.
 
 ## Fixes
 - Opening the NPCs tab inside a dungeon or other instance no longer errors.
 
 ## Journal
 - Extra drops that come from a quest or an achievement sit in their own groups again. Click the quest link to open that quest.
+- Encounter rows have See NPC and See Map after the source icon when we know that NPC or a pin.
 
 ## Quests
 - Show on Map uses the NPC database pin for the giver or turn-in, including object starters.

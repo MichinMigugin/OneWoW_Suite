@@ -614,6 +614,12 @@ local function LayoutEncounterHeaderRow(encBtn)
     if encBtn.encSource then
         trail = trail + SOURCE_ICON_SIZE + 8
     end
+    if encBtn.seeNpc then
+        trail = trail + (encBtn.seeNpc:GetWidth() or 0) + 8
+    end
+    if encBtn.seeMap then
+        trail = trail + (encBtn.seeMap:GetWidth() or 0) + 8
+    end
     local nameLeft = encBtn._nameLeft or 28
     local nameMax = math.max(40, rowW - nameLeft - trail - LOOT_PAD)
     local textW = math.min(nameFS:GetStringWidth() or 0, nameMax)
@@ -629,6 +635,16 @@ local function LayoutEncounterHeaderRow(encBtn)
     if encBtn.encSource then
         encBtn.encSource:ClearAllPoints()
         encBtn.encSource:SetPoint("LEFT", after, "RIGHT", 8, 0)
+        after = encBtn.encSource
+    end
+    if encBtn.seeNpc then
+        encBtn.seeNpc:ClearAllPoints()
+        encBtn.seeNpc:SetPoint("LEFT", after, "RIGHT", 8, 0)
+        after = encBtn.seeNpc
+    end
+    if encBtn.seeMap then
+        encBtn.seeMap:ClearAllPoints()
+        encBtn.seeMap:SetPoint("LEFT", after, "RIGHT", 8, 0)
     end
 end
 
@@ -1954,6 +1970,93 @@ local function AddZoneJumpButton(parent, instData, zoneMapID)
     return btn
 end
 
+---@param encounter table
+---@return number|nil
+local function EncounterNPCID(encounter)
+    if encounter.questCategory then
+        return nil
+    end
+    local ids = encounter.npcIDs
+    if ids then
+        local vendorAPI = ns.GetCatalogPackAPI("vendors")
+        if vendorAPI then
+            for i = 1, #ids do
+                local id = tonumber(ids[i])
+                if id and vendorAPI.GetVendor(id) then
+                    return id
+                end
+            end
+        end
+        return tonumber(ids[1])
+    end
+    return tonumber(encounter.npcID)
+end
+
+---@param encounter table
+---@return number|nil mapID
+---@return number|nil x
+---@return number|nil y
+local function EncounterMapPoint(encounter)
+    if encounter.questCategory then
+        return nil
+    end
+    local pin = encounter.pin
+    local mapID = encounter.zoneMapID
+    if (not pin or not mapID) and encounter.encounterID then
+        local addon = GetDataAddon()
+        local src = addon and addon.GetEncounter(encounter.encounterID)
+        if src then
+            pin = pin or src.pin
+            mapID = mapID or src.uiMapID
+        end
+    end
+    if mapID and pin and pin.x and pin.y then
+        return mapID, pin.x, pin.y
+    end
+    return nil
+end
+
+---@param encBtn Button
+---@param encounter table
+local function AddEncounterNavLinks(encBtn, encounter)
+    local npcID = EncounterNPCID(encounter)
+    if npcID then
+        local seeNpc = OneWoW_GUI:CreateTextLink(encBtn, {
+            text = L["JOURNAL_SEE_NPC"],
+            fontSize = 11,
+            tooltipTitle = L["JOURNAL_SEE_NPC"],
+            tooltipText = L["JOURNAL_SEE_NPC_TT"],
+            onClick = function()
+                ns.UI.OpenToVendor(npcID)
+            end,
+        })
+        seeNpc:SetFrameLevel((encBtn:GetFrameLevel() or 0) + 2)
+        encBtn.seeNpc = seeNpc
+    end
+    local mapID, x, y = EncounterMapPoint(encounter)
+    if mapID then
+        local seeMap = OneWoW_GUI:CreateTextLink(encBtn, {
+            text = L["JOURNAL_SEE_MAP"],
+            fontSize = 11,
+            tooltipTitle = L["JOURNAL_SEE_MAP"],
+            tooltipText = L["JOURNAL_SEE_MAP_TT"],
+            onClick = function()
+                ns.Navigation:OpenMapPin(mapID, x, y)
+            end,
+        })
+        seeMap:SetFrameLevel((encBtn:GetFrameLevel() or 0) + 2)
+        encBtn.seeMap = seeMap
+    end
+end
+
+---@param encBtn Frame
+---@return boolean
+local function EncounterHeaderClickOnLink(encBtn)
+    return (encBtn.seeNpc and encBtn.seeNpc:IsMouseOver())
+        or (encBtn.seeMap and encBtn.seeMap:IsMouseOver())
+        or (encBtn.jumpBtn and encBtn.jumpBtn:IsMouseOver())
+end
+
 local function OpenAchievementUI(achievementID)
     local ok = OneWoW:EnsureLoaded("Blizzard_AchievementUI")
     if not ok then
@@ -2474,6 +2577,7 @@ RefreshDetailView = function(isSecondRefresh)
         encBtn.encSource = encSource
         local jumpBtn = AddZoneJumpButton(encBtn, instData, encounter.zoneMapID)
         encBtn.jumpBtn = jumpBtn
+        AddEncounterNavLinks(encBtn, encounter)
 
         encBtn:SetScript("OnSizeChanged", function(myself)
             LayoutEncounterHeaderRow(myself)
@@ -2481,7 +2585,10 @@ RefreshDetailView = function(isSecondRefresh)
         LayoutEncounterHeaderRow(encBtn)
 
         local capturedEncID = encounter.encounterID
-        encBtn:SetScript("OnClick", function()
+        encBtn:SetScript("OnClick", function(myself)
+            if EncounterHeaderClickOnLink(myself) then
+                return
+            end
             expandedEncounters[capturedEncID] = not expandedEncounters[capturedEncID]
             RefreshDetailView(false)
         end)

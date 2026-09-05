@@ -6,7 +6,7 @@ local _, ns = ...
 -- Emit agents call ns:RegisterNpcData{ [npcID] = { ... } } from Data/ shards.
 --   ns.NPCs            [npcID] = npc record
 --   ns.NPCsByItem      [itemID][npcID] = true
---   ns.VendorIDs       [npcID] = true  (interactable or learned)
+--   ns.VendorIDs       [npcID] = true  (listed Catalog NPCs)
 -- ============================================================================
 
 local pairs = pairs
@@ -19,8 +19,8 @@ local npcs = ns.NPCs
 local byItem = ns.NPCsByItem
 local vendorIDs = ns.VendorIDs
 
---- True for the Catalog NPCs list: interactable roles, or anyone the player
---- talked to / learned. Shipped rares and bosses stay out until interacted.
+--- True for the Catalog NPCs list: interactable roles, encounters, or anyone
+--- the player talked to / learned.
 ---@param npc table|nil
 ---@return boolean
 function ns.IsListVendor(npc)
@@ -34,7 +34,9 @@ function ns.IsListVendor(npc)
     if roles then
         for i = 1, #roles do
             local role = roles[i]
-            if role == "vendor" or role == "trainer" or role == "service" or role == "quest_giver" then
+            if role == "vendor" or role == "trainer" or role == "service"
+                or role == "quest_giver" or role == "rare" or role == "boss"
+                or role == "vignette" then
                 return true
             end
         end

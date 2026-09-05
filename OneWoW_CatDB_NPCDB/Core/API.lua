@@ -292,6 +292,88 @@ local function OverlayLocations(locations)
     return out
 end
 
+---@param pin table|nil
+---@return number|nil
+---@return number|nil
+local function EncounterPinPercent(pin)
+    if not pin then
+        return nil
+    end
+    local x = Location.ToPercent(Location.ToFraction(pin.x))
+    local y = Location.ToPercent(Location.ToFraction(pin.y))
+    if not x or not y then
+        return nil
+    end
+    return x, y
+end
+
+---@param dest table
+---@param mapID number
+---@param x number|nil
+---@param y number|nil
+---@param zone string|nil
+local function PutLocation(dest, mapID, x, y, zone)
+    local cur = dest[mapID]
+    if not cur then
+        dest[mapID] = {
+            mapID = mapID,
+            x = x,
+            y = y,
+            zone = zone,
+        }
+        return
+    end
+    if (not cur.x or cur.x == 0) and x then
+        cur.x = x
+        cur.y = y
+    end
+    if (not cur.zone or cur.zone == "") and zone then
+        cur.zone = zone
+    end
+end
+
+-- Creature shards often omit xy for dungeon / raid / Delve bosses. The pin
+-- lives on the ZoneDB encounter; placeKeys name the instance map. Join those
+-- onto the overlay view only — never write the shipped row.
+---@param npc table
+---@param base table|nil
+---@param resolveZones boolean|nil
+---@return table|nil
+local function MergeEncounterLocations(npc, base, resolveZones)
+    local ids = npc.encounterIDs
+    local keys = npc.placeKeys
+    if not ids and not keys then
+        return base
+    end
+    local out = base
+    local zoneAPI = OneWoW:GetCatalogPackAPI("journal")
+    if zoneAPI and ids then
+        for i = 1, #ids do
+            local enc = zoneAPI.GetEncounter(ids[i])
+            local mapID = enc and tonumber(enc.uiMapID)
+            if mapID and mapID > 0 then
+                if not out then
+                    out = {}
+                end
+                local x, y = EncounterPinPercent(enc.pin)
+                PutLocation(out, mapID, x, y, resolveZones and MapName(mapID) or nil)
+            end
+        end
+    end
+    if keys then
+        for i = 1, #keys do
+            local mapID = tonumber(tostring(keys[i]):match("^zone:(%d+)$"))
+            if mapID and mapID > 0 then
+                if not out then
+                    out = {}
+                end
+                PutLocation(out, mapID, nil, nil, resolveZones and MapName(mapID) or nil)
+            end
+        end
+    end
+    return out
+end
+
 ---@param npc table
 ---@param resolveZones boolean|nil
 ---@return table|nil
@@ -314,14 +396,20 @@ local function OverlayVendor(npc, resolveZones)
         end
         view.category = ResolveRowCategory(npc, npcID)
         view.encounterIDs = npc.encounterIDs
+        view.questIDs = npc.questIDs
+        view.trackingQuestIDs = npc.trackingQuestIDs
+        view.rewardQuestIDs = npc.rewardQuestIDs
+        view.achievementIDs = npc.achievementIDs
         view.learned = npc.learned
         view.sync = npc.sync
         if npcID then
             view.lastScanned = GetVendorVisits()[npcID] or npc.lastScanned
         end
-        if resolveZones then
-            view.locations = OverlayLocations(npc.locations)
-        end
+        view.locations = MergeEncounterLocations(
+            npc,
+            resolveZones and OverlayLocations(npc.locations) or CopyLocations(npc.locations),
+            resolveZones
+        )
         return view
     end
 
@@ -347,9 +435,16 @@ local function OverlayVendor(npc, resolveZones)
         roles = npc.roles,
         encounterIDs = npc.encounterIDs,
         items = npc.items,
-        locations = resolveZones and OverlayLocations(npc.locations) or CopyLocations(npc.locations),
+        locations = MergeEncounterLocations(
+            npc,
+            resolveZones and OverlayLocations(npc.locations) or CopyLocations(npc.locations),
+            resolveZones
+        ),
         placeKeys = npc.placeKeys,
         questIDs = npc.questIDs,
+        trackingQuestIDs = npc.trackingQuestIDs,
+        rewardQuestIDs = npc.rewardQuestIDs,
+        achievementIDs = npc.achievementIDs,
         lastScanned = (npcID and GetVendorVisits()[npcID]) or npc.lastScanned,
         learned = npc.learned,
         sync = npc.sync,
@@ -380,14 +475,14 @@ function OneWoW_CatDB_NPCDB_API.GetNPC(npcID)
     return OverlayVendor(ns.NPCs[npcID], true)
 end
 
---- True for the Catalog NPCs list: interactable roles, or learned / talked-to.
+--- True for the Catalog NPCs list: interactable or encounter roles, or learned.
 ---@param npc table|nil
 ---@return boolean
 function OneWoW_CatDB_NPCDB_API.IsListVendor(npc)
     return ns.IsListVendor(npc)
 end
 
---- Interactable and learned NPC rows keyed by NPC ID.
+--- Listed Catalog NPC rows keyed by NPC ID.
 --- List path does not call C_Map; GetVendor / GetVendorsByItem resolve zone names.
 ---@return table vendors
 function OneWoW_CatDB_NPCDB_API.GetAllVendors()

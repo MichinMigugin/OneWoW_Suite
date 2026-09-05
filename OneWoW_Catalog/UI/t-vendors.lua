@@ -9,7 +9,11 @@ local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 local ipairs, pairs = ipairs, pairs
 local tinsert, sort, wipe, tconcat = tinsert, sort, wipe, table.concat
 local C_Item, C_CurrencyInfo, C_Map, C_Timer, C_TooltipInfo = C_Item, C_CurrencyInfo, C_Map, C_Timer, C_TooltipInfo
-local C_CreatureInfo = C_CreatureInfo
+local C_CreatureInfo, C_QuestLog = C_CreatureInfo, C_QuestLog
+local EJ_GetEncounterInfo = EJ_GetEncounterInfo
+local GetAchievementInfo = GetAchievementInfo
+local MAP_LEGEND_RARE, MAP_LEGEND_WORLDBOSS = MAP_LEGEND_RARE, MAP_LEGEND_WORLDBOSS
+local RAID, DELVES_LABEL, ACHIEVEMENTS, QUESTS_LABEL = RAID, DELVES_LABEL, ACHIEVEMENTS, QUESTS_LABEL
 local UNKNOWNOBJECT = UNKNOWNOBJECT
 local SetPortraitTextureFromCreatureDisplayID = SetPortraitTextureFromCreatureDisplayID
 local math = math
@@ -174,6 +178,26 @@ local function GetCurrentPlayerZone()
     return info.name, mapID
 end
 
+---@return table<number, boolean>|nil
+local function CollectPlayerMapIDs()
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then
+        return nil
+    end
+    local set = { [mapID] = true }
+    local id = mapID
+    for _ = 1, 8 do
+        local info = C_Map.GetMapInfo(id)
+        local parent = info and info.parentMapID
+        if not parent or parent == 0 or set[parent] then
+            break
+        end
+        set[parent] = true
+        id = parent
+    end
+    return set
+end
+
 local function VendorHasVendorRole(vendor)
     local addon = GetDataAddon()
     if addon and addon.IsListVendor then
@@ -185,7 +209,9 @@ local function VendorHasVendorRole(vendor)
     end
     if vendor.roles then
         for _, role in ipairs(vendor.roles) do
-            if role == "vendor" or role == "trainer" or role == "service" or role == "quest_giver" then
+            if role == "vendor" or role == "trainer" or role == "service"
+                or role == "quest_giver" or role == "rare" or role == "boss"
+                or role == "vignette" then
                 return true
             end
         end
@@ -200,6 +226,305 @@ local function VendorHasVendorRole(vendor)
     end
     return hasItems or vendor.lastScanned ~= nil
 end
+
+local CATDB_RARE_ENC = 10000000
+local CLASS_WORLDBOSS = 3
+
+local function HasNPCRole(vendor, want)
+    local roles = vendor and vendor.roles
+    if not roles then return false end
+    for i = 1, #roles do
+        if roles[i] == want then
+            return true
+        end
+    end
+    return false
+end
+
+local function HasShopRole(vendor)
+    return HasNPCRole(vendor, "vendor")
+        or HasNPCRole(vendor, "trainer")
+        or HasNPCRole(vendor, "service")
+        or HasNPCRole(vendor, "quest_giver")
+end
+
+local function IsRareEncounterID(encounterID)
+    encounterID = tonumber(encounterID)
+    return encounterID and encounterID >= CATDB_RARE_ENC
+end
+
+local function FirstEncounterID(vendor)
+    local ids = vendor and vendor.encounterIDs
+    if not ids then return nil end
+    return tonumber(ids[1])
+end
+
+local function PlaceInstanceType(vendor)
+    if vendor._placeType ~= nil then
+        return vendor._placeType ~= false and vendor._placeType or nil
+    end
+    local zoneAPI = ns.GetCatalogPackAPI("journal")
+    if not zoneAPI then
+        return nil
+    end
+    if vendor.placeKeys then
+        for i = 1, #vendor.placeKeys do
+            local inst = zoneAPI.GetInstanceByPlaceKey and zoneAPI.GetInstanceByPlaceKey(vendor.placeKeys[i])
+            if inst and inst.instanceType then
+                vendor._placeType = inst.instanceType
+                return inst.instanceType
+            end
+        end
+    end
+    local encID = FirstEncounterID(vendor)
+    local enc = encID and zoneAPI.GetEncounter and zoneAPI.GetEncounter(encID)
+    if enc and enc.instanceID and zoneAPI.GetInstanceByInstanceID then
+        local inst = zoneAPI.GetInstanceByInstanceID(enc.instanceID)
+        if inst and inst.instanceType then
+            vendor._placeType = inst.instanceType
+            return inst.instanceType
+        end
+    end
+    vendor._placeType = false
+    return nil
+end
+
+local function EncounterSubtype(vendor)
+    if not vendor then return nil end
+    if vendor._encounterSubtype ~= nil then
+        return vendor._encounterSubtype ~= false and vendor._encounterSubtype or nil
+    end
+    local subtype
+    if vendor.classification == CLASS_WORLDBOSS then
+        subtype = "world_boss"
+    elseif HasNPCRole(vendor, "rare") or HasNPCRole(vendor, "vignette")
+        or IsRareEncounterID(FirstEncounterID(vendor)) then
+        subtype = "rare"
+    elseif HasNPCRole(vendor, "boss") or FirstEncounterID(vendor) then
+        local itype = PlaceInstanceType(vendor)
+        if itype == "raid" then
+            subtype = "raid"
+        elseif itype == "delve" then
+            subtype = "delve"
+        elseif itype == "world" or itype == "zone" then
+            subtype = "world_boss"
+        else
+            subtype = "dungeon"
+        end
+        if not itype and not ns.GetCatalogPackAPI("journal") then
+            return subtype
+        end
+    end
+    vendor._encounterSubtype = subtype or false
+    return subtype
+end
+
+local function EncounterSubtypeLabel(subtype)
+    if subtype == "rare" then return MAP_LEGEND_RARE end
+    if subtype == "world_boss" then return MAP_LEGEND_WORLDBOSS end
+    if subtype == "raid" then return RAID end
+    if subtype == "delve" then return DELVES_LABEL end
+    if subtype == "dungeon" then return L["JOURNAL_CARD_DUNGEON"] end
+    return subtype
+end
+
+local function EncounterTypeLine(vendor)
+    local subtype = EncounterSubtype(vendor)
+    if not subtype then return nil end
+    return string.format(L["NPCS_TYPE_LINE"], L["NPCS_TYPE_ENCOUNTER"], EncounterSubtypeLabel(subtype))
+end
+
+local function FirstJournalEncounterID(vendor)
+    local ids = vendor and vendor.encounterIDs
+    if not ids then return nil end
+    for i = 1, #ids do
+        local id = tonumber(ids[i])
+        if id and not IsRareEncounterID(id) then
+            return id
+        end
+    end
+    return nil
+end
+
+local function IDListContains(list, term)
+    if not list or not term then return false end
+    for i = 1, #list do
+        if tostring(list[i]):find(term, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function IDInList(list, id)
+    if not list then return false end
+    id = tonumber(id)
+    if not id then return false end
+    for i = 1, #list do
+        if tonumber(list[i]) == id then
+            return true
+        end
+    end
+    return false
+end
+
+local function SafeDisplayText(text)
+    if not text or text == "" then
+        return nil
+    end
+    if OneWoW.Restriction.IsSecret(text) then
+        return nil
+    end
+    return text
+end
+
+-- NPC shards do not ship creature names. Tooltip names are also secret inside
+-- instances, so list search and the unnamed-row fallback use the encounter
+-- label from the Adventure Guide or the Zones pack when that pack is loaded.
+local encounterNameByID = {}
+
+---@param encounterID number|nil
+---@return string|nil
+local function EncounterNameForID(encounterID)
+    encounterID = tonumber(encounterID)
+    if not encounterID then
+        return nil
+    end
+    local cached = encounterNameByID[encounterID]
+    if cached ~= nil then
+        return cached or nil
+    end
+    local name
+    if not IsRareEncounterID(encounterID) then
+        name = SafeDisplayText(EJ_GetEncounterInfo(encounterID))
+    end
+    local zoneAPI = ns.GetCatalogPackAPI("journal")
+    if not name and zoneAPI then
+        local enc = zoneAPI.GetEncounter(encounterID)
+        name = enc and SafeDisplayText(enc.name) or nil
+    end
+    if name then
+        encounterNameByID[encounterID] = name
+    elseif zoneAPI then
+        encounterNameByID[encounterID] = false
+    end
+    return name
+end
+
+---@param vendor table|nil
+---@return string|nil
+local function VendorEncounterName(vendor)
+    local ids = vendor and vendor.encounterIDs
+    if not ids then
+        return nil
+    end
+    for i = 1, #ids do
+        local name = EncounterNameForID(ids[i])
+        if name then
+            return name
+        end
+    end
+    return nil
+end
+
+---@param vendor table|nil
+---@param term string
+---@return boolean
+local function VendorMatchesEncounterName(vendor, term)
+    local ids = vendor and vendor.encounterIDs
+    if not ids then
+        return false
+    end
+    for i = 1, #ids do
+        local name = EncounterNameForID(ids[i])
+        if name and name:lower():find(term, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+local function ResolveQuestName(questID)
+    local quests = ns.GetCatalogPackAPI("quests")
+    if quests and quests.GetQuestName then
+        local name = SafeDisplayText(quests.GetQuestName(questID))
+        if name then
+            return name
+        end
+    end
+    local title = SafeDisplayText(C_QuestLog.GetTitleForQuestID(questID))
+    if title then
+        return title
+    end
+    return string.format(L["QUESTS_UNNAMED"], questID)
+end
+
+local function OpenNPCQuest(questID)
+    questID = tonumber(questID)
+    if not questID or not ns.UI.OpenQuest then
+        return
+    end
+    local packName = ns.EnsureCatalogPack("quests")
+    if ns.GetCatalogPackAPI("quests") then
+        ns.UI.OpenQuest(questID)
+        return
+    end
+    if packName then
+        OneWoW:WithAddon(packName, function()
+            ns.UI.OpenQuest(questID)
+        end)
+    end
+end
+
+local function OpenEncounterLoot(vendor)
+    if not vendor or not ns.UI.OpenToInstance then
+        return
+    end
+    local spec = {
+        encounterID = FirstEncounterID(vendor),
+        placeKey = vendor.placeKeys and vendor.placeKeys[1],
+    }
+    if not spec.encounterID and not spec.placeKey then
+        return
+    end
+    local packName = ns.EnsureCatalogPack("journal")
+    if ns.GetCatalogPackAPI("journal") then
+        ns.UI.OpenToInstance(spec)
+        return
+    end
+    if packName then
+        OneWoW:WithAddon(packName, function()
+            ns.UI.OpenToInstance(spec)
+        end)
+    end
+end
+
+local function OpenNPCAchievement(achievementID)
+    achievementID = tonumber(achievementID)
+    if not achievementID then
+        return
+    end
+    if not OneWoW:EnsureLoaded("Blizzard_AchievementUI") then
+        return
+    end
+    ShowAchievementFrameForAchievement(achievementID)
+end
+
+local function EncounterFlavor(vendor)
+    local encID = FirstJournalEncounterID(vendor)
+    if not encID then
+        return nil
+    end
+    local _, description = EJ_GetEncounterInfo(encID)
+    return SafeDisplayText(description)
+end
+
+local FILTER_ENCOUNTER = "encounter"
+local FILTER_ENC_RARE = "encounter_rare"
+local FILTER_ENC_WORLD = "encounter_world_boss"
+local FILTER_ENC_RAID = "encounter_raid"
+local FILTER_ENC_DUNGEON = "encounter_dungeon"
+local FILTER_ENC_DELVE = "encounter_delve"
 
 local function VendorMatchesExpansion(vendor, filter)
     if filter == nil or filter == -1 then return true end
@@ -309,11 +634,46 @@ local function VendorMatchesCurrencyFilter(vendor, filter)
     return false
 end
 
-local function VendorMatchesZoneFilter(vendor, filterZone)
-    if not filterZone then return true end
-    if not vendor or not vendor.locations then return false end
+local function VendorMatchesZoneFilter(vendor, filterZone, filterMapIDs)
+    if not filterZone and not filterMapIDs then
+        return true
+    end
+    if not vendor then
+        return false
+    end
+    if filterMapIDs then
+        if vendor.locations then
+            for mapID, loc in pairs(vendor.locations) do
+                local id = loc.mapID or mapID
+                if filterMapIDs[id] then
+                    return true
+                end
+            end
+        end
+        local keys = vendor.placeKeys
+        if keys then
+            for i = 1, #keys do
+                local id = tonumber(tostring(keys[i]):match("^zone:(%d+)$"))
+                if id and filterMapIDs[id] then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+    if not vendor.locations then
+        return false
+    end
     for _, loc in pairs(vendor.locations) do
-        if loc.zone == filterZone then
+        local zone = loc.zone
+        if (not zone or zone == "") and loc.mapID then
+            local info = C_Map.GetMapInfo(loc.mapID)
+            zone = info and info.name
+            if zone then
+                loc.zone = zone
+            end
+        end
+        if zone == filterZone then
             return true
         end
     end
@@ -324,6 +684,24 @@ local UNCATEGORIZED_KEY = "__none__"
 
 local function VendorMatchesCategoryFilter(vendor, filterKey)
     if not filterKey then return true end
+    if filterKey == FILTER_ENCOUNTER then
+        return EncounterSubtype(vendor) ~= nil
+    end
+    if filterKey == FILTER_ENC_RARE then
+        return EncounterSubtype(vendor) == "rare"
+    end
+    if filterKey == FILTER_ENC_WORLD then
+        return EncounterSubtype(vendor) == "world_boss"
+    end
+    if filterKey == FILTER_ENC_RAID then
+        return EncounterSubtype(vendor) == "raid"
+    end
+    if filterKey == FILTER_ENC_DUNGEON then
+        return EncounterSubtype(vendor) == "dungeon"
+    end
+    if filterKey == FILTER_ENC_DELVE then
+        return EncounterSubtype(vendor) == "delve"
+    end
     if filterKey == UNCATEGORIZED_KEY then
         return not vendor.category or vendor.category == ""
     end
@@ -694,8 +1072,14 @@ local function BindVendorListRow(row, index, vendor, state)
     if knownName then
         paintName(knownName)
     else
-        row.nameText:SetText("NPC #" .. (npcID or "?"))
-        row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        local encounterName = VendorEncounterName(vendor)
+        if encounterName then
+            row.nameText:SetText(encounterName)
+            row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            row.nameText:SetText("NPC #" .. (npcID or "?"))
+            row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
         if npcID then
             FillVendorName(npcID, nil, paintName, function()
                 return row._nameToken == nameToken and row.vendor and row.vendor.npcID == npcID
@@ -745,10 +1129,18 @@ local function BindVendorListRow(row, index, vendor, state)
         end
     end
     local zoneLabel = LocationZoneLabel(primaryLoc)
-    row.zoneText:SetText(zoneLabel .. " | " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
+    if itemCount > 0 then
+        row.zoneText:SetText(zoneLabel .. " | " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
+    else
+        row.zoneText:SetText(zoneLabel)
+    end
     row.zoneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    if vendor.category then
+    local typeLine = EncounterTypeLine(vendor)
+    if typeLine then
+        row.categoryText:SetText(typeLine)
+        row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    elseif vendor.category then
         row.categoryText:SetText(ns.VendorCategories:GetLabel(vendor.category))
         row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     else
@@ -813,6 +1205,24 @@ local function BindSaveOrOpenLink(link, vendor, mapID, x, y)
     end)
 end
 
+local function PinLocationOnMap(addon, vendor, mapID)
+    local loc = vendor and vendor.locations and mapID and vendor.locations[mapID]
+    if not loc and vendor and vendor.locations then
+        for id, row in pairs(vendor.locations) do
+            loc = row
+            mapID = row.mapID or id
+            break
+        end
+    end
+    if mapID then
+        ns.Navigation:OpenMapPin(mapID, loc and loc.x, loc and loc.y)
+        return
+    end
+    if addon and not addon.CreateWaypoint(vendor, mapID) then
+        print("|cFFFFD100OneWoW:|r " .. L["VENDORS_WAYPOINT_FAILED"])
+    end
+end
+
 local function AddLocationRow(parent, yOffset, vendor, mapID, loc, addon)
     local zonePart = LocationZoneLabel(loc)
     local coordStr = ""
@@ -820,25 +1230,26 @@ local function AddLocationRow(parent, yOffset, vendor, mapID, loc, addon)
         coordStr = string.format(" (%.1f, %.1f)", loc.x, loc.y)
     end
 
-    local locLine = OneWoW_GUI:CreateFS(parent, 12)
+    local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
+    local locLine = OneWoW_GUI:CreateTextLink(parent, {
+        text = zonePart .. coordStr,
+        fontSize = 12,
+        tooltipTitle = zonePart,
+        tooltipText = L["VENDORS_WAYPOINT_TT"],
+        onClick = function()
+            PinLocationOnMap(addon, vendor, capturedMapID)
+        end,
+    })
     locLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    locLine:SetJustifyH("LEFT")
-    locLine:SetText(zonePart .. coordStr)
-    locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     tinsert(detailElements, locLine)
 
-    local capturedMapID, capturedX, capturedY = mapID, loc.x, loc.y
     local pinLink = OneWoW_GUI:CreateTextLink(parent, {
         text = L["VENDORS_WAYPOINT"],
         fontSize = 11,
         tooltipTitle = L["VENDORS_WAYPOINT"],
         tooltipText = L["VENDORS_WAYPOINT_TT"],
         onClick = function()
-            if addon then
-                if not addon.CreateWaypoint(vendor, capturedMapID) then
-                    print("|cFFFFD100OneWoW:|r " .. L["VENDORS_WAYPOINT_FAILED"])
-                end
-            end
+            PinLocationOnMap(addon, vendor, capturedMapID)
         end,
     })
     pinLink:SetPoint("LEFT", locLine, "RIGHT", 8, 0)
@@ -871,7 +1282,21 @@ local function BindVendorTypeControls(panels, vendor)
     if not vendor then
         typeDropdown:Hide()
         if typeLabel then typeLabel:Hide() end
+        if panels.LayoutDetailHeader then
+            panels.LayoutDetailHeader({ height = 0 })
+        end
         return
+    end
+    if not HasShopRole(vendor) then
+        typeDropdown:Hide()
+        if typeLabel then typeLabel:Hide() end
+        if panels.LayoutDetailHeader then
+            panels.LayoutDetailHeader({ height = 0 })
+        end
+        return
+    end
+    if panels.LayoutDetailHeader then
+        panels.LayoutDetailHeader({ height = 38 })
     end
     if typeLabel then typeLabel:Show() end
     typeDropdown:Show()
@@ -941,14 +1366,24 @@ local function ShowVendorDetail(panels, vendor)
             if vendor.items then
                 for _ in pairs(vendor.items) do n = n + 1 end
             end
-            panels.rightStatusText:SetText(name .. " - " .. n .. " " .. L["VENDORS_ITEMS_SHORT"])
+            if n > 0 then
+                panels.rightStatusText:SetText(name .. " - " .. n .. " " .. L["VENDORS_ITEMS_SHORT"])
+            else
+                panels.rightStatusText:SetText(name)
+            end
         end
     end
     if vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name, vendor.npcID) then
         paintDetailName(vendor.name)
     else
-        nameHeader:SetText("NPC #" .. (vendor.npcID or "?"))
-        nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        local encounterName = VendorEncounterName(vendor)
+        if encounterName then
+            nameHeader:SetText(encounterName)
+            nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            nameHeader:SetText("NPC #" .. (vendor.npcID or "?"))
+            nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
         if vendor.npcID then
             local npcID = vendor.npcID
             FillVendorName(npcID, vendor.name, paintDetailName, function()
@@ -988,45 +1423,152 @@ local function ShowVendorDetail(panels, vendor)
     tinsert(detailElements, infoLine)
     yOffset = StepRow(yOffset, infoLine:GetStringHeight())
 
+    local typeLine = EncounterTypeLine(vendor)
+    if typeLine then
+        local typeFS = OneWoW_GUI:CreateFS(parent, 12)
+        typeFS:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        typeFS:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        typeFS:SetJustifyH("LEFT")
+        typeFS:SetText(typeLine)
+        typeFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        tinsert(detailElements, typeFS)
+        yOffset = StepRow(yOffset, typeFS:GetStringHeight())
+    end
+
+    local journalEncID = FirstJournalEncounterID(vendor)
+    if journalEncID then
+        local encFS = OneWoW_GUI:CreateFS(parent, 12)
+        encFS:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        encFS:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        encFS:SetJustifyH("LEFT")
+        encFS:SetText(L["NPCS_ENCOUNTER_ID"] .. ": " .. journalEncID)
+        encFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        tinsert(detailElements, encFS)
+        yOffset = StepRow(yOffset, encFS:GetStringHeight())
+    end
+
+    if vendor.trackingQuestIDs then
+        for i = 1, #vendor.trackingQuestIDs do
+            local killID = tonumber(vendor.trackingQuestIDs[i])
+            if killID then
+                local killName = ResolveQuestName(killID)
+                local killLink = OneWoW_GUI:CreateTextLink(parent, {
+                    text = L["NPCS_KILL_QUEST"] .. ": " .. killID .. " - " .. killName,
+                    fontSize = 12,
+                    tooltipTitle = killName,
+                    tooltipText = L["QUESTS_QUESTID"] .. ": " .. killID,
+                    onClick = function()
+                        OpenNPCQuest(killID)
+                    end,
+                })
+                killLink:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+                tinsert(detailElements, killLink)
+                yOffset = StepRow(yOffset, killLink:GetHeight() or 14)
+            end
+        end
+    end
+
+    local relatedQuests = {}
+    if vendor.questIDs then
+        for i = 1, #vendor.questIDs do
+            local qid = tonumber(vendor.questIDs[i])
+            if qid and not IDInList(vendor.trackingQuestIDs, qid) then
+                tinsert(relatedQuests, qid)
+            end
+        end
+    end
+    if vendor.rewardQuestIDs then
+        for i = 1, #vendor.rewardQuestIDs do
+            local qid = tonumber(vendor.rewardQuestIDs[i])
+            if qid and not IDInList(vendor.trackingQuestIDs, qid) and not IDInList(relatedQuests, qid) then
+                tinsert(relatedQuests, qid)
+            end
+        end
+    end
+    if #relatedQuests > 0 then
+        local questHeader = OneWoW_GUI:CreateFS(parent, 12)
+        questHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        questHeader:SetText(QUESTS_LABEL)
+        questHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        tinsert(detailElements, questHeader)
+        yOffset = StepRow(yOffset, questHeader:GetStringHeight(), 2)
+        for i = 1, #relatedQuests do
+            local qid = relatedQuests[i]
+            local qname = ResolveQuestName(qid)
+            local qlink = OneWoW_GUI:CreateTextLink(parent, {
+                text = qname .. " (" .. qid .. ")",
+                fontSize = 12,
+                tooltipTitle = qname,
+                tooltipText = L["QUESTS_QUESTID"] .. ": " .. qid,
+                onClick = function()
+                    OpenNPCQuest(qid)
+                end,
+            })
+            qlink:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+            tinsert(detailElements, qlink)
+            yOffset = StepRow(yOffset, qlink:GetHeight() or 14)
+        end
+    end
+
+    if FirstEncounterID(vendor) or (vendor.placeKeys and vendor.placeKeys[1]) then
+        local lootLink = OneWoW_GUI:CreateTextLink(parent, {
+            text = L["NPCS_VIEW_LOOT"],
+            fontSize = 12,
+            tooltipTitle = L["NPCS_VIEW_LOOT"],
+            tooltipText = L["NPCS_VIEW_LOOT_TT"],
+            onClick = function()
+                OpenEncounterLoot(vendor)
+            end,
+        })
+        lootLink:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        tinsert(detailElements, lootLink)
+        yOffset = StepRow(yOffset, lootLink:GetHeight() or 14)
+    end
+
+    if vendor.achievementIDs and #vendor.achievementIDs > 0 then
+        local achHeader = OneWoW_GUI:CreateFS(parent, 12)
+        achHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        achHeader:SetText(ACHIEVEMENTS)
+        achHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        tinsert(detailElements, achHeader)
+        yOffset = StepRow(yOffset, achHeader:GetStringHeight(), 2)
+        for i = 1, #vendor.achievementIDs do
+            local achID = tonumber(vendor.achievementIDs[i])
+            if achID then
+                local _, achName = GetAchievementInfo(achID)
+                achName = SafeDisplayText(achName) or ("#" .. achID)
+                local achLink = OneWoW_GUI:CreateTextLink(parent, {
+                    text = achName .. " (" .. achID .. ")",
+                    fontSize = 12,
+                    tooltipTitle = achName,
+                    onClick = function()
+                        OpenNPCAchievement(achID)
+                    end,
+                })
+                achLink:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+                tinsert(detailElements, achLink)
+                yOffset = StepRow(yOffset, achLink:GetHeight() or 14)
+            end
+        end
+    end
+
+    local flavor = EncounterFlavor(vendor)
+    if flavor then
+        local flavorFS = OneWoW_GUI:CreateFS(parent, 11)
+        flavorFS:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        flavorFS:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        flavorFS:SetJustifyH("LEFT")
+        flavorFS:SetWordWrap(true)
+        flavorFS:SetText(flavor)
+        flavorFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        tinsert(detailElements, flavorFS)
+        yOffset = StepRow(yOffset, flavorFS:GetStringHeight(), 6)
+    end
+
     if vendor.locations then
         for mapID, loc in pairs(vendor.locations) do
             yOffset = AddLocationRow(parent, yOffset, vendor, mapID, loc, addon)
         end
-    end
-
-    yOffset = yOffset - 4
-    local divider = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
-    tinsert(detailElements, divider)
-    yOffset = yOffset - 8
-
-    if not vendor.lastScanned then
-        local unseenHint = OneWoW_GUI:CreateFS(parent, 10)
-        unseenHint:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-        unseenHint:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-        unseenHint:SetJustifyH("LEFT")
-        unseenHint:SetWordWrap(true)
-        unseenHint:SetText(L["VENDORS_UNSEEN_HINT"])
-        unseenHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        tinsert(detailElements, unseenHint)
-        yOffset = StepRow(yOffset, unseenHint:GetStringHeight(), 6)
-    else
-        local scanParts = {}
-        if vendor.firstSeen then
-            tinsert(scanParts, L["VENDORS_FIRST_SEEN"] .. ": " .. FormatTimestamp(vendor.firstSeen))
-        end
-        tinsert(scanParts, L["VENDORS_LAST_SCANNED"] .. ": " .. FormatTimestamp(vendor.lastScanned))
-        if vendor.scanCount then
-            tinsert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
-        end
-        local scanInfo = OneWoW_GUI:CreateFS(parent, 10)
-        scanInfo:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-        scanInfo:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-        scanInfo:SetJustifyH("LEFT")
-        scanInfo:SetWordWrap(true)
-        scanInfo:SetText(tconcat(scanParts, "  |  "))
-        scanInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        tinsert(detailElements, scanInfo)
-        yOffset = StepRow(yOffset, scanInfo:GetStringHeight(), 6)
     end
 
     local itemCount = 0
@@ -1034,14 +1576,63 @@ local function ShowVendorDetail(panels, vendor)
         for _ in pairs(vendor.items) do itemCount = itemCount + 1 end
     end
 
+    if vendor.lastScanned or HasShopRole(vendor) then
+        yOffset = yOffset - 4
+        local divider = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
+        tinsert(detailElements, divider)
+        yOffset = yOffset - 8
+        if vendor.lastScanned then
+            local scanParts = {}
+            if vendor.firstSeen then
+                tinsert(scanParts, L["VENDORS_FIRST_SEEN"] .. ": " .. FormatTimestamp(vendor.firstSeen))
+            end
+            tinsert(scanParts, L["VENDORS_LAST_SCANNED"] .. ": " .. FormatTimestamp(vendor.lastScanned))
+            if vendor.scanCount then
+                tinsert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
+            end
+            local scanInfo = OneWoW_GUI:CreateFS(parent, 10)
+            scanInfo:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+            scanInfo:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+            scanInfo:SetJustifyH("LEFT")
+            scanInfo:SetWordWrap(true)
+            scanInfo:SetText(tconcat(scanParts, "  |  "))
+            scanInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            tinsert(detailElements, scanInfo)
+            yOffset = StepRow(yOffset, scanInfo:GetStringHeight(), 6)
+        else
+            local unseenHint = OneWoW_GUI:CreateFS(parent, 10)
+            unseenHint:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+            unseenHint:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+            unseenHint:SetJustifyH("LEFT")
+            unseenHint:SetWordWrap(true)
+            unseenHint:SetText(L["VENDORS_UNSEEN_HINT"])
+            unseenHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            tinsert(detailElements, unseenHint)
+            yOffset = StepRow(yOffset, unseenHint:GetStringHeight(), 6)
+        end
+    end
+
+    if panels.rightStatusText then
+        local statusName = (vendor.name and vendor.name ~= "" and not IsGenericVendorName(vendor.name, vendor.npcID))
+            and vendor.name
+            or (VendorEncounterName(vendor) or ("NPC #" .. (vendor.npcID or "?")))
+        if itemCount > 0 then
+            panels.rightStatusText:SetText(statusName .. " - " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
+        else
+            panels.rightStatusText:SetText(statusName)
+        end
+    end
+
+    if itemCount == 0 then
+        parent:SetHeight(math.abs(yOffset) + 20)
+        panels.UpdateDetailThumb()
+        return
+    end
+
     yOffset = yOffset - 4
     local itemsDivider = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
     tinsert(detailElements, itemsDivider)
     yOffset = yOffset - 8
-
-    if panels.rightStatusText then
-        panels.rightStatusText:SetText(((vendor.name and vendor.name ~= "") and vendor.name or ("NPC #" .. (vendor.npcID or "?"))) .. " - " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
-    end
 
     if vendor.items then
         local sortedItems = {}
@@ -1178,9 +1769,9 @@ function RefreshVendorList(panels)
     local sorted = addon.GetSortedVendors(nil)
 
     local activeZoneFilter = nil
+    local activeMapIDs = nil
     if currentZoneOnly then
-        local playerZone = GetCurrentPlayerZone()
-        activeZoneFilter = playerZone
+        activeMapIDs = CollectPlayerMapIDs()
     elseif zoneFilter then
         activeZoneFilter = zoneFilter
     end
@@ -1189,8 +1780,8 @@ function RefreshVendorList(panels)
     local term = searchText ~= "" and searchText:lower() or nil
     for _, vendor in ipairs(sorted) do
         local passesZone = true
-        if activeZoneFilter then
-            passesZone = VendorMatchesZoneFilter(vendor, activeZoneFilter)
+        if activeZoneFilter or activeMapIDs then
+            passesZone = VendorMatchesZoneFilter(vendor, activeZoneFilter, activeMapIDs)
         end
 
         local passesSearch = true
@@ -1199,7 +1790,15 @@ function RefreshVendorList(panels)
             local zoneMatch = false
             if vendor.locations then
                 for _, loc in pairs(vendor.locations) do
-                    if loc.zone and loc.zone:lower():find(term, 1, true) then
+                    local zone = loc.zone
+                    if (not zone or zone == "") and loc.mapID then
+                        local info = C_Map.GetMapInfo(loc.mapID)
+                        zone = info and info.name
+                        if zone then
+                            loc.zone = zone
+                        end
+                    end
+                    if zone and zone:lower():find(term, 1, true) then
                         zoneMatch = true
                         break
                     end
@@ -1207,7 +1806,12 @@ function RefreshVendorList(panels)
             end
             local itemMatch = VendorMatchesItemSearch(vendor, term, addon)
             local idMatch = vendor.npcID and tostring(vendor.npcID):find(term, 1, true)
+                or IDListContains(vendor.encounterIDs, term)
+                or IDListContains(vendor.trackingQuestIDs, term)
+                or IDListContains(vendor.questIDs, term)
+                or IDListContains(vendor.rewardQuestIDs, term)
             passesSearch = nameMatch or zoneMatch or itemMatch or idMatch
+                or VendorMatchesEncounterName(vendor, term)
         end
 
         local passesCurrency = VendorMatchesCurrencyFilter(vendor, currencyFilter)
@@ -1549,6 +2153,12 @@ function ns.UI.CreateVendorsTab(parent)
         buildItems = function()
             local items = {
                 { value = nil, text = L["VENDORS_CATEGORY_ALL"] },
+                { value = FILTER_ENCOUNTER, text = L["NPCS_FILTER_ENCOUNTER"] },
+                { value = FILTER_ENC_RARE, text = L["NPCS_FILTER_RARE"] },
+                { value = FILTER_ENC_WORLD, text = L["NPCS_FILTER_WORLD_BOSS"] },
+                { value = FILTER_ENC_RAID, text = L["NPCS_FILTER_RAID"] },
+                { value = FILTER_ENC_DUNGEON, text = L["NPCS_FILTER_DUNGEON"] },
+                { value = FILTER_ENC_DELVE, text = L["NPCS_FILTER_DELVE"] },
                 { value = UNCATEGORIZED_KEY, text = L["VENDORS_CATEGORY_NONE"] },
             }
             for _, key in ipairs(ns.VendorCategories:GetSortedKeys()) do
@@ -1686,10 +2296,10 @@ function ns.UI.CreateVendorsTab(parent)
     panels.LayoutDetailHeader({ height = 38 })
 
     -- Start in the no-data state; the data-ready watcher swaps to the live view
-    -- once the Vendors data unit's data is queryable. Catch-up covers a tab opened
-    -- after data was already ready; the signal covers a mid-session load. The
-    -- `wired` guard keeps it idempotent (scan-callback registration is not
-    -- dedup-safe, and catch-up + a later signal can both reach the handler).
+    -- once the NPC data unit is queryable. Catch-up covers a tab opened after
+    -- data was already ready; the signal covers a mid-session load. The `wired`
+    -- guard keeps it idempotent (scan-callback registration is not dedup-safe,
+    -- and catch-up + a later signal can both reach the handler).
     emptyList:SetText(L["VENDORS_NO_DATA"])
     emptyDetail:SetText(L["VENDORS_NO_DATA"])
     panels.listScrollChild:SetHeight(100)
