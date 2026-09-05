@@ -285,6 +285,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
     ["QUESTS_NPC_FILTER"] = "NPC: %s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "Clear NPC filter",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "Click to open this NPC in Catalog",
     ["QUESTS_SEE_NOTE"] = "See Note",
     ["QUESTS_MAKE_NOTE"] = "Make Note",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl-Click to see note",

@@ -286,6 +286,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["QUESTS_NPC_UNNAMED"] = "PNG %d",
     ["QUESTS_NPC_FILTER"] = "PNG: %s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "Rimuovi filtro PNG",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "Clicca per aprire questo PNG nel Catalogo",
     ["QUESTS_SEE_NOTE"] = "Vedi nota",
     ["QUESTS_MAKE_NOTE"] = "Crea nota",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+clic per vedere la nota",

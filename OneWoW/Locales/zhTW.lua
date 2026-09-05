@@ -191,7 +191,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_PINPACKS_TITLE"] = "Notes - 圖釘包",
     ["WHATS_NEW_H_PINPACKS_BODY"] = "把 OneWay Pins 收進一個包。圖釘頁籤上的一列代表整組。匯入的包可像自己建立的一樣編輯：新增、刪除、重新命名和調整順序。右鍵圖釘或包可看到更多操作。關掉包後，其中圖釘會從地圖上全部隱藏。可設定包外觀，也可給單枚圖釘單獨圖示、背景和效果。可匯入或匯出包字串，也可把圖釘送進包。",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "資料庫已更新",
-    ["WHATS_NEW_H_DATABASE_BODY"] = "首頁和功能管理現在列出區域、NPC、物品、任務、任務封存和專業資料庫。Catalog 內容更多了：Journal 額外掉落 3283 件、地圖座標 13415 條、商店 95 間、任務起始標記 312 個。",
+    ["WHATS_NEW_H_DATABASE_BODY"] = "首頁和功能管理現在列出區域、NPC、物品、任務、任務封存和專業資料庫。Catalog 內容更多了：Journal 額外掉落 3283 件、地圖座標 13415 條、商店 95 間、任務起始標記 312 個。來自任務或成就的 Journal 額外掉落會單獨分組，在地圖上顯示會使用 NPC 標記。",
     ["WHATS_NEW_H_CATALOG_TABS_TITLE"] = "Catalog - 收藏品和家園",
     ["WHATS_NEW_H_CATALOG_TABS_BODY"] = "Catalog 在物品搜尋旁邊新增收藏品和家園分頁。收藏品列出幻化、坐騎、寵物和玩具及收集狀態。家園列出裝飾和擁有數量。點擊商人、掉落或任務來源即可開啟對應的 Catalog 分頁。",
     ["WHATS_NEW_H_COLLECTOR_TITLE"] = "QoL - 小地圖按鈕收集器",

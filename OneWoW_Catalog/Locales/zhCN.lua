@@ -286,6 +286,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
     ["QUESTS_NPC_FILTER"] = "NPC：%s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "清除 NPC 筛选",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "点击在目录中打开此 NPC",
     ["QUESTS_SEE_NOTE"] = "查看笔记",
     ["QUESTS_MAKE_NOTE"] = "创建笔记",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+点击查看笔记",

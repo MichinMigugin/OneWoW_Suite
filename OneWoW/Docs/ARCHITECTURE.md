@@ -932,6 +932,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
 | `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist) + Accounting (trainer costs), Catalog Tradeskills (scanCache), RecipeKnownUtil, Overlays2, Trackers, QoL bagbar/professionspanel/autoopen — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
 | `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles, Overlays2 / Accounting / Bags / QoL merchant sites — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
+| `OneWoW.CatDBSync` | `Services/CatDBSync.lua` | Always-loaded learn queue for NPC / quest / recipe facts while CatDB packs are LoD. Flush into pack `learned` overlays; `sync` marks rows for a future Companion pull. Does not upload. |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers; delegates tooltip reads to TooltipScanner |
 | `OneWoW.Collectibles` | `Services/Collectibles.lua` (+ `CollectiblesPunchLists.lua`) | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, `OneWoW_Trackers` (`TrackerEngine` collection-state steps), PredicateEngine, QoL tooltips — collectible key grammar + live display/state + Preyseeker content groups (punchList / direct), no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
 | `OneWoW.GearProficiency` | `Services/GearProficiency.lua` | Collectibles punch/direct lists (first); class weapon/armor proficiency masks via `FlagsUtil` — not loot-spec / not transmog-collect alone; see [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md) |
@@ -1413,6 +1414,7 @@ guild bank is open).
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
 | `OneWoW/Services/Location.lua` | Player map/position, coordinate conversion, user waypoints, map-percent distance, world-yard helpers (`OneWoW.Location`; no pin rendering) |
+| `OneWoW/Services/CatDBSync.lua` | Always-loaded CatDB learn queue (NPC / quest / recipe); flush into pack `learned`; `sync` for a future Companion pull |
 | `OneWoW/Services/Inventory.lua` | Live bag/bank/guild-bank event funnel + `ForEachSlot` / `GetBagIDs`; `BagTypes`/`BankTypes` via subdir (§8.9, see [INVENTORY.md](INVENTORY.md)) |
 | `OneWoW/Services/GuildBankTransfer.lua` | Bag→guild deposit plan + paced queue (§8.10, see [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md)) |
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |

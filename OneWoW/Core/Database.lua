@@ -415,6 +415,13 @@ local DEFAULTS = {
     -- Soft feature opt-out (Manage Features). Account map + per-character
     -- override maps; owned by AddonLoader OptOutStore.
     featureOptOut = { account = {}, char = {} },
+    -- Pending CatDB facts while LoD packs are not loaded. Flushed into each
+    -- pack's learned overlay; Companion later reads rows with sync = true.
+    catdbLearn = {
+        npc = {},
+        quest = {},
+        recipe = {},
+    },
 }
 
 --- Fresh copy of the shipped defaults subtree for one settings tab

@@ -17,6 +17,8 @@ ns.JournalCard = Card
 
 local WORLD_BOSSES_SECTION_ID = -10
 local WORLD_RARES_SECTION_ID = -11
+local ACHIEVEMENT_ENC_ID = -2
+local QUEST_ENC_ID = -3
 local RARE_BASE = 10000000
 
 Card.WORLD_BOSSES_SECTION_ID = WORLD_BOSSES_SECTION_ID
@@ -42,6 +44,12 @@ local function EncounterSortRank(enc)
     end
     if enc.worldRare then
         return 3
+    end
+    if enc.encounterID == ACHIEVEMENT_ENC_ID then
+        return 5
+    end
+    if enc.encounterID == QUEST_ENC_ID or enc.questCategory then
+        return 6
     end
     if enc.extrasCategory or enc.encounterID == 0 then
         return 7
@@ -92,8 +100,9 @@ function Card.RecalculateInstanceTotals(inst)
         local items = enc.items
         if items then
             for j = 1, #items do
-                local itemID = items[j].itemID
-                if itemID and not seen[itemID] then
+                local item = items[j]
+                local itemID = item.itemID
+                if itemID and not seen[itemID] and item.special ~= "Achievement" then
                     seen[itemID] = true
                     total = total + 1
                 end
@@ -150,6 +159,9 @@ end
 ---@return string|nil special
 ---@return table|nil rec
 local function ItemSpecial(itemID, itemData)
+    if itemData and itemData.achievementID then
+        return "Achievement", itemData
+    end
     local rec = itemData
     if not rec or not rec.classID then
         local itemAPI = OneWoW_CatDB_ItemDB_API
@@ -193,9 +205,14 @@ function Card.MakeExtraItem(entry)
     local snap = OneWoW_CatDB_ZoneDB_API.GetCachedItem(itemID)
     local special, rec = ItemSpecial(itemID, idata)
     local name = (idata and idata.name) or (snap and snap.name) or L["JOURNAL_UNKNOWN_ITEM"]
+    local questSources = idata and idata.questSources
+    if (not questSources or not questSources[1]) and idata and idata.questID then
+        questSources = { { id = idata.questID } }
+    end
     return {
         itemID = itemID,
         itemData = rec or idata or snap,
+        questSources = questSources,
         name = name,
         nameResolved = name ~= L["JOURNAL_UNKNOWN_ITEM"],
         icon = (idata and idata.icon) or (snap and snap.icon) or C_Item.GetItemIconByID(itemID) or 134400,
@@ -267,11 +284,21 @@ end
 ---@param inst table
 ---@param entry table
 ---@return boolean added
+local function FindEncounter(inst, encounterID)
+    for i = 1, #inst.encounters do
+        if inst.encounters[i].encounterID == encounterID then
+            return inst.encounters[i]
+        end
+    end
+    return nil
+end
+
 function Card.PlaceExtraOnCard(inst, entry)
     local itemID = entry.itemID
     if not inst or not itemID then
         return false
     end
+    local extraItem = Card.MakeExtraItem(entry)
     local encID = entry.encounterID
     local npcID = tonumber(entry.npcID)
     local entrySource = entry.source
@@ -287,11 +314,22 @@ function Card.PlaceExtraOnCard(inst, entry)
             dest = enc
             break
         end
-        if (not encID or encID == 0) and not (isWorld and npcID)
-            and (enc.encounterID == 0 or enc.extrasCategory)
-        then
-            dest = enc
-            break
+    end
+    if not dest and (not encID or encID == 0) and not (isWorld and npcID) then
+        if extraItem.questSources and extraItem.questSources[1] then
+            dest = FindEncounter(inst, QUEST_ENC_ID)
+        elseif extraItem.special == "Achievement" then
+            dest = FindEncounter(inst, ACHIEVEMENT_ENC_ID)
+        else
+            dest = FindEncounter(inst, 0)
+            if not dest then
+                for i = 1, #inst.encounters do
+                    if inst.encounters[i].extrasCategory then
+                        dest = inst.encounters[i]
+                        break
+                    end
+                end
+            end
         end
     end
     if not dest then
@@ -299,6 +337,25 @@ function Card.PlaceExtraOnCard(inst, entry)
             dest = NewWorldBossEncounter(encID, npcID, entrySource)
         elseif isWorld and npcID then
             dest = NewRareEncounter(npcID, entrySource)
+        elseif extraItem.questSources and extraItem.questSources[1] then
+            dest = {
+                encounterID = QUEST_ENC_ID,
+                name = L["JOURNAL_QUEST_LOOT"],
+                nameResolved = true,
+                bossIndex = 0,
+                items = {},
+                questCategory = true,
+                source = entrySource,
+            }
+        elseif extraItem.special == "Achievement" then
+            dest = {
+                encounterID = ACHIEVEMENT_ENC_ID,
+                name = L["ACHIEVEMENT"],
+                nameResolved = true,
+                bossIndex = 0,
+                items = {},
+                source = entrySource,
+            }
         else
             dest = {
                 encounterID = 0,
@@ -318,7 +375,7 @@ function Card.PlaceExtraOnCard(inst, entry)
     if EncounterHasItem(dest.items, itemID) then
         return false
     end
-    tinsert(dest.items, Card.MakeExtraItem(entry))
+    tinsert(dest.items, extraItem)
     sort(dest.items, function(a, b)
         return (a.name or "") < (b.name or "")
     end)

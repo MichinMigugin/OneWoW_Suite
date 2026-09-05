@@ -43,6 +43,7 @@ local SERVICE_KEYS = {
     "GearProficiency",
     "Location",
     "Merchant",
+    "CatDBSync",
     "Inventory",
     "GuildBankTransfer",
     "UpgradeDetection",

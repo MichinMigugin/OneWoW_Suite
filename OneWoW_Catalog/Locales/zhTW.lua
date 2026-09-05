@@ -286,6 +286,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
     ["QUESTS_NPC_FILTER"] = "NPC：%s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "清除 NPC 篩選",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "點擊在目錄中開啟此 NPC",
     ["QUESTS_SEE_NOTE"] = "檢視筆記",
     ["QUESTS_MAKE_NOTE"] = "建立筆記",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+點擊檢視筆記",

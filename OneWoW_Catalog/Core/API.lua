@@ -55,11 +55,12 @@ function OneWoW_Catalog_API.OpenQuestsFiltered(opts)
     end
 end
 
---- Open the vendors tab focused on an NPC vendor.
+--- Open the NPCs tab focused on a creature. Creates the card when missing.
 ---@param npcID number
-function OneWoW_Catalog_API.OpenToVendor(npcID)
+---@param npcInfo table|nil
+function OneWoW_Catalog_API.OpenToVendor(npcID, npcInfo)
     if ns.UI and ns.UI.OpenToVendor then
-        ns.UI.OpenToVendor(npcID)
+        ns.UI.OpenToVendor(npcID, npcInfo)
     end
 end
 

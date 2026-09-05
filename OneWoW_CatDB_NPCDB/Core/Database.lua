@@ -12,6 +12,7 @@ ns.DatabaseDefaults = {
         itemCache = {},
         vendorCategories = {},
         vendorVisits = {},
+        learned = {},
     },
 }
 

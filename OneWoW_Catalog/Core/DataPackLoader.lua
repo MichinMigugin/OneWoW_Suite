@@ -33,6 +33,7 @@ end)
 --- Registers quest events so the Quests pack loads on first NPC interaction.
 function ns.ArmCatalogDataPacks()
     questPackFrame:RegisterEvent("QUEST_DETAIL")
+    questPackFrame:RegisterEvent("QUEST_PROGRESS")
     questPackFrame:RegisterEvent("QUEST_ACCEPTED")
     questPackFrame:RegisterEvent("QUEST_TURNED_IN")
     questPackFrame:RegisterEvent("QUEST_COMPLETE")

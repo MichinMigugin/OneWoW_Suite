@@ -40,23 +40,29 @@ local function IsMatchMountEnabled()
     return OneWoW_QoL_API.GetModuleToggle("playmounts", "enableMatchMount", true)
 end
 
-local function CatalogHasVendor(npcID)
-    ns:EnsureCatalogPack("vendors")
-    local api = ns:GetCatalogPackAPI("vendors")
-    if not api then return false end
-    local allVendors = api.GetAllVendors()
-    return allVendors and allVendors[npcID] ~= nil
+local function CatalogHasVendor()
+    return ns:IsCatalogPackAvailable("vendors")
 end
 
-local function HandleOpenVendorDetails(npcIDNum)
+local function HandleOpenVendorDetails(unit, npcIDNum)
+    local mapID, x, y = Location.GetPlayerLocation()
+    local info = {
+        name = unit and UnitName(unit),
+        mapID = mapID,
+        x = x,
+        y = y,
+    }
+    if ns.CatDBSync then
+        ns.CatDBSync.LearnNPC(npcIDNum, info)
+    end
     if OneWoW_Catalog_API then
-        OneWoW_Catalog_API.OpenToVendor(npcIDNum)
+        OneWoW_Catalog_API.OpenToVendor(npcIDNum, info)
         return
     end
     OneWoW.UI:Show("catalog")
     C_Timer.After(0.25, function()
         if OneWoW_Catalog_API then
-            OneWoW_Catalog_API.OpenToVendor(npcIDNum)
+            OneWoW_Catalog_API.OpenToVendor(npcIDNum, info)
         end
     end)
 end
@@ -441,7 +447,7 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
     if not npcIDNum then return end
 
     local hasNotesMenu = OneWoW_Notes_API and OneWoW_Notes_API.GetNPC
-    local hasVendor = CatalogHasVendor(npcIDNum)
+    local hasVendor = CatalogHasVendor()
 
     rootDescription:CreateDivider()
     rootDescription:CreateTitle(L["UNIT_CTX_HEADER"])
@@ -469,7 +475,7 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
 
     if hasVendor then
         rootDescription:CreateButton(L["UNIT_CTX_OPEN_VENDOR_DETAILS"], function()
-            HandleOpenVendorDetails(npcIDNum)
+            HandleOpenVendorDetails(contextData.unit, npcIDNum)
         end)
     end
 end

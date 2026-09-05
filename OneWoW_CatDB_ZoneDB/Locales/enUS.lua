@@ -4,6 +4,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_LOADED"] = "OneWoW CatDB: Zone data loaded.",
 
     ["JOURNAL_GENERAL_LOOT"]  = "General Loot",
+    ["JOURNAL_QUEST_LOOT"]    = "Quest Related / Quest Drop",
     ["JOURNAL_WORLD_BOSSES"]  = "World Bosses",
     ["JOURNAL_WORLD_RARES"]   = "World Rares",
     ["JOURNAL_NPC_UNNAMED"]   = "NPC #%d",

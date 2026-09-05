@@ -6,7 +6,7 @@ local _, ns = ...
 -- Emit agents call ns:RegisterNpcData{ [npcID] = { ... } } from Data/ shards.
 --   ns.NPCs            [npcID] = npc record
 --   ns.NPCsByItem      [itemID][npcID] = true
---   ns.VendorIDs       [npcID] = true  (vendor, trainer, service, or quest giver)
+--   ns.VendorIDs       [npcID] = true  (interactable or learned)
 -- ============================================================================
 
 local pairs = pairs
@@ -19,12 +19,16 @@ local npcs = ns.NPCs
 local byItem = ns.NPCsByItem
 local vendorIDs = ns.VendorIDs
 
---- True for the Catalog Vendors list: vendor, trainer, service, or quest giver.
+--- True for the Catalog NPCs list: interactable roles, or anyone the player
+--- talked to / learned. Shipped rares and bosses stay out until interacted.
 ---@param npc table|nil
 ---@return boolean
 function ns.IsListVendor(npc)
     if not npc then
         return false
+    end
+    if npc.learned or npc.sync or npc.lastScanned then
+        return true
     end
     local roles = npc.roles
     if roles then
@@ -43,7 +47,7 @@ function ns.IsListVendor(npc)
             break
         end
     end
-    return hasItems or npc.lastScanned ~= nil
+    return hasItems
 end
 
 --- Merge NPC rows keyed by npcID.

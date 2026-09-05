@@ -191,7 +191,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_PINPACKS_TITLE"] = "Notes - Pacotes de pins",
     ["WHATS_NEW_H_PINPACKS_BODY"] = "Agrupe OneWay Pins em um pacote. Uma linha na aba Pins representa o grupo inteiro. Pacotes importados se editam como os que você criou: adicione, exclua, renomeie e reordene. Clique com o botão direito em um pin ou pacote para mais ações. Desative um pacote para esconder todos os pins dele no mapa. Defina o visual do pacote, ou dê a um pin o próprio ícone, fundo e efeito. Importe ou exporte uma string, ou envie um pin para um pacote.",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "Banco de dados atualizado",
-    ["WHATS_NEW_H_DATABASE_BODY"] = "Home e Gerenciar recursos agora listam os bancos Zona, NPC, Item, Missao, Arquivo de missoes e Profissao. O Catalog cresceu: 3283 extras do Journal, 13415 coordenadas de mapa, 95 lojas e 312 pins de inicio de missao.",
+    ["WHATS_NEW_H_DATABASE_BODY"] = "Home e Gerenciar recursos agora listam os bancos Zona, NPC, Item, Missao, Arquivo de missoes e Profissao. O Catalog cresceu: 3283 extras do Journal, 13415 coordenadas de mapa, 95 lojas e 312 pins de inicio de missao. Extras do Journal de missao ou conquista ficam em grupos proprios, e Mostrar no mapa usa o pin do NPC.",
     ["WHATS_NEW_H_CATALOG_TABS_TITLE"] = "Catalog - Colecionaveis e moradia",
     ["WHATS_NEW_H_CATALOG_TABS_BODY"] = "O Catalog tem as abas Colecionaveis e Moradia ao lado da Busca de itens. Colecionaveis lista transmog., montarias, mascotes e brinquedos com o status de colecao. Moradia lista decoracao e quantidades possuidas. Clique num vendedor, drop ou missao para abrir essa aba do Catalog.",
     ["WHATS_NEW_H_COLLECTOR_TITLE"] = "QoL - Coletor de botoes do minimapa",

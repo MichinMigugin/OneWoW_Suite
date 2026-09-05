@@ -10,7 +10,7 @@
 ## Group: OneWoW_Catalog
 ## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 
-## SavedVariables: OneWoW_CatDB_NPCDB_DB
+## SavedVariables: OneWoW_CatDB_NPCDB_DB, OneWoW_CatalogData_Vendors_DB
 
 ## X-Website: https://onewow.net/
 ## X-Category: |cFFFFD100OneWoW|r

@@ -180,6 +180,9 @@ local function VendorHasVendorRole(vendor)
         return addon.IsListVendor(vendor)
     end
     if not vendor then return false end
+    if vendor.learned or vendor.sync or vendor.lastScanned then
+        return true
+    end
     if vendor.roles then
         for _, role in ipairs(vendor.roles) do
             if role == "vendor" or role == "trainer" or role == "service" or role == "quest_giver" then
@@ -1197,7 +1200,8 @@ function RefreshVendorList(panels)
                 end
             end
             local itemMatch = VendorMatchesItemSearch(vendor, term, addon)
-            passesSearch = nameMatch or zoneMatch or itemMatch
+            local idMatch = vendor.npcID and tostring(vendor.npcID):find(term, 1, true)
+            passesSearch = nameMatch or zoneMatch or itemMatch or idMatch
         end
 
         local passesCurrency = VendorMatchesCurrencyFilter(vendor, currencyFilter)
@@ -1335,17 +1339,26 @@ local function SelectVendorByNpcID(panels, npcID)
     return true
 end
 
-function ns.UI.OpenToVendor(npcID)
+function ns.UI.OpenToVendor(npcID, npcInfo)
     npcID = tonumber(npcID)
     if not npcID then return end
 
-    local addon = GetDataAddon()
-    if not addon then
-        ns.pendingVendorSelect = npcID
-        return
+    if OneWoW.CatDBSync and npcInfo then
+        OneWoW.CatDBSync.LearnNPC(npcID, npcInfo)
     end
 
-    if not addon.GetVendor(npcID) then return end
+    OneWoW:EnsureCatalogPack("vendors")
+    local addon = GetDataAddon()
+    if addon and addon.EnsureLearnedNPC then
+        addon.EnsureLearnedNPC(npcID, npcInfo)
+    end
+
+    if not addon then
+        ns.pendingVendorSelect = npcID
+        OneWoW.UI:Show("catalog")
+        OneWoW.UI:SelectSubTab("catalog", "vendors")
+        return
+    end
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "vendors")

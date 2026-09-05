@@ -340,11 +340,10 @@ local function NotesHasCoords(coords)
     return type(coords) == "table" and tonumber(coords.x) and tonumber(coords.y)
 end
 
---- Notes stores 0-100. Callers may pass `coords` or top-level `x`/`y` in either
---- 0-1 or 0-100 (same mixed-source reading as OpenMapPin).
+--- Catalog NPC learn payload. Coordinates may be 0-1 or 0-100.
 ---@param npcInfo table|nil
 ---@return table
-local function NotesNPCPayload(npcInfo)
+local function CatalogLearnInfo(npcInfo)
     npcInfo = npcInfo or {}
     local mapID = tonumber(npcInfo.mapID)
     if mapID == 0 then
@@ -355,77 +354,46 @@ local function NotesNPCPayload(npcInfo)
     if NotesHasCoords(npcInfo.coords) then
         x, y = npcInfo.coords.x, npcInfo.coords.y
     end
-    x = OneWoW.Location.ToFraction(x)
-    y = OneWoW.Location.ToFraction(y)
+    x = OneWoW.Location.ToPercent(OneWoW.Location.ToFraction(x))
+    y = OneWoW.Location.ToPercent(OneWoW.Location.ToFraction(y))
 
-    local zone = npcInfo.zone
-    if zone == "" or zone == UNKNOWN then
-        zone = nil
-    end
-    if mapID and not zone then
-        local mapInfo = C_Map.GetMapInfo(mapID)
-        zone = mapInfo and mapInfo.name
-        if zone == "" then
-            zone = nil
-        end
+    local category = npcInfo.category
+    if category == "Quest Givers" or category == "Quest Giver" or not category or category == "" then
+        category = "quest_giver"
     end
 
-    local payload = {
+    return {
         name = npcInfo.name,
-        zone = zone,
+        zone = npcInfo.zone,
         mapID = mapID,
-        category = npcInfo.category or "Quest Givers",
+        x = x,
+        y = y,
+        category = category,
+        roles = npcInfo.roles or { "quest_giver" },
+        questID = npcInfo.questID,
+        displayID = npcInfo.displayID,
+        title = npcInfo.title,
     }
-    if x and y then
-        payload.coords = { x = x * 100, y = y * 100 }
-    end
-    return payload
 end
 
---- Opens OneWoW_Notes to the given NPC, adding it under "Quest Givers" if it is
---- not already a saved note. Fills missing name / zone / map / coords on an
---- existing note; never overwrites coords the player already set.
---- No-op (returns false) when Notes is not installed.
---- OneWoW_Notes is an optional dependency, so its API presence is checked here.
+--- Opens Catalog NPCs on this creature. Creates the card when NPCDB has no row.
 ---@param npcID number
----@param npcInfo table|nil  { name, zone, mapID, coords = { x, y }, x, y, category }
+---@param npcInfo table|nil  { name, zone, mapID, coords = { x, y }, x, y, category, roles, questID }
 ---@return boolean opened
 function Navigation:OpenNPC(npcID, npcInfo)
     npcID = tonumber(npcID)
     if not npcID then return false end
 
-    OneWoW:BringUp("OneWoW_Notes")
-    local notesAPI = OneWoW_Notes_API
-    if not notesAPI then return false end
-
-    local payload = NotesNPCPayload(npcInfo)
-    local existing = notesAPI.GetNPC(npcID)
-    if not existing then
-        notesAPI.AddOrUpdateNPC(npcID, payload)
-    else
-        local patch = {}
-        local cur = existing.name
-        if payload.name and payload.name ~= ""
-            and (not cur or cur == "" or cur:find("^NPC %d"))
-        then
-            patch.name = payload.name
-        end
-        if payload.zone and payload.zone ~= ""
-            and (not existing.zone or existing.zone == "")
-        then
-            patch.zone = payload.zone
-        end
-        if payload.mapID and not existing.mapID then
-            patch.mapID = payload.mapID
-        end
-        if payload.coords and not NotesHasCoords(existing.coords) then
-            patch.coords = payload.coords
-        end
-        if next(patch) then
-            notesAPI.AddOrUpdateNPC(npcID, patch)
-        end
+    local info = CatalogLearnInfo(npcInfo)
+    if OneWoW.CatDBSync then
+        OneWoW.CatDBSync.LearnNPC(npcID, info)
     end
-    return notesAPI.OpenNPC(npcID)
+    OneWoW:EnsureCatalogPack("vendors")
+    if ns.UI and ns.UI.OpenToVendor then
+        ns.UI.OpenToVendor(npcID, info)
+        return true
+    end
+    return false
 end
 
 --- Opens OneWoW_Notes to the given item's note, creating it under the "Quest"

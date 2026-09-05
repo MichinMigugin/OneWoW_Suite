@@ -286,6 +286,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["QUESTS_NPC_UNNAMED"] = "НИП %d",
     ["QUESTS_NPC_FILTER"] = "НИП: %s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "Сбросить фильтр НИП",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "Нажмите, чтобы открыть этого НИП в каталоге",
     ["QUESTS_SEE_NOTE"] = "Посмотреть заметку",
     ["QUESTS_MAKE_NOTE"] = "Создать заметку",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+щелчок, чтобы посмотреть заметку",

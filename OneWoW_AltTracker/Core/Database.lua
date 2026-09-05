@@ -39,6 +39,8 @@ ns.DatabaseDefaults = {
         overrides = {
             progress = {},
         },
+
+        legacyCatalogDataCopied = false,
     },
 }
 

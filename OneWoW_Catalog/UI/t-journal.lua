@@ -755,7 +755,7 @@ end
 ---@param item table
 ---@return number|nil questID
 local function LootRowQuestID(item)
-    local sources = item.itemData and item.itemData.questSources
+    local sources = item.questSources or (item.itemData and item.itemData.questSources)
     if type(sources) == "table" then
         local faction = UnitFactionGroup("player")
         local fallback
@@ -1668,7 +1668,7 @@ end
 local function ShowQuestLinks(item)
     local links = {}
     local questAddon = ns.GetCatalogPackAPI("quests")
-    for _, qs in ipairs(item.questSources or {}) do
+    for _, qs in ipairs(item.questSources or (item.itemData and item.itemData.questSources) or {}) do
         local action
         if questAddon and questAddon.GetQuest(qs.id) then
             local qid = qs.id
@@ -1693,11 +1693,11 @@ end
 local function ResolveOpenQuestID(item)
     local faction = UnitFactionGroup("player")
     local fallback
-    for _, qs in ipairs(item.questSources or {}) do
+    for _, qs in ipairs(item.questSources or (item.itemData and item.itemData.questSources) or {}) do
         if not fallback then fallback = qs.id end
         if qs.faction == faction then return qs.id end
     end
-    return fallback
+    return fallback or LootRowQuestID(item)
 end
 
 local function PaintDetailItemRow(row, hover)

@@ -67,9 +67,11 @@ order: player `vendorCategories` SV, shipped `category`, Creature
 Barber / Trainer / Innkeeper / Quest Giver filters use that key. Rare
 and boss stay roles only — no extra filter rows.
 
-The Catalog Vendors list is `vendor`, `trainer`, `service`, or
-`quest_giver` (not rare / boss). `GetVendorsByItem` / `ItemIsSold` still
-require stock.
+The Catalog NPCs list is `vendor`, `trainer`, `service`, or
+`quest_giver`, plus anyone the player talked to (learned overlay). Rare
+and boss stay out of the browse list until interacted. Learned rows and
+new facts set `sync = true` for a future Companion pull. Do not mutate
+shipped shards. `GetVendorsByItem` / `ItemIsSold` still require stock.
 
 ## Build (Workspace)
 

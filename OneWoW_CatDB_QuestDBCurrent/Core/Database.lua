@@ -9,6 +9,7 @@ ns.DatabaseDefaults = {
             enabled = true,
         },
         completion = {},
+        learned = {},
     },
 }
 

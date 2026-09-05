@@ -23,7 +23,21 @@
 - Collectibles and Housing can show Collected Only or Not Collected Only. Housing uses owned decor for that.
 
 #### Vendors
-- The list now includes trainers, innkeepers, repair, stables, flight masters, and bankers when the game titles them that way. People with no shop type who give quests show as Quest Giver. Filter by type as before.
+- The list is people you can talk to: shops, trainers, innkeepers, repair, stables, flight masters, bankers, barbers, and quest givers. Talking to someone who is missing adds them. Click a quest giver name to open that card. Search by NPC id as well as name.
+
+#### Journal
+- Extra drops that come from a quest or an achievement sit in their own groups again. Click the quest link to open that quest.
+
+#### Quests
+- Show on Map uses the NPC database pin for the giver or turn-in, including object starters.
+- Talking to a quest giver fills missing Catalog quest text and rewards again.
+- Click the giver or turn-in name to open that person in Catalog NPCs. A quest you pick up that we did not ship is saved.
+
+---
+
+### AltTracker
+#### Data
+- Quest completion from the old Catalog Quests pack is copied into the Quest Database. Vendor categories you set are copied into the NPC Database.
 
 ---
 
@@ -39,11 +53,11 @@
 
 ---
 
-*No user-facing changes this release for AltTracker, Bags, Mail, Notes, Shopping List, or Trackers.*
+*No user-facing changes this release for Bags, Mail, Notes, Shopping List, or Trackers.*
 
 ---
 
-- **Last Updated**: Sep 1, 2026
+- **Last Updated**: Sep 4, 2026
 
 ## R6.2609.0106
 

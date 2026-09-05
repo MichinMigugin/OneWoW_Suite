@@ -59,6 +59,8 @@ local RARE_BASE = 10000000
 local GENERAL_MIN = 20000000
 local WORLD_BOSSES_SECTION_ID = -10
 local WORLD_RARES_SECTION_ID = -11
+local ACHIEVEMENT_ENC_ID = -2
+local QUEST_ENC_ID = -3
 
 local function ExpansionName(expansionID)
     return expansionNameByID[expansionID] or OneWoW:GetExpansionName(expansionID) or ""
@@ -354,7 +356,11 @@ local function InstancePassesTypeFilter(inst, instanceTypeFilter)
     return inst.instanceType == instanceTypeFilter
 end
 
-local function ItemSpecial(itemID)
+local function ItemSpecial(itemID, lootRow)
+    if lootRow and lootRow.achievementID then
+        local itemAPI = OneWoW_CatDB_ItemDB_API
+        return "Achievement", itemAPI and itemAPI.GetItem(itemID)
+    end
     local itemAPI = OneWoW_CatDB_ItemDB_API
     local rec = itemAPI and itemAPI.GetItem(itemID)
     if not rec then
@@ -385,6 +391,57 @@ local function ItemSpecial(itemID)
         return "Pet", rec
     end
     return nil, rec
+end
+
+---@param questIDs table
+---@return table
+local function QuestSourcesFromIDs(questIDs)
+    local sources = {}
+    if type(questIDs) ~= "table" or #questIDs == 0 then
+        return sources
+    end
+    local questAPI = OneWoW:GetCatalogPackAPI("quests")
+    for i = 1, #questIDs do
+        local questID = tonumber(questIDs[i])
+        if questID then
+            local quest = questAPI and questAPI.GetQuest(questID)
+            tinsert(sources, {
+                id = questID,
+                faction = quest and quest.faction,
+            })
+        end
+    end
+    return sources
+end
+
+--- Loot.diffs mixed leftover quest IDs with difficulties. Keep IDs only.
+---@param lootRow table
+---@return table
+local function LootQuestSources(lootRow)
+    if type(lootRow.questSources) == "table" and lootRow.questSources[1] then
+        return lootRow.questSources
+    end
+    local ids = {}
+    if lootRow.questID then
+        tinsert(ids, lootRow.questID)
+    end
+    if type(lootRow.questIDs) == "table" then
+        for i = 1, #lootRow.questIDs do
+            tinsert(ids, lootRow.questIDs[i])
+        end
+    end
+    local diffs = lootRow.diffs
+    if type(diffs) == "table" then
+        for i = 1, #diffs do
+            local entry = diffs[i]
+            local did = (type(entry) == "table" and entry.id) or entry
+            did = tonumber(did)
+            if did and not ns.Difficulties[did] then
+                tinsert(ids, did)
+            end
+        end
+    end
+    return QuestSourcesFromIDs(ids)
 end
 
 ---@param diffIDs table|nil
@@ -437,7 +494,8 @@ local function BuildEncounterItems(enc)
         local row = loot[i]
         local itemID = row.itemID
         if itemID then
-            local special, itemData = ItemSpecial(itemID)
+            local questSources = LootQuestSources(row)
+            local special, itemData = ItemSpecial(itemID, row)
             local snap = ItemSnapshot(itemID)
             local diffs = KnownDifficultyIDs(row.diffs)
             if #diffs == 0 then
@@ -448,6 +506,7 @@ local function BuildEncounterItems(enc)
                 difficulties = DiffRowsFromIDs(diffs),
                 special = special,
                 itemData = itemData or snap,
+                questSources = questSources,
                 name = (snap and snap.name) or L["JOURNAL_UNKNOWN_ITEM"],
                 nameResolved = snap ~= nil and snap.name ~= nil,
                 icon = (snap and snap.icon) or 134400,
@@ -498,6 +557,12 @@ local function EncounterSortRank(enc)
     end
     if enc.worldRare then
         return 3
+    end
+    if enc.encounterID == ACHIEVEMENT_ENC_ID then
+        return 5
+    end
+    if enc.encounterID == QUEST_ENC_ID or enc.questCategory then
+        return 6
     end
     if enc.extrasCategory or enc.encounterID == 0 then
         return 7
@@ -1250,8 +1315,38 @@ function OneWoW_CatDB_ZoneDB_API.EnsureEncounters(inst)
             tinsert(encounters, SectionHeader(WORLD_RARES_SECTION_ID, L["JOURNAL_WORLD_RARES"]))
         end
     end
-    if #leftoverItems > 0 then
-        tinsert(encounters, LeftoverEncounter(leftoverItems))
+    local leftoverGeneral, leftoverQuest, leftoverAch = {}, {}, {}
+    for i = 1, #leftoverItems do
+        local item = leftoverItems[i]
+        if item.questSources and item.questSources[1] then
+            tinsert(leftoverQuest, item)
+        elseif item.special == "Achievement" then
+            tinsert(leftoverAch, item)
+        else
+            tinsert(leftoverGeneral, item)
+        end
+    end
+    if #leftoverGeneral > 0 then
+        tinsert(encounters, LeftoverEncounter(leftoverGeneral))
+    end
+    if #leftoverAch > 0 then
+        tinsert(encounters, {
+            encounterID = ACHIEVEMENT_ENC_ID,
+            name = L["ACHIEVEMENT"],
+            nameResolved = true,
+            bossIndex = 0,
+            items = leftoverAch,
+        })
+    end
+    if #leftoverQuest > 0 then
+        tinsert(encounters, {
+            encounterID = QUEST_ENC_ID,
+            name = L["JOURNAL_QUEST_LOOT"],
+            nameResolved = true,
+            bossIndex = 0,
+            items = leftoverQuest,
+            questCategory = true,
+        })
     end
     sort(encounters, SortEncounters)
 
@@ -1265,8 +1360,9 @@ function OneWoW_CatDB_ZoneDB_API.EnsureEncounters(inst)
         local items = encounters[i].items
         if items then
             for j = 1, #items do
-                local itemID = items[j].itemID
-                if itemID and not seen[itemID] then
+                local item = items[j]
+                local itemID = item.itemID
+                if itemID and not seen[itemID] and item.special ~= "Achievement" then
                     seen[itemID] = true
                     total = total + 1
                 end

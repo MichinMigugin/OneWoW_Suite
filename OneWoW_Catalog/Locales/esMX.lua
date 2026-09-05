@@ -286,6 +286,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["QUESTS_NPC_UNNAMED"] = "PNJ %d",
     ["QUESTS_NPC_FILTER"] = "PNJ: %s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "Quitar filtro de PNJ",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "Clic para abrir este PNJ en el Catálogo",
     ["QUESTS_SEE_NOTE"] = "Ver nota",
     ["QUESTS_MAKE_NOTE"] = "Crear nota",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+clic para ver la nota",

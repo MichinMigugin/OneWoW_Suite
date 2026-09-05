@@ -34,9 +34,9 @@ Archive rows into this pack's `ns` so Catalog keeps using the Current API.
 | `Core/DataLoader.lua` | `RegisterQuestData` → `ns.ExternalQuestDB`, `ExternalQuestDBByExpansion`, `QuestsByNPC`, `QuestsByRewardItem` (items, choices, package) |
 | `Modules/CompletionTracker.lua` | Per-character completion (`GetCompletedCharacters` `{ key, name }` rows, AltTracker supplement, `QUEST_TURNED_IN`) |
 | `Data/Generated/QuestLineMembers.lua` | QuestLine id → ordered quest IDs (all expansions; used by `GetQuestGuideChain`) |
-| `Core/Database.lua` | SavedVariables init (`ns.db`, including `completion`) |
-| `Core/API.lua` | Public API (`GetQuest`, `GetQuestLineMembers`, `GetQuestsForNPC`, `GetQuestsRewardingItem`, `GetCompletedCharacters`, `EnsureArchiveThen`, …) |
-| `Core/Core.lua` | `BootStore` lifecycle (`savedVar`, `onLogin` initializes CompletionTracker) |
+| `Core/Database.lua` | SavedVariables init (`ns.db`, including `completion` and `learned`) |
+| `Core/API.lua` | Public API (`GetQuest`, `GetQuestLineMembers`, `GetQuestsForNPC`, `GetQuestsRewardingItem`, `GetCompletedCharacters`, `EnsureArchiveThen`, `StoreQuestInfo`, `GetSyncQueue`, …) |
+| `Core/Core.lua` | `BootStore` lifecycle (`savedVar`, `onLogin` applies learned, flushes CatDBSync, initializes CompletionTracker / QuestScanner) |
 | `OneWoW_CatDB_QuestDBCurrent.lua` | Comment stub (no public globals) |
 
 `ns` stays private. Cross-unit callers use the `_API` global only.

@@ -286,6 +286,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
     ["QUESTS_NPC_FILTER"] = "NPC: %s",
     ["QUESTS_NPC_FILTER_CLEAR"] = "Limpar filtro de NPC",
+    ["QUESTS_NPC_OPEN_CATALOG"] = "Clique para abrir este NPC no Catálogo",
     ["QUESTS_SEE_NOTE"] = "Ver nota",
     ["QUESTS_MAKE_NOTE"] = "Criar nota",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+clique para ver a nota",

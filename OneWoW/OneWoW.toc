@@ -165,6 +165,7 @@ Services\itemstatus.lua
 Services\toast-engine.lua
 Services\tooltip-engine.lua
 Services\Location.lua
+Services\CatDBSync.lua
 Services\EntityResolvers.lua
 
 # Integrations

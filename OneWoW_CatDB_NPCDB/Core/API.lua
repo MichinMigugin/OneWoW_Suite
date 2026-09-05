@@ -6,6 +6,7 @@ local pairs, type = pairs, type
 local tonumber, tostring = tonumber, tostring
 local tinsert, sort = tinsert, sort
 local time = time
+local wipe = wipe
 local C_Item = C_Item
 local C_Map = C_Map
 local C_Timer = C_Timer
@@ -306,6 +307,8 @@ local function OverlayVendor(npc, resolveZones)
         end
         view.category = ResolveRowCategory(npc, npcID)
         view.encounterIDs = npc.encounterIDs
+        view.learned = npc.learned
+        view.sync = npc.sync
         if npcID then
             view.lastScanned = GetVendorVisits()[npcID] or npc.lastScanned
         end
@@ -341,6 +344,8 @@ local function OverlayVendor(npc, resolveZones)
         placeKeys = npc.placeKeys,
         questIDs = npc.questIDs,
         lastScanned = (npcID and GetVendorVisits()[npcID]) or npc.lastScanned,
+        learned = npc.learned,
+        sync = npc.sync,
     }
     if npcID then
         viewsByID[npcID] = view
@@ -368,14 +373,14 @@ function OneWoW_CatDB_NPCDB_API.GetNPC(npcID)
     return OverlayVendor(ns.NPCs[npcID], true)
 end
 
---- True for the Catalog Vendors list: vendor, trainer, service, or quest giver.
+--- True for the Catalog NPCs list: interactable roles, or learned / talked-to.
 ---@param npc table|nil
 ---@return boolean
 function OneWoW_CatDB_NPCDB_API.IsListVendor(npc)
     return ns.IsListVendor(npc)
 end
 
---- All vendor / trainer / service / quest-giver rows keyed by NPC ID.
+--- Interactable and learned NPC rows keyed by NPC ID.
 --- List path does not call C_Map; GetVendor / GetVendorsByItem resolve zone names.
 ---@return table vendors
 function OneWoW_CatDB_NPCDB_API.GetAllVendors()
@@ -810,6 +815,378 @@ function OneWoW_CatDB_NPCDB_API.DetermineItemStatus(itemID, itemData, specialTyp
     return collected and COLLECTED or NOT_COLLECTED
 end
 
+local LIST_ROLE = {
+    vendor = true,
+    trainer = true,
+    service = true,
+    quest_giver = true,
+}
+
+local function NormalizeLearnedCategory(category)
+    if type(category) ~= "string" or category == "" then
+        return nil
+    end
+    if category == "Quest Givers" or category == "Quest Giver" then
+        return "quest_giver"
+    end
+    return category
+end
+
+local function HasRole(roles, role)
+    if type(roles) ~= "table" then
+        return false
+    end
+    for i = 1, #roles do
+        if roles[i] == role then
+            return true
+        end
+    end
+    return false
+end
+
+local function MergeRoles(dst, src)
+    if type(src) ~= "table" then
+        return dst, false
+    end
+    dst = dst or {}
+    local added = false
+    local incoming = src
+    if src[1] == nil then
+        incoming = {}
+        for role, flag in pairs(src) do
+            if type(role) == "string" and flag then
+                tinsert(incoming, role)
+            end
+        end
+    end
+    for i = 1, #incoming do
+        local role = incoming[i]
+        if type(role) == "string" and role ~= "" and not HasRole(dst, role) then
+            tinsert(dst, role)
+            added = true
+        end
+    end
+    return dst, added
+end
+
+local function MergeQuestIDs(dst, src)
+    if src == nil then
+        return dst, false
+    end
+    dst = dst or {}
+    local seen = {}
+    for i = 1, #dst do
+        seen[dst[i]] = true
+    end
+    local added = false
+    local function add(id)
+        id = tonumber(id)
+        if id and not seen[id] then
+            seen[id] = true
+            tinsert(dst, id)
+            added = true
+        end
+    end
+    if type(src) == "number" then
+        add(src)
+    elseif type(src) == "table" then
+        for i = 1, #src do
+            add(src[i])
+        end
+        add(src.questID or src.id)
+    end
+    return dst, added
+end
+
+local function HasItems(items)
+    if type(items) ~= "table" then
+        return false
+    end
+    for _ in pairs(items) do
+        return true
+    end
+    return false
+end
+
+local function InvalidateNPCView(npcID)
+    if npcID then
+        viewsByID[npcID] = nil
+    else
+        wipe(viewsByID)
+    end
+    allVendorsCache = nil
+    allNPCsCache = nil
+end
+
+local function AddPlaceKey(npc, mapID)
+    if not mapID then
+        return
+    end
+    local key = "zone:" .. tostring(mapID)
+    npc.placeKeys = npc.placeKeys or {}
+    for i = 1, #npc.placeKeys do
+        if npc.placeKeys[i] == key then
+            return
+        end
+    end
+    tinsert(npc.placeKeys, key)
+end
+
+local function LocationIsNew(existing, mapID, x, y)
+    if not mapID then
+        return false
+    end
+    local loc = existing and existing[mapID]
+    if not loc then
+        return true
+    end
+    if (not loc.x or not loc.y) and x and y then
+        return true
+    end
+    return false
+end
+
+---@param npcID number
+---@param rec table
+local function MergeLearnedIntoStore(npcID, rec)
+    local npc = ns.NPCs[npcID]
+    if not npc then
+        npc = { npcID = npcID, roles = {}, locations = {} }
+        ns.NPCs[npcID] = npc
+    end
+    npc.npcID = npc.npcID or npcID
+    npc.learned = true
+    if rec.sync then
+        npc.sync = true
+    end
+    if rec.displayID and (not npc.displayID or npc.displayID == 0) then
+        npc.displayID = rec.displayID
+    end
+    if rec.title and (not npc.title or npc.title == "") then
+        npc.title = rec.title
+    end
+    if rec.category and (not npc.category or npc.category == "") then
+        npc.category = rec.category
+    end
+    if rec.creatureType and (not npc.creatureType or npc.creatureType == "") then
+        npc.creatureType = rec.creatureType
+    end
+    if rec.classification and not npc.classification then
+        npc.classification = rec.classification
+    end
+    if rec.expansion and not npc.expansion then
+        npc.expansion = rec.expansion
+    end
+    npc.roles = select(1, MergeRoles(npc.roles, rec.roles))
+    npc.questIDs = select(1, MergeQuestIDs(npc.questIDs, rec.questIDs))
+    if rec.lastScanned then
+        npc.lastScanned = rec.lastScanned
+    end
+    if type(rec.locations) == "table" then
+        npc.locations = npc.locations or {}
+        for mapID, loc in pairs(rec.locations) do
+            if type(loc) == "table" and type(mapID) == "number" then
+                local cur = npc.locations[mapID]
+                if not cur then
+                    npc.locations[mapID] = {
+                        x = loc.x,
+                        y = loc.y,
+                        mapID = loc.mapID or mapID,
+                    }
+                    AddPlaceKey(npc, mapID)
+                elseif (not cur.x or not cur.y) and loc.x and loc.y then
+                    cur.x = loc.x
+                    cur.y = loc.y
+                    cur.mapID = cur.mapID or mapID
+                end
+            end
+        end
+    end
+    if HasItems(rec.items) and not HasItems(npc.items) then
+        npc.items = rec.items
+        for itemID in pairs(rec.items) do
+            if type(itemID) == "number" then
+                ns.NPCsByItem[itemID] = ns.NPCsByItem[itemID] or {}
+                ns.NPCsByItem[itemID][npcID] = true
+            end
+        end
+    end
+    if ns.IsListVendor(npc) then
+        ns.VendorIDs[npcID] = true
+    end
+end
+
+---@param npcID number
+---@param info table|nil
+---@return table|nil view
+function OneWoW_CatDB_NPCDB_API.EnsureLearnedNPC(npcID, info)
+    npcID = tonumber(npcID)
+    if not npcID or npcID == 0 then
+        return nil
+    end
+    info = info or {}
+    local db = ns:GetDB()
+    db.learned = db.learned or {}
+
+    local shipped = ns.NPCs[npcID]
+    local isUnknown = shipped == nil
+    local rec = db.learned[npcID]
+    if not rec then
+        rec = { npcID = npcID, learnedAt = time() }
+        db.learned[npcID] = rec
+    end
+    rec.npcID = npcID
+    rec.learned = true
+
+    local newFacts = isUnknown
+    rec.roles = select(1, MergeRoles(rec.roles, info.roles))
+    if shipped then
+        local incoming = info.roles
+        if type(incoming) == "table" then
+            for i = 1, #(incoming[1] and incoming or {}) do
+                if not HasRole(shipped.roles, incoming[i]) and LIST_ROLE[incoming[i]] then
+                    newFacts = true
+                end
+            end
+            if incoming[1] == nil then
+                for role, flag in pairs(incoming) do
+                    if flag and not HasRole(shipped.roles, role) and LIST_ROLE[role] then
+                        newFacts = true
+                    end
+                end
+            end
+        end
+    elseif type(info.roles) == "table" then
+        newFacts = true
+    end
+
+    rec.questIDs = select(1, MergeQuestIDs(rec.questIDs, info.questIDs))
+    rec.questIDs = select(1, MergeQuestIDs(rec.questIDs, info.questID))
+    if rec.questIDs then
+        for i = 1, #rec.questIDs do
+            if not HasRole(shipped and shipped.questIDs, rec.questIDs[i]) then
+                newFacts = true
+                break
+            end
+        end
+    end
+
+    local category = NormalizeLearnedCategory(info.category)
+    if category then
+        rec.category = rec.category or category
+    end
+    if info.displayID and (not rec.displayID or rec.displayID == 0) then
+        rec.displayID = info.displayID
+        if not (shipped and shipped.displayID and shipped.displayID > 0) then
+            newFacts = true
+        end
+    end
+    if info.title and info.title ~= "" then
+        rec.title = rec.title or info.title
+    end
+    if info.subtitle and info.subtitle ~= "" then
+        rec.title = rec.title or info.subtitle
+    end
+    if info.creatureType and info.creatureType ~= "" then
+        rec.creatureType = rec.creatureType or info.creatureType
+    end
+    if info.classification then
+        rec.classification = rec.classification or info.classification
+    end
+    if info.expansion then
+        rec.expansion = rec.expansion or info.expansion
+    end
+    if info.lastScanned then
+        rec.lastScanned = info.lastScanned
+        GetVendorVisits()[npcID] = info.lastScanned
+    end
+
+    rec.locations = rec.locations or {}
+    local mapID = tonumber(info.mapID)
+    local x, y = info.x, info.y
+    if type(info.locations) == "table" then
+        for locMapID, loc in pairs(info.locations) do
+            if type(loc) == "table" and type(locMapID) == "number" then
+                if LocationIsNew(shipped and shipped.locations, locMapID, loc.x, loc.y) then
+                    newFacts = true
+                end
+                if not rec.locations[locMapID] then
+                    rec.locations[locMapID] = {
+                        x = loc.x,
+                        y = loc.y,
+                        mapID = loc.mapID or locMapID,
+                    }
+                end
+            end
+        end
+    end
+    if mapID then
+        x = OneWoW.Location.ToPercent(OneWoW.Location.ToFraction(x))
+        y = OneWoW.Location.ToPercent(OneWoW.Location.ToFraction(y))
+        if LocationIsNew(shipped and shipped.locations, mapID, x, y) then
+            newFacts = true
+        end
+        local cur = rec.locations[mapID]
+        if not cur then
+            rec.locations[mapID] = { x = x, y = y, mapID = mapID }
+        elseif (not cur.x or not cur.y) and x and y then
+            cur.x = x
+            cur.y = y
+        end
+    end
+
+    if HasItems(info.items) and not HasItems(rec.items) then
+        rec.items = info.items
+        if not (shipped and HasItems(shipped.items)) then
+            newFacts = true
+        end
+    end
+
+    if isUnknown or newFacts then
+        rec.sync = true
+    end
+
+    MergeLearnedIntoStore(npcID, rec)
+    if info.name then
+        OneWoW_CatDB_NPCDB_API.RememberNPCName(npcID, info.name)
+    end
+    InvalidateNPCView(npcID)
+    local view = OverlayVendor(ns.NPCs[npcID], true)
+    if view and info.lastScanned then
+        view.lastScanned = info.lastScanned
+    end
+    ns:FireScanCallbacks(view or rec)
+    return view
+end
+
+function ns:ApplyLearnedNPCs()
+    local learned = ns:GetDB().learned
+    if type(learned) ~= "table" then
+        return
+    end
+    for npcID, rec in pairs(learned) do
+        if type(npcID) == "number" and type(rec) == "table" then
+            MergeLearnedIntoStore(npcID, rec)
+        end
+    end
+    InvalidateNPCView()
+end
+
+---@return table
+function OneWoW_CatDB_NPCDB_API.GetSyncQueue()
+    local out = {}
+    local learned = ns:GetDB().learned
+    if type(learned) ~= "table" then
+        return out
+    end
+    for npcID, rec in pairs(learned) do
+        if type(rec) == "table" and rec.sync then
+            out[npcID] = rec
+        end
+    end
+    return out
+end
+
 --- Merge one Merchant funnel snapshot into name / category / visit overlay.
 ---@param scan table|nil
 function OneWoW_CatDB_NPCDB_API.MergeMerchantScan(scan)
@@ -824,25 +1201,41 @@ function OneWoW_CatDB_NPCDB_API.MergeMerchantScan(scan)
     if scan.subtitle or scan.canRepair then
         ApplyAutoCategory(npcID, scan.subtitle, scan.canRepair, true)
     end
+    if not ns.NPCs[npcID] then
+        local loc = scan.location
+        OneWoW_CatDB_NPCDB_API.EnsureLearnedNPC(npcID, {
+            name = scan.name,
+            title = scan.subtitle,
+            subtitle = scan.subtitle,
+            displayID = scan.displayID,
+            creatureType = scan.creatureType,
+            classification = scan.classification,
+            roles = { "vendor" },
+            mapID = loc and loc.mapID,
+            x = loc and loc.x,
+            y = loc and loc.y,
+            items = scan.items,
+            lastScanned = scan.scannedAt,
+        })
+        return
+    end
     local npc = ns.NPCs[npcID]
-    if npc then
-        ns.VendorIDs[npcID] = true
-        local view = OverlayVendor(npc, true)
-        if view then
-            view.lastScanned = GetVendorVisits()[npcID]
-            if scan.displayID and scan.displayID > 0 then
-                view.displayID = scan.displayID
-            end
-            if scan.subtitle and scan.subtitle ~= "" then
-                view.subtitle = NormalizeSubtitle(scan.subtitle) or view.subtitle
-            end
+    ns.VendorIDs[npcID] = true
+    local view = OverlayVendor(npc, true)
+    if view then
+        view.lastScanned = GetVendorVisits()[npcID]
+        if scan.displayID and scan.displayID > 0 then
+            view.displayID = scan.displayID
         end
-        if allVendorsCache and view then
-            allVendorsCache[npcID] = view
+        if scan.subtitle and scan.subtitle ~= "" then
+            view.subtitle = NormalizeSubtitle(scan.subtitle) or view.subtitle
         end
-        if allNPCsCache and view then
-            allNPCsCache[npcID] = view
-        end
+    end
+    if allVendorsCache and view then
+        allVendorsCache[npcID] = view
+    end
+    if allNPCsCache and view then
+        allNPCsCache[npcID] = view
     end
     ns:FireScanCallbacks(viewsByID[npcID] or scan)
 end

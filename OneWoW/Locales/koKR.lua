@@ -191,7 +191,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_PINPACKS_TITLE"] = "Notes - 핀 팩",
     ["WHATS_NEW_H_PINPACKS_BODY"] = "OneWay Pins를 팩으로 묶습니다. 핀 탭의 한 줄이 그룹 전체를 나타냅니다. 가져온 팩도 직접 만든 것과 같이 핀을 추가, 삭제, 이름 변경, 순서를 바꿀 수 있습니다. 핀이나 팩을 오른쪽 클릭하면 더 많은 동작이 있습니다. 팩을 끄면 그 안의 핀이 지도에서 모두 숨겨집니다. 팩 모양을 정하거나 핀마다 아이콘, 배경, 효과를 따로 줄 수 있습니다. 팩 문자열을 가져오거나 내보내거나, 핀을 팩으로 보낼 수 있습니다.",
     ["WHATS_NEW_H_DATABASE_TITLE"] = "데이터베이스 업데이트",
-    ["WHATS_NEW_H_DATABASE_BODY"] = "Home과 기능 관리에는 이제 Zone, NPC, Item, Quest, Quest Archive, TradeSkill 데이터베이스가 표시됩니다. Catalog이 늘었습니다. Journal 엑스트라 드롭 3283개, 지도 좌표 13415개, 상점 95곳, 퀘스트 시작 핀 312개가 추가되었습니다.",
+    ["WHATS_NEW_H_DATABASE_BODY"] = "Home과 기능 관리에는 이제 Zone, NPC, Item, Quest, Quest Archive, TradeSkill 데이터베이스가 표시됩니다. Catalog이 늘었습니다. Journal 엑스트라 드롭 3283개, 지도 좌표 13415개, 상점 95곳, 퀘스트 시작 핀 312개가 추가되었습니다. 퀘스트나 업적에서 온 Journal 엑스트라는 따로 묶이고, 지도에 표시는 NPC 핀을 씁니다.",
     ["WHATS_NEW_H_CATALOG_TABS_TITLE"] = "Catalog - 수집품과 주거",
     ["WHATS_NEW_H_CATALOG_TABS_BODY"] = "Catalog에 아이템 검색 옆에 수집품과 주거 탭이 있습니다. 수집품은 형상변환, 탈것, 애완동물, 장난감과 수집 여부를 보여 줍니다. 주거는 장식과 보유 수를 보여 줍니다. 상인, 드롭, 퀘스트 출처를 클릭하면 해당 Catalog 탭이 열립니다.",
     ["WHATS_NEW_H_COLLECTOR_TITLE"] = "QoL - 미니맵 버튼 수집기",

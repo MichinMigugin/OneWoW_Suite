@@ -593,3 +593,39 @@ function OneWoW_CatDB_TradeSkillDB_API.GetCraftingQualityVariants(itemID)
     end
     return variants
 end
+
+---@param recipeID number
+---@param info table|nil
+function OneWoW_CatDB_TradeSkillDB_API.EnsureLearnedRecipe(recipeID, info)
+    recipeID = tonumber(recipeID)
+    if not recipeID then
+        return
+    end
+    local db = ns:GetDB()
+    db.learned = db.learned or {}
+    local rec = db.learned[recipeID] or { id = recipeID }
+    rec.id = recipeID
+    rec.sync = true
+    if type(info) == "table" then
+        for key, value in pairs(info) do
+            rec[key] = value
+        end
+    end
+    db.learned[recipeID] = rec
+    return rec
+end
+
+---@return table
+function OneWoW_CatDB_TradeSkillDB_API.GetSyncQueue()
+    local out = {}
+    local learned = ns:GetDB().learned
+    if type(learned) ~= "table" then
+        return out
+    end
+    for recipeID, rec in pairs(learned) do
+        if type(rec) == "table" and rec.sync then
+            out[recipeID] = rec
+        end
+    end
+    return out
+end

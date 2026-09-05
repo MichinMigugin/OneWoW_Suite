@@ -5,6 +5,7 @@ local OneWoW_GUI = OneWoW_GUI
 local pairs, ipairs, type = pairs, ipairs, type
 local tonumber, tostring = tonumber, tostring
 local tinsert, sort, wipe = tinsert, sort, wipe
+local time = time
 local C_AddOns = C_AddOns
 local C_Map = C_Map
 local C_QuestLog = C_QuestLog
@@ -60,6 +61,14 @@ local function ImportArchiveData()
     if quests then
         ns:RegisterQuestData(quests)
         archiveImported = true
+        if ns.shippedQuestIDs then
+            for questID in pairs(quests) do
+                ns.shippedQuestIDs[questID] = true
+            end
+        end
+        if ns.ApplyLearnedQuests then
+            ns:ApplyLearnedQuests()
+        end
     end
 end
 
@@ -170,6 +179,39 @@ local function HasNormalizedValue(tbl, value)
     return false
 end
 
+---@param npcID number|nil
+---@return boolean
+local function NPCHasLocation(npcID)
+    if not npcID then
+        return false
+    end
+    local npcAPI = OneWoW:GetCatalogPackAPI("vendors")
+    if not npcAPI then
+        return true
+    end
+    local npc = npcAPI.GetNPC(npcID)
+    if not npc or not npc.locations then
+        return false
+    end
+    for _, loc in pairs(npc.locations) do
+        if loc and loc.x and loc.y then
+            return true
+        end
+    end
+    return false
+end
+
+---@param quest table
+---@return boolean
+local function QuestNPCHasLocation(quest)
+    local startNPC = quest.starts and quest.starts[1] and quest.starts[1].npcID
+    if NPCHasLocation(startNPC) then
+        return true
+    end
+    local endNPC = quest.ends and quest.ends[1] and quest.ends[1].npcID
+    return NPCHasLocation(endNPC)
+end
+
 local function QuestMatches(quest, expansionFilter, zoneFilter, typeFilter, questTypeFilter, searchText, advancedFilters)
     advancedFilters = advancedFilters or {}
     typeFilter = advancedFilters.groupType or typeFilter
@@ -260,12 +302,17 @@ local function QuestMatches(quest, expansionFilter, zoneFilter, typeFilter, ques
         return false
     end
     if advancedFilters.runtime and advancedFilters.runtime ~= "all" and advancedFilters.runtime ~= "favorite" then
-        local hasStarter = quest.starts and quest.starts[1] and quest.starts[1].npcID
-        local hasEnder = quest.ends and quest.ends[1] and quest.ends[1].npcID
+        local hasStarter = (quest.starts and quest.starts[1] and quest.starts[1].npcID)
+            or (quest.startObjects and quest.startObjects[1])
+        local hasEnder = (quest.ends and quest.ends[1] and quest.ends[1].npcID)
+            or (quest.endObjects and quest.endObjects[1])
         local hasLocation =
             (quest.coords and quest.coords.mapID and quest.coords.x and quest.coords.y)
             or (quest.starts and quest.starts[1] and quest.starts[1].mapID and quest.starts[1].x and quest.starts[1].y)
             or (quest.ends and quest.ends[1] and quest.ends[1].mapID and quest.ends[1].x and quest.ends[1].y)
+            or (quest.startObjects and quest.startObjects[1] and quest.startObjects[1].mapID and quest.startObjects[1].x and quest.startObjects[1].y)
+            or (quest.endObjects and quest.endObjects[1] and quest.endObjects[1].mapID and quest.endObjects[1].x and quest.endObjects[1].y)
+            or QuestNPCHasLocation(quest)
         if advancedFilters.runtime == "has_location" then
             if not hasLocation then
                 return false
@@ -313,7 +360,19 @@ local function CompareQuests(a, b)
     return (a.id or 0) < (b.id or 0)
 end
 
+---@param advancedFilters table|nil
+local function EnsureNPCDBForLocationFilter(advancedFilters)
+    local runtime = advancedFilters and advancedFilters.runtime
+    if runtime ~= "has_location" and runtime ~= "missing_location" then
+        return
+    end
+    if not OneWoW:GetCatalogPackAPI("vendors") then
+        OneWoW:EnsureCatalogPack("vendors")
+    end
+end
+
 local function FillSortedQuests(expansionFilter, zoneFilter, typeFilter, questTypeFilter, searchText, advancedFilters, results, shouldYield)
+    EnsureNPCDBForLocationFilter(advancedFilters)
     wipe(results)
     local source
     if expansionFilter and expansionFilter ~= -1 then
@@ -527,11 +586,166 @@ function API.GetAvailableZones(expansionID)
     return result
 end
 
+local LEARNED_QUEST_KEYS = {
+    "name", "starts", "ends", "startObjects", "endObjects",
+    "rewardItems", "rewardChoices", "packageItems", "rewardGold", "rewardXP",
+    "description", "objectivesText", "expansion", "mapID", "zoneName",
+    "questGiverID", "questTurnInID",
+}
+
+local function NPCIDSet(list)
+    local set = {}
+    if type(list) ~= "table" then
+        return set
+    end
+    for _, entry in pairs(list) do
+        local id
+        if type(entry) == "table" then
+            id = entry.npcID or entry.objectID
+        else
+            id = entry
+        end
+        id = tonumber(id)
+        if id then
+            set[id] = true
+        end
+    end
+    return set
+end
+
+local function RewardIDSet(list)
+    local set = {}
+    if type(list) ~= "table" then
+        return set
+    end
+    for _, entry in pairs(list) do
+        local id
+        if type(entry) == "number" then
+            id = entry
+        elseif type(entry) == "table" then
+            id = entry.itemID or entry.id
+        end
+        id = tonumber(id)
+        if id then
+            set[id] = true
+        end
+    end
+    return set
+end
+
+local function SetHasNew(oldSet, newSet)
+    for id in pairs(newSet) do
+        if not oldSet[id] then
+            return true
+        end
+    end
+    return false
+end
+
+local function HasNewQuestFacts(existing, data)
+    if not existing then
+        return true
+    end
+    if SetHasNew(NPCIDSet(existing.starts), NPCIDSet(data.starts)) then
+        return true
+    end
+    if SetHasNew(NPCIDSet(existing.ends), NPCIDSet(data.ends)) then
+        return true
+    end
+    if SetHasNew(NPCIDSet(existing.startObjects), NPCIDSet(data.startObjects)) then
+        return true
+    end
+    if SetHasNew(NPCIDSet(existing.endObjects), NPCIDSet(data.endObjects)) then
+        return true
+    end
+    if SetHasNew(RewardIDSet(existing.rewardItems), RewardIDSet(data.rewardItems)) then
+        return true
+    end
+    if SetHasNew(RewardIDSet(existing.rewardChoices), RewardIDSet(data.rewardChoices)) then
+        return true
+    end
+    if SetHasNew(RewardIDSet(existing.packageItems), RewardIDSet(data.packageItems)) then
+        return true
+    end
+    return false
+end
+
+function ns:SnapshotShippedQuestIDs()
+    if ns.shippedQuestIDs then
+        return
+    end
+    ns.shippedQuestIDs = {}
+    for questID in pairs(ns.ExternalQuestDB) do
+        ns.shippedQuestIDs[questID] = true
+    end
+end
+
+local function PersistLearnedQuest(questID, data)
+    if data.isInternal then
+        return
+    end
+    if not ns.db then
+        return
+    end
+    local existing = ns.ExternalQuestDB[questID]
+    if existing and not HasNewQuestFacts(existing, data) then
+        return
+    end
+    local db = ns:GetDB()
+    db.learned = db.learned or {}
+    local rec = db.learned[questID] or { id = questID, learnedAt = time() }
+    rec.id = questID
+    rec.learnedAt = rec.learnedAt or time()
+    rec.sync = true
+    if not (ns.shippedQuestIDs and ns.shippedQuestIDs[questID]) then
+        rec.unknown = true
+    end
+    for i = 1, #LEARNED_QUEST_KEYS do
+        local key = LEARNED_QUEST_KEYS[i]
+        if data[key] ~= nil then
+            rec[key] = data[key]
+        end
+    end
+    db.learned[questID] = rec
+end
+
+function ns:ApplyLearnedQuests()
+    local learned = ns.db and ns:GetDB().learned
+    if type(learned) ~= "table" then
+        return
+    end
+    for questID, rec in pairs(learned) do
+        if type(questID) == "number" and type(rec) == "table" then
+            API.StoreQuestInfo(questID, rec, { skipPersist = true })
+        end
+    end
+end
+
+---@return table
+function API.GetSyncQueue()
+    local out = {}
+    local learned = ns.db and ns:GetDB().learned
+    if type(learned) ~= "table" then
+        return out
+    end
+    for questID, rec in pairs(learned) do
+        if type(rec) == "table" and rec.sync then
+            out[questID] = rec
+        end
+    end
+    return out
+end
+
 ---@param questID number
 ---@param data table
-function API.StoreQuestInfo(questID, data)
+---@param opts table|nil
+function API.StoreQuestInfo(questID, data, opts)
     if not questID or type(data) ~= "table" then
         return
+    end
+    local persist = not (opts and opts.skipPersist)
+    if persist then
+        PersistLearnedQuest(questID, data)
     end
     local quest = ns.ExternalQuestDB[questID]
     if not quest then

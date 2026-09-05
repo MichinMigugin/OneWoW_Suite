@@ -1575,18 +1575,76 @@ local function GetAdvancedValueText(fieldName, value)
     return tostring(value)
 end
 
+---@param npcID number|nil
+---@param preferMapID number|nil
+---@return number|nil mapID
+---@return number|nil x
+---@return number|nil y
+local function NPCDBPin(npcID, preferMapID)
+    npcID = tonumber(npcID)
+    if not npcID then
+        return nil
+    end
+    if not ns.GetCatalogPackAPI("vendors") then
+        ns.EnsureCatalogPack("vendors")
+    end
+    local npcAPI = ns.GetCatalogPackAPI("vendors")
+    if not npcAPI then
+        return nil
+    end
+    local npc = npcAPI.GetNPC(npcID)
+    if not npc or not npc.locations then
+        return nil
+    end
+    local loc = preferMapID and npc.locations[preferMapID]
+    if loc and loc.x and loc.y then
+        return loc.mapID or preferMapID, loc.x, loc.y
+    end
+    for mapID, row in pairs(npc.locations) do
+        if row and row.x and row.y then
+            return row.mapID or mapID, row.x, row.y
+        end
+    end
+    return nil
+end
+
+---@param pin table|nil
+---@param questData table|nil
+---@return table|nil
+local function FillPinFromNPCDB(pin, questData)
+    if not pin or (pin.x and pin.y) then
+        return pin
+    end
+    local mapID, x, y = NPCDBPin(pin.npcID, pin.mapID or (questData and questData.mapID))
+    if not x then
+        return pin
+    end
+    return {
+        npcID = pin.npcID,
+        npcName = pin.npcName or pin.name,
+        objectID = pin.objectID,
+        mapID = mapID,
+        x = x,
+        y = y,
+    }
+end
+
 local function GetQuestStarterData(questData)
     if not questData then return nil end
 
     if questData.starts and questData.starts[1] then
-        return questData.starts[1]
+        return FillPinFromNPCDB(questData.starts[1], questData)
+    end
+
+    if questData.startObjects and questData.startObjects[1] then
+        return questData.startObjects[1]
     end
 
     if questData.questGiverID then
-        return {
+        return FillPinFromNPCDB({
             npcID = questData.questGiverID,
             npcName = questData.questGiverName,
-        }
+        }, questData)
     end
 
     return nil
@@ -1596,14 +1654,18 @@ local function GetQuestEnderData(questData)
     if not questData then return nil end
 
     if questData.ends and questData.ends[1] then
-        return questData.ends[1]
+        return FillPinFromNPCDB(questData.ends[1], questData)
+    end
+
+    if questData.endObjects and questData.endObjects[1] then
+        return questData.endObjects[1]
     end
 
     if questData.questTurnInID then
-        return {
+        return FillPinFromNPCDB({
             npcID = questData.questTurnInID,
             npcName = questData.questTurnInName,
-        }
+        }, questData)
     end
 
     return nil
@@ -1642,6 +1704,12 @@ end
 local function BuildNotesNPCInfo(npcData, questData, npcName)
     local mapID = tonumber(npcData.mapID) or tonumber(questData and questData.mapID)
     local x, y = npcData.x, npcData.y
+    if (not x or not y) and npcData.npcID then
+        local pinMapID, pinX, pinY = NPCDBPin(npcData.npcID, mapID)
+        x = x or pinX
+        y = y or pinY
+        mapID = mapID or pinMapID
+    end
     if (not x or not y) and questData and questData.coords then
         x = x or questData.coords.x
         y = y or questData.coords.y
@@ -1660,7 +1728,9 @@ local function BuildNotesNPCInfo(npcData, questData, npcName)
         mapID = mapID,
         x = x,
         y = y,
-        category = "Quest Givers",
+        category = "quest_giver",
+        roles = { "quest_giver" },
+        questID = questData and (questData.id or questData.questID),
     }
 end
 
@@ -2193,7 +2263,7 @@ function ShowQuestDetail(panels, questData)
 
             if npcID then
                 GameTooltip:AddLine(
-                    "Click to add NPC to Notes and open Notes navigation",
+                    L["QUESTS_NPC_OPEN_CATALOG"],
                     0,
                     1,
                     0
