@@ -43,7 +43,7 @@ Many step types complete themselves from game events — quests, renown, vault s
 ## Tips
 
 * Pin one daily/weekly list while leveling or doing chores so you are not alt-tabbing to the hub. Hide pin when done puts that window away after the last step and brings it back after reset. Edit the list to show the pin only on characters in a Role.
-* Dungeon and raid bosses cannot be filled from your target. Blizzard does not let addons read that target inside an instance. Add Kill a Dungeon or Raid Boss and use Fill from current encounter during the fight or just after you defeat it (still works after you leave, until you reload). A fight with two bosses (for example Twin Fangs) is still one encounter.
+* Dungeon and raid bosses cannot be filled from your target. Blizzard does not let addons read that target inside an instance. Add Kill a Dungeon or Raid Boss. The first time, start the fight or use Fill from current encounter just after you defeat it (still works after you leave, until you reload). Looking at the boss is not enough. After that, the step tracks later kills. A fight with two bosses (for example Twin Fangs) is still one encounter. You can also type the encounter ID.
 * Open-world rares still use Kill a Rare or Boss and Fill from target. Rare Quest is the loot lock (once per day or week), not the kill itself.
 * Drag a section header or a step to reorder. Drop a step on another section to move it there.
 * Hover a section or step for add, edit, and delete. List actions sit under the title.

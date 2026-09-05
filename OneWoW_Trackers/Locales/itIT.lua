@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "Entra in spedizione/incursione",
     ["TRACKER_SC_INSTANCE_DESC"]             = "Si completa automaticamente quando entri in una spedizione o incursione specifica. Usa il pulsante dall'interno per compilare l'ID istanza.",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "Uccidi un boss di spedizione o incursione",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Si completa automaticamente quando sconfiggi questo incontro della Guida alle avventure. In una spedizione o incursione, inizia lo scontro o compila subito dopo la vittoria. Digitando l'ID incontro viene mostrato il nome del boss.",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Si completa automaticamente quando sconfiggi questo incontro della Guida alle avventure. La prima volta, inizia lo scontro o usa Compila dall'incontro attuale subito dopo la vittoria - guardare il boss non basta. Dopo, il passo traccia le vittorie successive. Puoi anche digitare l'ID incontro.",
     ["TRACKER_SC_KILL_TITLE"]             = "Uccidi un raro o boss",
     ["TRACKER_SC_KILL_DESC"]             = "Si completa automaticamente quando il tuo gruppo uccide una creatura specifica nel mondo aperto. Selezionala e usa il pulsante per compilare il suo ID. I boss di spedizione e incursione usano Uccidi un boss di spedizione o incursione.",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "Gli ID creatura non possono essere letti in una spedizione o incursione. Usa Uccidi un boss di spedizione o incursione e Compila dall'incontro attuale durante lo scontro o subito dopo la vittoria.",

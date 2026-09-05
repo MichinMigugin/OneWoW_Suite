@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "Entrer dans un donjon/raid",
     ["TRACKER_SC_INSTANCE_DESC"]             = "Se termine automatiquement lorsque vous entrez dans un donjon ou raid spécifique. Utilisez le bouton depuis l'intérieur pour remplir l'ID d'instance.",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "Tuer un boss de donjon ou de raid",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Se termine automatiquement lorsque vous vainquez cette rencontre du Guide de l'aventurier. Dans un donjon ou un raid, lancez le combat ou remplissez juste après la victoire. Saisir l'ID de rencontre affiche le nom du boss.",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Se termine automatiquement lorsque vous vainquez cette rencontre du Guide de l'aventurier. La première fois, lancez le combat ou utilisez Remplir depuis la rencontre actuelle juste après la victoire - regarder le boss ne suffit pas. Ensuite, l'étape suit les prochaines victoires. Vous pouvez aussi saisir l'ID de rencontre.",
     ["TRACKER_SC_KILL_TITLE"]             = "Tuer un rare ou un boss",
     ["TRACKER_SC_KILL_DESC"]             = "Se termine automatiquement lorsque votre groupe tue une créature spécifique en extérieur. Ciblez-la et utilisez le bouton pour remplir son ID. Les boss de donjon et de raid utilisent Tuer un boss de donjon ou de raid.",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "Les ID de créature ne peuvent pas être lus dans un donjon ou un raid. Utilisez Tuer un boss de donjon ou de raid et Remplir depuis la rencontre actuelle pendant le combat ou juste après la victoire.",

@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "Dungeon/Schlachtzug betreten",
     ["TRACKER_SC_INSTANCE_DESC"]             = "Wird automatisch abgeschlossen, wenn du einen bestimmten Dungeon oder Schlachtzug betrittst. Nutze die Schaltfläche von innen, um die Instanz-ID auszufüllen.",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "Dungeon- oder Schlachtzugboss töten",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Wird automatisch abgeschlossen, wenn du diese Begegnung im Abenteuerführer besiegst. In einem Dungeon oder Schlachtzug starte den Kampf oder fülle direkt nach dem Sieg. Die Begegnungs-ID zeigt den Bossnamen.",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Wird automatisch abgeschlossen, wenn du diese Begegnung im Abenteuerführer besiegst. Beim ersten Mal starte den Kampf oder nutze Aus aktueller Begegnung füllen direkt nach dem Sieg - den Boss nur anzusehen reicht nicht. Danach verfolgt der Schritt spätere Siege. Du kannst die Begegnungs-ID auch eingeben.",
     ["TRACKER_SC_KILL_TITLE"]             = "Seltenen oder Boss töten",
     ["TRACKER_SC_KILL_DESC"]             = "Wird automatisch abgeschlossen, wenn deine Gruppe eine bestimmte Kreatur in der offenen Welt tötet. Visiere sie an und nutze die Schaltfläche, um ihre ID auszufüllen. Dungeon- und Schlachtzugbosse verwenden Dungeon- oder Schlachtzugboss töten.",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "Kreatur-IDs können in einem Dungeon oder Schlachtzug nicht gelesen werden. Verwende Dungeon- oder Schlachtzugboss töten und Aus aktueller Begegnung füllen während des Kampfes oder direkt nach dem Sieg.",

@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "Entrar en mazmorra/banda",
     ["TRACKER_SC_INSTANCE_DESC"]             = "Se completa automáticamente al entrar en una mazmorra o banda específica. Usa el botón desde dentro para rellenar el ID de instancia.",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "Matar un jefe de mazmorra o banda",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Se completa automáticamente al derrotar ese encuentro de la Guía de aventuras. En una mazmorra o banda, empieza el combate o rellena justo después de la victoria. Al escribir el ID de encuentro se muestra el nombre del jefe.",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Se completa automáticamente al derrotar ese encuentro de la Guía de aventuras. La primera vez, empieza el combate o usa Rellenar desde el encuentro actual justo después de la victoria - mirar al jefe no basta. Después, el paso rastrea las siguientes victorias. También puedes escribir el ID de encuentro.",
     ["TRACKER_SC_KILL_TITLE"]             = "Matar un raro o jefe",
     ["TRACKER_SC_KILL_DESC"]             = "Se completa automáticamente cuando tu grupo mata una criatura específica en mundo abierto. Selecciónala y usa el botón para rellenar su ID. Los jefes de mazmorra y banda usan Matar un jefe de mazmorra o banda.",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "Los ID de criatura no se pueden leer dentro de una mazmorra o banda. Usa Matar un jefe de mazmorra o banda y Rellenar desde el encuentro actual durante el combate o justo después de la victoria.",

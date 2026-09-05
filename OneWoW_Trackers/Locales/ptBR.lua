@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "Entrar em masmorra/raide",
     ["TRACKER_SC_INSTANCE_DESC"]             = "Conclui automaticamente quando você entra em uma masmorra ou raide específica. Use o botão de dentro para preencher o ID da instância.",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "Matar um chefe de masmorra ou raide",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Conclui automaticamente quando você derrota esse encontro do Guia da aventura. Em uma masmorra ou raide, comece a luta ou preencha logo após a vitória. Digitar o ID do encontro mostra o nome do chefe.",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "Conclui automaticamente quando você derrota esse encontro do Guia da aventura. Na primeira vez, comece a luta ou use Preencher a partir do encontro atual logo após derrotá-lo - só olhar para o chefe não basta. Depois disso, a etapa rastreia as próximas derrotas. Você também pode digitar o ID do encontro.",
     ["TRACKER_SC_KILL_TITLE"]             = "Matar um raro ou chefe",
     ["TRACKER_SC_KILL_DESC"]             = "Conclui automaticamente quando seu grupo mata uma criatura específica no mundo aberto. Selecione-a e use o botão para preencher o ID. Chefes de masmorra e raide usam Matar um chefe de masmorra ou raide.",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "IDs de criatura não podem ser lidos dentro de uma masmorra ou raide. Use Matar um chefe de masmorra ou raide e Preencher a partir do encontro atual durante a luta ou logo após a vitória.",

@@ -380,7 +380,7 @@ local function RecalcQuestRareUI(card)
             pane:SetHeight(0)
         end
     end
-    if card._fillBtn then
+    if card._scopeDD and card._fillBtn then
         if isRare and card._expanded then
             card._fillBtn:Show()
         else
@@ -2722,6 +2722,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 dialog._activeCard = myself
                 if myself._fieldRow then myself._fieldRow:Show() end
                 if myself._saveFieldBtn then myself._saveFieldBtn:Show() end
+                if myself._fillBtn then myself._fillBtn:Show() end
                 if myself._titleBtn then myself._titleBtn:Show() end
                 RecalcQuestRareUI(myself)
                 myself:SetHeight(myself._expandedHeight or (CardHeaderHeight(descHeight) + FIELD_ROW_H + SAVE_ROW_H))

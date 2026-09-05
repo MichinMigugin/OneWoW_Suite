@@ -51,8 +51,15 @@
 
 ---
 
-*No user-facing changes this release for Bags, Mail, Notes, Shopping List, or Trackers.*
+# Trackers
+## Fixes
+- Editing a step inside a dungeon or other instance no longer errors.
+- Kill a Dungeon or Raid Boss now shows Fill from current encounter when you add a new step. The first time, start the fight or fill just after the kill.
 
 ---
 
-- **Last Updated**: Sep 4, 2026
+*No user-facing changes this release for Bags, Mail, Notes, or Shopping List.*
+
+---
+
+- **Last Updated**: Sep 5, 2026

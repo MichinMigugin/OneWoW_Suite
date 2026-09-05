@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "进入地下城/团队副本",
     ["TRACKER_SC_INSTANCE_DESC"]             = "进入特定地下城或团队副本时自动完成。在内部使用按钮填充副本ID。",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "击杀地下城或团队首领",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "击败冒险指南中的该首领战时自动完成。在地下城或团队副本中开始战斗，或在击败后立即填充。输入首领战ID会显示名称。",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "击败冒险指南中的该首领战时自动完成。第一次请开始战斗，或在击败后立即使用从当前首领战填充 - 只看着首领不够。之后该步骤会跟踪之后的击杀。也可以输入首领战ID。",
     ["TRACKER_SC_KILL_TITLE"]             = "击杀稀有或首领",
     ["TRACKER_SC_KILL_DESC"]             = "队伍在野外击杀特定生物时自动完成。选中目标并使用按钮填充其ID。地下城和团队首领请使用击杀地下城或团队首领。",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "在地下城或团队副本中无法读取生物ID。请使用击杀地下城或团队首领，并在战斗中或击败后使用从当前首领战填充。",

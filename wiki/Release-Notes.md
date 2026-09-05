@@ -53,11 +53,18 @@
 
 ---
 
-*No user-facing changes this release for Bags, Mail, Notes, Shopping List, or Trackers.*
+### Trackers
+#### Fixes
+- Editing a step inside a dungeon or other instance no longer errors.
+- Kill a Dungeon or Raid Boss now shows Fill from current encounter when you add a new step. The first time, start the fight or fill just after the kill.
 
 ---
 
-- **Last Updated**: Sep 4, 2026
+*No user-facing changes this release for Bags, Mail, Notes, or Shopping List.*
+
+---
+
+- **Last Updated**: Sep 5, 2026
 
 ## R6.2609.0106
 
@@ -97,7 +104,7 @@ Released Aug 11, 2026. Home attention filtering, suite On/Off settings chrome, P
 
 ## R6.2608.0406
 
-Released Aug 4, 2026. Home hub cards and What’s New, slash cleanup path, Mail AH invoice breakdown, Catalog Journal/Vendors work, AltTracker auctions, and Notes list polish.
+Released Aug 4, 2026. Home hub cards and Whatâ€™s New, slash cleanup path, Mail AH invoice breakdown, Catalog Journal/Vendors work, AltTracker auctions, and Notes list polish.
 
 [Read full release notes](Release-Notes-R6.2608.0406)
 
@@ -110,4 +117,4 @@ Released Aug 4, 2026. Home hub cards and What’s New, slash cleanup path, Mail 
 ### Sources
 
 * [CHANGELOG.md](https://github.com/kellewic/OneWoW_Suite/blob/main/CHANGELOG.md)
-* In-game: Home → What’s New (highlights only)
+* In-game: Home â†’ Whatâ€™s New (highlights only)

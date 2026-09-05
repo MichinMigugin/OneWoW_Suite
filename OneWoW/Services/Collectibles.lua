@@ -1130,7 +1130,8 @@ function Collectibles.IsRareLockCompleted(npcIDOrKey)
     return C_QuestLog.IsQuestFlaggedCompleted(lock.questID)
 end
 
---- Creature name from a unit hyperlink tooltip. Nil while the client is still retrieving.
+--- Creature name from a unit hyperlink tooltip. Nil while the client is still
+--- retrieving, or when line text is secret (instanced content).
 ---@param npcID number
 ---@return string|nil name
 function Collectibles.ResolveNPCName(npcID)
@@ -1144,7 +1145,8 @@ function Collectibles.ResolveNPCName(npcID)
     end
     for i = 1, #tooltipData.lines do
         local text = tooltipData.lines[i].leftText
-        if text and text ~= "" and text ~= RETRIEVING_DATA then
+        -- Secret unit lines cannot be compared or cached from addon code.
+        if text and not ns.Restriction.IsSecretValue(text) and text ~= "" and text ~= RETRIEVING_DATA then
             npcNameCache[npcID] = text
             return text
         end

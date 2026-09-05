@@ -263,7 +263,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_SC_INSTANCE_TITLE"]             = "進入地城/團隊副本",
     ["TRACKER_SC_INSTANCE_DESC"]             = "進入特定地城或團隊副本時自動完成。在內部使用按鈕填入副本ID。",
     ["TRACKER_SC_ENCOUNTER_TITLE"]             = "擊殺地城或團隊首領",
-    ["TRACKER_SC_ENCOUNTER_DESC"]             = "擊敗冒險指南中的該首領戰時自動完成。在地城或團隊副本中開始戰鬥，或在擊敗後立即填入。輸入首領戰ID會顯示名稱。",
+    ["TRACKER_SC_ENCOUNTER_DESC"]             = "擊敗冒險指南中的該首領戰時自動完成。第一次請開始戰鬥，或在擊敗後立即使用從目前首領戰填入 - 只看著首領不夠。之後此步驟會追蹤之後的擊殺。也可以輸入首領戰ID。",
     ["TRACKER_SC_KILL_TITLE"]             = "擊殺稀有或首領",
     ["TRACKER_SC_KILL_DESC"]             = "隊伍在野外擊殺特定生物時自動完成。選取目標並使用按鈕填入其ID。地城與團隊首領請使用擊殺地城或團隊首領。",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]             = "在地城或團隊副本中無法讀取生物ID。請使用擊殺地城或團隊首領，並在戰鬥中或擊敗後使用從目前首領戰填入。",

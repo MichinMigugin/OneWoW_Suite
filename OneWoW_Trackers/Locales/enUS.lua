@@ -266,7 +266,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_SC_INSTANCE_TITLE"]       = "Enter a Dungeon/Raid",
     ["TRACKER_SC_INSTANCE_DESC"]        = "Auto-completes when you enter a specific dungeon or raid. Use the button while inside to fill the instance ID.",
     ["TRACKER_SC_ENCOUNTER_TITLE"]      = "Kill a Dungeon or Raid Boss",
-    ["TRACKER_SC_ENCOUNTER_DESC"]       = "Auto-completes when you defeat that Adventure Guide encounter. In a dungeon or raid, start the fight or fill just after the kill. Typing the encounter ID shows the boss name.",
+    ["TRACKER_SC_ENCOUNTER_DESC"]       = "Auto-completes when you defeat that Adventure Guide encounter. The first time, start the fight or use Fill from current encounter just after the kill - looking at the boss is not enough. After that, the step tracks later kills. You can also type the encounter ID.",
     ["TRACKER_SC_KILL_TITLE"]           = "Kill a Rare or Boss",
     ["TRACKER_SC_KILL_DESC"]            = "Auto-completes when your group kills a specific creature in the open world. Target it and use the button to fill its ID. Dungeon and raid bosses use Kill a Dungeon or Raid Boss instead.",
     ["TRACKER_SC_KILL_INSTANCE_NOTE"]   = "Creature IDs cannot be read inside a dungeon or raid. Use Kill a Dungeon or Raid Boss and Fill from current encounter during the fight or just after the kill.",
