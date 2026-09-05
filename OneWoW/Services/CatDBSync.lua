@@ -4,10 +4,13 @@ local _, ns = ...
 -- CatDBSync
 -- ============================================================================
 -- Always-loaded queue for facts the player just saw (NPC talk, quest dialog,
--- merchant, trainer, services). CatDB packs are LoadOnDemand — gossip must
--- not parse NPC shards. Rows land here, then flush into the pack's learned
--- overlay when that pack loads. New or newly complete facts set sync = true
--- for a future Companion pull to OneWoW servers. This file does not upload.
+-- merchant, trainer, services, profession window). CatDB packs are
+-- LoadOnDemand — gossip must not parse NPC shards. Rows land here, then flush
+-- into the pack's learned overlay when that pack loads. New or newly complete
+-- facts set sync = true. Companion reads only those flagged rows (plus this
+-- pending queue). This file does not upload.
+--
+-- Contract: OneWoW/Docs/CATDB_CONTRIBUTE.md
 -- ============================================================================
 
 local CatDBSync = {}
@@ -20,6 +23,7 @@ local tinsert, wipe = tinsert, wipe
 local strsplit = strsplit
 local C_Timer = C_Timer
 local C_AddOns = C_AddOns
+local C_TradeSkillUI = C_TradeSkillUI
 local Enum = Enum
 local UnitExists, UnitGUID, UnitName = UnitExists, UnitGUID, UnitName
 local UnitCreatureType, UnitClassification = UnitCreatureType, UnitClassification
@@ -30,6 +34,7 @@ local KINDS = { "npc", "quest", "recipe" }
 local getters = {}
 local session = { npc = {}, quest = {}, recipe = {} }
 local questLoadQueued = false
+local recipeLoadQueued = false
 
 local function CopyScalarTable(src)
     if type(src) ~= "table" then
@@ -165,6 +170,21 @@ local function MergeLearnInfo(dst, src)
     if src.lastScanned then
         dst.lastScanned = src.lastScanned
     end
+    if src.sync then
+        dst.sync = true
+    end
+    if src.item and not dst.item then
+        dst.item = src.item
+    end
+    if src.prof and not dst.prof then
+        dst.prof = src.prof
+    end
+    if src.pid and not dst.pid then
+        dst.pid = src.pid
+    end
+    if type(src.rg) == "table" and not dst.rg then
+        dst.rg = src.rg
+    end
     return dst
 end
 
@@ -191,9 +211,11 @@ local function Queue(kind, id, info)
     session[kind][id] = MergeLearnInfo(session[kind][id], info)
     session[kind][id].id = session[kind][id].id or id
     session[kind][id].learnedAt = session[kind][id].learnedAt or time()
+    session[kind][id].sync = true
     local store = PersistRoot()
     if store then
         store[kind][id] = MergeLearnInfo(store[kind][id], session[kind][id])
+        store[kind][id].sync = true
     end
 end
 
@@ -431,6 +453,91 @@ local function ArmQuestPack()
     end)
 end
 
+local function ArmTradeSkillPack()
+    if recipeLoadQueued then
+        return
+    end
+    local addon = ns.ResolveCatalogPack and ns:ResolveCatalogPack("tradeskills")
+    if not addon then
+        return
+    end
+    if C_AddOns.IsAddOnLoaded(addon) then
+        return
+    end
+    recipeLoadQueued = true
+    C_Timer.After(0, function()
+        recipeLoadQueued = false
+        if ns.EnsureLoaded then
+            ns:EnsureLoaded(addon)
+        end
+        if ns.ProfessionRecipe.IsTradeskillOpen() then
+            ScanVisibleRecipes(ns.ProfessionRecipe.GetLastScan())
+        end
+    end)
+end
+
+local function CaptureRecipeInfo(recipeID, scan)
+    local info = C_TradeSkillUI.GetRecipeInfo(recipeID)
+    local out = { id = recipeID }
+    if info then
+        out.name = info.name
+    end
+    if scan and scan.baseInfo then
+        out.prof = scan.baseInfo.parentProfessionName or scan.baseInfo.professionName
+        out.pid = scan.baseInfo.parentProfessionID or scan.baseInfo.professionID
+    end
+    local link = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+    if link then
+        out.item = tonumber(link:match("item:(%d+)"))
+    end
+    local schematic = C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
+    if schematic and schematic.reagentSlotSchematics then
+        local rg = {}
+        local basic = Enum.CraftingReagentType.Basic
+        for i = 1, #schematic.reagentSlotSchematics do
+            local slot = schematic.reagentSlotSchematics[i]
+            if slot.reagentType == basic and slot.reagents then
+                local qty = slot.quantityRequired or 1
+                for j = 1, #slot.reagents do
+                    local reagent = slot.reagents[j]
+                    if reagent and reagent.itemID then
+                        tinsert(rg, { reagent.itemID, qty })
+                    end
+                end
+            end
+        end
+        if rg[1] then
+            out.rg = rg
+        end
+    end
+    return out
+end
+
+local function RecipeNeedsContribute(recipeID)
+    local api = OneWoW_CatDB_TradeSkillDB_API
+    if not api then
+        return false
+    end
+    local shipped = api.GetRecipe(recipeID)
+    if not shipped then
+        return true
+    end
+    return type(shipped.rg) ~= "table" or shipped.rg[1] == nil
+end
+
+local function ScanVisibleRecipes(scan)
+    local ids = C_TradeSkillUI.GetAllRecipeIDs()
+    if not ids then
+        return
+    end
+    for i = 1, #ids do
+        local recipeID = ids[i]
+        if RecipeNeedsContribute(recipeID) then
+            CatDBSync.LearnRecipe(recipeID, CaptureRecipeInfo(recipeID, scan))
+        end
+    end
+end
+
 local EVENT_ROLES = {
     GOSSIP_SHOW = nil,
     QUEST_GREETING = "quest_giver",
@@ -491,6 +598,22 @@ if ns.Merchant and ns.Merchant.RegisterScanCallback then
         })
     end)
 end
+
+ns.ProfessionRecipe.RegisterShowCallback("CatDBSync", function()
+    ArmTradeSkillPack()
+end)
+
+ns.ProfessionRecipe.RegisterScanCallback("CatDBSync", function(scan)
+    ScanVisibleRecipes(scan)
+end)
+
+ns.ProfessionRecipe.RegisterLearnedCallback("CatDBSync", function(recipeID)
+    recipeID = tonumber(recipeID)
+    if not recipeID then
+        return
+    end
+    CatDBSync.LearnRecipe(recipeID, CaptureRecipeInfo(recipeID))
+end)
 
 ns:RegisterCoreLoginHandler("CatDBSync", function()
     local store = PersistRoot()

@@ -2,6 +2,7 @@ local _, ns = ...
 
 local pairs, ipairs, type = pairs, ipairs, type
 local tonumber = tonumber
+local time = time
 local tinsert, sort = tinsert, sort
 local C_Item = C_Item
 local C_Spell = C_Spell
@@ -594,6 +595,62 @@ function OneWoW_CatDB_TradeSkillDB_API.GetCraftingQualityVariants(itemID)
     return variants
 end
 
+local LEARNED_RECIPE_KEYS = {
+    "name", "item", "items", "prof", "pid", "rg", "sl",
+    "learn", "npc", "quest", "exp", "icon", "cat", "min",
+}
+
+local function ReagentItemSet(rg)
+    local set = {}
+    if type(rg) ~= "table" then
+        return set
+    end
+    for i = 1, #rg do
+        local row = rg[i]
+        local id
+        if type(row) == "table" then
+            id = tonumber(row[1] or row.itemID)
+        else
+            id = tonumber(row)
+        end
+        if id then
+            set[id] = true
+        end
+    end
+    return set
+end
+
+local function RecipeHasNewFacts(shipped, info)
+    if not shipped then
+        return true
+    end
+    if type(info) ~= "table" then
+        return false
+    end
+    if info.item and not shipped.item then
+        return true
+    end
+    if type(info.rg) == "table" then
+        if type(shipped.rg) ~= "table" or not shipped.rg[1] then
+            return true
+        end
+        local have = ReagentItemSet(shipped.rg)
+        for i = 1, #info.rg do
+            local row = info.rg[i]
+            local id
+            if type(row) == "table" then
+                id = tonumber(row[1] or row.itemID)
+            else
+                id = tonumber(row)
+            end
+            if id and not have[id] then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 ---@param recipeID number
 ---@param info table|nil
 function OneWoW_CatDB_TradeSkillDB_API.EnsureLearnedRecipe(recipeID, info)
@@ -601,14 +658,24 @@ function OneWoW_CatDB_TradeSkillDB_API.EnsureLearnedRecipe(recipeID, info)
     if not recipeID then
         return
     end
+    info = info or {}
+    local shipped = ns.Recipes[recipeID]
+    if not RecipeHasNewFacts(shipped, info) then
+        return
+    end
     local db = ns:GetDB()
     db.learned = db.learned or {}
-    local rec = db.learned[recipeID] or { id = recipeID }
+    local rec = db.learned[recipeID] or { id = recipeID, learnedAt = time() }
     rec.id = recipeID
+    rec.learnedAt = rec.learnedAt or time()
     rec.sync = true
-    if type(info) == "table" then
-        for key, value in pairs(info) do
-            rec[key] = value
+    if not shipped then
+        rec.unknown = true
+    end
+    for i = 1, #LEARNED_RECIPE_KEYS do
+        local key = LEARNED_RECIPE_KEYS[i]
+        if info[key] ~= nil and rec[key] == nil then
+            rec[key] = info[key]
         end
     end
     db.learned[recipeID] = rec

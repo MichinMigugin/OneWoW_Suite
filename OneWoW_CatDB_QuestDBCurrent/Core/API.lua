@@ -589,8 +589,13 @@ end
 local LEARNED_QUEST_KEYS = {
     "name", "starts", "ends", "startObjects", "endObjects",
     "rewardItems", "rewardChoices", "packageItems", "rewardGold", "rewardXP",
-    "description", "objectivesText", "expansion", "mapID", "zoneName",
+    "description", "objectivesText", "objectives", "objectiveDetails",
+    "expansion", "mapID", "zoneName",
     "questGiverID", "questTurnInID",
+    "flags", "categories", "questType", "classification",
+    "rewardSpellIDs", "rewardCurrencies",
+    "level", "suggestedGroup", "frequency",
+    "isCampaign", "isWorldQuest", "isDaily", "isWeekly",
 }
 
 local function NPCIDSet(list)
@@ -623,7 +628,7 @@ local function RewardIDSet(list)
         if type(entry) == "number" then
             id = entry
         elseif type(entry) == "table" then
-            id = entry.itemID or entry.id
+            id = entry.itemID or entry.currencyID or entry.id
         end
         id = tonumber(id)
         if id then
@@ -642,8 +647,24 @@ local function SetHasNew(oldSet, newSet)
     return false
 end
 
+local function TextIsNew(old, new)
+    return type(new) == "string" and new ~= "" and (type(old) ~= "string" or old == "")
+end
+
 local function HasNewQuestFacts(existing, data)
     if not existing then
+        return true
+    end
+    if TextIsNew(existing.name, data.name) then
+        return true
+    end
+    if TextIsNew(existing.description, data.description) then
+        return true
+    end
+    if TextIsNew(existing.objectivesText, data.objectivesText) then
+        return true
+    end
+    if data.mapID and not existing.mapID then
         return true
     end
     if SetHasNew(NPCIDSet(existing.starts), NPCIDSet(data.starts)) then
@@ -665,6 +686,12 @@ local function HasNewQuestFacts(existing, data)
         return true
     end
     if SetHasNew(RewardIDSet(existing.packageItems), RewardIDSet(data.packageItems)) then
+        return true
+    end
+    if SetHasNew(RewardIDSet(existing.rewardCurrencies), RewardIDSet(data.rewardCurrencies)) then
+        return true
+    end
+    if SetHasNew(RewardIDSet(existing.rewardSpellIDs), RewardIDSet(data.rewardSpellIDs)) then
         return true
     end
     return false

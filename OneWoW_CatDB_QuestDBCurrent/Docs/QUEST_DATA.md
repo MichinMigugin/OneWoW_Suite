@@ -78,3 +78,7 @@ python bin/catdb_status.py quest
 
 Splits npc pins onto `{ npcID }`, keeps object/area starts as
 `startObjects`.
+
+Live dialog capture writes `global.learned` and sets `sync = true` when
+the quest or its text / givers / rewards are new. CompSync Contribute
+reads those rows only. See [CATDB_CONTRIBUTE](../../OneWoW/Docs/CATDB_CONTRIBUTE.md).

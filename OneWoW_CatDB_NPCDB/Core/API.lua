@@ -1145,6 +1145,9 @@ function OneWoW_CatDB_NPCDB_API.EnsureLearnedNPC(npcID, info)
     if isUnknown or newFacts then
         rec.sync = true
     end
+    if info.name and info.name ~= "" then
+        rec.name = rec.name or info.name
+    end
 
     MergeLearnedIntoStore(npcID, rec)
     if info.name then

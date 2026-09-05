@@ -416,7 +416,8 @@ local DEFAULTS = {
     -- override maps; owned by AddonLoader OptOutStore.
     featureOptOut = { account = {}, char = {} },
     -- Pending CatDB facts while LoD packs are not loaded. Flushed into each
-    -- pack's learned overlay; Companion later reads rows with sync = true.
+    -- pack's learned overlay; CompSync Contribute reads rows with sync = true.
+    -- See OneWoW/Docs/CATDB_CONTRIBUTE.md.
     catdbLearn = {
         npc = {},
         quest = {},

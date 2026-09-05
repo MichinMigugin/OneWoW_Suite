@@ -70,8 +70,9 @@ and boss stay roles only — no extra filter rows.
 The Catalog NPCs list is `vendor`, `trainer`, `service`, or
 `quest_giver`, plus anyone the player talked to (learned overlay). Rare
 and boss stay out of the browse list until interacted. Learned rows and
-new facts set `sync = true` for a future Companion pull. Do not mutate
+new facts set `sync = true` for CompSync Contribute. Do not mutate
 shipped shards. `GetVendorsByItem` / `ItemIsSold` still require stock.
+See [CATDB_CONTRIBUTE](../../OneWoW/Docs/CATDB_CONTRIBUTE.md).
 
 ## Build (Workspace)
 

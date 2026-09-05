@@ -19,5 +19,9 @@ Items, Quests (Current / Archive), and Tradeskills.
 Public APIs are `OneWoW_CatDB_<Pack>_API` (`GetPlace`, `GetNPC`, `GetItem`,
 `GetAchievementsForItem`, `GetQuest`, `GetRecipe`, …). `ns` stays private.
 
+Learned overlays set `sync = true` on facts the player found that we did
+not ship. CompSync Contribute reads only those rows. Contract:
+[CATDB_CONTRIBUTE](../../OneWoW/Docs/CATDB_CONTRIBUTE.md).
+
 Emit and scoreboard live in OneWoW_Workspace (`bin/catdb_*_emit.py`,
 `bin/catdb_status.py`). They write only `OneWoW_CatDB_*` Data files.
