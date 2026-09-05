@@ -90,8 +90,9 @@ local function MakeShipment(name)
         maxQtyEnabled = false,
         maxQty = 0,
         restock = false,
-        restockSources = { bags = true, bank = true, guild = false },
+        restockSources = ns:NewRestockSources(),
         exclusions = {},
+        editedAt = time(),
         keepCopper = 0,
         maxCopperEnabled = false,
         maxCopper = 0,
@@ -109,6 +110,12 @@ local function CreateShipment(name)
     return shipment.id
 end
 
+local function TouchEdited(shipment)
+    if shipment then
+        shipment.editedAt = time()
+    end
+end
+
 local function RenameShipment(id, name)
     name = strtrim(name or "")
     if name == "" then
@@ -119,6 +126,7 @@ local function RenameShipment(id, name)
         return false, "ERR_SHIPMENT_MISSING"
     end
     shipment.name = name
+    TouchEdited(shipment)
     return true
 end
 
@@ -394,6 +402,7 @@ local function EnsureDetailWidgets()
             local s = Current()
             if s then
                 s.mode = def.key
+                TouchEdited(s)
                 if def.key == "manual" and ns.AutoRun then
                     ns.AutoRun:ClearSessionFlags(s.id)
                 end
@@ -431,6 +440,7 @@ local function EnsureDetailWidgets()
             local s = Current()
             if s then
                 s.frequency = def.key
+                TouchEdited(s)
             end
             dw.SetFrequencyChecked(def.key)
         end)
@@ -467,6 +477,7 @@ local function EnsureDetailWidgets()
                 local s = Current()
                 if s then
                     s.kind = def.key
+                    TouchEdited(s)
                 end
                 dw.SetKindChecked(def.key)
                 if dw.SyncKindPanels then
@@ -510,6 +521,7 @@ local function EnsureDetailWidgets()
                 local s = Current()
                 if s then
                     s.targetKind = def.key
+                    TouchEdited(s)
                 end
                 dw.SetTargetKindChecked(def.key)
                 if dw.SyncTargetKind then
@@ -539,6 +551,7 @@ local function EnsureDetailWidgets()
             local s = Current()
             if s then
                 s.target = text
+                TouchEdited(s)
             end
             if SyncActionButtons then
                 SyncActionButtons()
@@ -584,6 +597,7 @@ local function EnsureDetailWidgets()
             local s = Current()
             if s then
                 s.targetRoleId = value or ""
+                TouchEdited(s)
             end
             dw.roleDropdown._text:SetText(text)
             dw.roleDropdown._activeValue = value
@@ -626,6 +640,7 @@ local function EnsureDetailWidgets()
             local s = Current()
             if s then
                 s.roleDistribute = value
+                TouchEdited(s)
             end
             dw.distDropdown._text:SetText(text)
             dw.distDropdown._activeValue = value
@@ -692,6 +707,7 @@ local function EnsureDetailWidgets()
         local s = Current()
         if s then
             s.match = myself:GetSearchText()
+            TouchEdited(s)
         end
         myself:ClearFocus()
     end)
@@ -699,6 +715,7 @@ local function EnsureDetailWidgets()
         local s = Current()
         if s then
             s.match = myself:GetSearchText()
+            TouchEdited(s)
         end
     end)
     AttachTooltip(dw.matchBox, L["SHIPMENT_MATCH"], L["TT_SHIPMENT_MATCH"])
@@ -726,12 +743,14 @@ local function EnsureDetailWidgets()
         local s = Current()
         if s then
             s.keepQty = tonumber(myself:GetSearchText()) or 0
+            TouchEdited(s)
         end
     end)
     dw.keepBox:HookScript("OnTextChanged", function(myself, userInput)
         local s = Current()
         if userInput and s then
             s.keepQty = tonumber(myself:GetSearchText()) or 0
+            TouchEdited(s)
         end
     end)
     AttachTooltip(dw.keepBox, L["SHIPMENT_KEEP"], L["TT_SHIPMENT_KEEP"])
@@ -754,12 +773,14 @@ local function EnsureDetailWidgets()
         local s = Current()
         if s then
             s.maxQty = tonumber(myself:GetSearchText()) or 0
+            TouchEdited(s)
         end
     end)
     dw.maxBox:HookScript("OnTextChanged", function(myself, userInput)
         local s = Current()
         if userInput and s then
             s.maxQty = tonumber(myself:GetSearchText()) or 0
+            TouchEdited(s)
         end
     end)
     AttachTooltip(dw.maxBox, L["SHIPMENT_MAX"], L["TT_SHIPMENT_MAX"])
@@ -773,10 +794,44 @@ local function EnsureDetailWidgets()
         local s = Current()
         if s then
             s.restock = myself:GetChecked() and true or false
+            TouchEdited(s)
+        end
+        if dw.SyncRestockSourcesEnabled then
+            dw.SyncRestockSourcesEnabled()
         end
     end)
     AttachTooltip(dw.restock, L["SHIPMENT_RESTOCK"], L["TT_SHIPMENT_RESTOCK"])
-    nextIY(28)
+    nextIY(26)
+
+    dw.restockSourcesLabel = OneWoW_GUI:CreateFS(dw.itemPanel, 11)
+    dw.restockSourcesLabel:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 8, iy)
+    dw.restockSourcesLabel:SetText(L["SHIPMENT_RESTOCK_SOURCES"] .. ":")
+    AttachTooltip(dw.restockSourcesLabel, L["SHIPMENT_RESTOCK_SOURCES"], L["TT_SHIPMENT_RESTOCK_SOURCES"])
+    nextIY(16)
+
+    dw.restockSourceButtons = {}
+    for _, def in ipairs({
+        { key = "bags", label = HUD_EDIT_MODE_BAGS_LABEL },
+        { key = "bank", label = BANK },
+        { key = "warband", label = ACCOUNT_BANK_PANEL_TITLE },
+        { key = "guild", label = GUILD_BANK },
+    }) do
+        local cb = OneWoW_GUI:CreateCheckbox(dw.itemPanel, { label = def.label })
+        cb:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 16, iy)
+        cb:SetScript("OnClick", function(myself)
+            local s = Current()
+            if not s then
+                return
+            end
+            s.restockSources = ns:NormalizeRestockSources(s.restockSources)
+            s.restockSources[def.key] = myself:GetChecked() and true or false
+            TouchEdited(s)
+        end)
+        AttachTooltip(cb, def.label, L["TT_SHIPMENT_RESTOCK_SOURCES"])
+        dw.restockSourceButtons[def.key] = cb
+        nextIY(24)
+    end
+    nextIY(4)
     local itemRulesH = -iy
     dw.itemPanel:SetHeight(itemRulesH)
 
@@ -816,6 +871,7 @@ local function EnsureDetailWidgets()
         if s then
             local gold = tonumber(dw.goldKeepBox:GetSearchText()) or 0
             s.keepCopper = gold * 10000
+            TouchEdited(s)
         end
     end
     dw.goldKeepBox:HookScript("OnEditFocusLost", CommitGoldKeep)
@@ -844,6 +900,7 @@ local function EnsureDetailWidgets()
         if s then
             local gold = tonumber(dw.goldMaxBox:GetSearchText()) or 0
             s.maxCopper = gold * 10000
+            TouchEdited(s)
         end
     end
     dw.goldMaxBox:HookScript("OnEditFocusLost", CommitGoldMax)
@@ -872,6 +929,7 @@ local function EnsureDetailWidgets()
         if s then
             local gold = tonumber(dw.goldRestockBox:GetSearchText()) or 0
             s.restockCopper = gold * 10000
+            TouchEdited(s)
         end
     end
     dw.goldRestockBox:HookScript("OnEditFocusLost", CommitGoldRestock)
@@ -883,6 +941,7 @@ local function EnsureDetailWidgets()
         local s = Current()
         if s then
             s.restock = myself:GetChecked() and true or false
+            TouchEdited(s)
             if s.restock and (s.restockCopper or 0) == 0 and (s.maxCopper or 0) > 0 then
                 s.restockCopper = s.maxCopper
                 dw.goldRestockBox:SetText(tostring(math.floor(s.restockCopper / 10000)))
@@ -1039,10 +1098,15 @@ local function EnsureDetailWidgets()
             s.maxQty = tonumber(dw.maxBox:GetSearchText()) or 0
             s.maxQtyEnabled = dw.maxEnable:GetChecked() and true or false
             s.restock = dw.restock:GetChecked() and true or false
+            s.restockSources = ns:NormalizeRestockSources(s.restockSources)
+            for key, cb in pairs(dw.restockSourceButtons) do
+                s.restockSources[key] = cb:GetChecked() and true or false
+            end
             dw.keepBox:ClearFocus()
             dw.maxBox:ClearFocus()
             dw.matchBox:ClearFocus()
         end
+        TouchEdited(s)
         dw.targetBox:ClearFocus()
     end
 
@@ -1201,6 +1265,17 @@ local function EnsureDetailWidgets()
     end
     dw.SyncActionButtons = SyncActionButtons
 
+    local function SyncRestockSourcesEnabled()
+        local on = dw.maxEnable:GetChecked() and dw.restock:GetChecked()
+        for _, cb in pairs(dw.restockSourceButtons) do
+            SetWidgetEnabled(cb, on)
+        end
+        if dw.restockSourcesLabel then
+            dw.restockSourcesLabel:SetAlpha(on and 1 or 0.45)
+        end
+    end
+    dw.SyncRestockSourcesEnabled = SyncRestockSourcesEnabled
+
     local function SyncCapDependent()
         local s = Current()
         local capOn = dw.maxEnable:GetChecked() and true or false
@@ -1218,6 +1293,7 @@ local function EnsureDetailWidgets()
             end
             SetWidgetEnabled(dw.restock, false)
         end
+        SyncRestockSourcesEnabled()
     end
     dw.SyncCapDependent = SyncCapDependent
 
@@ -1276,8 +1352,20 @@ local function EnsureDetailWidgets()
     end
     dw.SyncKindPanels = SyncKindPanels
 
-    dw.maxEnable:SetScript("OnClick", SyncCapDependent)
-    dw.goldMaxEnable:SetScript("OnClick", SyncGoldCapDependent)
+    dw.maxEnable:SetScript("OnClick", function()
+        local s = Current()
+        if s then
+            TouchEdited(s)
+        end
+        SyncCapDependent()
+    end)
+    dw.goldMaxEnable:SetScript("OnClick", function()
+        local s = Current()
+        if s then
+            TouchEdited(s)
+        end
+        SyncGoldCapDependent()
+    end)
 end
 
 --- Bind the selected shipment's values into the (already built) widgets.
@@ -1328,6 +1416,11 @@ local function RefreshDetail()
     dw.maxBox:SetText(tostring(s.maxQty or 0))
     dw.maxBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dw.restock:SetChecked(s.restock and true or false)
+    local sources = ns:NormalizeRestockSources(s.restockSources)
+    s.restockSources = sources
+    for key, cb in pairs(dw.restockSourceButtons) do
+        cb:SetChecked(sources[key] and true or false)
+    end
 
     local keepGold = math.floor((s.keepCopper or 0) / 10000)
     dw.goldKeepBox:SetText(tostring(keepGold))

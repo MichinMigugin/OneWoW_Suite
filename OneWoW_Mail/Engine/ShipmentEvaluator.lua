@@ -60,28 +60,41 @@ local function CountInBankTabs(bank, itemID)
     return total
 end
 
---- Count target inventory for restock (bags/bank/guild + in-transit mail).
+--- Recipient-owned stock for restock (not sender pull). Missing warband counts as on.
+local function SourceEnabled(sources, key, defaultOn)
+    if not sources then
+        return defaultOn
+    end
+    local v = sources[key]
+    if v == nil then
+        return defaultOn
+    end
+    return v and true or false
+end
+
+--- Count recipient inventory for restock (bags/bank/warband/guild + in-transit).
 local function CountTargetHave(charKey, itemID, sources)
     local API = OneWoW_AltTracker_Storage_API
     if not API or not charKey then
         return 0
     end
     local total = 0
-    if sources.bags then
+    if SourceEnabled(sources, "bags", true) then
         total = total + CountInBagSlots(API.GetBags(charKey), itemID)
     end
-    if sources.bank then
+    if SourceEnabled(sources, "bank", true) then
         total = total + CountInBankTabs(API.GetPersonalBank(charKey), itemID)
     end
-    if sources.guild then
+    if SourceEnabled(sources, "warband", true) then
+        total = total + CountInBankTabs(API.GetWarbandBank(), itemID)
+    end
+    if SourceEnabled(sources, "guild", false) then
         total = total + CountInBankTabs(API.GetGuildBank(charKey), itemID)
     end
-    if API.GetInTransitShipments then
-        for _, ship in ipairs(API.GetInTransitShipments(charKey) or {}) do
-            for _, it in ipairs(ship.items or {}) do
-                if it.itemID == itemID then
-                    total = total + (it.count or it.stackCount or 1)
-                end
+    for _, ship in ipairs(API.GetInTransitShipments(charKey) or {}) do
+        for _, it in ipairs(ship.items or {}) do
+            if it.itemID == itemID then
+                total = total + (it.count or it.stackCount or 1)
             end
         end
     end
@@ -579,7 +592,7 @@ local function PlanItemsShipment(shipment, reserved, skipSet)
     end
 
     local keepQty = shipment.keepQty or 0
-    local restockSources = shipment.restockSources or { bags = true, bank = true, guild = false }
+    local restockSources = ns:NormalizeRestockSources(shipment.restockSources)
 
     -- perTarget[target] = { entries = {} }
     local perTarget = {}

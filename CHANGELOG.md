@@ -60,7 +60,7 @@
 
 ## Portals
 - Mage Teleports and Mage Portals are separate ESC flyouts. Show or hide each set in Portals settings. Class & Racial Abilities uses the same split.
-- ESC portal icons use short destination labels (HoV, SoB, SW). You can enlarge just that text, or hide it and use the tooltip. The suite font size no longer changes those labels.
+- ESC portal icons use short destination labels (HoV, SoB, SW). You can enlarge just that text, or hide it and use the tooltip. The suite font size no longer changes those labels. The ESC and Portals text sliders now change that label size.
 - ESC hearthstone can be random, your Hearthstone, a specific toy, hidden, or shown disabled. Seasonal-only mode hides older Hero's Path expansion flyouts. Live dungeon teleports (on by default) pick up new Path spells from the game. A Group Finder teleport prompt is off unless you turn it on.
 - Added Mycomancer's Hearthspore, The Schools of Arcane Magic - Mastery, Nature's Beacon, and Dundun's Abundant Travel Method.
 
@@ -82,7 +82,14 @@
 
 ---
 
-*No user-facing changes this release for Bags, Mail, Notes, or Shopping List.*
+# Mail
+## Shipments
+- Top-up restock now counts the recipient's Warband Bank by default (along with their bags and bank). Uncheck Warband Bank if you still want items mailed into that character's bags when the warband already has enough.
+- Checkboxes under restock choose where to look on the recipient. You still send from your bags. Mail already on the way still counts.
+
+---
+
+*No user-facing changes this release for Bags, Notes, or Shopping List.*
 
 ---
 

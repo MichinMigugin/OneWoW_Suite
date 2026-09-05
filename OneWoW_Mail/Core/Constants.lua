@@ -21,6 +21,8 @@ ns.Constants = {
     COLLECT_SETTLE = 0.15,
     SEND_ATTACH_SLOTS = ATTACHMENTS_MAX_SEND or 12,
     SUBJECT_PREFIX = "OneWoW Mail: ",
+    -- Named key on the shipments array table (`shipments.schema_version`).
+    SHIPMENTS_SCHEMA_VERSION = 1,
     -- Coin-tinted edit-box borders (Compose money row + gold shipment fields).
     MONEY_COLORS = {
         GOLD = { 1.00, 0.82, 0.10 },

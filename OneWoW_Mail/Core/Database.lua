@@ -45,7 +45,12 @@ function ns:InitializeDatabase()
         ns:EnsurePresetShipments()
     end
 
-    for _, shipment in ipairs(db.global.mail.shipments) do
+    local shipments = db.global.mail.shipments
+    if shipments.schema_version == nil then
+        shipments.schema_version = ns.Constants.SHIPMENTS_SCHEMA_VERSION
+    end
+
+    for _, shipment in ipairs(shipments) do
         -- Soulbound exclusion is applied at plan time; strip leftover suffixes from older saves.
         if type(shipment.match) == "string" then
             shipment.match = shipment.match:gsub("%s*&%s*!#soulbound%s*$", "")
@@ -76,6 +81,7 @@ function ns:InitializeDatabase()
             shipment.maxCopperEnabled = shipment.maxCopperEnabled and true or false
             shipment.restockCopper = shipment.restockCopper or shipment.maxCopper or 0
         end
+        shipment.restockSources = ns:NormalizeRestockSources(shipment.restockSources)
     end
 
     -- Shipment match rules are user-authored expressions, so renaming or
@@ -96,6 +102,25 @@ function ns:InitializeDatabase()
             return out
         end,
     })
+end
+
+--- Fresh restockSources table (bags/bank/warband on; guild off).
+---@return table
+function ns:NewRestockSources()
+    return { bags = true, bank = true, guild = false, warband = true }
+end
+
+--- Fill missing restock source keys. Missing `warband` becomes true.
+---@param sources table|nil
+---@return table
+function ns:NormalizeRestockSources(sources)
+    if type(sources) ~= "table" then
+        return self:NewRestockSources()
+    end
+    if sources.warband == nil then
+        sources.warband = true
+    end
+    return sources
 end
 
 --- Seed manual-mode preset shipments once (cloth/leather/metal/herb/DE).
@@ -121,7 +146,7 @@ function ns:EnsurePresetShipments()
             maxQtyEnabled = false,
             maxQty = 0,
             restock = false,
-            restockSources = { bags = true, bank = true, guild = false },
+            restockSources = ns:NewRestockSources(),
             exclusions = {},
         },
         {
@@ -139,7 +164,7 @@ function ns:EnsurePresetShipments()
             maxQtyEnabled = false,
             maxQty = 0,
             restock = false,
-            restockSources = { bags = true, bank = true, guild = false },
+            restockSources = ns:NewRestockSources(),
             exclusions = {},
         },
         {
@@ -157,7 +182,7 @@ function ns:EnsurePresetShipments()
             maxQtyEnabled = false,
             maxQty = 0,
             restock = false,
-            restockSources = { bags = true, bank = true, guild = false },
+            restockSources = ns:NewRestockSources(),
             exclusions = {},
         },
         {
@@ -175,7 +200,7 @@ function ns:EnsurePresetShipments()
             maxQtyEnabled = false,
             maxQty = 0,
             restock = false,
-            restockSources = { bags = true, bank = true, guild = false },
+            restockSources = ns:NewRestockSources(),
             exclusions = {},
         },
         {
@@ -193,7 +218,7 @@ function ns:EnsurePresetShipments()
             maxQtyEnabled = false,
             maxQty = 0,
             restock = false,
-            restockSources = { bags = true, bank = true, guild = false },
+            restockSources = ns:NewRestockSources(),
             exclusions = {},
         },
     }

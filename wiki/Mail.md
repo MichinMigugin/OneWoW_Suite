@@ -22,7 +22,8 @@ Reusable plans:
 
 * Target a **character** or a **role** (Settings → Roles & Alts)
 * **Match** bag items with [search expressions](Bags-Search-Syntax) (soulbound always excluded)
-* Keep / cap / top-up rules for items and gold; in-transit mail counts toward restock targets
+* Keep / cap / top-up rules for items and gold; in-transit mail always counts toward restock targets
+* When topping up, choose whether the recipient's bags, bank, Warband Bank, and guild bank count as already owned (Warband Bank starts on). You still send from your bags.
 * Role distribute: fill first, round-robin, or equal split
 * Auto-run can plan on mailbox open and hold for review on Activity
 

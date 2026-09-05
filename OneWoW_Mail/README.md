@@ -19,7 +19,7 @@ Replaces the default mailbox UI while you are at a mailbox:
 Reusable logistics plans for mailing items and gold:
 - Target a **character** or a **role** (suite Roles & Alts — AltTracker hub not required)
 - **Match** bag items with Bags search syntax (`#` keywords, operators, saved searches); soulbound items are always excluded
-- Per-item rules: leave some on this character, cap send amount, or **top up** the target using known alt inventory (in-transit mail counts toward the target)
+- Per-item rules: leave some on this character, cap send amount, or **top up** the target using known alt inventory (bags, bank, Warband Bank, optional guild bank; in-transit mail always counts)
 - Gold rules: keep / cap / restock on the recipient
 - Role distribute modes: fill first, round-robin, or equal split
 - Auto-run modes can plan on mailbox open and wait for review on Activity, or send according to shipment settings
