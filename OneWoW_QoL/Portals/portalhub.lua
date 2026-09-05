@@ -364,16 +364,27 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		end
 		return portals
 	elseif categoryID == "abilities" then
+		local ph = OneWoW:GetPortalHub()
 		local allAbilities = {}
-		local mageT = ns.PortalHubDetection:GetMageTeleports(showAll)
-		local mageP = ns.PortalHubDetection:GetMagePortals(showAll)
+		if ph.showMageTeleports then
+			local mageT = ns.PortalHubDetection:GetMageTeleports(showAll)
+			if #mageT > 0 then
+				table.insert(allAbilities, {type = "header", name = L["PORTAL_MAGE_TELEPORTS"]})
+				for _, p in ipairs(mageT) do table.insert(allAbilities, p) end
+			end
+		end
+		if ph.showMagePortals then
+			local mageP = ns.PortalHubDetection:GetMagePortals(showAll)
+			if #mageP > 0 then
+				table.insert(allAbilities, {type = "header", name = L["PORTAL_MAGE_PORTALS"]})
+				for _, p in ipairs(mageP) do table.insert(allAbilities, p) end
+			end
+		end
 		local druid = ns.PortalHubDetection:GetDruidPortals(showAll)
 		local dk = ns.PortalHubDetection:GetDeathKnightPortals(showAll)
 		local monk = ns.PortalHubDetection:GetMonkPortals(showAll)
 		local shaman = ns.PortalHubDetection:GetShamanPortals(showAll)
 		local racial = ns.PortalHubDetection:GetRacePortals(showAll)
-		for _, p in ipairs(mageT) do table.insert(allAbilities, p) end
-		for _, p in ipairs(mageP) do table.insert(allAbilities, p) end
 		for _, p in ipairs(druid) do table.insert(allAbilities, p) end
 		for _, p in ipairs(dk) do table.insert(allAbilities, p) end
 		for _, p in ipairs(monk) do table.insert(allAbilities, p) end

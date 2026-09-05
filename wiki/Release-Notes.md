@@ -60,6 +60,9 @@
 #### ESC Menu
 - Turning off ESC Menu Panel now hides the character info, notes, and portal strips. Character Info, Alerts, Zone Notes, and left/right side choices apply when you open the game menu.
 
+#### Portals
+- Mage Teleports and Mage Portals are separate ESC flyouts. Show or hide each set in Portals settings. Class & Racial Abilities uses the same split.
+
 #### Instance Toast
 - Zoning into a dungeon or raid shows real collectable counts on the instance toast and the ESC instance panel again.
 

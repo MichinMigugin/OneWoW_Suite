@@ -419,18 +419,27 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		yOffset = yOffset - (iconSize + iconGap)
 	end
 
-	local mageT = ns.PortalHubDetection:GetMageTeleports(showAll)
-	local mageP = ns.PortalHubDetection:GetMagePortals(showAll)
-	local allMage = {}
-	for _, t in ipairs(mageT) do table.insert(allMage, t) end
-	for _, p in ipairs(mageP) do table.insert(allMage, p) end
-	if #allMage > 0 then
-		local icon = C_Spell.GetSpellTexture(3561) or 237509
-		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, icon, iconSize, 0, yOffset, allMage, flyoutOrient, "Mage", growLeft
-		)
-		table.insert(flyoutButtons, button)
-		yOffset = yOffset - (iconSize + iconGap)
+	if ph.showMageTeleports then
+		local mageT = ns.PortalHubDetection:GetMageTeleports(showAll)
+		if #mageT > 0 then
+			local icon = C_Spell.GetSpellTexture(mageT[1].id) or C_Spell.GetSpellTexture(3561) or 237509
+			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
+				parent, icon, iconSize, 0, yOffset, mageT, flyoutOrient, L["PORTAL_ESC_MAGE_TELEPORT"], growLeft
+			)
+			table.insert(flyoutButtons, button)
+			yOffset = yOffset - (iconSize + iconGap)
+		end
+	end
+	if ph.showMagePortals then
+		local mageP = ns.PortalHubDetection:GetMagePortals(showAll)
+		if #mageP > 0 then
+			local icon = C_Spell.GetSpellTexture(mageP[1].id) or C_Spell.GetSpellTexture(10059) or 237509
+			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
+				parent, icon, iconSize, 0, yOffset, mageP, flyoutOrient, L["PORTAL_ESC_MAGE_PORTAL"], growLeft
+			)
+			table.insert(flyoutButtons, button)
+			yOffset = yOffset - (iconSize + iconGap)
+		end
 	end
 
 	yOffset = yOffset - (iconSize + iconGap)

@@ -33,3 +33,25 @@ Search:Register({
     path = PortalsPath("PORTAL_DISPLAY_OPTIONS"),
     nav = portalsNav,
 })
+
+Search:Register({
+    id = "qol:portals-mage-teleports",
+    title = "PORTAL_SHOW_MAGE_TELEPORTS",
+    description = "PORTAL_SHOW_MAGE_TELEPORTS_DESC",
+    scope = "OneWoW_QoL",
+    tags = { "mage", "teleport", "esc", "hide" },
+    addonKey = "OneWoW_QoL",
+    path = PortalsPath("PORTAL_SHOW_MAGE_TELEPORTS"),
+    nav = portalsNav,
+})
+
+Search:Register({
+    id = "qol:portals-mage-portals",
+    title = "PORTAL_SHOW_MAGE_PORTALS",
+    description = "PORTAL_SHOW_MAGE_PORTALS_DESC",
+    scope = "OneWoW_QoL",
+    tags = { "mage", "portal", "esc", "hide" },
+    addonKey = "OneWoW_QoL",
+    path = PortalsPath("PORTAL_SHOW_MAGE_PORTALS"),
+    nav = portalsNav,
+})

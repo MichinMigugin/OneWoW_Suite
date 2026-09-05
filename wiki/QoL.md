@@ -46,7 +46,7 @@ UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel** (zone notes
 
 **Copy Text** — copy tooltip or UI text under the cursor.
 
-Built-in with QoL (not separate toggles): toast-style alerts and portal data used by the hub / ESC panel.
+Built-in with QoL (not separate toggles): toast-style alerts and the Portals hub / ESC strip. Mages get separate Teleport and Portal flyouts on ESC; show or hide each set in Portals settings.
 
 There are **36** external modules. The full labeled catalog lives in the repo ([MODULES.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/MODULES.md)).
 

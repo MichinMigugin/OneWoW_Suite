@@ -688,6 +688,42 @@ function ns.UI.CreatePortalsTab(parent)
 			rowY = OneWoW_GUI:CreateToggleRow(content, {
 				yOffset = rowY,
 				contentWidth = contentWidth,
+				label = L["PORTAL_SHOW_MAGE_TELEPORTS"],
+				description = L["PORTAL_SHOW_MAGE_TELEPORTS_DESC"],
+				value = ph.showMageTeleports,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().showMageTeleports = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
+				label = L["PORTAL_SHOW_MAGE_PORTALS"],
+				description = L["PORTAL_SHOW_MAGE_PORTALS_DESC"],
+				value = ph.showMagePortals,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().showMagePortals = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
 				label = L["PORTAL_ESC_SHOW_UNKNOWN"],
 				description = L["PORTAL_ESC_SHOW_UNKNOWN_DESC"],
 				value = ph.escShowUnknown ~= false,
