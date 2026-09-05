@@ -1,10 +1,32 @@
 local _, ns = ...
 
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 local L = ns.L
 
 ns.PortalHubFlyouts = ns.PortalHubFlyouts or {}
 local Flyouts = ns.PortalHubFlyouts
+
+--- Dedicated ESC overlay size; suite fontSizeOffset must not change these.
+---@param fs FontString
+---@param text string|nil
+function Flyouts:ApplyIconLabel(fs, text)
+	if not fs then return end
+	local ph = OneWoW:GetPortalHub()
+	fs:SetWordWrap(false)
+	if fs.SetMaxLines then
+		fs:SetMaxLines(1)
+	end
+	if not ph.escShowIconText or not text or text == "" then
+		fs:SetText("")
+		fs:Hide()
+		OneWoW_GUI:ApplyFontCapped(fs, ph.escIconFontSize, 0)
+		return
+	end
+	fs:Show()
+	fs:SetText(text)
+	OneWoW_GUI:ApplyFontCapped(fs, ph.escIconFontSize, 0)
+end
 
 --- Fill a button with an icon that tracks the button size.
 --- SetNormalTexture leaves a default-sized stamp that looks tiny on ESC slots.
@@ -158,10 +180,13 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 			button.icon:SetTexture(icon)
 		end
 
-		if ns.PortalData and ns.PortalData:GetShortName(portalData.id) then
-			button.text:SetText(ns.PortalData:GetShortName(portalData.id))
-		end
 	end
+
+	local label
+	if portalData.type == "spell" then
+		label = ns.PortalData:GetShortName(portalData.id)
+	end
+	self:ApplyIconLabel(button.text, label)
 
 	if isAvailable then
 		button:SetAlpha(1)
@@ -252,9 +277,7 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
-	if label then
-		button.text:SetText(label)
-	end
+	self:ApplyIconLabel(button.text, label)
 
 	local flyoutFrame = self:CreateFlyoutFrame(button, side)
 	flyoutFrame.alwaysExpanded = alwaysExpanded and true or false
@@ -349,9 +372,7 @@ function Flyouts:CreateNestedFlyoutButton(parent, iconTexture, iconSize, xOffset
 	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
-	if label then
-		button.text:SetText(label)
-	end
+	self:ApplyIconLabel(button.text, label)
 
 	local nestedFlyout = self:CreateFlyoutFrame(button, "DOWN")
 	nestedFlyout:SetSize(iconSize * #portals, iconSize)
@@ -403,9 +424,7 @@ function Flyouts:CreateExpansionFlyout(parent, iconTexture, iconSize, xOffset, y
 	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
-	if label then
-		button.text:SetText(label)
-	end
+	self:ApplyIconLabel(button.text, label)
 
 	local expFlyout = self:CreateFlyoutFrame(button, "DOWN")
 	local maxPerRow = 12

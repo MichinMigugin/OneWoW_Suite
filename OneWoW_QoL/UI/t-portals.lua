@@ -634,6 +634,60 @@ function ns.UI.CreatePortalsTab(parent)
 			rowY = OneWoW_GUI:CreateToggleRow(content, {
 				yOffset = rowY,
 				contentWidth = contentWidth,
+				label = L["PORTAL_ESC_SHOW_ICON_TEXT"],
+				description = L["PORTAL_ESC_SHOW_ICON_TEXT_DESC"],
+				value = ph.escShowIconText,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().escShowIconText = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			local fontLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			OneWoW_GUI:SetFontBaseSize(fontLabel, 12)
+			OneWoW_GUI:SafeSetFont(fontLabel, OneWoW_GUI:GetFont(), 12)
+			fontLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+			fontLabel:SetJustifyH("LEFT")
+			fontLabel:SetText(L["PORTAL_ESC_ICON_FONT_SIZE"])
+			fontLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+			local fontDesc = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+			OneWoW_GUI:SetFontBaseSize(fontDesc, 10)
+			OneWoW_GUI:SafeSetFont(fontDesc, OneWoW_GUI:GetFont(), 10)
+			fontDesc:SetPoint("TOPLEFT", fontLabel, "BOTTOMLEFT", 0, -3)
+			fontDesc:SetWidth(math.max(50, contentWidth - 24))
+			fontDesc:SetJustifyH("LEFT")
+			fontDesc:SetWordWrap(true)
+			fontDesc:SetText(L["PORTAL_ESC_ICON_FONT_SIZE_DESC"])
+			fontDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+			local fontSliderY = rowY - fontLabel:GetStringHeight() - 3 - fontDesc:GetStringHeight() - 6
+			local fontSlider = OneWoW_GUI:CreateSlider(content, {
+				width = math.min(220, math.max(120, contentWidth - 24)),
+				minVal = 8,
+				maxVal = 18,
+				step = 1,
+				currentVal = ph.escIconFontSize,
+				fmt = "%d",
+				onChange = function(val)
+					OneWoW:GetPortalHub().escIconFontSize = val
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+			})
+			fontSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 12, fontSliderY)
+			rowY = fontSliderY - 36 - 10
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
 				label = L["PORTAL_RANDOM_HEARTHSTONE"],
 				description = L["PORTAL_RANDOM_HEARTHSTONE_DESC"],
 				value = ph.randomHearthstone and true or false,

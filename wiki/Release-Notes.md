@@ -62,6 +62,7 @@
 
 #### Portals
 - Mage Teleports and Mage Portals are separate ESC flyouts. Show or hide each set in Portals settings. Class & Racial Abilities uses the same split.
+- ESC portal icons use short destination labels (HoV, SoB, SW). You can enlarge just that text, or hide it and use the tooltip. The suite font size no longer changes those labels.
 
 #### Instance Toast
 - Zoning into a dungeon or raid shows real collectable counts on the instance toast and the ESC instance panel again.

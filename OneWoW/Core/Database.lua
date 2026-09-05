@@ -78,6 +78,8 @@ local DEFAULTS = {
         customItems = {},
         iconSize = 36,
         escIconSize = 40,
+        escIconFontSize = 11,
+        escShowIconText = true,
         gridColumns = 8,
     },
     instanceStatsEsc = { enabled = false },

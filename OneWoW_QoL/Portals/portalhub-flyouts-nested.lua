@@ -23,7 +23,7 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, co
 	mainButton.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	mainButton.text:SetShadowColor(0, 0, 0, 1)
 	mainButton.text:SetShadowOffset(1, -1)
-	mainButton.text:SetText(config.label)
+	ns.PortalHubFlyouts:ApplyIconLabel(mainButton.text, config.label)
 
 	local expFlyout = CreateFrame("Frame", nil, UIParent)
 	expFlyout:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -57,7 +57,7 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, co
 		expButton.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		expButton.text:SetShadowColor(0, 0, 0, 1)
 		expButton.text:SetShadowOffset(1, -1)
-		expButton.text:SetText(expData.label)
+		ns.PortalHubFlyouts:ApplyIconLabel(expButton.text, expData.label)
 
 		if #expData.portals > 0 then
 			local portalFlyout = CreateFrame("Frame", nil, UIParent)
@@ -170,7 +170,7 @@ end
 function Nested:CreateDungeonsButton(parent, iconSize, yOffset, expansions, growLeft)
 	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, {
 		icon = "Interface\\Icons\\Achievement_Boss_Archaedas",
-		label = L["SETTINGS_PORTALHUB_DUNGEONS"],
+		label = "Dun",
 		tooltip = L["SETTINGS_PORTALHUB_DUNGEONS"],
 	}, growLeft)
 end
@@ -178,7 +178,7 @@ end
 function Nested:CreateRaidsButton(parent, iconSize, yOffset, expansions, growLeft)
 	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, {
 		icon = 4062765,
-		label = L["SETTINGS_PORTALHUB_RAIDS"],
+		label = "Raid",
 		tooltip = L["SETTINGS_PORTALHUB_RAIDS"],
 	}, growLeft)
 end
