@@ -829,6 +829,7 @@ local function ClearDetailElements()
     wipe(detailElements)
     wipe(visibleRewardItemRows)
     wipe(visibleQuestNameRows)
+    wipe(visibleNPCNameRows)
 end
 
 local function GetQuestTypeLabel(quest)
@@ -1289,11 +1290,73 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
     end
 end
 
-local function IsGenericNPCName(name)
-    return not name
-        or name == ""
-        or name:find("^NPC %d") ~= nil
-        or name:find("^NPC #%d") ~= nil
+local function IsGenericNPCName(name, npcID)
+    if not name or name == "" then
+        return true
+    end
+    if OneWoW.Restriction.IsSecretValue(name) then
+        return true
+    end
+    if name == RETRIEVING_DATA or name == RETRIEVING_ITEM_INFO then
+        return true
+    end
+    if name == UNKNOWNOBJECT then
+        return true
+    end
+    if name == "???" or name == "?" then
+        return true
+    end
+    if name:find("^NPC #%d") ~= nil or name:find("^NPC %d") ~= nil then
+        return true
+    end
+    if npcID and name == tostring(npcID) then
+        return true
+    end
+    return false
+end
+
+local function GetNPCAPI()
+    local api = ns.GetCatalogPackAPI("vendors")
+    if api then
+        return api
+    end
+    if not OneWoW:IsCatalogPackAvailable("vendors") then
+        return nil
+    end
+    ns.EnsureCatalogPack("vendors")
+    return ns.GetCatalogPackAPI("vendors")
+end
+
+local function RememberResolvedNPCName(npcID, name)
+    if IsGenericNPCName(name, npcID) then
+        return
+    end
+    npcNameCache[npcID] = name
+    local api = GetNPCAPI()
+    if api then
+        api.RememberNPCName(npcID, name)
+    end
+end
+
+local function PeekStoredNPCName(npcID)
+    if npcNameCache[npcID] then
+        return npcNameCache[npcID]
+    end
+    local api = ns.GetCatalogPackAPI("vendors")
+    if not api then
+        return nil
+    end
+    local cached = api.GetCachedNPCName(npcID)
+    if not IsGenericNPCName(cached, npcID) then
+        npcNameCache[npcID] = cached
+        return cached
+    end
+    local npc = api.GetNPC(npcID)
+    if npc and not IsGenericNPCName(npc.name, npcID) then
+        npcNameCache[npcID] = npc.name
+        return npc.name
+    end
+    return nil
 end
 
 local function ResolveNPCName(npcID, knownName, allowLive)
@@ -1301,16 +1364,27 @@ local function ResolveNPCName(npcID, knownName, allowLive)
         return nil
     end
 
-    if not IsGenericNPCName(knownName) then
+    if not IsGenericNPCName(knownName, npcID) then
+        RememberResolvedNPCName(npcID, knownName)
         return knownName
     end
 
-    if npcNameCache[npcID] then
-        return npcNameCache[npcID]
+    local stored = PeekStoredNPCName(npcID)
+    if stored then
+        return stored
     end
 
     if not allowLive then
         return nil
+    end
+
+    local api = GetNPCAPI()
+    if api then
+        local live = api.ResolveNPCName(npcID)
+        if not IsGenericNPCName(live, npcID) then
+            npcNameCache[npcID] = live
+            return live
+        end
     end
 
     local hyperlink = ("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID)
@@ -1319,9 +1393,8 @@ local function ResolveNPCName(npcID, knownName, allowLive)
     if tooltipData and tooltipData.lines then
         for _, line in ipairs(tooltipData.lines) do
             local text = line.leftText
-            if text and not OneWoW.Restriction.IsSecretValue(text)
-                and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
-                npcNameCache[npcID] = text
+            if not IsGenericNPCName(text, npcID) then
+                RememberResolvedNPCName(npcID, text)
                 return text
             end
         end
@@ -1382,37 +1455,69 @@ local function ScheduleNPCNameRefresh(npcID, questData)
         return
     end
 
-    local state = { attempt = 1 }
-    npcNameRefreshPending[npcID] = state
+    npcNameRefreshPending[npcID] = true
 
-    local function retry()
-        if npcNameCache[npcID] then
-            npcNameRefreshPending[npcID] = nil
-            ApplyVisibleNPCName(npcID, npcNameCache[npcID])
-            return
-        end
-
-        local npcName = ResolveNPCName(npcID, nil, true)
-        if npcName then
-            npcNameRefreshPending[npcID] = nil
-            ApplyVisibleNPCName(npcID, npcName)
-            return
-        end
-
-        state.attempt = state.attempt + 1
-
-        local delay = NPC_NAME_REFRESH_DELAYS[state.attempt]
-        if delay
-            and selectedQuest
+    local function stillCurrent()
+        return selectedQuest
             and questData
             and selectedQuest.id == questData.id
-        then
+    end
+
+    local function finish(name)
+        npcNameRefreshPending[npcID] = nil
+        if not stillCurrent() or IsGenericNPCName(name, npcID) then
+            return
+        end
+        RememberResolvedNPCName(npcID, name)
+        ApplyVisibleNPCName(npcID, name)
+    end
+
+    local function requestFromAPI(api)
+        if not stillCurrent() then
+            npcNameRefreshPending[npcID] = nil
+            return
+        end
+        local cached = api.GetCachedNPCName(npcID)
+        if not IsGenericNPCName(cached, npcID) then
+            finish(cached)
+            return
+        end
+        api.RequestNPCName(npcID, function(_, info)
+            finish(info and info.name)
+        end)
+    end
+
+    local api = GetNPCAPI()
+    if api then
+        requestFromAPI(api)
+        return
+    end
+
+    local live = ResolveNPCName(npcID, nil, true)
+    if live then
+        finish(live)
+        return
+    end
+
+    local state = { attempt = 1 }
+    local function retry()
+        if not stillCurrent() then
+            npcNameRefreshPending[npcID] = nil
+            return
+        end
+        local npcName = ResolveNPCName(npcID, nil, true)
+        if npcName then
+            finish(npcName)
+            return
+        end
+        state.attempt = state.attempt + 1
+        local delay = NPC_NAME_REFRESH_DELAYS[state.attempt]
+        if delay then
             C_Timer.After(delay, retry)
         else
             npcNameRefreshPending[npcID] = nil
         end
     end
-
     C_Timer.After(NPC_NAME_REFRESH_DELAYS[state.attempt], retry)
 end
 
@@ -2157,7 +2262,7 @@ function ShowQuestDetail(panels, questData)
             or (npcID and npcNameCache[npcID])
             or fallbackNPCName
 
-        if npcID and IsGenericNPCName(npcName) then
+        if npcID and IsGenericNPCName(npcName, npcID) then
             ScheduleNPCNameRefresh(npcID, questData)
         end
 
@@ -2191,37 +2296,13 @@ function ShowQuestDetail(panels, questData)
         setLinkText("4dbfff")
         npcBtn:SetHeight(math.max(16, npcText:GetStringHeight() or 16))
 
-        if npcID and IsGenericNPCName(npcName) then
+        if npcID and IsGenericNPCName(npcName, npcID) then
             RegisterVisibleNPCName(npcID, function(resolvedName)
                 if resolvedName and resolvedName ~= npcName then
                     npcName = resolvedName
                     setLinkText("4dbfff")
                 end
             end)
-
-            local rowQuestID = questData and questData.id
-            local rowVersion = detailRenderVersion
-
-            local function patchResolvedName()
-                if rowVersion ~= detailRenderVersion
-                    or not selectedQuest
-                    or selectedQuest.id ~= rowQuestID
-                then
-                    return
-                end
-
-                local resolvedName = ResolveNPCName(npcID, nil, true)
-                if resolvedName and resolvedName ~= npcName then
-                    npcName = resolvedName
-                    setLinkText("4dbfff")
-                end
-            end
-
-            C_Timer.After(0.2, patchResolvedName)
-            C_Timer.After(0.6, patchResolvedName)
-            C_Timer.After(1.2, patchResolvedName)
-            C_Timer.After(2.0, patchResolvedName)
-            C_Timer.After(3.0, patchResolvedName)
         end
 
         npcBtn:SetScript("OnEnter", function(self)

@@ -12,7 +12,8 @@ This is the Catalog NPCs store.
 
 NPCDB owns the **creature**: display, title, type, roles, map pins, and
 vendor stock as itemIDs + price. Name resolves at runtime (tooltip queue),
-locale-safe — do not bake names into shards.
+locale-safe — do not bake names into shards. Opening a Catalog NPC card or
+a quest giver / turn-in requests that tooltip and writes `nameCache`.
 
 Everyone else stores IDs:
 

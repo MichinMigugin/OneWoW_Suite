@@ -784,6 +784,9 @@ function OneWoW_CatDB_NPCDB_API.ResolveNPCName(npcID)
 end
 
 local pendingNPCNames = {}
+-- Creature hyperlink tooltips often land after 1s. A single timeout used to
+-- Deliver(nil) and drop TOOLTIP_DATA_UPDATE, so a later name never cached.
+local NPC_NAME_RETRY = { 0.1, 0.25, 0.5, 1.0, 2.0, 3.0 }
 
 local function DeliverNPCName(npcID, name)
     local cbs = pendingNPCNames[npcID]
@@ -817,11 +820,26 @@ function OneWoW_CatDB_NPCDB_API.RequestNPCName(npcID, cb)
     if not list then
         list = {}
         pendingNPCNames[npcID] = list
-        C_Timer.After(1, function()
-            if pendingNPCNames[npcID] then
-                DeliverNPCName(npcID, OneWoW_CatDB_NPCDB_API.ResolveNPCName(npcID))
+        local attempt = 1
+        local function retry()
+            if not pendingNPCNames[npcID] then
+                return
             end
-        end)
+            local resolved = OneWoW_CatDB_NPCDB_API.ResolveNPCName(npcID)
+            if resolved then
+                DeliverNPCName(npcID, resolved)
+                return
+            end
+            attempt = attempt + 1
+            local delay = NPC_NAME_RETRY[attempt]
+            if delay then
+                C_TooltipInfo.GetHyperlink(CreatureHyperlink(npcID))
+                C_Timer.After(delay, retry)
+            else
+                DeliverNPCName(npcID, nil)
+            end
+        end
+        C_Timer.After(NPC_NAME_RETRY[1], retry)
     end
     tinsert(list, cb)
 end

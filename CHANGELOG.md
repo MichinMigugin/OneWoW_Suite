@@ -23,6 +23,7 @@
 ## NPCs
 - The NPCs tab lists shops, trainers, innkeepers, repair, stables, flight masters, bankers, barbers, quest givers, rares, and bosses. Encounter cards show type, kill quest, related quests, loot, Adventure Guide text when the game has it, and location. Click a quest, View loot, or a location to open Quests, Zones, or the map. Search by name, encounter name, NPC id, encounter id, or quest id. Filter by Encounters or a boss type.
 - Encounter NPCs use the instance or zone from that encounter instead of Unknown Location. Current Zone Only lists bosses in this instance or map. Click the location to open that map.
+- Opening an NPC card asks the game for the name and remembers it. The list can still show an id until you open that card.
 
 ## Fixes
 - Opening the NPCs tab inside a dungeon or other instance no longer errors.
@@ -35,6 +36,7 @@
 - Show on Map uses the NPC database pin for the giver or turn-in, including object starters.
 - Talking to a quest giver fills missing Catalog quest text and rewards again.
 - Click the giver or turn-in name to open that person in Catalog NPCs. A quest you pick up that we did not ship is saved.
+- Opening a quest asks the game for the giver and turn-in names and remembers them.
 
 ---
 

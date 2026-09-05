@@ -1069,6 +1069,14 @@ local function BindVendorListRow(row, index, vendor, state)
         knownName = nil
         vendor.name = nil
     end
+    if (not knownName) and npcID then
+        local addon = GetDataAddon()
+        local cached = addon and addon.GetCachedNPCName(npcID)
+        if not IsGenericVendorName(cached, npcID) then
+            knownName = cached
+            vendor.name = cached
+        end
+    end
     if knownName then
         paintName(knownName)
     else
@@ -1079,11 +1087,6 @@ local function BindVendorListRow(row, index, vendor, state)
         else
             row.nameText:SetText("NPC #" .. (npcID or "?"))
             row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-        if npcID then
-            FillVendorName(npcID, nil, paintName, function()
-                return row._nameToken == nameToken and row.vendor and row.vendor.npcID == npcID
-            end)
         end
     end
 
@@ -1350,11 +1353,16 @@ local function ShowVendorDetail(panels, vendor)
     nameHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     nameHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     nameHeader:SetJustifyH("LEFT")
+    local detailNameWasGeneric = IsGenericVendorName(vendor.name, vendor.npcID)
     local function paintDetailName(name)
         if not nameHeader:IsShown() then return end
         nameHeader:SetText(name)
         nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         vendor.name = name
+        if detailNameWasGeneric and vendorListAPI then
+            detailNameWasGeneric = false
+            vendorListAPI.Refresh()
+        end
         if panels.vendorTypeDropdownText then
             panels.vendorTypeDropdownText:SetText(
                 vendor.category and ns.VendorCategories:GetLabel(vendor.category)

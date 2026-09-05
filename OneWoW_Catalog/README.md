@@ -30,6 +30,7 @@ Browse dungeons, raids, Delves, and World hubs from every expansion:
 Find NPCs, shops, and encounters:
 - Browse shops, trainers, services, quest givers, rares, and bosses
 - Search by name, encounter name, NPC id, encounter id, or quest id
+- Opening a card asks the game for the NPC name and remembers it for later lists
 - Encounter cards show type, kill quest, related quests, loot, and location
 - Click a quest to open it on the Quests tab; View loot opens the Zones encounter
 - Click a location (or Pin) to open that zone on the world map
