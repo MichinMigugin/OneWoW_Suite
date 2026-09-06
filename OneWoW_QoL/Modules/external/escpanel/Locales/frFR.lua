@@ -5,8 +5,9 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "frFR", {
 
     ["ESCPANEL_TITLE"] = "Panneau du menu ÉCHAP",
-    ["ESCPANEL_DESC"] = "Affiche les infos du personnage, les alertes, les notes de zone et une bande de portails à côté du menu ÉCHAP. Choisissez ci-dessous quel côté chacun utilise.",
+    ["ESCPANEL_DESC"] = "Affiche une fiche personnage, les collections et notes de ce lieu, et une bande de portails a cote du menu ECHAP. La fiche montre le courrier, la Durabilite, La grande chambre forte et le Comptoir, avec les Initiatives en option. La carte du lieu a des icones Alerte objet pour Shopping List, les notes, Trackers et Farming. Survolez une icone pour les details ; cliquez une icone allumee pour l'ouvrir. Cliquez-la pour ouvrir l'ecran du personnage, ou la carte du lieu pour ouvrir cette zone dans le Catalogue. Choisissez ci-dessous quel cote chacun utilise.",
     ["ESCPANEL_TOGGLE_SHOW_CHARACTER"] = "Afficher les infos du personnage",
+    ["ESCPANEL_TOGGLE_ENDEAVORS"] = "Afficher les Initiatives",
     ["ESCPANEL_TOGGLE_ALERTS"] = "Afficher les alertes",
     ["ESCPANEL_TOGGLE_ZONE_NOTES"] = "Afficher les notes de zone",
     ["ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY"] = "Masquer les notes de zone si vides",

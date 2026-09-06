@@ -5,8 +5,9 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "zhCN", {
 
     ["ESCPANEL_TITLE"] = "ESC 菜单面板",
-    ["ESCPANEL_DESC"] = "在 ESC 菜单旁显示角色信息、警报、区域笔记和传送门条。在下方选择各项使用哪一侧。",
+    ["ESCPANEL_DESC"] = "在 ESC 菜单旁显示角色卡片、此地收藏与笔记，以及传送门条。角色卡片会显示信件、耐久度、宏伟宝库和商栈，并可选择显示文化节。地点卡片上的物品提醒图标对应购物清单、笔记、Trackers 和 Farming。将鼠标放在图标上可看详情，点击亮起的图标即可打开。点击角色卡片打开角色界面，或点击地点卡片在目录中打开该区域。在下方选择各项使用哪一侧。",
     ["ESCPANEL_TOGGLE_SHOW_CHARACTER"] = "显示角色信息",
+    ["ESCPANEL_TOGGLE_ENDEAVORS"] = "显示文化节",
     ["ESCPANEL_TOGGLE_ALERTS"] = "显示警报",
     ["ESCPANEL_TOGGLE_ZONE_NOTES"] = "显示区域笔记",
     ["ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY"] = "为空时隐藏区域笔记",

@@ -17,7 +17,8 @@ local BUILT_IN_CATEGORIES = {
     "Profession",
     "Gold Making",
     "PvP",
-    "Shopping List"
+    "Shopping List",
+    "Farming"
 }
 
 function NotesCategories:GetCategories()

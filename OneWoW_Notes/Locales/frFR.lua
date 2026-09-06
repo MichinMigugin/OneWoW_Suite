@@ -249,6 +249,15 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["NOTE_TYPE_DAILY_DESC"] = "Les tâches se réinitialisent à l'heure de réinitialisation quotidienne du serveur",
     ["NOTE_TYPE_WEEKLY_DESC"] = "Les tâches se réinitialisent à l'heure de réinitialisation hebdomadaire du serveur",
     ["NOTE_TYPE_LABEL_FORMAT"] = "Note %s",
+    ["NOTE_TYPE_FARMING"] = "Farming",
+    ["NOTE_TYPE_FARMING_DESC"] = "Suit un objet a farmer. Il faut un objet et un lieu.",
+    ["NOTE_KIND_PICK_TITLE"] = "Quel type de note ?",
+    ["NOTE_KIND_ITEM"] = "Objet",
+    ["NOTE_KIND_ITEM_DESC"] = "Note liee a un ID d'objet",
+    ["LABEL_FARM_ITEM"] = "ID ou nom d'objet",
+    ["LABEL_FARM_PLACE"] = "Lieu",
+    ["LABEL_FARM_ENCOUNTER"] = "Rencontre",
+    ["LABEL_FARM_INTENT"] = "Intention",
 
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Réinitialiser toutes les tâches",
@@ -267,6 +276,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 -- Success / Error
     ["SUCCESS_NOTE_ADDED"] = "Note « %s » ajoutée avec succès !",
     ["ERROR_ENTER_NOTE_TITLE"] = "Veuillez saisir un titre de note",
+    ["ERROR_FARM_REQUIRED"] = "Les notes de farming ont besoin d'un titre, d'un objet et d'un lieu.",
 
 -- Tooltips for list item buttons
     ["TOOLTIP_BUTTON_ADD_NOTE"] = "Ajouter une note",

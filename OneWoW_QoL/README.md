@@ -25,7 +25,7 @@ UI panels, map tools, bars, and screen customization.
 
 - **AFK Panel** — full-screen AFK overlay with character info, alerts, and notes
 - **Auto Delete** — skip typing DELETE when destroying items
-- **ESC Menu Panel** — character info, alerts, zone notes, and portal strip beside the ESC menu
+- **ESC Menu Panel** — character card (mail, durability, Great Vault, Trading Post, optional Housing Endeavors), this place's collections, Item Alert icons, zone notes, and a portal strip beside the ESC menu. Hover an Item Alert icon for the list or note; click a lit icon to open it. Click the character card to open the character screen, or the place card to open that zone in Catalog.
 - **Bag Bar** — movable bar of bag items matched by keyword expression
 - **Quest Item Bar** — clickable quest-item buttons with sorting and filters ([details](Modules/external/questitembar/README.md))
 - **Professions Panel** — expansion skills, recipe counts, and first-craft tracking beside the profession window

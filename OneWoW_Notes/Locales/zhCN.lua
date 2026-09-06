@@ -249,6 +249,15 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["NOTE_TYPE_DAILY_DESC"] = "待办在每日服务器重置时间重置",
     ["NOTE_TYPE_WEEKLY_DESC"] = "待办在每周服务器重置时间重置",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s 笔记",
+    ["NOTE_TYPE_FARMING"] = "Farming",
+    ["NOTE_TYPE_FARMING_DESC"] = "追踪要刷的物品。需要物品和地点。",
+    ["NOTE_KIND_PICK_TITLE"] = "要添加哪种笔记？",
+    ["NOTE_KIND_ITEM"] = "物品",
+    ["NOTE_KIND_ITEM_DESC"] = "绑定到物品 ID 的笔记",
+    ["LABEL_FARM_ITEM"] = "物品 ID 或名称",
+    ["LABEL_FARM_PLACE"] = "地点",
+    ["LABEL_FARM_ENCOUNTER"] = "首领",
+    ["LABEL_FARM_INTENT"] = "目的",
 
 -- Note todo
     ["NOTE_RESET_TODOS"] = "重置所有待办",
@@ -267,6 +276,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 -- Success / Error
     ["SUCCESS_NOTE_ADDED"] = "笔记“%s”添加成功！",
     ["ERROR_ENTER_NOTE_TITLE"] = "请输入笔记标题",
+    ["ERROR_FARM_REQUIRED"] = "刷取笔记需要标题、物品和地点。",
 
 -- Tooltips for list item buttons
     ["TOOLTIP_BUTTON_ADD_NOTE"] = "添加笔记",

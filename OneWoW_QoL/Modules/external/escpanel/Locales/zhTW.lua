@@ -5,8 +5,9 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "zhTW", {
 
     ["ESCPANEL_TITLE"] = "ESC 選單面板",
-    ["ESCPANEL_DESC"] = "在 ESC 選單旁顯示角色資訊、警報、區域筆記和傳送門條。在下方選擇各項使用哪一側。",
+    ["ESCPANEL_DESC"] = "在 ESC 選單旁顯示角色卡片、此地收藏與筆記，以及傳送門條。角色卡片會顯示郵件、耐久度、寶庫和貿易站，並可選擇顯示睦鄰活動。地點卡片上的物品提醒圖示對應購物清單、筆記、Trackers 和 Farming。將滑鼠放在圖示上可看詳情，點擊亮起的圖示即可開啟。點擊角色卡片開啟角色視窗，或點擊地點卡片在目錄中開啟該區域。在下方選擇各項使用哪一側。",
     ["ESCPANEL_TOGGLE_SHOW_CHARACTER"] = "顯示角色資訊",
+    ["ESCPANEL_TOGGLE_ENDEAVORS"] = "顯示睦鄰活動",
     ["ESCPANEL_TOGGLE_ALERTS"] = "顯示警報",
     ["ESCPANEL_TOGGLE_ZONE_NOTES"] = "顯示區域筆記",
     ["ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY"] = "為空時隱藏區域筆記",

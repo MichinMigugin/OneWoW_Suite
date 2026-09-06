@@ -694,6 +694,17 @@ function ShoppingList:IsStillNeeded(itemID)
     return stillNeededSet[itemID] == true
 end
 
+--- Item IDs that are still short on at least one list (owned < needed).
+---@return number[]
+function ShoppingList:GetStillNeededItemIDs()
+    EnsureOverlayCache()
+    local out = {}
+    for itemID in pairs(stillNeededSet) do
+        out[#out + 1] = itemID
+    end
+    return out
+end
+
 function ShoppingList:GetItemStatus(itemID, specificListName)
     itemID = tonumber(itemID)
     if not itemID then return nil end

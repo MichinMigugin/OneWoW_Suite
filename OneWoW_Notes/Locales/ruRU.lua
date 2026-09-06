@@ -249,6 +249,15 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["NOTE_TYPE_DAILY_DESC"] = "Задачи сбрасываются во время ежедневного сброса на сервере",
     ["NOTE_TYPE_WEEKLY_DESC"] = "Задачи сбрасываются во время еженедельного сброса на сервере",
     ["NOTE_TYPE_LABEL_FORMAT"] = "Заметка: %s",
+    ["NOTE_TYPE_FARMING"] = "Фарм",
+    ["NOTE_TYPE_FARMING_DESC"] = "Отслеживает предмет для фарма. Нужны предмет и место.",
+    ["NOTE_KIND_PICK_TITLE"] = "Какая это заметка?",
+    ["NOTE_KIND_ITEM"] = "Предмет",
+    ["NOTE_KIND_ITEM_DESC"] = "Заметка с ID предмета",
+    ["LABEL_FARM_ITEM"] = "ID или имя предмета",
+    ["LABEL_FARM_PLACE"] = "Место",
+    ["LABEL_FARM_ENCOUNTER"] = "Босс",
+    ["LABEL_FARM_INTENT"] = "Цель",
 
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Сбросить все задачи",
@@ -267,6 +276,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 -- Success / Error
     ["SUCCESS_NOTE_ADDED"] = "Заметка «%s» успешно добавлена!",
     ["ERROR_ENTER_NOTE_TITLE"] = "Пожалуйста, введите заголовок заметки",
+    ["ERROR_FARM_REQUIRED"] = "Для фарм-заметок нужны название, предмет и место.",
 
 -- Tooltips for list item buttons
     ["TOOLTIP_BUTTON_ADD_NOTE"] = "Добавить заметку",

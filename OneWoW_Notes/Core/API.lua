@@ -494,6 +494,72 @@ function OneWoW_Notes_API.FindMatchingZoneNotes(zone, subzone)
     return ns.Zones:FindMatchingNotes(zone, subzone)
 end
 
+--- Farming journal notes whose place text matches any of `placeNames`.
+---@param placeNames string[]
+---@return table[]
+function OneWoW_Notes_API.FindFarmingNotesForPlace(placeNames)
+    local hits = {}
+    if type(placeNames) ~= "table" or not ns.NotesData then
+        return hits
+    end
+
+    local needles = {}
+    for i = 1, #placeNames do
+        local name = placeNames[i]
+        if type(name) == "string" and name ~= "" then
+            needles[#needles + 1] = name:lower()
+        end
+    end
+    if #needles == 0 then
+        return hits
+    end
+
+    local function PlaceMatches(place)
+        if type(place) ~= "string" or place == "" then
+            return false
+        end
+        local hay = place:lower()
+        for i = 1, #needles do
+            local needle = needles[i]
+            if hay == needle or hay:find(needle, 1, true) or needle:find(hay, 1, true) then
+                return true
+            end
+        end
+        return false
+    end
+
+    for id, data in pairs(ns.NotesData:GetAllNotes()) do
+        if type(data) == "table" and data.noteType == "farming" and PlaceMatches(data.instance_name) then
+            hits[#hits + 1] = {
+                id = id,
+                title = data.title or "",
+                itemID = data.itemID,
+                itemName = data.itemName or "",
+                content = data.content or "",
+            }
+        end
+    end
+    return hits
+end
+
+--- Opens a journal note on the Notes tab.
+---@param noteID string
+---@return boolean
+function OneWoW_Notes_API.OpenJournalNote(noteID)
+    if not noteID or noteID == "" then
+        return false
+    end
+    ns.pendingJournalSelect = noteID
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "notes")
+    local tabFrame = OneWoW.UI:GetContentFrame("notes", "notes")
+    if tabFrame and tabFrame.setSelectedNote then
+        tabFrame.setSelectedNote(noteID)
+        ns.pendingJournalSelect = nil
+    end
+    return true
+end
+
 --- Attach a pin's map to a zone note window (create/enable pinEnabled).
 ---@param pinID string
 ---@return string|nil noteId

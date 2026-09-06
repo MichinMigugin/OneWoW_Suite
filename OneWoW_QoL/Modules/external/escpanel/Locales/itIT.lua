@@ -5,8 +5,9 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "itIT", {
 
     ["ESCPANEL_TITLE"] = "Pannello menu ESC",
-    ["ESCPANEL_DESC"] = "Mostra info del personaggio, avvisi, note della zona e una striscia di portali accanto al menu ESC. Scegli sotto quale lato usa ciascuno.",
+    ["ESCPANEL_DESC"] = "Mostra una scheda personaggio, le collezioni e le note di questo luogo e una striscia di portali accanto al menu ESC. La scheda mostra la posta, l'Integrita, la Gran Banca e l'Emporio, con Iniziative opzionali. La scheda del luogo ha icone Avviso oggetto per Shopping List, note, Trackers e Farming. Passa il mouse per i dettagli; clicca un'icona accesa per aprirla. Cliccala per aprire la finestra personaggio, o la scheda del luogo per aprire quella zona nel Catalogo. Scegli sotto quale lato usa ciascuno.",
     ["ESCPANEL_TOGGLE_SHOW_CHARACTER"] = "Mostra info del personaggio",
+    ["ESCPANEL_TOGGLE_ENDEAVORS"] = "Mostra Iniziative",
     ["ESCPANEL_TOGGLE_ALERTS"] = "Mostra avvisi",
     ["ESCPANEL_TOGGLE_ZONE_NOTES"] = "Mostra note della zona",
     ["ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY"] = "Nascondi note della zona se vuote",

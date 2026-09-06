@@ -249,6 +249,15 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["NOTE_TYPE_DAILY_DESC"] = "작업이 일일 서버 초기화 시간에 초기화됩니다",
     ["NOTE_TYPE_WEEKLY_DESC"] = "작업이 주간 서버 초기화 시간에 초기화됩니다",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s 메모",
+    ["NOTE_TYPE_FARMING"] = "파밍",
+    ["NOTE_TYPE_FARMING_DESC"] = "파밍할 아이템을 추적합니다. 아이템과 장소가 필요합니다.",
+    ["NOTE_KIND_PICK_TITLE"] = "어떤 종류의 메모인가요?",
+    ["NOTE_KIND_ITEM"] = "아이템",
+    ["NOTE_KIND_ITEM_DESC"] = "아이템 ID에 연결된 메모",
+    ["LABEL_FARM_ITEM"] = "아이템 ID 또는 이름",
+    ["LABEL_FARM_PLACE"] = "장소",
+    ["LABEL_FARM_ENCOUNTER"] = "우두머리",
+    ["LABEL_FARM_INTENT"] = "목적",
 
 -- Note todo
     ["NOTE_RESET_TODOS"] = "모든 작업 초기화",
@@ -267,6 +276,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 -- Success / Error
     ["SUCCESS_NOTE_ADDED"] = "'%s' 메모가 성공적으로 추가되었습니다!",
     ["ERROR_ENTER_NOTE_TITLE"] = "메모 제목을 입력하세요",
+    ["ERROR_FARM_REQUIRED"] = "파밍 메모에는 제목, 아이템, 장소가 필요합니다.",
 
 -- Tooltips for list item buttons
     ["TOOLTIP_BUTTON_ADD_NOTE"] = "메모 추가",

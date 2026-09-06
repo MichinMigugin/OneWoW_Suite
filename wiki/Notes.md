@@ -10,7 +10,7 @@
 
 | Tab | Use it for |
 |-----|------------|
-| **Notes** | General journal - categories, tags, todos, favorites, login notes, pin-to-screen, rich text |
+| **Notes** | General journal - categories, tags, todos, favorites, login notes, pin-to-screen, rich text. Add Note asks the kind first (Standard, Daily, Weekly, Farming, or Item) |
 | **Players** | Guildmates and friends - realm, guild, class, personal comments; collectible sightings |
 | **NPCs** | Vendors and important NPCs - location, stock, quests |
 | **Zones** | Zone tips, a floating window when you enter the area, and your OneWay Pins for that map |
@@ -80,6 +80,14 @@ Track collectibles you care about with an **intent** (Want, Spotted, Farming, or
 * Optional **auto-delete**: collected Want/Spotted/Farming entries move to the Delete List, then purge after a delay (Immediate / 1 / 7 / 14 days); empty the Delete List anytime from settings
 
 Link collectibles into journal notes the same way you link items.
+
+---
+
+## Farming notes
+
+A **Farming** journal note tracks one item and the place you farm it (instance, zone, or route). Encounter is optional. Intent is Want or Farm.
+
+Website farm-list items sync into these notes. CompSync writes them back into Notes so the addon, site, and phone use the same required fields.
 
 ---
 

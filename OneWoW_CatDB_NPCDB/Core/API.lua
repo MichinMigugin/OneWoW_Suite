@@ -644,6 +644,25 @@ function OneWoW_CatDB_NPCDB_API.GetVendorsByItem(itemID)
     return out
 end
 
+--- NPCs that list this item as stock or loot (vendors, rares, bosses).
+--- Locations keep map IDs; zone names are not resolved.
+---@param itemID number
+---@return table npcs
+function OneWoW_CatDB_NPCDB_API.GetNPCsByItem(itemID)
+    local out = {}
+    local map = ns.NPCsByItem[itemID]
+    if not map then
+        return out
+    end
+    for npcID in pairs(map) do
+        local npc = OverlayVendor(ns.NPCs[npcID], false)
+        if npc then
+            tinsert(out, npc)
+        end
+    end
+    return out
+end
+
 --- Aggregate store statistics.
 ---@return table stats
 function OneWoW_CatDB_NPCDB_API.GetStats()

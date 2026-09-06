@@ -249,6 +249,15 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["NOTE_TYPE_DAILY_DESC"] = "Aufgaben werden zur täglichen Server-Zurücksetzzeit zurückgesetzt",
     ["NOTE_TYPE_WEEKLY_DESC"] = "Aufgaben werden zur wöchentlichen Server-Zurücksetzzeit zurückgesetzt",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s-Notiz",
+    ["NOTE_TYPE_FARMING"] = "Farming",
+    ["NOTE_TYPE_FARMING_DESC"] = "Verfolgt einen Gegenstand zum Farmen. Braucht Gegenstand und Ort.",
+    ["NOTE_KIND_PICK_TITLE"] = "Welche Art von Notiz?",
+    ["NOTE_KIND_ITEM"] = "Gegenstand",
+    ["NOTE_KIND_ITEM_DESC"] = "Notiz zu einer Gegenstand-ID",
+    ["LABEL_FARM_ITEM"] = "Gegenstands-ID oder Name",
+    ["LABEL_FARM_PLACE"] = "Ort",
+    ["LABEL_FARM_ENCOUNTER"] = "Begegnung",
+    ["LABEL_FARM_INTENT"] = "Absicht",
 
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Alle Aufgaben zurücksetzen",
@@ -267,6 +276,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 -- Success / Error
     ["SUCCESS_NOTE_ADDED"] = "Notiz „%s“ erfolgreich hinzugefügt!",
     ["ERROR_ENTER_NOTE_TITLE"] = "Bitte gib einen Notiztitel ein",
+    ["ERROR_FARM_REQUIRED"] = "Farming-Notizen brauchen einen Titel, einen Gegenstand und einen Ort.",
 
 -- Tooltips for list item buttons
     ["TOOLTIP_BUTTON_ADD_NOTE"] = "Notiz hinzufügen",

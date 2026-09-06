@@ -17,6 +17,15 @@ function OneWoW_ShoppingList_API.Show()
     end
 end
 
+--- Show Shopping List, optionally selecting `listName`.
+---@param listName string|nil
+function OneWoW_ShoppingList_API.ShowList(listName)
+    if listName and listName ~= "" then
+        ns.ShoppingList:SetActiveList(listName)
+    end
+    OneWoW_ShoppingList_API.Show()
+end
+
 --- Hide the Shopping List main window.
 function OneWoW_ShoppingList_API.Hide()
     if ns.MainWindow and ns.MainWindow.Hide then
@@ -78,4 +87,10 @@ end
 ---@return boolean
 function OneWoW_ShoppingList_API.IsStillNeeded(itemID)
     return ns.ShoppingList:IsStillNeeded(itemID)
+end
+
+--- Item IDs that are still short on at least one list (owned < needed).
+---@return number[]
+function OneWoW_ShoppingList_API.GetStillNeededItemIDs()
+    return ns.ShoppingList:GetStillNeededItemIDs()
 end

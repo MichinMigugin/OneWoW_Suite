@@ -52,7 +52,9 @@ function ns.UI.CreateNotesTab(parent)
     local addNoteBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_NOTE"], height = 25, minWidth = 80 })
     addNoteBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
     addNoteBtn:SetScript("OnClick", function()
-        if ns.UI.ShowAddNoteDialog then
+        if ns.UI.ShowAddKindDialog then
+            ns.UI.ShowAddKindDialog()
+        elseif ns.UI.ShowAddNoteDialog then
             ns.UI.ShowAddNoteDialog()
         end
     end)
@@ -1118,4 +1120,12 @@ function ns.UI.CreateNotesTab(parent)
     parent.controlPanel = controlPanel
     parent.listingPanel = listingPanel
     parent.detailPanel = detailPanel
+
+    parent:HookScript("OnShow", function()
+        if ns.pendingJournalSelect then
+            local noteID = ns.pendingJournalSelect
+            ns.pendingJournalSelect = nil
+            parent.setSelectedNote(noteID)
+        end
+    end)
 end

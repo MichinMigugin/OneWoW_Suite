@@ -10,9 +10,9 @@ local collapsedCards = {}
 
 local TOGGLE_TO_DB = {
     esc_show_character_info  = "escShowCharacterInfo",
+    esc_show_endeavors       = "escShowEndeavors",
     esc_show_zone_notes      = "escShowZoneNotes",
     esc_hide_zone_when_empty = "escHideZoneNotesWhenEmpty",
-    esc_show_alerts          = "escShowAlerts",
     esc_show_portals         = "escPortalsEnabled",
 }
 

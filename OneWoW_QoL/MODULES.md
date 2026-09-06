@@ -101,7 +101,7 @@ swipes, and situation-based visibility (place × combat cards).
 
 ### ESC Menu Panel
 
-Display character info, alerts, zone notes, and portal strip alongside the ESC menu. Choose which side each uses below.
+Display a character card, this place's collections and notes, and a portal strip alongside the ESC menu. The character card shows mail, durability, Great Vault, and Trading Post, with optional Housing Endeavors. The place card has Item Alert icons for Shopping List, notes, Trackers, and Farming. Hover an icon for details; click a lit icon to open it. Click the character card to open the character screen, or the place card to open that zone in Catalog. Choose which side each uses below.
 
 - **Module id:** `escpanel` · **Folder:** `Modules/external/escpanel/`
 

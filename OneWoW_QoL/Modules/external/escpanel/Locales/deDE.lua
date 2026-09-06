@@ -5,8 +5,9 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "deDE", {
 
     ["ESCPANEL_TITLE"] = "ESC-Menüpanel",
-    ["ESCPANEL_DESC"] = "Zeigt Charakterinfos, Warnungen, Zonennotizen und eine Portalleiste neben dem ESC-Menü an. Wähle unten, welche Seite jedes verwendet.",
+    ["ESCPANEL_DESC"] = "Zeigt eine Charakterkarte, Sammlungen und Notizen dieses Orts sowie eine Portalleiste neben dem ESC-Menü. Die Charakterkarte zeigt Post, Haltbarkeit, Große Schatzkammer und Handelsposten, optional mit Unterfangen. Die Ortskarte hat Gegenstandsalarm-Symbole für Shopping List, Notizen, Trackers und Farming. Zeige auf ein Symbol für Details; klicke ein helles Symbol, um es zu öffnen. Klicke sie, um den Charakterbildschirm zu öffnen, oder die Ortskarte, um die Zone im Katalog zu öffnen. Wähle unten, welche Seite jedes verwendet.",
     ["ESCPANEL_TOGGLE_SHOW_CHARACTER"] = "Charakterinfos anzeigen",
+    ["ESCPANEL_TOGGLE_ENDEAVORS"] = "Unterfangen anzeigen",
     ["ESCPANEL_TOGGLE_ALERTS"] = "Warnungen anzeigen",
     ["ESCPANEL_TOGGLE_ZONE_NOTES"] = "Zonennotizen anzeigen",
     ["ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY"] = "Zonennotizen ausblenden, wenn leer",

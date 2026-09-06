@@ -1488,5 +1488,22 @@ function ns.UI.CreateTrackerTab(parent)
         end
     end
 
+    function parent.SelectList(listID)
+        if not listID or not TD:GetList(listID) then
+            return
+        end
+        selectedListID = listID
+        parent.RefreshList()
+        parent.ShowDetail(listID)
+    end
+
+    parent:HookScript("OnShow", function()
+        if ns.pendingListSelect then
+            local listID = ns.pendingListSelect
+            ns.pendingListSelect = nil
+            parent.SelectList(listID)
+        end
+    end)
+
     parent.RefreshList()
 end

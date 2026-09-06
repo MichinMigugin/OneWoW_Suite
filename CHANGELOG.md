@@ -56,7 +56,9 @@
 
 # QoL
 ## ESC Menu
-- Turning off ESC Menu Panel now hides the character info, notes, and portal strips. Character Info, Alerts, Zone Notes, and left/right side choices apply when you open the game menu.
+- Turning off ESC Menu Panel now hides the character info, notes, and portal strips. Character Info, Zone Notes, and left/right side choices apply when you open the game menu.
+- Character info is a themed card with your portrait, spec, item level, Mythic+ rating, and gold. Mail and durability sit on the top right. Great Vault shows Raid, Dungeon, and World bars, and says Claim Reward when last week's chest is waiting. Trading Post travel points use a progress bar and say Cache Available when the Collector's Cache is waiting. Housing Endeavors can sit under that; turn them off on the ESC Menu Panel Features tab. Click the card to close the menu and open the character screen.
+- This place is one card: collections, an Item Alert row, and zone notes. Item Alert uses icons for Shopping List, zone notes, Trackers, and Farming notes. Lit icons have hits here; dim icons do not. Hover an icon for the list or note text. Click a lit icon to open that list or note. Click the card to open Catalog Zones.
 
 ## Portals
 - Mage Teleports and Mage Portals are separate ESC flyouts. Show or hide each set in Portals settings. Class & Racial Abilities uses the same split.
@@ -89,8 +91,15 @@
 
 ---
 
-*No user-facing changes this release for Bags, Notes, or Shopping List.*
+# Notes
+## Add Note
+- Add Note now asks what kind of note first: Standard, Daily, Weekly, Farming, or Item.
+- Farming notes need a title, an item, and a place. CompSync can write website farm-list items into those notes.
 
 ---
 
-- **Last Updated**: Sep 5, 2026
+*No user-facing changes this release for Bags or Shopping List.*
+
+---
+
+- **Last Updated**: Sep 6, 2026

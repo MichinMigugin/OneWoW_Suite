@@ -17,12 +17,65 @@ local function MakeLabel(parent, text, x, y)
     return lbl
 end
 
-function ns.UI.ShowAddNoteDialog()
+function ns.UI.ShowAddKindDialog()
+    local dialog = ns.UI.CreateThemedDialog({
+        name            = "OneWoW_NotesAddKindDialog",
+        title           = L["NOTE_KIND_PICK_TITLE"],
+        width           = 440,
+        height          = 430,
+        destroyOnClose  = true,
+        buttons = {
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
+        },
+    })
+
+    if dialog.built then dialog:Show() return end
+    dialog.built = true
+
+    local kinds = {
+        { value = "standard", text = L["NOTE_TYPE_STANDARD"], desc = L["NOTE_TYPE_STANDARD_DESC"] },
+        { value = "daily",    text = DAILY,                   desc = L["NOTE_TYPE_DAILY_DESC"] },
+        { value = "weekly",   text = WEEKLY,                  desc = L["NOTE_TYPE_WEEKLY_DESC"] },
+        { value = "farming",  text = L["NOTE_TYPE_FARMING"],  desc = L["NOTE_TYPE_FARMING_DESC"] },
+        { value = "item",     text = L["NOTE_KIND_ITEM"],     desc = L["NOTE_KIND_ITEM_DESC"] },
+    }
+
+    local y = -8
+    for i = 1, #kinds do
+        local kind = kinds[i]
+        local value = kind.value
+        local btn = OneWoW_GUI:CreateFitTextButton(dialog.content, { text = kind.text, height = 26, minWidth = 180 })
+        btn:SetPoint("TOPLEFT", dialog.content, "TOPLEFT", 16, y)
+        local desc = OneWoW_GUI:CreateFS(dialog.content, 11)
+        desc:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+        desc:SetPoint("RIGHT", dialog.content, "RIGHT", -16, 0)
+        desc:SetText(kind.desc)
+        desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        desc:SetJustifyH("LEFT")
+        btn:SetScript("OnClick", function()
+            dialog:Hide()
+            if value == "item" then
+                if ns.UI.ShowAddItemByIDDialog then
+                    ns.UI.ShowAddItemByIDDialog()
+                end
+                return
+            end
+            ns.UI.ShowAddNoteDialog(value)
+        end)
+        y = y - 70
+    end
+
+    dialog:Show()
+end
+
+function ns.UI.ShowAddNoteDialog(presetType)
+    presetType = presetType or "standard"
+    local isFarming = presetType == "farming"
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesAddNoteDialog",
         title           = L["DIALOG_ADD_NOTE_TITLE"],
         width           = 580,
-        height          = 580,
+        height          = isFarming and 700 or 580,
         destroyOnClose  = true,
         buttons = {
             {
@@ -42,8 +95,16 @@ function ns.UI.ShowAddNoteDialog()
                     local selectedFontOutline = dlg.selectedFontOutline or ""
                     local selectedFontSize  = dlg.selectedFontSize or 12
                     local selectedOpacity   = dlg.selectedOpacity  or 0.9
-                    local selectedNoteType  = dlg.noteTypeDD and dlg.noteTypeDD:GetValue() or "standard"
+                    local selectedNoteType  = dlg.presetType or (dlg.noteTypeDD and dlg.noteTypeDD:GetValue()) or "standard"
                     local noteContent = dlg.contentEditBox and dlg.contentEditBox:GetText() or ""
+                    local farmItemText = dlg.farmItemInput and dlg.farmItemInput:GetText() or ""
+                    local farmPlace = dlg.farmPlaceInput and dlg.farmPlaceInput:GetText() or ""
+                    if selectedNoteType == "farming" then
+                        if farmItemText == "" or farmPlace == "" then
+                            print("|cFFFFD100OneWoW - Notes:|r " .. L["ERROR_FARM_REQUIRED"])
+                            return
+                        end
+                    end
 
                     local noteData = {
                         content       = noteContent,
@@ -69,6 +130,17 @@ function ns.UI.ShowAddNoteDialog()
                         autoUnpinned  = false,
                         pinHideTasksUntilHover = false,
                     }
+                    if selectedNoteType == "farming" then
+                        local itemID = tonumber(farmItemText)
+                        noteData.itemID = itemID or 0
+                        noteData.itemName = itemID and "" or farmItemText
+                        noteData.instance_name = farmPlace
+                        noteData.encounter = dlg.farmEncInput and dlg.farmEncInput:GetText() or ""
+                        noteData.intent = dlg.farmIntentDD and dlg.farmIntentDD:GetValue() or "farm"
+                        if selectedCategory == "General" then
+                            noteData.category = "Farming"
+                        end
+                    end
 
                     if ns.NotesData then
                         local noteID = ns.NotesData:AddNote(noteTitle, noteData)
@@ -92,6 +164,7 @@ function ns.UI.ShowAddNoteDialog()
 
     if dialog.built then dialog:Show() return end
     dialog.built = true
+    dialog.presetType = presetType
 
     local content = dialog.content
     local COL1_X  = 10
@@ -121,7 +194,7 @@ function ns.UI.ShowAddNoteDialog()
         end
     end
     catDD:SetOptions(catOpts)
-    catDD:SetSelected("General")
+    catDD:SetSelected(isFarming and "Farming" or "General")
     dialog.catDD = catDD
 
     MakeLabel(content, L["LABEL_STORAGE"], COL2_X, yPos)
@@ -258,9 +331,11 @@ function ns.UI.ShowAddNoteDialog()
         {text = L["NOTE_TYPE_STANDARD"], value = "standard"},
         {text = DAILY,    value = "daily"},
         {text = WEEKLY,   value = "weekly"},
+        {text = L["NOTE_TYPE_FARMING"], value = "farming"},
     })
-    noteTypeDD:SetSelected("standard")
+    noteTypeDD:SetSelected(presetType)
     dialog.noteTypeDD = noteTypeDD
+    dialog.presetType = presetType
 
     local autoPinSection = CreateFrame("Frame", nil, content)
     autoPinSection:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL2_X, yPos - 4)
@@ -273,14 +348,64 @@ function ns.UI.ShowAddNoteDialog()
     dialog.autoPinSection  = autoPinSection
 
     noteTypeDD.onSelect = function(value)
+        dialog.presetType = value
         if value == "daily" or value == "weekly" then
             autoPinSection:Show()
         else
             autoPinSection:Hide()
             autoPinCheckbox:SetChecked(false)
         end
+        if dialog.farmSection then
+            if value == "farming" then
+                dialog.farmSection:Show()
+            else
+                dialog.farmSection:Hide()
+            end
+        end
+    end
+    if presetType == "daily" or presetType == "weekly" then
+        autoPinSection:Show()
     end
     yPos = yPos - ROW_H + 4
+
+    local farmSection = CreateFrame("Frame", nil, content)
+    farmSection:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
+    farmSection:SetPoint("RIGHT", content, "RIGHT", -COL1_X, 0)
+    farmSection:SetHeight(100)
+    dialog.farmSection = farmSection
+    MakeLabel(farmSection, L["LABEL_FARM_ITEM"], 0, 0)
+    local farmItemInput = OneWoW_GUI:CreateEditBox(farmSection, { height = 24 })
+    farmItemInput:SetPoint("TOPLEFT", farmSection, "TOPLEFT", 0, -18)
+    farmItemInput:SetPoint("TOPRIGHT", farmSection, "TOPRIGHT", -COL_W - 20, -18)
+    farmItemInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dialog.farmItemInput = farmItemInput
+    MakeLabel(farmSection, L["LABEL_FARM_PLACE"], COL2_X - COL1_X, 0)
+    local farmPlaceInput = OneWoW_GUI:CreateEditBox(farmSection, { height = 24 })
+    farmPlaceInput:SetPoint("TOPLEFT", farmSection, "TOPLEFT", COL2_X - COL1_X, -18)
+    farmPlaceInput:SetPoint("TOPRIGHT", farmSection, "TOPRIGHT", 0, -18)
+    farmPlaceInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dialog.farmPlaceInput = farmPlaceInput
+    MakeLabel(farmSection, L["LABEL_FARM_ENCOUNTER"], 0, -46)
+    local farmEncInput = OneWoW_GUI:CreateEditBox(farmSection, { height = 24 })
+    farmEncInput:SetPoint("TOPLEFT", farmSection, "TOPLEFT", 0, -64)
+    farmEncInput:SetPoint("TOPRIGHT", farmSection, "TOPRIGHT", -COL_W - 20, -64)
+    farmEncInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dialog.farmEncInput = farmEncInput
+    MakeLabel(farmSection, L["LABEL_FARM_INTENT"], COL2_X - COL1_X, -46)
+    local farmIntentDD = ns.UI.CreateThemedDropdown(farmSection, "", COL_W, 24)
+    farmIntentDD:SetPoint("TOPLEFT", farmSection, "TOPLEFT", COL2_X - COL1_X, -64)
+    farmIntentDD:SetOptions({
+        {text = L["COLLECTIBLE_INTENT_FARMING"], value = "farm"},
+        {text = L["COLLECTIBLE_INTENT_WANT"], value = "want"},
+    })
+    farmIntentDD:SetSelected("farm")
+    dialog.farmIntentDD = farmIntentDD
+    if isFarming then
+        farmSection:Show()
+        yPos = yPos - 108
+    else
+        farmSection:Hide()
+    end
 
     local previewLabel = OneWoW_GUI:CreateFS(content, 10)
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
@@ -622,6 +747,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
         {text = L["NOTE_TYPE_STANDARD"], value = "standard"},
         {text = DAILY,    value = "daily"},
         {text = WEEKLY,   value = "weekly"},
+        {text = L["NOTE_TYPE_FARMING"], value = "farming"},
     })
     noteTypeDD:SetSelected(noteData.noteType or "standard")
 

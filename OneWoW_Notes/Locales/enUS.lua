@@ -249,6 +249,15 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTE_TYPE_DAILY_DESC"] = "TODOs reset at daily server reset time",
     ["NOTE_TYPE_WEEKLY_DESC"] = "TODOs reset at weekly server reset time",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s Note",
+    ["NOTE_TYPE_FARMING"] = "Farming",
+    ["NOTE_TYPE_FARMING_DESC"] = "Track an item to farm. Needs an item and a place.",
+    ["NOTE_KIND_PICK_TITLE"] = "What kind of note?",
+    ["NOTE_KIND_ITEM"] = "Item",
+    ["NOTE_KIND_ITEM_DESC"] = "Note tied to an item ID",
+    ["LABEL_FARM_ITEM"] = "Item ID or name",
+    ["LABEL_FARM_PLACE"] = "Place",
+    ["LABEL_FARM_ENCOUNTER"] = "Encounter",
+    ["LABEL_FARM_INTENT"] = "Intent",
 
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Reset All TODOs",
@@ -267,6 +276,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 -- Success / Error
     ["SUCCESS_NOTE_ADDED"] = "Note '%s' added successfully!",
     ["ERROR_ENTER_NOTE_TITLE"] = "Please enter a note title",
+    ["ERROR_FARM_REQUIRED"] = "Farming notes need a title, an item, and a place.",
 
 -- Tooltips for list item buttons
     ["TOOLTIP_BUTTON_ADD_NOTE"] = "Add Note",
