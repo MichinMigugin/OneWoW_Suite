@@ -245,15 +245,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "標準",
-    ["NOTE_TYPE_STANDARD_DESC"] = "無自動重設的一般筆記",
-    ["NOTE_TYPE_DAILY_DESC"] = "待辦在每日伺服器重設時間重設",
-    ["NOTE_TYPE_WEEKLY_DESC"] = "待辦在每週伺服器重設時間重設",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s 筆記",
     ["NOTE_TYPE_FARMING"] = "Farming",
-    ["NOTE_TYPE_FARMING_DESC"] = "追蹤要刷的物品。需要物品和地點。",
-    ["NOTE_KIND_PICK_TITLE"] = "要新增哪種筆記？",
-    ["NOTE_KIND_ITEM"] = "物品",
-    ["NOTE_KIND_ITEM_DESC"] = "綁定到物品 ID 的筆記",
     ["LABEL_FARM_ITEM"] = "物品 ID 或名稱",
     ["LABEL_FARM_PLACE"] = "地點",
     ["LABEL_FARM_ENCOUNTER"] = "首領",

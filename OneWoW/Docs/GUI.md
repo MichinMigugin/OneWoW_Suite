@@ -1715,6 +1715,8 @@ When building **`OptionsSliderTemplate`** sliders manually (custom layout), call
 - **CreateRosterPanel(parent, anchorFrame)** — roster layout
 - **CreateItemIcon(parent, options)** — item icon frame (legacy, use CreateSkinnedIcon for new code)
 - **CreateFactionIcon(parent, options)** — faction icon
+- **CreatePortraitWithFaction(parent, options)** — player portrait with a corner faction badge (`:SetUnit`, `:SetFaction`, `:SetClassBorder`)
+- **CreateItemAlertRow(parent, options)** — one-line Item Alert row (Shopping List, notes, Trackers, Farming). `SetHits` shows `Title: (N)`, hits left of ASCII `|`, idle icons on the right. Empty left uses Blizzard `NONE`; full right uses `manyLabel`. Optional `interactive` + `onClick`.
 - **CreateMailIcon(parent, options)** — mail icon
 - **CreateExpandedPanelGrid(ef, options)** — expanded panel grid
 

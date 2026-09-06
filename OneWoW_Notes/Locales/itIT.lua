@@ -245,15 +245,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Standard",
-    ["NOTE_TYPE_STANDARD_DESC"] = "Nota normale senza azzeramento automatico",
-    ["NOTE_TYPE_DAILY_DESC"] = "Le attività si azzerano all'ora di azzeramento giornaliero del server",
-    ["NOTE_TYPE_WEEKLY_DESC"] = "Le attività si azzerano all'ora di azzeramento settimanale del server",
     ["NOTE_TYPE_LABEL_FORMAT"] = "Nota %s",
     ["NOTE_TYPE_FARMING"] = "Farming",
-    ["NOTE_TYPE_FARMING_DESC"] = "Traccia un oggetto da farmare. Servono un oggetto e un luogo.",
-    ["NOTE_KIND_PICK_TITLE"] = "Che tipo di nota?",
-    ["NOTE_KIND_ITEM"] = "Oggetto",
-    ["NOTE_KIND_ITEM_DESC"] = "Nota legata a un ID oggetto",
     ["LABEL_FARM_ITEM"] = "ID o nome oggetto",
     ["LABEL_FARM_PLACE"] = "Luogo",
     ["LABEL_FARM_ENCOUNTER"] = "Scontro",

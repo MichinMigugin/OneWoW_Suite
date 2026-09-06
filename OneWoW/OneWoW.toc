@@ -49,6 +49,7 @@ GUI\ItemListEditor.lua
 GUI\Virtualizer.lua
 GUI\Cards.lua
 GUI\Icons.lua
+GUI\StatusWidgets.lua
 GUI\EntityIdField.lua
 GUI\ReorderDrag.lua
 GUI\KeywordHelp.lua
@@ -165,6 +166,7 @@ Services\itemstatus.lua
 Services\toast-engine.lua
 Services\tooltip-engine.lua
 Services\Location.lua
+Services\StatusCards.lua
 Services\CatDBSync.lua
 Services\EntityResolvers.lua
 

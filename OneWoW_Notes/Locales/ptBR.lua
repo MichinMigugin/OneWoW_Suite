@@ -245,15 +245,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Padrão",
-    ["NOTE_TYPE_STANDARD_DESC"] = "Nota normal sem reinício automático",
-    ["NOTE_TYPE_DAILY_DESC"] = "As tarefas reiniciam no horário de reinício diário do servidor",
-    ["NOTE_TYPE_WEEKLY_DESC"] = "As tarefas reiniciam no horário de reinício semanal do servidor",
     ["NOTE_TYPE_LABEL_FORMAT"] = "Nota %s",
     ["NOTE_TYPE_FARMING"] = "Farming",
-    ["NOTE_TYPE_FARMING_DESC"] = "Acompanha um item para farmar. Precisa de um item e um lugar.",
-    ["NOTE_KIND_PICK_TITLE"] = "Que tipo de nota?",
-    ["NOTE_KIND_ITEM"] = "Item",
-    ["NOTE_KIND_ITEM_DESC"] = "Nota ligada a um ID de item",
     ["LABEL_FARM_ITEM"] = "ID ou nome do item",
     ["LABEL_FARM_PLACE"] = "Lugar",
     ["LABEL_FARM_ENCOUNTER"] = "Encontro",

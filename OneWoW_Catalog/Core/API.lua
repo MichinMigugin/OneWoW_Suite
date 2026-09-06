@@ -100,3 +100,43 @@ end
 function OneWoW_Catalog_API.EnsureCatalogPack(roleOrName)
     return OneWoW:EnsureCatalogPack(roleOrName)
 end
+
+--- Shared List button: Farm / Want / Shopping via OneWoW_ShoppingList_API.
+---@param parent Frame
+---@param itemID number|string
+---@param extras table|nil
+---@return Button|nil
+function ns.AttachListButton(parent, itemID, extras)
+    itemID = tonumber(itemID)
+    if not parent or not itemID or itemID <= 0 then
+        return nil
+    end
+    extras = extras or {}
+    local api = OneWoW_ShoppingList_API
+    if not api or not api.ShowAddToListMenu then
+        return nil
+    end
+    local btn = parent._listBtn
+    if not btn then
+        btn = OneWoW_GUI:CreateFitTextButton(parent, {
+            text = api.GetListButtonLabel and api.GetListButtonLabel() or "",
+            height = 18,
+            minWidth = 36,
+            paddingX = 8,
+        })
+        parent._listBtn = btn
+        btn:SetScript("OnClick", function(self)
+            if OneWoW_ShoppingList_API and OneWoW_ShoppingList_API.ShowAddToListMenu then
+                OneWoW_ShoppingList_API.ShowAddToListMenu(self, self._itemID, self._extras)
+            end
+        end)
+    elseif api.GetListButtonLabel then
+        btn:SetFitText(api.GetListButtonLabel())
+    end
+    btn._itemID = itemID
+    btn._extras = extras
+    btn:ClearAllPoints()
+    btn:SetPoint(extras.point or "RIGHT", extras.relativeTo or parent, extras.relativePoint or extras.point or "RIGHT", extras.x or -6, extras.y or 0)
+    btn:Show()
+    return btn
+end

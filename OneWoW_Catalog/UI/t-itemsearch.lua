@@ -374,9 +374,22 @@ local function BindItemListRow(row, index, result, state)
     row.nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
     row.nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
+    if row.listBtn and result.itemID then
+        ns.AttachListButton(row.rightCluster, result.itemID, {
+            name = result.name,
+            point = "RIGHT",
+            relativeTo = row.favBtn or row.rightCluster,
+            relativePoint = row.favBtn and "LEFT" or "RIGHT",
+            x = row.favBtn and -4 or 0,
+            y = 0,
+        })
+    elseif row.listBtn then
+        row.listBtn:Hide()
+    end
+
     local hasOwned = result.ownedCount and result.ownedCount > 0
     local showFav = row.favBtn and result.itemID
-    local useRightChrome = hasOwned or showFav
+    local useRightChrome = hasOwned or showFav or (row.listBtn and row.listBtn:IsShown())
 
     if useRightChrome then
         row.rightCluster:Show()

@@ -246,15 +246,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Estándar",
-    ["NOTE_TYPE_STANDARD_DESC"] = "Nota normal sin reinicio automático",
-    ["NOTE_TYPE_DAILY_DESC"] = "Las tareas se reinician a la hora de reinicio diario del servidor",
-    ["NOTE_TYPE_WEEKLY_DESC"] = "Las tareas se reinician a la hora de reinicio semanal del servidor",
     ["NOTE_TYPE_LABEL_FORMAT"] = "Nota %s",
     ["NOTE_TYPE_FARMING"] = "Farming",
-    ["NOTE_TYPE_FARMING_DESC"] = "Sigue un objeto para farmear. Hace falta un objeto y un lugar.",
-    ["NOTE_KIND_PICK_TITLE"] = "Que tipo de nota?",
-    ["NOTE_KIND_ITEM"] = "Objeto",
-    ["NOTE_KIND_ITEM_DESC"] = "Nota ligada a un ID de objeto",
     ["LABEL_FARM_ITEM"] = "ID o nombre de objeto",
     ["LABEL_FARM_PLACE"] = "Lugar",
     ["LABEL_FARM_ENCOUNTER"] = "Encuentro",

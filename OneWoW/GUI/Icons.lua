@@ -147,6 +147,58 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
     }
 end
 
+--- Portrait with a faction badge on the corner. Call :SetUnit / :SetFaction.
+---@param parent Frame
+---@param options { size: number|nil, badgeSize: number|nil }
+---@return Frame
+function OneWoW_GUI:CreatePortraitWithFaction(parent, options)
+    options = options or {}
+    local size = options.size or 56
+    local badgeSize = options.badgeSize or 18
+    local C = OneWoW_GUI.Constants
+
+    local frame = OneWoW_GUI:CreateFrame(parent, {
+        width = size + 8,
+        height = size + 8,
+        backdrop = C.BACKDROP_INNER_NO_INSETS,
+        bgColor = "BG_TERTIARY",
+        borderColor = "BORDER_ACCENT",
+    })
+    frame:EnableMouse(false)
+
+    local portrait = frame:CreateTexture(nil, "ARTWORK")
+    portrait:SetSize(size, size)
+    portrait:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    frame.portrait = portrait
+
+    local factionIcon = frame:CreateTexture(nil, "OVERLAY")
+    factionIcon:SetSize(badgeSize, badgeSize)
+    factionIcon:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 4, -4)
+    frame.factionIcon = factionIcon
+
+    function frame:SetUnit(unit)
+        SetPortraitTexture(self.portrait, unit)
+    end
+
+    function frame:SetFaction(faction)
+        local icons = C.ICON_TEXTURES
+        if faction == "Horde" then
+            self.factionIcon:SetTexture(icons.horde)
+        elseif faction == "Alliance" then
+            self.factionIcon:SetTexture(icons.alliance)
+        else
+            self.factionIcon:SetTexture(icons.neutral)
+        end
+    end
+
+    function frame:SetClassBorder(classFile)
+        local color = (classFile and RAID_CLASS_COLORS[classFile]) or { r = 1, g = 1, b = 1 }
+        self:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+    end
+
+    return frame
+end
+
 function OneWoW_GUI:CreateFactionIcon(parent, options)
     options = options or {}
     local faction = options.faction or "Alliance"

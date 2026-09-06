@@ -245,15 +245,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Standard",
-    ["NOTE_TYPE_STANDARD_DESC"] = "Normale Notiz ohne automatisches Zurücksetzen",
-    ["NOTE_TYPE_DAILY_DESC"] = "Aufgaben werden zur täglichen Server-Zurücksetzzeit zurückgesetzt",
-    ["NOTE_TYPE_WEEKLY_DESC"] = "Aufgaben werden zur wöchentlichen Server-Zurücksetzzeit zurückgesetzt",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s-Notiz",
     ["NOTE_TYPE_FARMING"] = "Farming",
-    ["NOTE_TYPE_FARMING_DESC"] = "Verfolgt einen Gegenstand zum Farmen. Braucht Gegenstand und Ort.",
-    ["NOTE_KIND_PICK_TITLE"] = "Welche Art von Notiz?",
-    ["NOTE_KIND_ITEM"] = "Gegenstand",
-    ["NOTE_KIND_ITEM_DESC"] = "Notiz zu einer Gegenstand-ID",
     ["LABEL_FARM_ITEM"] = "Gegenstands-ID oder Name",
     ["LABEL_FARM_PLACE"] = "Ort",
     ["LABEL_FARM_ENCOUNTER"] = "Begegnung",

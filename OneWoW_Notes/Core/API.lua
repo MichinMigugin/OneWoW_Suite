@@ -542,6 +542,34 @@ function OneWoW_Notes_API.FindFarmingNotesForPlace(placeNames)
     return hits
 end
 
+--- Journal notes of `noteType` that still have unchecked tasks.
+---@param noteType string
+---@return table[]
+function OneWoW_Notes_API.GetIncompleteJournalNotes(noteType)
+    local hits = {}
+    if not noteType or not ns.NotesData then
+        return hits
+    end
+    for id, data in pairs(ns.NotesData:GetAllNotes()) do
+        if type(data) == "table" and data.noteType == noteType then
+            local tasks = {}
+            for _, todo in ipairs(data.todos or {}) do
+                if not todo.completed and todo.text and todo.text ~= "" then
+                    tasks[#tasks + 1] = todo.text
+                end
+            end
+            if #tasks > 0 then
+                hits[#hits + 1] = {
+                    id = id,
+                    title = data.title or "",
+                    tasks = tasks,
+                }
+            end
+        end
+    end
+    return hits
+end
+
 --- Opens a journal note on the Notes tab.
 ---@param noteID string
 ---@return boolean

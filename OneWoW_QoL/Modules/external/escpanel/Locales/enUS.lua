@@ -4,7 +4,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "enUS", {
 
     ["ESCPANEL_TITLE"] = "ESC Menu Panel",
-    ["ESCPANEL_DESC"] = "Display a character card, this place's collections and notes, and a portal strip alongside the ESC menu. The character card shows mail, durability, Great Vault, and Trading Post, with optional Housing Endeavors. The place card has Item Alert icons for Shopping List, notes, Trackers, and Farming. Hover an icon for details; click a lit icon to open it. Click the character card to open the character screen, or the place card to open that zone in Catalog. Choose which side each uses below.",
+    ["ESCPANEL_DESC"] = "Display a You card, Alerts, this place's collections and notes, and a portal strip alongside the ESC menu. The You card shows a portrait with a faction badge, mail, durability, Great Vault, and Trading Post, with optional Housing Endeavors. Alerts list mail and auction attention when something needs a look. The place card has Item Alert icons for Shopping List, notes, Trackers, and Farming. Hits sit left of |, the rest sit right. Hover an icon for details; click a hit to open it. Click the character card to open the character screen, or the place card to open that zone in Catalog. Choose which side each uses below.",
     ["ESCPANEL_TOGGLE_SHOW_CHARACTER"] = "Display Character Info",
     ["ESCPANEL_TOGGLE_ENDEAVORS"] = "Display Endeavors",
     ["ESCPANEL_TOGGLE_ALERTS"] = "Display Alerts",

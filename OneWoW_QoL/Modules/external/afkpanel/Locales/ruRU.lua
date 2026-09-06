@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "ruRU", {
 
     ["AFKPANEL_TITLE"] = "Панель отошёл",
-    ["AFKPANEL_DESC"] = "Показывает полноэкранное наложение отошёл с информацией о персонаже, оповещениями и заметками, когда вы отходите.",
+    ["AFKPANEL_DESC"] = "Полноэкранное наложение AFK с теми же карточками You и Here, что и меню ESC, оповещениями о почте и аукционе, и необязательными Daily/Weekly заметками, если Notes включен.",
     ["AFKPANEL_CAMERA_SPIN"] = "Вращение камеры",
     ["AFKPANEL_SHOW_DAILY"] = "Показывать ежедневные заметки",
     ["AFKPANEL_SHOW_WEEKLY"] = "Показывать еженедельные заметки",

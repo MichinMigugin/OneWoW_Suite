@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "zhCN", {
 
     ["AFKPANEL_TITLE"] = "暂离面板",
-    ["AFKPANEL_DESC"] = "当你暂离时，显示一个全屏暂离覆盖层，包含你的角色信息、警报和笔记。",
+    ["AFKPANEL_DESC"] = "全屏暂离覆盖层，使用与 ESC 菜单相同的 You / Here 卡片、实时邮件与拍卖提醒，并在启用笔记时可选显示每日/每周笔记。",
     ["AFKPANEL_CAMERA_SPIN"] = "镜头旋转",
     ["AFKPANEL_SHOW_DAILY"] = "显示每日笔记",
     ["AFKPANEL_SHOW_WEEKLY"] = "显示每周笔记",

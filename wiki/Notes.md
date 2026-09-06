@@ -10,7 +10,7 @@
 
 | Tab | Use it for |
 |-----|------------|
-| **Notes** | General journal - categories, tags, todos, favorites, login notes, pin-to-screen, rich text. Add Note asks the kind first (Standard, Daily, Weekly, Farming, or Item) |
+| **Notes** | General journal - categories, tags, todos, favorites, login notes, pin-to-screen, rich text. Add Note sets Standard, Daily, or Weekly on the create panel |
 | **Players** | Guildmates and friends - realm, guild, class, personal comments; collectible sightings |
 | **NPCs** | Vendors and important NPCs - location, stock, quests |
 | **Zones** | Zone tips, a floating window when you enter the area, and your OneWay Pins for that map |
@@ -86,7 +86,7 @@ Link collectibles into journal notes the same way you link items.
 
 ## Farming notes
 
-Existing **Farming** journal notes still track an item and the place you farm it. The account-wide farm list now lives on the [Shopping List](Shopping-List) Farming tab. CompSync reads and writes that list from Shopping List, not from these notes.
+Existing **Farming** journal notes still track an item and the place you farm it. Add Note no longer creates that kind. Item notes stay on the Items tab.
 
 ---
 

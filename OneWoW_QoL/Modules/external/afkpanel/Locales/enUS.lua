@@ -4,7 +4,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "enUS", {
 
     ["AFKPANEL_TITLE"] = "AFK Panel",
-    ["AFKPANEL_DESC"] = "Displays a full-screen AFK overlay with your character info, alerts, and notes when you go AFK.",
+    ["AFKPANEL_DESC"] = "Full-screen AFK overlay with the same You and Here cards as the ESC menu, live mail and auction alerts, and optional Daily/Weekly notes when Notes is enabled.",
     ["AFKPANEL_CAMERA_SPIN"] = "Camera Spin",
     ["AFKPANEL_SHOW_DAILY"] = "Show Daily Notes",
     ["AFKPANEL_SHOW_WEEKLY"] = "Show Weekly Notes",

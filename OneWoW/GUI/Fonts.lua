@@ -296,16 +296,20 @@ end
 function OneWoW_GUI:ApplyFontCapped(fs, size, maxOffset)
     if not fs then return end
     self:SetFontCap(fs, size, maxOffset)
-    local fontPath = self:GetFont()
     local offset = self:GetFontSizeOffset() or 0
     local cappedSize = math.max(6, size + math.min(offset, maxOffset))
-    if fontPath then
-        -- See SafeSetFont: don't distrust SetFont's return value; only the pcall error.
-        local ok = pcall(fs.SetFont, fs, fontPath, cappedSize, "")
-        if not ok then fs:SetFontObject(GameFontNormal) end
-    else
-        fs:SetFontObject(GameFontNormal)
+    local target = self:GetFont() or GetStockFontPath()
+    if target then
+        -- Same file + same flags: SetFont keeps the previous size. WoW Default
+        -- has no file path, so fall through to the stock face at cappedSize
+        -- instead of SetFontObject (that bakes GameFontNormal's size).
+        local ok = pcall(fs.SetFont, fs, target, cappedSize, "OUTLINE")
+        if ok then
+            pcall(fs.SetFont, fs, target, cappedSize, "")
+            return
+        end
     end
+    fs:SetFontObject(GameFontNormal)
 end
 
 function OneWoW_GUI:ApplyFontToFrame(frame)

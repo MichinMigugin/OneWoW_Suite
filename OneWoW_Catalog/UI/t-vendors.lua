@@ -1716,13 +1716,23 @@ local function ShowVendorDetail(panels, vendor)
 
             local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
             itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
-            itemName:SetPoint("RIGHT", itemRow, "RIGHT", -150, 0)
+            local listBtn = ns.AttachListButton(itemRow, itemID, {
+                name = itemData and (itemData.name or itemData.itemName) or "",
+                point = "RIGHT",
+                x = -8,
+                y = 0,
+            })
+            itemName:SetPoint("RIGHT", itemRow, "RIGHT", listBtn and -200 or -150, 0)
             itemName:SetJustifyH("LEFT")
             itemName:SetWordWrap(false)
             tinsert(detailElements, itemName)
 
             local costText = OneWoW_GUI:CreateFS(itemRow, 10)
-            costText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
+            if listBtn then
+                costText:SetPoint("RIGHT", listBtn, "LEFT", -8, 0)
+            else
+                costText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
+            end
             costText:SetJustifyH("RIGHT")
             local costStr = FormatCost(itemData)
             costText:SetText(costStr)

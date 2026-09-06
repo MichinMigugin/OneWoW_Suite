@@ -63,7 +63,7 @@ Automatically scans for and untracks already-completed achievements when you log
 
 ### AFK Panel
 
-Displays a full-screen AFK overlay with your character info, alerts, and notes when you go AFK.
+Full-screen AFK overlay with the same You and Here cards as the ESC menu, live mail and auction alerts, and optional Daily/Weekly notes when Notes is enabled.
 
 - **Module id:** `afkpanel` · **Folder:** `Modules/external/afkpanel/`
 
@@ -101,7 +101,7 @@ swipes, and situation-based visibility (place × combat cards).
 
 ### ESC Menu Panel
 
-Display a character card, this place's collections and notes, and a portal strip alongside the ESC menu. The character card shows mail, durability, Great Vault, and Trading Post, with optional Housing Endeavors. The place card has Item Alert icons for Shopping List, notes, Trackers, and Farming. Hover an icon for details; click a lit icon to open it. Click the character card to open the character screen, or the place card to open that zone in Catalog. Choose which side each uses below.
+Display a You card, Alerts, this place's collections and notes, and a portal strip alongside the ESC menu. The You card shows a portrait with a faction badge, mail, durability, Great Vault, and Trading Post, with optional Housing Endeavors. Alerts list mail and auction attention when something needs a look. The place card has Item Alert icons for Shopping List, notes, Trackers, and Farming. Hits sit left of |, the rest sit right. Hover an icon for details; click a hit to open it. Click the character card to open the character screen, or the place card to open that zone in Catalog. Choose which side each uses below.
 
 - **Module id:** `escpanel` · **Folder:** `Modules/external/escpanel/`
 

@@ -142,9 +142,22 @@ function ns.UI.CreateCollectibleBrowser(parent, spec)
             row.statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
+        local listBtn
+        if result.itemID then
+            listBtn = ns.AttachListButton(row, result.itemID, {
+                name = result.name,
+                point = "RIGHT",
+                relativeTo = row.statusText,
+                relativePoint = "LEFT",
+                x = -6,
+                y = 0,
+            })
+        elseif row._listBtn then
+            row._listBtn:Hide()
+        end
         row.nameText:ClearAllPoints()
         row.nameText:SetPoint("LEFT", row.iconFrame, "RIGHT", 6, 0)
-        row.nameText:SetPoint("RIGHT", row.statusText, "LEFT", -6, 0)
+        row.nameText:SetPoint("RIGHT", listBtn or row.statusText, "LEFT", -6, 0)
 
         if result.itemID and (not result.name or not result.icon) then
             ns.GetItemDataLoader():LoadItemData(result.itemID, function(_, itemData)

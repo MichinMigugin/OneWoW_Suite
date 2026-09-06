@@ -595,6 +595,10 @@ local function LayoutLootTableRow(row)
     if cols.source.GetObjectType and cols.source:GetObjectType() == "FontString" then
         cols.source:SetWidth(LOOT_SOURCE_MIN)
     end
+    if cols.list then
+        cols.list:ClearAllPoints()
+        cols.list:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    end
 end
 
 ---@param encBtn Frame
@@ -2687,6 +2691,15 @@ RefreshDetailView = function(isSecondRefresh)
                     statusText:SetText("")
                 end
 
+                local listBtn = ns.AttachListButton(itemRow, item.itemID, {
+                    name = item.name,
+                    instance_name = instData and instData.name or "",
+                    encounter = encounter and encounter.name or "",
+                    instance = instData and instData.id or 0,
+                    point = "RIGHT",
+                    x = -4,
+                    y = 0,
+                })
                 itemRow._lootCols = {
                     leadW = LOOT_PAD + LOOT_ICON + LOOT_GAP,
                     name = itemName,
@@ -2694,6 +2707,7 @@ RefreshDetailView = function(isSecondRefresh)
                     status = statusText,
                     diff = diffText,
                     source = sourceIcon,
+                    list = listBtn,
                 }
                 itemRow:SetScript("OnSizeChanged", function(myself)
                     LayoutLootTableRow(myself)
@@ -2701,6 +2715,19 @@ RefreshDetailView = function(isSecondRefresh)
                 LayoutLootTableRow(itemRow)
 
                 itemRow:EnableMouse(true)
+                itemRow:SetScript("OnMouseUp", function(self, button)
+                    if button == "RightButton" and ns.AttachListButton then
+                        local api = OneWoW_ShoppingList_API
+                        if api and api.ShowAddToListMenu then
+                            api.ShowAddToListMenu(self, item.itemID, {
+                                name = item.name,
+                                instance_name = instData and instData.name or "",
+                                encounter = encounter and encounter.name or "",
+                                instance = instData and instData.id or 0,
+                            })
+                        end
+                    end
+                end)
                 itemRow:SetScript("OnEnter", function(self)
                     PaintDetailItemRow(self, true)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

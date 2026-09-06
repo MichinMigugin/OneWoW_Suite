@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["AFKPANEL_TITLE"] = "자리 비움 패널",
-    ["AFKPANEL_DESC"] = "자리를 비우면 캐릭터 정보, 알림, 쪽지가 담긴 전체 화면 자리 비움 오버레이를 표시합니다.",
+    ["AFKPANEL_DESC"] = "ESC 메뉴와 같은 You/Here 카드, 실시간 우편과 경매 알림, Notes가 켜져 있을 때만 보이는 일일/주간 쪽지가 있는 전체 화면 자리 비움 오버레이입니다.",
     ["AFKPANEL_CAMERA_SPIN"] = "카메라 회전",
     ["AFKPANEL_SHOW_DAILY"] = "일일 쪽지 표시",
     ["AFKPANEL_SHOW_WEEKLY"] = "주간 쪽지 표시",

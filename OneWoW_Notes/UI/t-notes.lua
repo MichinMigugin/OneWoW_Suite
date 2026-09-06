@@ -52,11 +52,7 @@ function ns.UI.CreateNotesTab(parent)
     local addNoteBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_NOTE"], height = 25, minWidth = 80 })
     addNoteBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
     addNoteBtn:SetScript("OnClick", function()
-        if ns.UI.ShowAddKindDialog then
-            ns.UI.ShowAddKindDialog()
-        elseif ns.UI.ShowAddNoteDialog then
-            ns.UI.ShowAddNoteDialog()
-        end
+        ns.UI.ShowAddNoteDialog()
     end)
     addNoteBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

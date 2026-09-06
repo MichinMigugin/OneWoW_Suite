@@ -42,6 +42,7 @@ local SERVICE_KEYS = {
     "Collectibles",
     "GearProficiency",
     "Location",
+    "StatusCards",
     "Merchant",
     "CatDBSync",
     "Inventory",

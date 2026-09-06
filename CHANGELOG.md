@@ -57,8 +57,14 @@
 # QoL
 ## ESC Menu
 - Turning off ESC Menu Panel now hides the character info, notes, and portal strips. Character Info, Zone Notes, and left/right side choices apply when you open the game menu.
-- Character info is a themed card with your portrait, spec, item level, Mythic+ rating, and gold. Mail and durability sit on the top right. Great Vault shows Raid, Dungeon, and World bars, and says Claim Reward when last week's chest is waiting. Trading Post travel points use a progress bar and say Cache Available when the Collector's Cache is waiting. Housing Endeavors can sit under that; turn them off on the ESC Menu Panel Features tab. Click the card to close the menu and open the character screen.
-- This place is one card: collections, an Item Alert row, and zone notes. Item Alert uses icons for Shopping List, zone notes, Trackers, and Farming notes. Lit icons have hits here; dim icons do not. Hover an icon for the list or note text. Click a lit icon to open that list or note. Click the card to open Catalog Zones.
+- Character info is a themed card with your portrait, a faction badge, spec, item level, Mythic+ rating, and gold. Mail and durability sit on the top right. Great Vault shows Raid, Dungeon, and World bars, and says Claim Reward when last week's chest is waiting. Trading Post travel points use a progress bar and say Cache Available when the Collector's Cache is waiting. Housing Endeavors can sit under that; turn them off on the ESC Menu Panel Features tab. Click the card to close the menu and open the character screen.
+- Alerts sit under You when something needs a look: mail on this character, auctions expiring or expired, auction gold waiting, or mail on other alts. The card hides when the list is empty. Turn it off on the ESC Menu Panel Features tab.
+- This place is one card: collections, an Item Alert row, and zone notes. Item Alert uses icons for Shopping List, zone notes, Trackers, and Farming notes. The row shows a count, then hits left of | and the rest on the right. None means no hits; Many means every source has one. Hover an icon for the list or note text. Click a hit to open that list or note. Click the card to open Catalog Zones.
+
+## AFK Panel
+- The AFK overlay uses the same You and Here cards as the ESC menu, including the portrait with a faction badge, weekly bars, and Item Alert icons. Hover an icon for the list or note; keys and mouse still clear AFK the same way (no click-to-open).
+- Alerts sit in the center column (auction attention and gold waiting). Mail stays on the You card only.
+- Daily and Weekly notes stay optional and share one card. They only appear when Notes is enabled. You sits on the bottom left; Alerts in the center; Here and notes stack up from the bottom right. Each card keeps its full size when empty.
 
 ## Portals
 - Mage Teleports and Mage Portals are separate ESC flyouts. Show or hide each set in Portals settings. Class & Racial Abilities uses the same split.
@@ -94,8 +100,7 @@
 
 # Notes
 ## Add Note
-- Add Note now asks what kind of note first: Standard, Daily, Weekly, Farming, or Item.
-- Farming notes need a title, an item, and a place.
+- Add Note opens the create panel. Set the type there: Standard, Daily, or Weekly. Item notes stay on the Items tab. Farming is no longer created from this dialog.
 
 ---
 

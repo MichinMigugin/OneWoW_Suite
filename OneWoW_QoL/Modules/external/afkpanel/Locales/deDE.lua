@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "deDE", {
 
     ["AFKPANEL_TITLE"] = "AFK-Panel",
-    ["AFKPANEL_DESC"] = "Zeigt ein Vollbild-AFK-Overlay mit deinen Charakterinfos, Warnungen und Notizen an, wenn du AFK gehst.",
+    ["AFKPANEL_DESC"] = "Vollbild-AFK-Overlay mit denselben You- und Here-Karten wie das ESC-Menü, Live-Post- und Auktionswarnungen und optionalen täglichen/wöchentlichen Notizen, wenn Notes aktiv ist.",
     ["AFKPANEL_CAMERA_SPIN"] = "Kameradrehung",
     ["AFKPANEL_SHOW_DAILY"] = "Tägliche Notizen anzeigen",
     ["AFKPANEL_SHOW_WEEKLY"] = "Wöchentliche Notizen anzeigen",

@@ -245,15 +245,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Стандартная",
-    ["NOTE_TYPE_STANDARD_DESC"] = "Обычная заметка без автоматического сброса",
-    ["NOTE_TYPE_DAILY_DESC"] = "Задачи сбрасываются во время ежедневного сброса на сервере",
-    ["NOTE_TYPE_WEEKLY_DESC"] = "Задачи сбрасываются во время еженедельного сброса на сервере",
     ["NOTE_TYPE_LABEL_FORMAT"] = "Заметка: %s",
     ["NOTE_TYPE_FARMING"] = "Фарм",
-    ["NOTE_TYPE_FARMING_DESC"] = "Отслеживает предмет для фарма. Нужны предмет и место.",
-    ["NOTE_KIND_PICK_TITLE"] = "Какая это заметка?",
-    ["NOTE_KIND_ITEM"] = "Предмет",
-    ["NOTE_KIND_ITEM_DESC"] = "Заметка с ID предмета",
     ["LABEL_FARM_ITEM"] = "ID или имя предмета",
     ["LABEL_FARM_PLACE"] = "Место",
     ["LABEL_FARM_ENCOUNTER"] = "Босс",

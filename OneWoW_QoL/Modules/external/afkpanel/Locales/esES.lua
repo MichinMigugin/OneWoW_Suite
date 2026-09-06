@@ -5,7 +5,7 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "esES", {
 
     ["AFKPANEL_TITLE"] = "Panel AFK",
-    ["AFKPANEL_DESC"] = "Muestra una superposición AFK a pantalla completa con la info de tu personaje, alertas y notas cuando te ausentas.",
+    ["AFKPANEL_DESC"] = "Superposicion AFK a pantalla completa con las mismas fichas You y Here que el menu ESC, alertas de correo y subastas, y notas Daily/Weekly opcionales si Notes esta activado.",
     ["AFKPANEL_CAMERA_SPIN"] = "Giro de cámara",
     ["AFKPANEL_SHOW_DAILY"] = "Mostrar notas diarias",
     ["AFKPANEL_SHOW_WEEKLY"] = "Mostrar notas semanales",
