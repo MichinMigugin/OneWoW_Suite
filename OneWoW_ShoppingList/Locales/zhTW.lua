@@ -229,6 +229,17 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["OWSL_MM_CLICK_TO_OPEN"] = "點擊開啟",
 
+    ["OWSL_TAB_SHOPPING"] = "購物",
+    ["OWSL_BTN_LIST"] = "清單",
+    ["OWSL_MENU_FARM"] = "刷取",
+    ["OWSL_MENU_WANT"] = "想要",
+    ["OWSL_FARM_WANTED"] = "想要",
+    ["OWSL_SEND_TO_SHOPPING"] = "傳送到購物清單",
+    ["OWSL_SEND_TO_FARM"] = "傳送到刷取清單",
+    ["OWSL_MOVE_TO_WANTED"] = "移到想要",
+    ["OWSL_MOVE_TO_FARMING"] = "移到刷取",
+    ["OWSL_FARM_SELECT_ITEM"] = "選擇一件物品",
+
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100OneWoW Shopping List:|r",
 
     ["BINDING_HEADER_ONEWOW_SHOPPING_LIST"] = "|cFF00FF00OneWoW|r Shopping List",

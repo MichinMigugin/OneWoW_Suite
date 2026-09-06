@@ -78,6 +78,7 @@ Track collectibles you care about with an **intent** (Want, Spotted, Farming, or
 * **Sold by** shows captured vendor offers (richer with the Catalog NPCs pack)
 * Transmog sets can show ensemble progress and member appearances
 * Optional **auto-delete**: collected Want/Spotted/Farming entries move to the Delete List, then purge after a delay (Immediate / 1 / 7 / 14 days); empty the Delete List anytime from settings
+* Want or Farming intent also adds the item to the [Shopping List](Shopping-List) Farming tab when we can resolve an item id (Shopping List must be enabled; it is not loaded just to write the row)
 
 Link collectibles into journal notes the same way you link items.
 
@@ -85,9 +86,7 @@ Link collectibles into journal notes the same way you link items.
 
 ## Farming notes
 
-A **Farming** journal note tracks one item and the place you farm it (instance, zone, or route). Encounter is optional. Intent is Want or Farm.
-
-Website farm-list items sync into these notes. CompSync writes them back into Notes so the addon, site, and phone use the same required fields.
+Existing **Farming** journal notes still track an item and the place you farm it. The account-wide farm list now lives on the [Shopping List](Shopping-List) Farming tab. CompSync reads and writes that list from Shopping List, not from these notes.
 
 ---
 
@@ -117,6 +116,7 @@ QoL **Inspect Gear** can save inspect notes into Notes when that module is enabl
 
 * [Trackers](Trackers) — structured checklists vs free-form Notes
 * [Catalog](Catalog)
+* [Shopping List](Shopping-List) — Farming tab for Want / Farming collectibles
 * [Slash commands](Slash-Commands)
 
 ### Sources

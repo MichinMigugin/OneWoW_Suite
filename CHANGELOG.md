@@ -95,11 +95,20 @@
 # Notes
 ## Add Note
 - Add Note now asks what kind of note first: Standard, Daily, Weekly, Farming, or Item.
-- Farming notes need a title, an item, and a place. CompSync can write website farm-list items into those notes.
+- Farming notes need a title, an item, and a place.
 
 ---
 
-*No user-facing changes this release for Bags or Shopping List.*
+# Shopping List
+## Farming List
+- The Shopping List window has a Farming tab: one account-wide list with Wanted and Farming groups.
+- Select a row for item info, where you already have copies, where to get it (when Catalog packs are already loaded), a note, and a quantity.
+- Move a row between Wanted and Farming, or send it to a shopping list. Right-click a shopping-list item to send it to Farm.
+- Notes Collectibles Want or Farming intent adds that item to the Farming List when we can resolve an item id.
+
+---
+
+*No user-facing changes this release for Bags.*
 
 ---
 

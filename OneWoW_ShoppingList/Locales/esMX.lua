@@ -229,6 +229,17 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["OWSL_MM_CLICK_TO_OPEN"] = "Clic para abrir",
 
+    ["OWSL_TAB_SHOPPING"] = "Compras",
+    ["OWSL_BTN_LIST"] = "Lista",
+    ["OWSL_MENU_FARM"] = "Farmear",
+    ["OWSL_MENU_WANT"] = "Deseo",
+    ["OWSL_FARM_WANTED"] = "Deseados",
+    ["OWSL_SEND_TO_SHOPPING"] = "Enviar a la lista de compras",
+    ["OWSL_SEND_TO_FARM"] = "Enviar a Farmeo",
+    ["OWSL_MOVE_TO_WANTED"] = "Mover a Deseados",
+    ["OWSL_MOVE_TO_FARMING"] = "Mover a Farmeo",
+    ["OWSL_FARM_SELECT_ITEM"] = "Selecciona un objeto",
+
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100OneWoW Shopping List:|r",
 
     ["BINDING_HEADER_ONEWOW_SHOPPING_LIST"] = "|cFF00FF00OneWoW|r Shopping List",

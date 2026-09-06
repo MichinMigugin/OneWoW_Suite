@@ -43,6 +43,7 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | `show` / `hide` | Show or hide |
 | `help` | Print help |
 | `add <itemID>` | Add that item to the active list (quantity 1) |
+| `farm` / `farming` | Open the Farming tab |
 
 ## QoL module shortcuts
 

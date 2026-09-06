@@ -94,3 +94,91 @@ end
 function OneWoW_ShoppingList_API.GetStillNeededItemIDs()
     return ns.ShoppingList:GetStillNeededItemIDs()
 end
+
+--- Add or update an item on the account-wide Farming List.
+---@param itemID number|string
+---@param style string|nil "wanted" or "farming"
+---@param extras table|nil
+---@return boolean
+function OneWoW_ShoppingList_API.AddFarmItem(itemID, style, extras)
+    return ns.FarmList:AddItem(itemID, style, extras)
+end
+
+--- Remove an item from the Farming List.
+---@param itemID number|string
+---@return boolean
+function OneWoW_ShoppingList_API.RemoveFarmItem(itemID)
+    return ns.FarmList:RemoveItem(itemID)
+end
+
+--- Set Wanted or Farming style on a farm row.
+---@param itemID number|string
+---@param style string
+---@return boolean
+function OneWoW_ShoppingList_API.SetFarmStyle(itemID, style)
+    return ns.FarmList:SetStyle(itemID, style)
+end
+
+--- All farm rows grouped as `{ wanted = {...}, farming = {...} }`.
+---@return { wanted: table[], farming: table[] }
+function OneWoW_ShoppingList_API.GetFarmItems()
+    return ns.FarmList:GetAll()
+end
+
+--- True when itemID is on the Farming List. Second return is the style.
+---@param itemID number|string
+---@return boolean
+---@return string|nil style
+function OneWoW_ShoppingList_API.IsOnFarmList(itemID)
+    return ns.FarmList:IsOnFarmList(itemID)
+end
+
+--- Show the Shopping List window on the Farming tab.
+function OneWoW_ShoppingList_API.ShowFarming()
+    if ns.MainWindow and ns.MainWindow.SetWindowMode then
+        ns.MainWindow:SetWindowMode("farming")
+    end
+    OneWoW_ShoppingList_API.Show()
+end
+
+--- Label for the shared Catalog List button.
+---@return string
+function OneWoW_ShoppingList_API.GetListButtonLabel()
+    return ns.L["OWSL_BTN_LIST"]
+end
+
+--- Farm / Want / Shopping picker for one item. Shopping opens a submenu of named lists.
+---@param owner Frame
+---@param itemID number|string
+---@param extras table|nil
+function OneWoW_ShoppingList_API.ShowAddToListMenu(owner, itemID, extras)
+    itemID = tonumber(itemID)
+    if not owner or not itemID or itemID <= 0 then
+        return
+    end
+    extras = extras or {}
+    local L = ns.L
+    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+        rootDescription:CreateTitle(L["OWSL_BTN_LIST"])
+        rootDescription:CreateButton(L["OWSL_MENU_FARM"], function()
+            ns.FarmList:AddItem(itemID, "farming", extras)
+        end)
+        rootDescription:CreateButton(L["OWSL_MENU_WANT"], function()
+            ns.FarmList:AddItem(itemID, "wanted", extras)
+        end)
+        local shopMenu = rootDescription:CreateButton(L["OWSL_TAB_SHOPPING"])
+        local names = ns.ShoppingList:GetParentLists()
+        if not names or #names == 0 then
+            shopMenu:CreateButton(L["OWSL_MAIN_LIST"], function()
+                ns.ShoppingList:AddItemToList(ns.MAIN_LIST_KEY, itemID, extras.quantity or 1, extras.notes)
+            end)
+            return
+        end
+        for i = 1, #names do
+            local listName = names[i]
+            shopMenu:CreateButton(listName, function()
+                ns.ShoppingList:AddItemToList(listName, itemID, extras.quantity or 1, extras.notes)
+            end)
+        end
+    end)
+end

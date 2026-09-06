@@ -40,6 +40,7 @@ Core\API.lua
 # Modules
 Modules\ShoppingList.lua
 Modules\DataAccess.lua
+Modules\FarmList.lua
 Modules\Alerts.lua
 Modules\Tooltips.lua
 Modules\BagButton.lua

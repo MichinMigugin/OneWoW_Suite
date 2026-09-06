@@ -14,6 +14,9 @@ local function InitializeModules()
     if ns.DataAccess then
         ns.DataAccess:Initialize()
     end
+    if ns.FarmList then
+        ns.FarmList:Initialize()
+    end
     if ns.Alerts then
         ns.Alerts:Initialize()
     end
@@ -146,6 +149,12 @@ local function HandleSlashCommand(msg)
         print("  |cFFFFFFFF/1wsl show|r - Show main window")
         print("  |cFFFFFFFF/1wsl hide|r - Hide main window")
         print("  |cFFFFFFFF/1wsl add <itemID>|r - Add item to active list")
+        print("  |cFFFFFFFF/1wsl farm|r - Show Farming tab")
+        return
+    end
+
+    if msg == "farm" or msg == "farming" then
+        OneWoW_ShoppingList_API.ShowFarming()
         return
     end
 

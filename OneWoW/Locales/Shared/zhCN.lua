@@ -148,6 +148,8 @@ ns.Locale:RegisterShared("zhCN", {
     ["COLLECTION"] = "收藏",
     ["DUNGEON"] = "地下城",
     ["FARMING"] = "刷取",
+    ["WHERE_IT_IS"] = "在哪里",
+    ["WHERE_TO_GET"] = "如何获得",
     ["PROFESSION"] = "专业技能",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these

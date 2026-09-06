@@ -41,6 +41,20 @@ local searchAltsOn   = false
 local inSettingsView = false
 local contentHeaderFrame
 local addButtonRowFrame
+local newListBtn
+local windowMode = "shopping"
+local selectedFarmItemID
+local tabShoppingBtn
+local tabFarmingBtn
+local farmAddByIdBtn
+local shoppingSidebarScroll
+local farmSidebarScrollContainer
+local farmDetailPanel
+local farmDetail
+local farmRowPool = {}
+local farmWantedHeader
+local farmFarmingHeader
+local FARM_POOL_SIZE = 48
 
 local function GetDB()
     return ns.db
@@ -157,6 +171,73 @@ local function CreateListRow(parent)
     return row
 end
 
+local function PaintFarmRow(row, hover)
+    if row.data and row.data.isSelected then
+        OneWoW_GUI:ApplyListRowFill(row, { selected = true })
+    elseif hover then
+        OneWoW_GUI:ApplyListRowFill(row, { hover = true })
+    else
+        OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = row._zebraIndex })
+    end
+end
+
+local function CreateFarmGroupHeader(parent)
+    local h = OneWoW_GUI:CreateFrame(parent, {
+        bgColor     = "BG_SECONDARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+    h:SetHeight(26)
+    h.title = OneWoW_GUI:CreateFS(h, 12)
+    h.title:SetPoint("LEFT", 8, 0)
+    h.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    h.count = OneWoW_GUI:CreateFS(h, 10)
+    h.count:SetPoint("RIGHT", -8, 0)
+    h.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    h:Hide()
+    return h
+end
+
+local function CreateFarmItemRow(parent)
+    local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    row:SetHeight(28)
+    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    row._zebraIndex = 1
+    OneWoW_GUI:ApplyListRowFill(row, { zebraIndex = 1 })
+    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+    row.statusBar = row:CreateTexture(nil, "ARTWORK")
+    row.statusBar:SetWidth(4)
+    row.statusBar:SetPoint("LEFT",   row, "LEFT",   0, 0)
+    row.statusBar:SetPoint("TOP",    row, "TOP",    0, 0)
+    row.statusBar:SetPoint("BOTTOM", row, "BOTTOM", 0, 0)
+
+    row.icon = row:CreateTexture(nil, "ARTWORK")
+    row.icon:SetSize(20, 20)
+    row.icon:SetPoint("LEFT", row.statusBar, "RIGHT", 4, 0)
+
+    row.nameText = OneWoW_GUI:CreateFS(row, 11)
+    row.nameText:SetPoint("LEFT",  row.icon, "RIGHT", 6, 0)
+    row.nameText:SetPoint("RIGHT", row, "RIGHT", -36, 0)
+    row.nameText:SetJustifyH("LEFT")
+    row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    row.qtyText = OneWoW_GUI:CreateFS(row, 10)
+    row.qtyText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+    row.qtyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    row:SetScript("OnEnter", function(myself)
+        PaintFarmRow(myself, true)
+    end)
+    row:SetScript("OnLeave", function(myself)
+        PaintFarmRow(myself, false)
+    end)
+
+    row.data = {}
+    row:Hide()
+    return row
+end
+
 local function ConfigureListRow(row, listName, isSelected, isDefault, childCount, zebraIndex)
     row:Show()
     row.data.listName   = listName
@@ -256,18 +337,53 @@ function MainWindow:Create()
     settingsToggleBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -6, 0)
     settingsToggleBtn:SetScript("OnClick", function() MainWindow:ToggleSettings() end)
 
+    local tabBar = CreateFrame("Frame", nil, mainFrame)
+    tabBar:SetPoint("TOPLEFT",  mainFrame, "TOPLEFT",  4, -28)
+    tabBar:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -4, -28)
+    tabBar:SetHeight(C.GUI.TAB_STRIP_HEIGHT)
+
+    tabShoppingBtn = OneWoW_GUI:CreateFitTextButton(tabBar, { text = L["OWSL_TAB_SHOPPING"], height = 22 })
+    tabShoppingBtn:SetPoint("LEFT", tabBar, "LEFT", 0, 0)
+    tabShoppingBtn:SetScript("OnClick", function() MainWindow:SetWindowMode("shopping") end)
+    tabShoppingBtn:SetScript("OnLeave", function(myself)
+        if windowMode == "shopping" then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end)
+
+    tabFarmingBtn = OneWoW_GUI:CreateFitTextButton(tabBar, { text = L["FARMING"], height = 22 })
+    tabFarmingBtn:SetPoint("LEFT", tabShoppingBtn, "RIGHT", 6, 0)
+    tabFarmingBtn:SetScript("OnClick", function() MainWindow:SetWindowMode("farming") end)
+    tabFarmingBtn:SetScript("OnLeave", function(myself)
+        if windowMode == "farming" then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end)
+
     local sidebarW = C.GUI.SIDEBAR_WIDTH
     local dividerX = sidebarW + 4
 
     local divider = mainFrame:CreateTexture(nil, "ARTWORK")
     divider:SetWidth(1)
-    divider:SetPoint("TOP",    mainFrame, "TOPLEFT",    dividerX, -28)
-    divider:SetPoint("BOTTOM", mainFrame, "BOTTOMLEFT", dividerX,   4)
+    divider:SetPoint("TOPLEFT",    tabBar,    "BOTTOMLEFT", dividerX - 4, -2)
+    divider:SetPoint("BOTTOMLEFT", mainFrame, "BOTTOMLEFT", dividerX,      4)
     divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     sidebarPanel = CreateFrame("Frame", nil, mainFrame)
-    sidebarPanel:SetPoint("TOPLEFT",    mainFrame, "TOPLEFT",    4,  -28)
-    sidebarPanel:SetPoint("BOTTOMLEFT", mainFrame, "BOTTOMLEFT", 4,    4)
+    sidebarPanel:SetPoint("TOPLEFT",    tabBar,    "BOTTOMLEFT",  0, -2)
+    sidebarPanel:SetPoint("BOTTOMLEFT", mainFrame, "BOTTOMLEFT",  4,  4)
     sidebarPanel:SetWidth(sidebarW)
 
     local sidebarHeader = OneWoW_GUI:CreateFrame(sidebarPanel, {
@@ -278,7 +394,7 @@ function MainWindow:Create()
     sidebarHeader:SetPoint("TOPLEFT",  sidebarPanel, "TOPLEFT",  0, 0)
     sidebarHeader:SetPoint("TOPRIGHT", sidebarPanel, "TOPRIGHT", 0, 0)
 
-    local newListBtn = OneWoW_GUI:CreateFitTextButton(sidebarHeader, { text = L["OWSL_BTN_NEW_LIST"], height = 22 })
+    newListBtn = OneWoW_GUI:CreateFitTextButton(sidebarHeader, { text = L["OWSL_BTN_NEW_LIST"], height = 22 })
     newListBtn:SetPoint("LEFT", sidebarHeader, "LEFT", 6, 0)
     newListBtn:SetScript("OnClick", function()
         ns.Dialogs:InputDialog(L["OWSL_DIALOG_NEW_LIST"], "", function(name)
@@ -297,11 +413,34 @@ function MainWindow:Create()
         end)
     end)
 
-    local sidebarScrollContainer = CreateFrame("Frame", nil, sidebarPanel)
-    sidebarScrollContainer:SetPoint("TOPLEFT",     sidebarPanel, "TOPLEFT",     0, -34)
-    sidebarScrollContainer:SetPoint("BOTTOMRIGHT", sidebarPanel, "BOTTOMRIGHT", 0,   0)
+    farmAddByIdBtn = OneWoW_GUI:CreateFitTextButton(sidebarHeader, { text = L["ADD_BY_ID"], height = 22 })
+    farmAddByIdBtn:SetPoint("LEFT", sidebarHeader, "LEFT", 6, 0)
+    farmAddByIdBtn:Hide()
+    farmAddByIdBtn:SetScript("OnClick", function()
+        ns.Dialogs:InputDialog(L["OWSL_DIALOG_ADD_BY_ID"], "", function(val)
+            local id = tonumber(val)
+            if not id or id <= 0 then
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ENTER_VALID_ID"])
+                return
+            end
+            local ok = ns.FarmList:AddItem(id, "wanted")
+            if ok then
+                selectedFarmItemID = id
+                local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
+                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, L["FARMING"]))
+                MainWindow:RefreshFarmSidebar()
+                MainWindow:RefreshFarmDetail()
+            else
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_INVALID_ITEM"])
+            end
+        end, L["OWSL_BTN_ADD"])
+    end)
 
-    local sidebarScrollFrame, sidebarScrollContent = OneWoW_GUI:CreateScrollFrame(sidebarScrollContainer, {})
+    shoppingSidebarScroll = CreateFrame("Frame", nil, sidebarPanel)
+    shoppingSidebarScroll:SetPoint("TOPLEFT",     sidebarPanel, "TOPLEFT",     0, -34)
+    shoppingSidebarScroll:SetPoint("BOTTOMRIGHT", sidebarPanel, "BOTTOMRIGHT", 0,   0)
+
+    local sidebarScrollFrame, sidebarScrollContent = OneWoW_GUI:CreateScrollFrame(shoppingSidebarScroll, {})
     sidebarPanel.scrollFrame   = sidebarScrollFrame
     sidebarPanel.scrollContent = sidebarScrollContent
 
@@ -309,8 +448,23 @@ function MainWindow:Create()
         listRowPool[i] = CreateListRow(sidebarScrollContent)
     end
 
+    farmSidebarScrollContainer = CreateFrame("Frame", nil, sidebarPanel)
+    farmSidebarScrollContainer:SetPoint("TOPLEFT",     sidebarPanel, "TOPLEFT",     0, -34)
+    farmSidebarScrollContainer:SetPoint("BOTTOMRIGHT", sidebarPanel, "BOTTOMRIGHT", 0,   0)
+    farmSidebarScrollContainer:Hide()
+
+    local farmScrollFrame, farmScrollContent = OneWoW_GUI:CreateScrollFrame(farmSidebarScrollContainer, {})
+    sidebarPanel.farmScrollFrame   = farmScrollFrame
+    sidebarPanel.farmScrollContent = farmScrollContent
+
+    farmWantedHeader  = CreateFarmGroupHeader(farmScrollContent)
+    farmFarmingHeader = CreateFarmGroupHeader(farmScrollContent)
+    for i = 1, FARM_POOL_SIZE do
+        farmRowPool[i] = CreateFarmItemRow(farmScrollContent)
+    end
+
     contentPanel = CreateFrame("Frame", nil, mainFrame)
-    contentPanel:SetPoint("TOPLEFT",     mainFrame, "TOPLEFT",     dividerX + 1, -28)
+    contentPanel:SetPoint("TOPLEFT",     tabBar,    "BOTTOMLEFT",  dividerX - 3, -2)
     contentPanel:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -4, 4)
 
     local contentHeader = OneWoW_GUI:CreateFrame(contentPanel, {
@@ -489,7 +643,9 @@ function MainWindow:Create()
     contentPanel.scrollContent  = scrollContent
 
     self:BuildSettingsPanel()
+    self:BuildFarmDetailPanel()
     self:RegisterDragDrop(mainFrame)
+    self:ApplyWindowMode()
 
     ns.ShoppingList:SetActiveList(ns.ShoppingList:GetActiveListName())
 end
@@ -688,12 +844,23 @@ function MainWindow:Rebuild()
     settingsPanel      = nil
     contentHeaderFrame = nil
     addButtonRowFrame  = nil
+    newListBtn         = nil
+    tabShoppingBtn     = nil
+    tabFarmingBtn      = nil
+    farmAddByIdBtn     = nil
+    shoppingSidebarScroll = nil
+    farmSidebarScrollContainer = nil
+    farmDetailPanel    = nil
+    farmDetail         = nil
+    farmWantedHeader   = nil
+    farmFarmingHeader  = nil
     searchBox          = nil
     searchAltsBtn      = nil
     statusLabel        = nil
     inSettingsView     = false
     listRowPool        = {}
     itemRows           = {}
+    farmRowPool        = {}
 end
 
 function MainWindow:ShowSettings()
@@ -712,32 +879,44 @@ function MainWindow:ToggleSettings()
         if contentPanel.scrollFrame   then contentPanel.scrollFrame:Hide() end
         if contentHeaderFrame         then contentHeaderFrame:Hide() end
         if addButtonRowFrame          then addButtonRowFrame:Hide() end
+        if farmDetailPanel            then farmDetailPanel:Hide() end
     else
         settingsPanel:Hide()
-        if contentPanel.listContainer then contentPanel.listContainer:Show() end
-        if contentPanel.scrollFrame   then contentPanel.scrollFrame:Show() end
-        if contentHeaderFrame         then contentHeaderFrame:Show() end
-        if addButtonRowFrame          then addButtonRowFrame:Show() end
+        self:ApplyWindowMode()
     end
 end
 
 function MainWindow:RegisterDragDrop(frame)
     frame:SetScript("OnReceiveDrag", function()
         local dragType, id = GetCursorInfo()
-        if dragType == "item" then
-            ClearCursor()
-            local activeList = ns.ShoppingList:GetActiveListName()
-            local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
+        if dragType ~= "item" then return end
+        ClearCursor()
+        if windowMode == "farming" then
+            local ok = ns.FarmList:AddItem(id, "wanted")
             if ok then
+                selectedFarmItemID = id
                 local name = id and C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
-                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
-                MainWindow:RefreshItemList()
+                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, L["FARMING"]))
+                MainWindow:RefreshFarmSidebar()
+                MainWindow:RefreshFarmDetail()
             end
+            return
+        end
+        local activeList = ns.ShoppingList:GetActiveListName()
+        local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
+        if ok then
+            local name = id and C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
+            MainWindow:RefreshItemList()
         end
     end)
 end
 
 function MainWindow:RefreshSidebar()
+    if windowMode == "farming" then
+        self:RefreshFarmSidebar()
+        return
+    end
     if not sidebarPanel then return end
 
     HideAllRows(listRowPool)
@@ -897,6 +1076,11 @@ function MainWindow:RefreshSidebar()
 end
 
 function MainWindow:RefreshItemList()
+    if windowMode == "farming" then
+        self:RefreshFarmSidebar()
+        self:RefreshFarmDetail()
+        return
+    end
     local scrollContent = contentPanel and contentPanel.scrollContent
     if not scrollContent then return end
 
@@ -1350,6 +1534,18 @@ function MainWindow:ShowItemContextMenu(itemID, listName)
             end
         end
 
+        local sendFarm = rootDescription:CreateButton(L["OWSL_SEND_TO_FARM"])
+        sendFarm:CreateButton(L["OWSL_FARM_WANTED"], function()
+            ns.FarmList:AddFromShoppingList(itemID, listName, "wanted")
+            local name = C_Item.GetItemNameByID(itemID) or tostring(itemID)
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, L["OWSL_FARM_WANTED"]))
+        end)
+        sendFarm:CreateButton(L["FARMING"], function()
+            ns.FarmList:AddFromShoppingList(itemID, listName, "farming")
+            local name = C_Item.GetItemNameByID(itemID) or tostring(itemID)
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, L["FARMING"]))
+        end)
+
         rootDescription:CreateButton(L["OWSL_MENU_CREATE_CRAFT_ORDER"], function()
             local recipes = ns.ShoppingList:GetCraftableRecipes(itemID)
             if #recipes == 0 then
@@ -1450,9 +1646,554 @@ function MainWindow:ShowListContextMenu(listName)
     end)
 end
 
+local function PaintModeTab(btn, selected)
+    if not btn then return end
+    if selected then
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    else
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+end
+
+function MainWindow:ApplyWindowMode()
+    local farming = windowMode == "farming"
+    PaintModeTab(tabShoppingBtn, not farming)
+    PaintModeTab(tabFarmingBtn, farming)
+
+    if inSettingsView then return end
+
+    if newListBtn then
+        if farming then newListBtn:Hide() else newListBtn:Show() end
+    end
+    if farmAddByIdBtn then
+        if farming then farmAddByIdBtn:Show() else farmAddByIdBtn:Hide() end
+    end
+    if shoppingSidebarScroll then
+        if farming then shoppingSidebarScroll:Hide() else shoppingSidebarScroll:Show() end
+    end
+    if farmSidebarScrollContainer then
+        if farming then farmSidebarScrollContainer:Show() else farmSidebarScrollContainer:Hide() end
+    end
+    if contentHeaderFrame then
+        if farming then contentHeaderFrame:Hide() else contentHeaderFrame:Show() end
+    end
+    if addButtonRowFrame then
+        if farming then addButtonRowFrame:Hide() else addButtonRowFrame:Show() end
+    end
+    if contentPanel and contentPanel.listContainer then
+        if farming then contentPanel.listContainer:Hide() else contentPanel.listContainer:Show() end
+    end
+    if farmDetailPanel then
+        if farming then farmDetailPanel:Show() else farmDetailPanel:Hide() end
+    end
+end
+
+function MainWindow:SetWindowMode(mode)
+    if mode ~= "farming" then
+        mode = "shopping"
+    end
+    windowMode = mode
+    if not mainFrame then return end
+    self:ApplyWindowMode()
+    if mainFrame:IsShown() then
+        self:RefreshSidebar()
+        self:RefreshItemList()
+    end
+end
+
+function MainWindow:BuildFarmDetailPanel()
+    farmDetailPanel = OneWoW_GUI:CreateFrame(contentPanel, {
+        backdrop    = OneWoW_GUI.Constants.BACKDROP_SOFT,
+        bgColor     = "BG_PRIMARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+    farmDetailPanel:SetAllPoints(contentPanel)
+    farmDetailPanel:Hide()
+
+    local d = {}
+    farmDetail = d
+
+    d.emptyHint = OneWoW_GUI:CreateFS(farmDetailPanel, 12)
+    d.emptyHint:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", 16, -16)
+    d.emptyHint:SetPoint("TOPRIGHT", farmDetailPanel, "TOPRIGHT", -16, -16)
+    d.emptyHint:SetJustifyH("LEFT")
+    d.emptyHint:SetText(L["OWSL_FARM_SELECT_ITEM"])
+    d.emptyHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    d.icon = OneWoW_GUI:CreateSkinnedIcon(farmDetailPanel, { size = 36, itemID = 6948 })
+    d.icon:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", 12, -12)
+
+    d.nameText = OneWoW_GUI:CreateFS(farmDetailPanel, 14)
+    d.nameText:SetPoint("TOPLEFT", d.icon, "TOPRIGHT", 10, 0)
+    d.nameText:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -12, 0)
+    d.nameText:SetJustifyH("LEFT")
+    d.nameText:SetWordWrap(true)
+    d.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    d.idText = OneWoW_GUI:CreateFS(farmDetailPanel, 10)
+    d.idText:SetPoint("TOPLEFT", d.nameText, "BOTTOMLEFT", 0, -2)
+    d.idText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    d.statusText = OneWoW_GUI:CreateFS(farmDetailPanel, 11)
+    d.statusText:SetPoint("TOPLEFT", d.icon, "BOTTOMLEFT", 0, -10)
+    d.statusText:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -12, 0)
+    d.statusText:SetJustifyH("LEFT")
+
+    d.whereIsHeader = OneWoW_GUI:CreateFS(farmDetailPanel, 12)
+    d.whereIsHeader:SetText(L["WHERE_IT_IS"])
+    d.whereIsHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    d.whereIsLines = {}
+    for i = 1, 12 do
+        local fs = OneWoW_GUI:CreateFS(farmDetailPanel, 11)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(true)
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        d.whereIsLines[i] = fs
+    end
+
+    d.whereGetHeader = OneWoW_GUI:CreateFS(farmDetailPanel, 12)
+    d.whereGetHeader:SetText(L["WHERE_TO_GET"])
+    d.whereGetHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    d.whereGetLines = {}
+    for i = 1, 16 do
+        local fs = OneWoW_GUI:CreateFS(farmDetailPanel, 11)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(true)
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        d.whereGetLines[i] = fs
+    end
+
+    d.noteLabel = OneWoW_GUI:CreateFS(farmDetailPanel, 11)
+    d.noteLabel:SetText(NOTE_COLON)
+    d.noteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    d.noteBox = OneWoW_GUI:CreateEditBox(farmDetailPanel, { height = 22 })
+    d.noteBox:SetScript("OnEditFocusLost", function(myself)
+        if selectedFarmItemID then
+            ns.FarmList:SetNotes(selectedFarmItemID, myself:GetText() or "")
+        end
+    end)
+
+    d.qtyLabel = OneWoW_GUI:CreateFS(farmDetailPanel, 11)
+    d.qtyLabel:SetText(L["OWSL_LABEL_QTY"])
+    d.qtyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    d.qtyBox = OneWoW_GUI:CreateEditBox(farmDetailPanel, { width = 56, height = 22 })
+    d.qtyBox:SetNumeric(true)
+    d.qtyBox:SetMaxLetters(4)
+    d.qtyBox:SetJustifyH("CENTER")
+    local function CommitFarmQty(myself)
+        local qty = tonumber(myself:GetText()) or 0
+        if selectedFarmItemID and qty > 0 then
+            ns.FarmList:SetQuantity(selectedFarmItemID, qty)
+            myself:ClearFocus()
+            MainWindow:RefreshFarmSidebar()
+            MainWindow:RefreshFarmDetail()
+        elseif selectedFarmItemID then
+            local row = ns.FarmList:GetItem(selectedFarmItemID)
+            myself:SetText(tostring(row and row.quantity or 1))
+            myself:ClearFocus()
+        end
+    end
+    d.qtyBox:SetScript("OnEnterPressed", CommitFarmQty)
+    d.qtyBox:SetScript("OnEditFocusLost", CommitFarmQty)
+
+    d.moveBtn = OneWoW_GUI:CreateFitTextButton(farmDetailPanel, { text = L["OWSL_MOVE_TO_FARMING"], height = 22 })
+    d.sendBtn = OneWoW_GUI:CreateFitTextButton(farmDetailPanel, { text = L["OWSL_SEND_TO_SHOPPING"], height = 22 })
+    d.removeBtn = OneWoW_GUI:CreateFitTextButton(farmDetailPanel, { text = DELETE, height = 22 })
+
+    d.moveBtn:SetScript("OnClick", function()
+        if not selectedFarmItemID then return end
+        local row = ns.FarmList:GetItem(selectedFarmItemID)
+        if not row then return end
+        local nextStyle = row.style == "farming" and "wanted" or "farming"
+        ns.FarmList:SetStyle(selectedFarmItemID, nextStyle)
+        MainWindow:RefreshFarmSidebar()
+        MainWindow:RefreshFarmDetail()
+    end)
+
+    d.sendBtn:SetScript("OnClick", function()
+        if not selectedFarmItemID then return end
+        MainWindow:ShowSendToShoppingMenu(selectedFarmItemID)
+    end)
+
+    d.removeBtn:SetScript("OnClick", function()
+        if not selectedFarmItemID then return end
+        local itemID = selectedFarmItemID
+        local name = C_Item.GetItemNameByID(itemID) or string.format(L["OWSL_ITEM_PREFIX"], itemID)
+        local function DoRemove()
+            ns.FarmList:RemoveItem(itemID)
+            selectedFarmItemID = nil
+            MainWindow:RefreshFarmSidebar()
+            MainWindow:RefreshFarmDetail()
+        end
+        if GetSettings().confirmItemDelete == false then
+            DoRemove()
+            return
+        end
+        ns.Dialogs:ConfirmDialog(
+            L["OWSL_DIALOG_DELETE_CONFIRM"]:format(name),
+            L["OWSL_DIALOG_DELETE_CONFIRM2"],
+            DoRemove,
+            DELETE,
+            mainFrame,
+            {
+                showDontAskAgain = true,
+                onDontAskAgain = function()
+                    GetSettings().confirmItemDelete = false
+                end,
+            }
+        )
+    end)
+end
+
+local function MeasureOr(fs, fallback)
+    local h = fs:GetStringHeight()
+    if h and h > 0 then return h end
+    return fallback
+end
+
+function MainWindow:RefreshFarmSidebar()
+    if not sidebarPanel or not sidebarPanel.farmScrollContent then return end
+    if windowMode ~= "farming" then return end
+
+    HideAllRows(farmRowPool)
+    if farmWantedHeader then farmWantedHeader:Hide() end
+    if farmFarmingHeader then farmFarmingHeader:Hide() end
+
+    local grouped = ns.FarmList:GetAll()
+    local scrollContent = sidebarPanel.farmScrollContent
+    local yOff = 0
+    local rowIdx = 1
+    local rowH = 28
+    local rowGap = 2
+
+    local function PlaceHeader(header, title, count)
+        header:ClearAllPoints()
+        header:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, -yOff)
+        header:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, -yOff)
+        header.title:SetText(title)
+        header.count:SetText(tostring(count))
+        header:Show()
+        yOff = yOff + 28
+    end
+
+    local function PlaceRows(items)
+        for i = 1, #items do
+            if rowIdx > FARM_POOL_SIZE then break end
+            local item = items[i]
+            local row = farmRowPool[rowIdx]
+            local capturedID = item.itemID
+            local isSelected = selectedFarmItemID == capturedID
+            row.data.itemID = capturedID
+            row.data.isSelected = isSelected
+            row._zebraIndex = rowIdx
+
+            local icon = C_Item.GetItemIconByID(capturedID)
+            row.icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+            row.nameText:SetText(item.name)
+            row.qtyText:SetText(tostring(item.quantity or 1))
+
+            local status = ns.FarmList:GetItemStatus(capturedID)
+            if status then
+                local r, g, b = unpack(status.statusColor)
+                row.statusBar:SetColorTexture(r, g, b, 1)
+            else
+                row.statusBar:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            end
+
+            if isSelected then
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            else
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+            PaintFarmRow(row, false)
+
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, -yOff)
+            row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, -yOff)
+            row:SetHeight(rowH)
+
+            row:SetScript("OnClick", function(_, btn)
+                if btn == "RightButton" then
+                    selectedFarmItemID = capturedID
+                    MainWindow:RefreshFarmSidebar()
+                    MainWindow:RefreshFarmDetail()
+                    MainWindow:ShowFarmItemContextMenu(capturedID)
+                else
+                    selectedFarmItemID = capturedID
+                    MainWindow:RefreshFarmSidebar()
+                    MainWindow:RefreshFarmDetail()
+                end
+            end)
+
+            row:Show()
+            rowIdx = rowIdx + 1
+            yOff = yOff + rowH + rowGap
+        end
+    end
+
+    PlaceHeader(farmWantedHeader, L["OWSL_FARM_WANTED"], #grouped.wanted)
+    PlaceRows(grouped.wanted)
+    PlaceHeader(farmFarmingHeader, L["FARMING"], #grouped.farming)
+    PlaceRows(grouped.farming)
+
+    scrollContent:SetHeight(math.max(yOff + 4, 1))
+end
+
+function MainWindow:RefreshFarmDetail()
+    if not farmDetailPanel or not farmDetail then return end
+    if windowMode ~= "farming" then return end
+
+    local d = farmDetail
+    local row = selectedFarmItemID and ns.FarmList:GetItem(selectedFarmItemID)
+    if not row then
+        d.emptyHint:Show()
+        d.icon:Hide()
+        d.nameText:Hide()
+        d.idText:Hide()
+        d.statusText:Hide()
+        d.whereIsHeader:Hide()
+        d.whereGetHeader:Hide()
+        d.noteLabel:Hide()
+        d.noteBox:Hide()
+        d.qtyLabel:Hide()
+        d.qtyBox:Hide()
+        d.moveBtn:Hide()
+        d.sendBtn:Hide()
+        d.removeBtn:Hide()
+        for i = 1, #d.whereIsLines do d.whereIsLines[i]:Hide() end
+        for i = 1, #d.whereGetLines do d.whereGetLines[i]:Hide() end
+        return
+    end
+
+    d.emptyHint:Hide()
+    d.icon:Show()
+    d.nameText:Show()
+    d.idText:Show()
+    d.statusText:Show()
+    d.noteLabel:Show()
+    d.noteBox:Show()
+    d.qtyLabel:Show()
+    d.qtyBox:Show()
+    d.moveBtn:Show()
+    d.sendBtn:Show()
+    d.removeBtn:Show()
+
+    local itemID = row.itemID
+    local displayName = C_Item.GetItemNameByID(itemID) or row.name or string.format(L["OWSL_ITEM_PREFIX"], itemID)
+    local iconTex = C_Item.GetItemIconByID(itemID)
+    OneWoW_GUI:UpdateIconTexture(d.icon, iconTex or "Interface\\Icons\\INV_Misc_QuestionMark")
+    local quality = C_Item.GetItemQualityByID(itemID)
+    OneWoW_GUI:UpdateIconQuality(d.icon, quality)
+
+    local itemLink = select(2, C_Item.GetItemInfo(itemID))
+    if itemLink then
+        d.icon:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(itemLink)
+            GameTooltip:Show()
+        end)
+        d.icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    else
+        d.icon:SetScript("OnEnter", nil)
+        d.icon:SetScript("OnLeave", nil)
+        C_Item.RequestLoadItemDataByID(itemID)
+    end
+
+    d.nameText:SetText(displayName)
+    d.idText:SetText(L["ITEM_ID"] .. " " .. tostring(itemID))
+
+    local status = ns.FarmList:GetItemStatus(itemID)
+    if status then
+        local r, g, b = unpack(status.statusColor)
+        d.statusText:SetTextColor(r, g, b)
+        d.statusText:SetText(string.format(L["OWSL_STATUS_ALTS"], status.totalOwned, status.needed))
+    else
+        d.statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        d.statusText:SetText("")
+    end
+
+    d.noteBox:SetText(row.notes or "")
+    d.qtyBox:SetText(tostring(row.quantity or 1))
+
+    if row.style == "farming" then
+        d.moveBtn:SetFitText(L["OWSL_MOVE_TO_WANTED"])
+    else
+        d.moveBtn:SetFitText(L["OWSL_MOVE_TO_FARMING"])
+    end
+
+    local pad = 12
+    local y = -12
+    d.icon:ClearAllPoints()
+    d.icon:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    local nameH = MeasureOr(d.nameText, 16)
+    local idH = MeasureOr(d.idText, 12)
+    y = y - math.max(36, nameH + idH + 6) - 10
+
+    d.statusText:ClearAllPoints()
+    d.statusText:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    d.statusText:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -pad, 0)
+    y = y - MeasureOr(d.statusText, 14) - 12
+
+    local locations = status and status.locations or {}
+    d.whereIsHeader:Show()
+    d.whereIsHeader:ClearAllPoints()
+    d.whereIsHeader:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    y = y - MeasureOr(d.whereIsHeader, 14) - 4
+    if #locations == 0 then
+        d.whereIsLines[1]:Show()
+        d.whereIsLines[1]:SetText(NONE)
+        d.whereIsLines[1]:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        d.whereIsLines[1]:ClearAllPoints()
+        d.whereIsLines[1]:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+        d.whereIsLines[1]:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -pad, 0)
+        y = y - MeasureOr(d.whereIsLines[1], 12) - 2
+        for i = 2, #d.whereIsLines do d.whereIsLines[i]:Hide() end
+    else
+        for i = 1, #d.whereIsLines do
+            local fs = d.whereIsLines[i]
+            if locations[i] then
+                fs:Show()
+                fs:SetText(locations[i])
+                fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                fs:ClearAllPoints()
+                fs:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+                fs:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -pad, 0)
+                y = y - MeasureOr(fs, 12) - 2
+            else
+                fs:Hide()
+            end
+        end
+    end
+    y = y - 8
+
+    local sources = ns.FarmList:GetCatalogSources(itemID)
+    if #sources == 0 then
+        d.whereGetHeader:Hide()
+        for i = 1, #d.whereGetLines do d.whereGetLines[i]:Hide() end
+    else
+        d.whereGetHeader:Show()
+        d.whereGetHeader:ClearAllPoints()
+        d.whereGetHeader:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+        y = y - MeasureOr(d.whereGetHeader, 14) - 4
+        local lineIdx = 1
+        for g = 1, #sources do
+            local group = sources[g]
+            local headerFS = d.whereGetLines[lineIdx]
+            if headerFS then
+                headerFS:Show()
+                headerFS:SetText(group.header)
+                headerFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_MUTED"))
+                headerFS:ClearAllPoints()
+                headerFS:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+                headerFS:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -pad, 0)
+                y = y - MeasureOr(headerFS, 12) - 2
+                lineIdx = lineIdx + 1
+            end
+            for li = 1, #group.lines do
+                local fs = d.whereGetLines[lineIdx]
+                if not fs then break end
+                fs:Show()
+                fs:SetText(group.lines[li])
+                fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                fs:ClearAllPoints()
+                fs:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad + 8, y)
+                fs:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -pad, 0)
+                y = y - MeasureOr(fs, 12) - 2
+                lineIdx = lineIdx + 1
+            end
+        end
+        for i = lineIdx, #d.whereGetLines do
+            d.whereGetLines[i]:Hide()
+        end
+    end
+    y = y - 10
+
+    d.noteLabel:ClearAllPoints()
+    d.noteLabel:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    y = y - MeasureOr(d.noteLabel, 12) - 4
+    d.noteBox:ClearAllPoints()
+    d.noteBox:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    d.noteBox:SetPoint("RIGHT", farmDetailPanel, "RIGHT", -pad, 0)
+    y = y - 28
+
+    d.qtyLabel:ClearAllPoints()
+    d.qtyLabel:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    d.qtyBox:ClearAllPoints()
+    d.qtyBox:SetPoint("LEFT", d.qtyLabel, "RIGHT", 6, 0)
+    y = y - 30
+
+    d.moveBtn:ClearAllPoints()
+    d.moveBtn:SetPoint("TOPLEFT", farmDetailPanel, "TOPLEFT", pad, y)
+    d.sendBtn:ClearAllPoints()
+    d.sendBtn:SetPoint("LEFT", d.moveBtn, "RIGHT", 6, 0)
+    d.removeBtn:ClearAllPoints()
+    d.removeBtn:SetPoint("LEFT", d.sendBtn, "RIGHT", 6, 0)
+end
+
+function MainWindow:ShowSendToShoppingMenu(itemID)
+    MenuUtil.CreateContextMenu(UIParent, function(_, rootDescription)
+        rootDescription:CreateTitle(L["OWSL_SEND_TO_SHOPPING"])
+        for _, listName in ipairs(ns.ShoppingList:GetParentLists()) do
+            local captured = listName
+            rootDescription:CreateButton(listName, function()
+                local ok = ns.FarmList:SendToShoppingList(itemID, captured)
+                if ok then
+                    local name = C_Item.GetItemNameByID(itemID) or tostring(itemID)
+                    print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, captured))
+                else
+                    print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_MOVE_FAILED"]:format(""))
+                end
+            end)
+        end
+    end)
+end
+
+function MainWindow:ShowFarmItemContextMenu(itemID)
+    local row = ns.FarmList:GetItem(itemID)
+    if not row then return end
+    MenuUtil.CreateContextMenu(UIParent, function(_, rootDescription)
+        rootDescription:CreateTitle(C_Item.GetItemNameByID(itemID) or row.name or L["ITEM"])
+        if row.style == "farming" then
+            rootDescription:CreateButton(L["OWSL_MOVE_TO_WANTED"], function()
+                ns.FarmList:SetStyle(itemID, "wanted")
+                MainWindow:RefreshFarmSidebar()
+                MainWindow:RefreshFarmDetail()
+            end)
+        else
+            rootDescription:CreateButton(L["OWSL_MOVE_TO_FARMING"], function()
+                ns.FarmList:SetStyle(itemID, "farming")
+                MainWindow:RefreshFarmSidebar()
+                MainWindow:RefreshFarmDetail()
+            end)
+        end
+        rootDescription:CreateButton(L["OWSL_SEND_TO_SHOPPING"], function()
+            MainWindow:ShowSendToShoppingMenu(itemID)
+        end)
+        rootDescription:CreateButton(DELETE, function()
+            ns.FarmList:RemoveItem(itemID)
+            if selectedFarmItemID == itemID then
+                selectedFarmItemID = nil
+            end
+            MainWindow:RefreshFarmSidebar()
+            MainWindow:RefreshFarmDetail()
+        end)
+    end)
+end
+
 function MainWindow:Show()
     if not mainFrame then self:Create() end
     mainFrame:Show()
+    self:ApplyWindowMode()
     self:RefreshSidebar()
     self:RefreshItemList()
 end
@@ -1465,12 +2206,14 @@ function MainWindow:Toggle()
     if not mainFrame then
         self:Create()
         mainFrame:Show()
+        self:ApplyWindowMode()
         self:RefreshSidebar()
         self:RefreshItemList()
     elseif mainFrame:IsShown() then
         mainFrame:Hide()
     else
         mainFrame:Show()
+        self:ApplyWindowMode()
         self:RefreshSidebar()
         self:RefreshItemList()
     end

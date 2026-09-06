@@ -148,6 +148,8 @@ ns.Locale:RegisterShared("enUS", {
     ["COLLECTION"] = "Collection",
     ["DUNGEON"] = "Dungeon",
     ["FARMING"] = "Farming",
+    ["WHERE_IT_IS"] = "Where it is",
+    ["WHERE_TO_GET"] = "Where to get it",
     ["PROFESSION"] = "Profession",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these

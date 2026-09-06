@@ -1,4 +1,4 @@
-**OneWoW Shopping List** tracks what you need to buy, craft, or farm — and shows what you already own on this character or across your account.
+**OneWoW Shopping List** tracks what you need to buy, craft, or farm — and shows what you already own on this character or across your account. One window has two tabs: **Shopping** (named lists) and **Farming** (one account-wide list).
 
 **Requires:** [OneWoW](Home) core. Enable **Shopping List** under [Manage Features](Getting-Started).
 
@@ -14,7 +14,20 @@
 * Status colors: **green** (this character covers it), **blue** (warband / alts cover it), **yellow** (partial), **red** (none)
 * Hover status for exact locations; right-click to move items or start a craft order
 
-Slash extras: `show` / `hide` / `help` / `add <itemID>` on any Shopping List alias.
+Slash extras: `show` / `hide` / `help` / `add <itemID>` / `farm` on any Shopping List alias.
+
+---
+
+## Farming List
+
+One account-wide list (not multiple named lists). The left side has **Wanted** and **Farming** groups. Click a row to select it.
+
+The right side shows item info, **Where it is** (owned copies, same colors as Shopping), **Where to get it** when a Catalog pack is already loaded this session, a short note, and a quantity.
+
+* Move a row between Wanted and Farming
+* Send a farm row to a shopping list you pick (adds that quantity)
+* Right-click a Shopping row and choose **Send to Farm** (Wanted or Farming)
+* Notes Collectibles **Want** or **Farming** intent adds that item here when we can resolve an item id
 
 ---
 

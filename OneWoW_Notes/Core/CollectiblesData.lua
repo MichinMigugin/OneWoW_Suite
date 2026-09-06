@@ -16,7 +16,7 @@ local Collectibles = ns.DataModule:New("collectibles", "collectibleCustomCategor
 })
 ns.Collectibles = Collectibles
 
-local pairs, ipairs = pairs, ipairs
+local pairs, ipairs, wipe = pairs, ipairs, wipe
 
 -- Valid intent values (user-facing meaning): none | want | spotted | farming |
 -- delete. The `delete` intent is the recycle bin: items sort to the bottom, render
@@ -77,6 +77,9 @@ function Collectibles:UpsertCollectible(key, fields)
             if v ~= nil then existing[k] = v end
         end
         self:SaveCollectible(key, existing)
+        if fields.intent == "want" or fields.intent == "farming" then
+            self:SyncFarmListIntent(key, existing.intent)
+        end
         return true, existing
     end
 
@@ -98,6 +101,9 @@ function Collectibles:UpsertCollectible(key, fields)
     }
 
     self:SaveCollectible(key, record)
+    if fields.intent == "want" or fields.intent == "farming" then
+        self:SyncFarmListIntent(key, record.intent)
+    end
     return true, record
 end
 
@@ -138,6 +144,113 @@ function Collectibles:SetIntent(key, intent)
     end
 
     self:SaveCollectible(key, record)
+    if intent == "want" or intent == "farming" then
+        self:SyncFarmListIntent(key, intent)
+    end
+end
+
+-- Shopping List is LoD and not a Notes RequiredDep. Push Want / Farming
+-- items when the API is present; otherwise queue until data-ready.
+local pendingFarmPushes = {}
+local farmWatcherRegistered = false
+
+local function ResolveCollectibleItemID(key)
+    local desc = OneWoW.Collectibles.ParseKey(key)
+    if not desc then return nil end
+
+    local collType, subtype, id = desc.type, desc.subtype, desc.id
+    if collType == "toy" or collType == "heirloom" or collType == "recipe" then
+        return id
+    end
+    if collType == "appearance" then
+        if subtype == "item" then
+            return id
+        end
+        if subtype == "source" or subtype == "ima" then
+            local itemID = C_TransmogCollection.GetSourceItemID(id)
+            if itemID and itemID > 0 then return itemID end
+            local info = C_TransmogCollection.GetSourceInfo(id)
+            if info and info.itemID and info.itemID > 0 then
+                return info.itemID
+            end
+        end
+    end
+
+    local record = Collectibles:GetCollectible(key)
+    local offers = record and record.acquisition and record.acquisition.vendorOffers
+    if offers then
+        for i = 1, #offers do
+            local itemID = offers[i].itemID
+            if itemID and itemID > 0 then
+                return itemID
+            end
+        end
+    end
+    return nil
+end
+
+local function FlushPendingFarmPushes()
+    local api = OneWoW_ShoppingList_API
+    if not api or not api.AddFarmItem then return end
+    for i = 1, #pendingFarmPushes do
+        local pending = pendingFarmPushes[i]
+        api.AddFarmItem(pending.itemID, pending.style, pending.extras)
+    end
+    wipe(pendingFarmPushes)
+end
+
+--- Add or update the Shopping List Farming List when this collectible
+--- resolves to an itemID. No-op when Shopping List is not ready yet
+--- (queued until OneWoW_ShoppingList signals data-ready).
+---@param key string
+---@param intent string
+function Collectibles:SyncFarmListIntent(key, intent)
+    local itemID = ResolveCollectibleItemID(key)
+    if not itemID then return end
+
+    local style = intent == "farming" and "farming" or "wanted"
+    local display = OneWoW.Collectibles.ResolveDisplay(key)
+    local extras = {
+        name = display and display.name or "",
+        mergeQuantity = false,
+    }
+
+    local record = self:GetCollectible(key)
+    local offers = record and record.acquisition and record.acquisition.vendorOffers
+    if offers and offers[1] then
+        local loc = offers[1].location
+        if type(loc) == "string" then
+            extras.instance_name = loc
+        elseif type(loc) == "table" then
+            extras.instance_name = loc.zone or loc.name or ""
+        end
+    end
+
+    local api = OneWoW_ShoppingList_API
+    if api and api.AddFarmItem then
+        api.AddFarmItem(itemID, style, extras)
+        return
+    end
+
+    for i = 1, #pendingFarmPushes do
+        if pendingFarmPushes[i].itemID == itemID then
+            pendingFarmPushes[i] = {
+                itemID = itemID,
+                style = style,
+                extras = extras,
+            }
+            return
+        end
+    end
+    pendingFarmPushes[#pendingFarmPushes + 1] = {
+        itemID = itemID,
+        style = style,
+        extras = extras,
+    }
+    if not farmWatcherRegistered then
+        farmWatcherRegistered = true
+        OneWoW:RegisterDataReadyWatcher("OneWoW_ShoppingList", FlushPendingFarmPushes)
+    end
 end
 
 -- ---------------------------------------------------------------------------

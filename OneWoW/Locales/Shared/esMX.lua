@@ -149,6 +149,8 @@ ns.Locale:RegisterShared("esMX", {
     ["COLLECTION"] = "Colección",
     ["DUNGEON"] = "Mazmorra",
     ["FARMING"] = "Farmeo",
+    ["WHERE_IT_IS"] = "Dónde está",
+    ["WHERE_TO_GET"] = "Dónde conseguirlo",
     ["PROFESSION"] = "Profesión",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these

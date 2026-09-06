@@ -228,6 +228,17 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["OWSL_MM_CLICK_TO_OPEN"] = "Нажмите, чтобы открыть",
 
+    ["OWSL_TAB_SHOPPING"] = "Покупки",
+    ["OWSL_BTN_LIST"] = "Список",
+    ["OWSL_MENU_FARM"] = "Фарм",
+    ["OWSL_MENU_WANT"] = "Хочу",
+    ["OWSL_FARM_WANTED"] = "Желаемое",
+    ["OWSL_SEND_TO_SHOPPING"] = "Отправить в список покупок",
+    ["OWSL_SEND_TO_FARM"] = "Отправить в фарм-список",
+    ["OWSL_MOVE_TO_WANTED"] = "Перенести в Желаемое",
+    ["OWSL_MOVE_TO_FARMING"] = "Перенести в Фарм",
+    ["OWSL_FARM_SELECT_ITEM"] = "Выберите предмет",
+
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100OneWoW Shopping List:|r",
 
     ["BINDING_HEADER_ONEWOW_SHOPPING_LIST"] = "|cFF00FF00OneWoW|r Shopping List",

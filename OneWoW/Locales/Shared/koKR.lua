@@ -148,6 +148,8 @@ ns.Locale:RegisterShared("koKR", {
     ["COLLECTION"] = "수집품",
     ["DUNGEON"] = "던전",
     ["FARMING"] = "파밍",
+    ["WHERE_IT_IS"] = "어디에 있는지",
+    ["WHERE_TO_GET"] = "어디서 구하는지",
     ["PROFESSION"] = "전문 기술",
 
     -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these

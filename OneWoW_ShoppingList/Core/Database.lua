@@ -14,6 +14,9 @@ local defaults = {
             activeList  = MAIN_LIST_KEY,
             defaultList = MAIN_LIST_KEY,
         },
+        farmList = {
+            items = {},
+        },
         settings = {
             enableTooltips        = true,
             showBagButtons        = true,

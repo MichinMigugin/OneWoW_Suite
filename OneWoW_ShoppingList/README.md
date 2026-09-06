@@ -17,7 +17,11 @@
   - **Yellow** — partial coverage.
   - **Red** — none owned.
 - Hover an item's status to see exact locations (which character, bank tab, guild bank, etc.).
-- Per-item right-click menu: move to another list, create a craft order from the item.
+- Per-item right-click menu: move to another list, send to the Farming List, or create a craft order from the item.
+
+### Farming List
+
+One account-wide list on the **Farming** tab (Wanted and Farming groups). Select a row for item info, where you already have copies, where to get it when Catalog packs are already loaded, a note, and a quantity. Move rows between groups, or send a farm row to a shopping list. Notes Collectibles Want or Farming intent adds the item here when we can resolve an item id.
 
 ### Multiple Lists
 
@@ -99,6 +103,7 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 - `/1wsl show` — show the main window.
 - `/1wsl hide` — hide the main window.
 - `/1wsl add <itemID>` — add an item to the active list.
+- `/1wsl farm` — open the Farming tab.
 - `/1wsl help` — print the command list.
 
 ## Keybindings
