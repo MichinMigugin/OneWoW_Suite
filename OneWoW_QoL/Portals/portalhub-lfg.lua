@@ -110,6 +110,11 @@ local function ShowPrompt()
 	end
 	pendingShow = nil
 	dialog.nameFS:SetText(pendingName or "")
+	local nameHeight = dialog.nameFS:GetStringHeight()
+	if nameHeight < 16 then
+		nameHeight = 16
+	end
+	dialog.nameHost:SetHeight(nameHeight)
 	ApplySecureSpell()
 	dialog.frame:Show()
 end
@@ -147,16 +152,23 @@ local function BuildPopup()
 		dialog.titleBar:HookScript("OnDragStop", SavePosition)
 	end
 
-	local nameFS = OneWoW_GUI:CreateFS(dialog.contentFrame, 13)
-	nameFS:SetPoint("TOPLEFT", dialog.contentFrame, "TOPLEFT", 10, -8)
-	nameFS:SetPoint("TOPRIGHT", dialog.contentFrame, "TOPRIGHT", -10, -8)
+	local nameHost = CreateFrame("Frame", nil, dialog.contentFrame)
+	nameHost:SetPoint("TOPLEFT", dialog.contentFrame, "TOPLEFT", 10, -8)
+	nameHost:SetPoint("TOPRIGHT", dialog.contentFrame, "TOPRIGHT", -10, -8)
+	nameHost:SetHeight(16)
+	dialog.nameHost = nameHost
+
+	local nameFS = OneWoW_GUI:CreateFS(nameHost, 13)
+	nameFS:SetPoint("TOPLEFT")
+	nameFS:SetPoint("TOPRIGHT")
 	nameFS:SetJustifyH("CENTER")
 	nameFS:SetWordWrap(true)
 	dialog.nameFS = nameFS
 
 	secureBtn = CreateFrame("Button", nil, dialog.contentFrame, "SecureActionButtonTemplate")
-	secureBtn:SetPoint("TOPLEFT", nameFS, "BOTTOMLEFT", 0, -8)
-	secureBtn:SetPoint("TOPRIGHT", nameFS, "BOTTOMRIGHT", 0, -8)
+	-- SecureActionButton cannot SetPoint to a FontString (region).
+	secureBtn:SetPoint("TOPLEFT", nameHost, "BOTTOMLEFT", 0, -8)
+	secureBtn:SetPoint("TOPRIGHT", nameHost, "BOTTOMRIGHT", 0, -8)
 	secureBtn:SetHeight(52)
 	secureBtn:RegisterForClicks("AnyUp", "AnyDown")
 	secureBtn:SetAttribute("type", "spell")
